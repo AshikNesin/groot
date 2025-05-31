@@ -1,4 +1,4 @@
-import { PrismaClient, Todo } from '../generated/prisma';
+import { PrismaClient, Todo } from '@/generated/prisma';
 
 const prisma = new PrismaClient();
 

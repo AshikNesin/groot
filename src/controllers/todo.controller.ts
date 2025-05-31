@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import * as todoModel from '../models/todo.model';
+import * as todoModel from '@/models/todo.model';
 
 export const createTodo = async (req: Request, res: Response): Promise<void> => {
   try {
