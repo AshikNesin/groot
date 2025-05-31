@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getUser, User } from '@/models/user.model.ts';
+import { getUser, User } from '@/models/user.model';
 
 export const displayUser = (req: Request, res: Response): void => {
   const user: User = getUser();
