@@ -11,7 +11,8 @@
     "dev": "tsx watch src/index.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
-    "test": "npm run build"
+    "test": "npm run build",
+    "generate": "prisma generate"
   },
   "repository": {
     "type": "git",
@@ -34,11 +35,13 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "@t3-oss/env-core": "^0.13.6",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-basic-auth": "^1.2.1",
+    "prisma": "^6.8.2",
     "zod": "^3.25.42"
   }
 }
