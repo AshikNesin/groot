@@ -1,8 +1,8 @@
 import express from 'express';
 import userRoutes from '@/routes/user.routes.ts';
-import basicAuthMiddleware from './middlewares/basicAuth.middleware';
-import corsMiddleware from './middlewares/cors.middleware';
-import { env } from './env';
+import basicAuthMiddleware from '@/middlewares/basicAuth.middleware';
+import corsMiddleware from '@/middlewares/cors.middleware';
+import { env } from '@/env';
 
 const app = express();
 const port = env.PORT;
