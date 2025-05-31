@@ -22,11 +22,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/', (req, res) => {
+  res.json({
+    message: "It Works!",
+  });
+});
+
 // Basic Authentication
 app.use(basicAuthMiddleware);
 
-app.use('/', userRoutes); // Use the new user router
-app.use('/api', todoRoutes); // Use the new todo router with /api prefix
+app.use(userRoutes); // Use the new user router
+app.use(todoRoutes); // Use the new todo router with /api prefix
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
