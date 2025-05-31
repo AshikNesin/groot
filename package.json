@@ -10,7 +10,7 @@
     "dev": "tsx watch src/index.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run build"
   },
   "repository": {
     "type": "git",
