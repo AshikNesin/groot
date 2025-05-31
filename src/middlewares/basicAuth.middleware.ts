@@ -1,5 +1,5 @@
 import basicAuth from 'express-basic-auth';
-import { env } from '../env';
+import { env } from '@/env';
 
 const basicAuthMiddleware = basicAuth({
   users: {

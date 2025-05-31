@@ -26,6 +26,7 @@
   "homepage": "https://github.com/AshikNesin/express-typescript-boilerplate#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.29",
     "esbuild": "^0.25.5",
@@ -33,10 +34,10 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "express": "^5.1.0",
     "@t3-oss/env-core": "^0.13.6",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "express-basic-auth": "^1.2.1",
     "zod": "^3.25.42"
   }
