@@ -15,6 +15,10 @@ export const env = createEnv({
     BASIC_AUTH_PASSWORD: z
       .string()
       .min(1, "Basic auth password cannot be empty"),
+    SENTRY_DSN: z
+      .string()
+      .url("Sentry DSN must be a valid URL")
+      .optional(),
     // NODE_ENV: z.enum(["development", "production", "test"]).default("development"), // Optional: if you use NODE_ENV
   },
 
@@ -31,6 +35,7 @@ export const env = createEnv({
     PORT: process.env.PORT,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
+    SENTRY_DSN: process.env.SENTRY_DSN,
     // NODE_ENV: process.env.NODE_ENV, // Optional
   },
 

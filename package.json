@@ -7,12 +7,14 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "node scripts/build.mjs",
+    "postbuild": "npm run sentry:sourcemaps",
     "start": "node --require dotenv/config dist/bundle.js",
     "dev": "tsx watch src/index.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
     "test": "npm run build",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org sentry --project express-typescript-boilerplate ./dist && sentry-cli sourcemaps upload --org sentry --project express-typescript-boilerplate ./dist"
   },
   "repository": {
     "type": "git",
