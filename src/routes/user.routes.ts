@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { displayUser } from '@/controllers/user.controller'; // Ensure .js extension
+import { displayUser } from '@/controllers/user.controller.ts';
 
 const router = Router();
 
