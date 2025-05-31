@@ -1,6 +1,6 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
-import dotenv from 'dotenv'; 
+import dotenv from "dotenv";
 dotenv.config();
 
 export const env = createEnv({
@@ -9,8 +9,12 @@ export const env = createEnv({
   // and will throw an error if not set correctly.
   server: {
     PORT: z.coerce.number().default(3000), // coerce to number, default to 3000
-    BASIC_AUTH_USERNAME: z.string().min(1, "Basic auth username cannot be empty"),
-    BASIC_AUTH_PASSWORD: z.string().min(1, "Basic auth password cannot be empty"),
+    BASIC_AUTH_USERNAME: z
+      .string()
+      .min(1, "Basic auth username cannot be empty"),
+    BASIC_AUTH_PASSWORD: z
+      .string()
+      .min(1, "Basic auth password cannot be empty"),
     // NODE_ENV: z.enum(["development", "production", "test"]).default("development"), // Optional: if you use NODE_ENV
   },
 
