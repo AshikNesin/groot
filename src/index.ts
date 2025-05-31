@@ -1,3 +1,6 @@
+// Import Sentry first, before any other imports
+import { Sentry } from "@/core/instrument";
+
 import express from "express";
 import userRoutes from "@/routes/user.routes.ts";
 import todoRoutes from "@/routes/todo.routes.ts";
@@ -39,8 +42,24 @@ app.use(basicAuthMiddleware);
 app.use(userRoutes);
 app.use(todoRoutes);
 
+// Debug route for Sentry testing
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
+
+// Set up Sentry error handler (must be before any other error middleware)
+Sentry.setupExpressErrorHandler(app);
+
 // Error handling middleware
 app.use(errorLoggerMiddleware);
+
+// Optional fallthrough error handler for Sentry
+app.use(function onError(err: Error, req: express.Request, res: express.Response, next: express.NextFunction) {
+  // The error id is attached to `res.sentry` to be returned
+  // and optionally displayed to the user for support.
+  res.statusCode = 500;
+  res.end((res as any).sentry + "\n");
+});
 
 app.listen(port, () => {
   logger.info(`Server is running on http://localhost:${port}`);
