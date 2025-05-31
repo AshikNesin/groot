@@ -14,7 +14,8 @@
     "format": "biome format --write ./src",
     "test": "npm run build",
     "generate": "prisma generate",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org sentry --project express-typescript-boilerplate ./dist && sentry-cli sourcemaps upload --org sentry --project express-typescript-boilerplate ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org sentry --project express-typescript-boilerplate ./dist && sentry-cli sourcemaps upload --org sentry --project express-typescript-boilerplate ./dist",
+    "postinstall": "pnpm run generate"
   },
   "repository": {
     "type": "git",
