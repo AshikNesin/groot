@@ -57,16 +57,11 @@ async function build() {
       },
       sourcemap: true,
       tsconfig: "tsconfig.json", // Point to tsconfig to respect paths and other settings
-      // To handle potential issues with __dirname and __filename in ESM
-      // define: {
-      //  '__dirname': '"."', // Adjust if your script relies on a specific __dirname
-      //  '__filename': '"bundle.js"' // Adjust if your script relies on a specific __filename
-      // },
-      // If you have issues with CJS dependencies being bundled into ESM:
-      // mainFields: ['module', 'main'], // Prioritize ESM fields
-      // banner: { // For CJS interop if needed with some packages
-      //   js: "import { createRequire } from 'module';const require = createRequire(import.meta.url);"
-      // }
+      define: {
+        __dirname: "import.meta.url",
+        __filename: "import.meta.url",
+      },
+      mainFields: ["module", "main"], // Prioritize ESM fields
     });
     console.log("Build successful: dist/bundle.js created.");
   } catch (error) {
