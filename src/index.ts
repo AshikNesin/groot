@@ -1,12 +1,17 @@
 import express from "express";
 import userRoutes from "@/routes/user.routes.ts";
-import todoRoutes from "@/routes/todo.routes.ts"; // Added import for todo routes
+import todoRoutes from "@/routes/todo.routes.ts";
 import basicAuthMiddleware from "@/middlewares/basicAuth.middleware";
 import corsMiddleware from "@/middlewares/cors.middleware";
+import { requestLoggerMiddleware, errorLoggerMiddleware } from "@/middlewares/requestLogger.middleware";
 import { env } from "@/env";
+import { logger } from "@/core/logger";
 
 const app = express();
 const port = env.PORT;
+
+// Request logging middleware
+app.use(requestLoggerMiddleware);
 
 // CORS Middleware
 app.use(corsMiddleware);
@@ -31,9 +36,12 @@ app.get("/", (req, res) => {
 // Basic Authentication
 app.use(basicAuthMiddleware);
 
-app.use(userRoutes); // Use the new user router
-app.use(todoRoutes); // Use the new todo router with /api prefix
+app.use(userRoutes);
+app.use(todoRoutes);
+
+// Error handling middleware
+app.use(errorLoggerMiddleware);
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  logger.info(`Server is running on http://localhost:${port}`);
 });
