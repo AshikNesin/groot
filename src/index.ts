@@ -1,9 +1,9 @@
-import express from 'express';
-import userRoutes from '@/routes/user.routes.ts';
-import todoRoutes from '@/routes/todo.routes.ts'; // Added import for todo routes
-import basicAuthMiddleware from '@/middlewares/basicAuth.middleware';
-import corsMiddleware from '@/middlewares/cors.middleware';
-import { env } from '@/env';
+import express from "express";
+import userRoutes from "@/routes/user.routes.ts";
+import todoRoutes from "@/routes/todo.routes.ts"; // Added import for todo routes
+import basicAuthMiddleware from "@/middlewares/basicAuth.middleware";
+import corsMiddleware from "@/middlewares/cors.middleware";
+import { env } from "@/env";
 
 const app = express();
 const port = env.PORT;
@@ -15,14 +15,14 @@ app.use(corsMiddleware);
 app.use(express.json());
 
 // Health check endpoint (unprotected)
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
   });
 });
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json({
     message: "It Works!",
   });

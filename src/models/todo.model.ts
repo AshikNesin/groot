@@ -1,4 +1,4 @@
-import { PrismaClient, Todo } from '@/generated/prisma';
+import { PrismaClient, Todo } from "@/generated/prisma";
 
 const prisma = new PrismaClient();
 
@@ -22,7 +22,7 @@ export const findById = async (id: number): Promise<Todo | null> => {
 
 export const update = async (
   id: number,
-  data: { title?: string; completed?: boolean }
+  data: { title?: string; completed?: boolean },
 ): Promise<Todo | null> => {
   return prisma.todo.update({
     where: { id },
