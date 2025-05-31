@@ -1,8 +1,9 @@
 import basicAuth from 'express-basic-auth';
+import { env } from '../env.js';
 
 const basicAuthMiddleware = basicAuth({
   users: {
-    [process.env.BASIC_AUTH_USERNAME || 'admin']: process.env.BASIC_AUTH_PASSWORD || 'password',
+    [env.BASIC_AUTH_USERNAME]: env.BASIC_AUTH_PASSWORD,
   },
   challenge: true,
   realm: 'Restricted Area. Please login.',

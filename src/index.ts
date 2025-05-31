@@ -1,13 +1,11 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import userRoutes from '@/routes/user.routes.js'; // Ensure .js extension
 import basicAuthMiddleware from './middlewares/basicAuth.middleware.js';
 import corsMiddleware from './middlewares/cors.middleware.js';
-
-dotenv.config();
+import { env } from './env.js';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = env.PORT;
 
 // CORS Middleware
 app.use(corsMiddleware);
