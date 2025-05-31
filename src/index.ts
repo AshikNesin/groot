@@ -1,5 +1,5 @@
 import express from 'express';
-import userRoutes from '@/routes/user.routes'; // Ensure .js extension
+import userRoutes from '@/routes/user.routes.ts';
 import basicAuthMiddleware from './middlewares/basicAuth.middleware';
 import corsMiddleware from './middlewares/cors.middleware';
 import { env } from './env';
