@@ -1,8 +1,8 @@
 import express from 'express';
-import userRoutes from '@/routes/user.routes.js'; // Ensure .js extension
-import basicAuthMiddleware from './middlewares/basicAuth.middleware.js';
-import corsMiddleware from './middlewares/cors.middleware.js';
-import { env } from './env.js';
+import userRoutes from '@/routes/user.routes'; // Ensure .js extension
+import basicAuthMiddleware from './middlewares/basicAuth.middleware';
+import corsMiddleware from './middlewares/cors.middleware';
+import { env } from './env';
 
 const app = express();
 const port = env.PORT;
