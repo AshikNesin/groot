@@ -1,6 +1,7 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
-// dotenv is loaded in src/index.ts or a bootstrap file
+import dotenv from 'dotenv'; 
+dotenv.config();
 
 export const env = createEnv({
   // Specify server-side environment variables
