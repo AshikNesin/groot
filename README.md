@@ -6,6 +6,7 @@ A simple Express.js application with TypeScript support and Biome for linting an
 
 * Node.js (v18 or later recommended)
 * npm or yarn
+* pnpm (This project uses pnpm as the package manager. If you don't have it installed, you can install it globally via npm: `npm install -g pnpm`)
 
 ## Getting Started
 
@@ -17,18 +18,16 @@ A simple Express.js application with TypeScript support and Biome for linting an
 
 2. **Install dependencies:**
    ```bash
-   npm install
-   # or
-   yarn install
+   pnpm install
    ```
 
 ## Available Scripts
 
-* **`npm run build`**: Compiles TypeScript code to JavaScript in the `dist` directory.
-* **`npm start`**: Starts the application from the compiled code in `dist`.
-* **`npm run dev`**: Starts the application in development mode with live reloading. It watches for TypeScript changes, recompiles, and restarts the server.
-* **`npm run lint`**: Lints the TypeScript code in the `src` directory using Biome.
-* **`npm run format`**: Formats the TypeScript code in the `src` directory using Biome.
+* **`pnpm build`**: Compiles TypeScript code to JavaScript in the `dist` directory.
+* **`pnpm start`**: Starts the application from the compiled code in `dist`.
+* **`pnpm dev`**: Starts the application in development mode with live reloading. It watches for TypeScript changes, recompiles, and restarts the server.
+* **`pnpm lint`**: Lints the TypeScript code in the `src` directory using Biome.
+* **`pnpm format`**: Formats the TypeScript code in the `src` directory using Biome.
 
 ## Project Structure
 
@@ -46,18 +45,18 @@ A simple Express.js application with TypeScript support and Biome for linting an
 
 1. **Build the application:**
    ```bash
-   npm run build
+   pnpm build
    ```
 
 2. **Start the application:**
    ```bash
-   npm start
+   pnpm start
    ```
    The server will be running on `http://localhost:3000` by default.
 
 3. **Development mode:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
    This will start the server and automatically restart it when you make changes to the TypeScript files.
 
@@ -65,9 +64,9 @@ A simple Express.js application with TypeScript support and Biome for linting an
 
 * **Lint:**
   ```bash
-  npm run lint
+  pnpm lint
   ```
 * **Format:**
   ```bash
-  npm run format
+  pnpm format
   ```
