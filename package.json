@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.5",
+    "@keyv/postgres": "^2.1.7",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-dialog": "^1.0.7",
     "@radix-ui/react-label": "^2.0.3",
@@ -69,6 +70,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-basic-auth": "^1.2.1",
+    "keyv": "^5.5.3",
     "lucide-react": "^0.552.0",
     "nuqs": "^2.7.3",
     "pg-boss": "^12.2.0",
