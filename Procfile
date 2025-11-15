@@ -1,1 +1,1 @@
-web: npm run postinstall && npm start
+web: pnpm run postinstall && pnpm start
