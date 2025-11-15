@@ -8,7 +8,9 @@ export const env = createEnv({
   // These are validated at build time (or server start)
   // and will throw an error if not set correctly.
   server: {
+    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     PORT: z.coerce.number().default(3000), // coerce to number, default to 3000
+    DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
     BASIC_AUTH_USERNAME: z
       .string()
       .min(1, "Basic auth username cannot be empty"),
@@ -32,7 +34,9 @@ export const env = createEnv({
   // often you need to manually destructure them here.
   // For a simple Node.js/Express app, this maps directly from process.env.
   runtimeEnv: {
+    NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
+    DATABASE_URL: process.env.DATABASE_URL,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
     SENTRY_DSN: process.env.SENTRY_DSN,

@@ -13,5 +13,11 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2
+  },
+  "files": {
+    "ignore": [
+      "dist",
+      "server/src/generated"
+    ]
   }
 }
