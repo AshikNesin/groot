@@ -17,6 +17,13 @@ export const env = createEnv({
     BASIC_AUTH_PASSWORD: z
       .string()
       .min(1, "Basic auth password cannot be empty"),
+    AWS_ACCESS_KEY_ID: z.string().min(1, "AWS access key is required").default("localstack"),
+    AWS_SECRET_ACCESS_KEY: z
+      .string()
+      .min(1, "AWS secret key is required")
+      .default("localstack"),
+    AWS_DEFAULT_REGION: z.string().min(1).default("us-east-1"),
+    AWS_DEFAULT_S3_BUCKET: z.string().min(1).default("local-bucket"),
     SENTRY_DSN: z
       .string()
       .url("Sentry DSN must be a valid URL")
@@ -44,6 +51,10 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION,
+    AWS_DEFAULT_S3_BUCKET: process.env.AWS_DEFAULT_S3_BUCKET,
     SENTRY_DSN: process.env.SENTRY_DSN,
     JOB_CONCURRENCY: process.env.JOB_CONCURRENCY,
     JOB_POLL_INTERVAL: process.env.JOB_POLL_INTERVAL,

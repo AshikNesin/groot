@@ -37,6 +37,14 @@ export function Layout() {
             >
               Todos
             </NavLink>
+            <NavLink
+              to="/storage"
+              className={({ isActive }) =>
+                `transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`
+              }
+            >
+              Storage
+            </NavLink>
             <span className="text-muted-foreground">{user?.username}</span>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               Logout

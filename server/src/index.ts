@@ -12,6 +12,7 @@ import basicAuthMiddleware from "@/middlewares/basicAuth.middleware";
 import { requestLoggerMiddleware } from "@/middlewares/requestLogger.middleware";
 import { errorHandlerMiddleware, notFoundHandler } from "@/middlewares/error-handler.middleware";
 import { apiRouter } from "@/routes";
+import publicFileRoutes from "@/routes/public-file.routes";
 import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +57,7 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.use("/api/v1/public/files", publicFileRoutes);
 app.use("/api/v1", basicAuthMiddleware, apiRouter);
 
 app.get(/^(?!\/api)(?!\/health).*/, async (req, res, next) => {

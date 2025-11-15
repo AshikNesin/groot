@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "@/components/Layout";
 import { Dashboard } from "@/pages/Dashboard";
 import { Todos } from "@/pages/Todos";
+import { Storage } from "@/pages/Storage";
 import { Login } from "@/pages/Login";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -23,6 +24,7 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="todos" element={<Todos />} />
+            <Route path="storage" element={<Storage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

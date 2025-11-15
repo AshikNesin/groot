@@ -28,7 +28,7 @@ export class KeyvPrismaAdapter {
   /**
    * Get a value by key
    */
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<unknown> {
     try {
       const namespacedKey = this.getKey(key);
       const record = await this.prisma.keyv.findUnique({
@@ -55,7 +55,7 @@ export class KeyvPrismaAdapter {
    * Set a value with optional TTL
    * Note: TTL is ignored as the Keyv model doesn't have expiry support
    */
-  async set(key: string, value: any, ttl?: number): Promise<void> {
+  async set(key: string, value: unknown, ttl?: number): Promise<void> {
     try {
       const namespacedKey = this.getKey(key);
       const serializedValue = typeof value === "string" ? value : JSON.stringify(value);
@@ -129,7 +129,7 @@ export class KeyvPrismaAdapter {
   /**
    * Get multiple values by keys
    */
-  async getMany(keys: string[]): Promise<any[]> {
+  async getMany(keys: string[]): Promise<unknown[]> {
     try {
       const namespacedKeys = keys.map((key) => this.getKey(key));
       const records = await this.prisma.keyv.findMany({
