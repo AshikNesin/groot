@@ -12,6 +12,7 @@ import basicAuthMiddleware from "@/middlewares/basicAuth.middleware";
 import { requestLoggerMiddleware } from "@/middlewares/requestLogger.middleware";
 import { errorHandlerMiddleware, notFoundHandler } from "@/middlewares/error-handler.middleware";
 import { apiRouter } from "@/routes";
+import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,6 +80,47 @@ Sentry.setupExpressErrorHandler(app);
 app.use(notFoundHandler);
 app.use(errorHandlerMiddleware);
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(`Server is running on http://localhost:${port}`);
+  void initializeJobQueue();
+});
+
+const initializeJobQueue = async () => {
+  try {
+    await initJobQueue();
+    await startWorkers();
+    logger.info("Job queue initialized and workers started");
+  } catch (error) {
+    logger.error({ error }, "Failed to initialize job queue");
+  }
+};
+
+const shutdown = async (signal: string) => {
+  logger.info(`${signal} received. Shutting down gracefully...`);
+
+  try {
+    await stopJobQueue();
+  } catch (error) {
+    logger.error({ error }, "Failed to stop job queue");
+  }
+
+  if (viteServer) {
+    try {
+      await viteServer.close();
+      logger.info("Vite dev server closed");
+    } catch (error) {
+      logger.error({ error }, "Failed to close Vite dev server");
+    }
+  }
+
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  process.exit(0);
+};
+
+process.on("SIGINT", () => {
+  void shutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  void shutdown("SIGTERM");
 });

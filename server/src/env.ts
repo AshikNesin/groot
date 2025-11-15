@@ -21,6 +21,11 @@ export const env = createEnv({
       .string()
       .url("Sentry DSN must be a valid URL")
       .optional(),
+    JOB_CONCURRENCY: z.coerce.number().default(5),
+    JOB_POLL_INTERVAL: z.coerce.number().default(5),
+    JOB_ARCHIVE_COMPLETED_AFTER_SECONDS: z.coerce.number().default(60 * 60 * 24 * 7),
+    JOB_DELETE_ARCHIVED_AFTER_SECONDS: z.coerce.number().default(60 * 60 * 24 * 30),
+    JOB_MONITOR_STATE_INTERVAL: z.coerce.number().default(60),
     // NODE_ENV: z.enum(["development", "production", "test"]).default("development"), // Optional: if you use NODE_ENV
   },
 
@@ -40,6 +45,11 @@ export const env = createEnv({
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
     SENTRY_DSN: process.env.SENTRY_DSN,
+    JOB_CONCURRENCY: process.env.JOB_CONCURRENCY,
+    JOB_POLL_INTERVAL: process.env.JOB_POLL_INTERVAL,
+    JOB_ARCHIVE_COMPLETED_AFTER_SECONDS: process.env.JOB_ARCHIVE_COMPLETED_AFTER_SECONDS,
+    JOB_DELETE_ARCHIVED_AFTER_SECONDS: process.env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
+    JOB_MONITOR_STATE_INTERVAL: process.env.JOB_MONITOR_STATE_INTERVAL,
     // NODE_ENV: process.env.NODE_ENV, // Optional
   },
 

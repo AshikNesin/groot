@@ -1,7 +1,7 @@
 {
-  "name": "app",
+  "name": "express-react-boilerplate",
   "version": "1.0.0",
-  "description": "",
+  "description": "A minimal boilerplate for building Express.js and React.js applications",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -20,15 +20,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AshikNesin/express-typescript-boilerplate.git"
+    "url": "git+https://github.com/AshikNesin/express-react-boilerplate.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/AshikNesin/express-typescript-boilerplate/issues"
+    "url": "https://github.com/AshikNesin/express-react-boilerplate/issues"
   },
-  "homepage": "https://github.com/AshikNesin/express-typescript-boilerplate#readme",
+  "homepage": "https://github.com/AshikNesin/express-react-boilerplate#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/cors": "^2.8.18",
@@ -37,11 +37,13 @@
     "@types/pino": "^7.0.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/supertest": "^6.0.3",
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.5",
     "esbuild-plugin-alias": "^0.2.1",
     "postcss": "^8.5.6",
+    "supertest": "^7.1.4",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
@@ -50,11 +52,11 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.5",
+    "@prisma/client": "^6.19.0",
     "@radix-ui/react-dialog": "^1.0.7",
     "@radix-ui/react-label": "^2.0.3",
     "@radix-ui/react-select": "^2.1.7",
     "@radix-ui/react-slot": "^1.0.5",
-    "@prisma/client": "^6.19.0",
     "@sentry/node": "^9.24.0",
     "@sentry/profiling-node": "^9.24.0",
     "@t3-oss/env-core": "^0.13.6",
@@ -69,6 +71,7 @@
     "express-basic-auth": "^1.2.1",
     "lucide-react": "^0.552.0",
     "nuqs": "^2.7.3",
+    "pg-boss": "^12.2.0",
     "pino": "^9.7.0",
     "pino-pretty": "^13.0.0",
     "prisma": "^6.19.0",
@@ -78,7 +81,7 @@
     "react-router-dom": "^7.9.5",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "zustand": "^5.0.8",
-    "zod": "^3.25.42"
+    "zod": "^3.25.42",
+    "zustand": "^5.0.8"
   }
 }
