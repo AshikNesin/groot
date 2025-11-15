@@ -22,3 +22,13 @@ model Todo {
   updatedAt DateTime @updatedAt
 }
 
+// Note: The keyv table is managed by @keyv/postgres package
+// The @@ignore attribute tells Prisma not to manage this table
+model Keyv {
+  key   String @id @db.VarChar
+  value String @db.Text
+
+  @@map("keyv")
+  @@ignore
+}
+
