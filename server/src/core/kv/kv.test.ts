@@ -60,13 +60,13 @@ describe("KV System", () => {
 
     it("should generate namespaced keys correctly", () => {
       // Access private method through type assertion for testing
-      const adapterAny = adapter as any;
-      expect(adapterAny.getKey("test")).toBe("test-adapter:test");
+      const adapterWithKey = adapter as KeyvPrismaAdapter & { getKey(key: string): string };
+      expect(adapterWithKey.getKey("test")).toBe("test-adapter:test");
       
       // Test without namespace
       const noNsAdapter = new KeyvPrismaAdapter({ namespace: undefined });
-      const noNsAdapterAny = noNsAdapter as any;
-      expect(noNsAdapterAny.getKey("test")).toBe("test");
+      const noNamespace = noNsAdapter as KeyvPrismaAdapter & { getKey(key: string): string };
+      expect(noNamespace.getKey("test")).toBe("test");
     });
 
     it("should get a value that exists", async () => {

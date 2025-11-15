@@ -16,6 +16,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 - **[Todos API](./features/todos.md)** – CRUD contract, validation, and React integration
 - **[Background Jobs](./features/jobs.md)** – pg-boss queues, handlers, and job API
 - **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
+- **[Storage](./features/storage.md)** – S3-backed file browser, secure shares, and rate limits
 
 ### 📚 Examples & History
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets

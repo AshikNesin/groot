@@ -22,6 +22,27 @@ model Todo {
   updatedAt DateTime @updatedAt
 }
 
+model PublicFileShare {
+  id             Int      @id @default(autoincrement())
+  shareId        String   @unique @db.VarChar
+  bucketName     String   @db.VarChar
+  filePath       String   @db.VarChar
+  fileName       String   @db.VarChar
+  contentType    String?  @db.VarChar
+  fileSize       Int?
+  expiresAt      DateTime @db.Timestamptz(6)
+  accessCount    Int      @default(0)
+  maxAccessCount Int?
+  passwordHash   String?  @db.VarChar
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isDeleted      Boolean  @default(false)
+
+  @@index([shareId], map: "public_file_share_share_id")
+  @@index([expiresAt], map: "public_file_share_expires_at")
+  @@index([bucketName], map: "public_file_share_bucket_name")
+}
+
 // Note: The keyv table is managed by @keyv/postgres package
 // The @@ignore attribute tells Prisma not to manage this table
 model Keyv {
