@@ -1,4 +1,4 @@
-import { hash, compare } from "bcryptjs";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/core/database";
 import {
   UnauthorizedError,
@@ -24,7 +24,7 @@ export const authService = {
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    const isPasswordValid = await compare(data.password, user.password);
+    const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedError("Invalid email or password");
@@ -59,7 +59,7 @@ export const authService = {
     }
 
     // Hash password
-    const hashedPassword = await hash(data.password, 10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     // Create user
     const user = await prisma.user.create({
