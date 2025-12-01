@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { createNamespaceKv } from "./index";
+import { createNamespaceKv } from "@/core/kv";
 import Keyv from "keyv";
 
 // Mock the Prisma client for testing

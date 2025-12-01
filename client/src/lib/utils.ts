@@ -86,7 +86,7 @@ export {
   parseYYYYMM,
   currentMonth,
   getMonthRange,
-} from "./date.utils";
+} from "@/lib/date.utils";
 
 // Re-export design tokens for convenience
 export {
@@ -98,4 +98,4 @@ export {
   typography,
   tableStyles,
   formStyles,
-} from "./design-tokens";
+} from "@/lib/design-tokens";

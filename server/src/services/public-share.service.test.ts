@@ -27,7 +27,7 @@ vi.mock("@/services/storage.service", () => ({
   storageFileService: mockStorageService,
 }));
 
-import { publicShareService } from "./public-share.service";
+import { publicShareService } from "@/services/public-share.service";
 
 const baseShare = {
   id: 1,

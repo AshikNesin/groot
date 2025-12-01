@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import { PageContainer } from "./PageContainer";
-import { PageHeader } from "./PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface PageLayoutProps {
   children: ReactNode;

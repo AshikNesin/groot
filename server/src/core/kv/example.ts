@@ -3,7 +3,7 @@
  * This file demonstrates how to use the KV system in your application
  */
 
-import kv, { createNamespaceKv } from "./index";
+import kv, { createNamespaceKv } from "@/core/kv";
 
 // Basic usage examples
 export async function basicKvExamples() {

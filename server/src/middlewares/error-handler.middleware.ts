@@ -12,7 +12,7 @@ import { getCurrentTraceContext } from "@/core/logger/trace-context";
 import { sanitizeRequestBody } from "@/core/logger/utils";
 import { ResponseHandler } from "@/core/response-handler";
 import { ZodError } from "zod";
-import { getRequestLogger } from "./requestLogger.middleware";
+import { getRequestLogger } from "@/middlewares/requestLogger.middleware";
 
 /**
  * Global error handling middleware
