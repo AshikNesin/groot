@@ -7,6 +7,6 @@ export {
   ValidationError,
   ConflictError,
   InternalError,
-} from "./base.errors";
+} from "@/core/errors/base.errors";
 
-export { isPrismaError, handlePrismaError } from "./prisma-error-handler";
+export { isPrismaError, handlePrismaError } from "@/core/errors/prisma-error-handler";

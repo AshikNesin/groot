@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Request } from "express";
 import pino, { type Logger } from "pino";
-import { serializeObject } from "./utils";
+import { serializeObject } from "@/core/logger/utils";
 
 // Enhanced logger configuration
 const isDevelopment = process.env.NODE_ENV !== "production";

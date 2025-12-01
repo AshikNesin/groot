@@ -3,7 +3,7 @@ import {
   BadRequestError,
   ConflictError,
   NotFoundError,
-} from "./base.errors";
+} from "@/core/errors/base.errors";
 
 /**
  * Check if an error is a Prisma error
