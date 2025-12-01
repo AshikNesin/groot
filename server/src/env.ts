@@ -17,6 +17,19 @@ export const env = createEnv({
     BASIC_AUTH_PASSWORD: z
       .string()
       .min(1, "Basic auth password cannot be empty"),
+    JWT_SECRET: z
+      .string()
+      .min(32, "JWT secret must be at least 32 characters")
+      .default("your-secret-key-change-in-production-min-32-chars"),
+    JWT_EXPIRES_IN: z.string().default("7d"),
+    ADMIN_AUTH_KEY: z
+      .string()
+      .min(1, "Admin auth key cannot be empty")
+      .default("change-this-in-production"),
+    LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    RP_NAME: z.string().default("Express React Boilerplate"),
+    RP_ID: z.string().default("localhost"),
+    ORIGIN: z.string().default("http://localhost:3000"),
     AWS_ACCESS_KEY_ID: z.string().min(1, "AWS access key is required").default("localstack"),
     AWS_SECRET_ACCESS_KEY: z
       .string()
@@ -51,6 +64,13 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
+    JWT_SECRET: process.env.JWT_SECRET,
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+    ADMIN_AUTH_KEY: process.env.ADMIN_AUTH_KEY,
+    LOG_LEVEL: process.env.LOG_LEVEL,
+    RP_NAME: process.env.RP_NAME,
+    RP_ID: process.env.RP_ID,
+    ORIGIN: process.env.ORIGIN,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION,

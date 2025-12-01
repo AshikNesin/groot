@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import type { ViteDevServer } from "vite";
 import { Sentry } from "@/core/instrument";
 import { env } from "@/env";
@@ -29,6 +30,7 @@ app.use(requestLoggerMiddleware);
 app.use(corsMiddleware);
 app.use(compression());
 app.use(express.json());
+app.use(cookieParser());
 
 if (!isProd) {
   const { createServer } = await import("vite");
@@ -57,7 +59,16 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Public routes (no basic auth)
 app.use("/api/v1/public/files", publicFileRoutes);
+
+// Public auth routes (no basic auth)
+import authRoutes from "@/routes/auth.routes";
+import passkeyRoutes from "@/routes/passkey.routes";
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/passkey", passkeyRoutes);
+
+// Protected routes (with basic auth)
 app.use("/api/v1", basicAuthMiddleware, apiRouter);
 
 app.get(/^(?!\/api)(?!\/health).*/, async (req, res, next) => {

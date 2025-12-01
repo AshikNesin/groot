@@ -1,29 +1,80 @@
 import { create } from "zustand";
+import { apiClient } from "@/lib/api";
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: { username: string } | null;
-  login: (username: string, password: string) => void;
-  logout: () => void;
-  checkAuth: () => void;
+  user: { id: number; email: string } | null;
+  isLoading: boolean;
+  error: string | null;
+  hasCheckedAuth: boolean;
+
+  // Actions
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
-const AUTH_KEY = "auth";
+const AUTH_KEY = "auth"; // Keep for backward compatibility with basic auth
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: Boolean(localStorage.getItem(AUTH_KEY)),
   user: null,
-  login: (username, password) => {
-    const token = btoa(`${username}:${password}`);
-    localStorage.setItem(AUTH_KEY, token);
-    set({ isAuthenticated: true, user: { username } });
+  isLoading: false,
+  error: null,
+  hasCheckedAuth: false,
+
+  /**
+   * Login with email and password (JWT)
+   */
+  login: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { user } = await apiClient.login(email, password);
+      set({ isAuthenticated: true, user, isLoading: false });
+    } catch (error) {
+      set({
+        isAuthenticated: false,
+        user: null,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Login failed",
+      });
+      throw error;
+    }
   },
-  logout: () => {
-    localStorage.removeItem(AUTH_KEY);
-    set({ isAuthenticated: false, user: null });
+
+  /**
+   * Logout
+   */
+  logout: async () => {
+    try {
+      await apiClient.logout();
+    } finally {
+      // Clear basic auth token as well
+      localStorage.removeItem(AUTH_KEY);
+      set({ isAuthenticated: false, user: null, error: null });
+    }
   },
-  checkAuth: () => {
-    const token = localStorage.getItem(AUTH_KEY);
-    set({ isAuthenticated: Boolean(token) });
+
+  /**
+   * Check authentication status on app load
+   */
+  checkAuth: async () => {
+    set({ isLoading: true });
+    try {
+      const user = await apiClient.getCurrentUser();
+      set({
+        isAuthenticated: !!user,
+        user,
+        isLoading: false,
+        hasCheckedAuth: true,
+      });
+    } catch {
+      set({
+        isAuthenticated: false,
+        user: null,
+        isLoading: false,
+        hasCheckedAuth: true,
+      });
+    }
   },
 }));

@@ -1,25 +1,60 @@
-# Express.js TypeScript App
+# Express + React SaaS Boilerplate
 
-A simple Express.js application with TypeScript support and Biome for linting and formatting.
+A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a complete UI component library.
+
+## ✨ Features
+
+### Backend
+- ✅ **JWT Authentication** - Complete auth system with login, logout, and protected routes
+- ✅ **Production Error Handling** - Sentry integration, breadcrumbs, and request tracing
+- ✅ **Enhanced Logging** - Request correlation, performance tracking, and business events
+- ✅ **Base Controller** - Pagination, sorting, ID parsing utilities
+- ✅ **Background Jobs** - pg-boss queue system for async processing
+- ✅ **Key-Value Storage** - Keyv with PostgreSQL adapter
+- ✅ **File Storage** - S3-backed storage with public sharing
+
+### Frontend
+- ✅ **26 UI Components** - Complete component library with Radix UI
+- ✅ **Design System** - Stripe-inspired, data-first design tokens
+- ✅ **Type-Safe API Client** - Automatic 401 handling and error management
+- ✅ **Layout Components** - PageLayout, PageHeader, PageContainer, Section
+- ✅ **Auth Store** - JWT authentication with loading and error states
+- ✅ **30+ Utility Functions** - Date, currency, validation, and more
+
+## 📚 Documentation
+
+- **[Quick Start Guide](./docs/quick-start.md)** - Get up and running in 3 steps
+- **[Complete Reference](./docs/boilerplate-enhancements.md)** - Full documentation of all features
+- **[Documentation Hub](./docs/README.md)** - Browse all available guides
 
 ## Prerequisites
 
-* Node.js (v18 or later recommended)
-* npm or yarn
-* pnpm (This project uses pnpm as the package manager. If you don't have it installed, you can install it globally via npm: `npm install -g pnpm`)
+- Node.js (v18 or later recommended)
+- PostgreSQL database
+- pnpm (Install globally: `npm install -g pnpm`)
 
-## Getting Started
+## Quick Start
 
-1. **Clone the repository:**
+1. **Setup environment:**
    ```bash
-   git clone <repository-url>
-   cd <repository-name>
+   cp .env.example .env
+   # Edit .env and set JWT_SECRET, ADMIN_AUTH_KEY, DATABASE_URL
    ```
 
-2. **Install dependencies:**
+2. **Install and generate:**
    ```bash
    pnpm install
+   pnpm prisma generate
+   pnpm prisma db push
    ```
+
+3. **Start development:**
+   ```bash
+   pnpm dev
+   # Server runs on http://localhost:3000
+   ```
+
+See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
 
 ## Available Scripts
 
@@ -32,41 +67,131 @@ A simple Express.js application with TypeScript support and Biome for linting an
 ## Project Structure
 
 ```
-├── src/
-│   └── index.ts      # Main application file
-├── dist/             # Compiled JavaScript output (after running npm run build)
-├── biome.json        # Biome configuration
-├── package.json      # Project metadata and dependencies
-├── tsconfig.json     # TypeScript configuration
-└── README.md         # This file
+├── server/
+│   ├── src/
+│   │   ├── controllers/    # Request handlers
+│   │   ├── services/       # Business logic
+│   │   ├── routes/         # API routes
+│   │   ├── middlewares/    # Express middlewares
+│   │   ├── core/           # Core utilities (errors, logger, jobs)
+│   │   ├── models/         # Data models
+│   │   ├── validations/    # Zod schemas
+│   │   └── utils/          # Helper functions
+│   └── ...
+├── client/
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   │   ├── ui/         # 26 UI components
+│   │   │   └── layout/     # Layout components
+│   │   ├── pages/          # Page components
+│   │   ├── lib/            # Utils & API client
+│   │   ├── store/          # Zustand stores
+│   │   └── hooks/          # Custom hooks
+│   └── ...
+├── docs/               # Documentation
+├── prisma/             # Database schema
+└── ...
 ```
 
-## Usage
+## Tech Stack
 
-1. **Build the application:**
-   ```bash
-   pnpm build
-   ```
+| Area | Technologies |
+|------|-------------|
+| **Backend** | Node.js, Express 5, TypeScript, Prisma, PostgreSQL |
+| **Auth** | JWT, bcryptjs, cookie-parser |
+| **Jobs** | pg-boss (PostgreSQL-backed queue) |
+| **Logging** | Pino, Sentry |
+| **Frontend** | React 19, TypeScript, Vite 7 |
+| **UI** | Radix UI, Tailwind CSS, shadcn/ui patterns |
+| **State** | Zustand, React Query |
+| **Routing** | React Router 7 |
+| **Tooling** | Biome, Vitest, pnpm |
 
-2. **Start the application:**
-   ```bash
-   pnpm start
-   ```
-   The server will be running on `http://localhost:3000` by default.
+## Authentication
 
-3. **Development mode:**
-   ```bash
-   pnpm dev
-   ```
-   This will start the server and automatically restart it when you make changes to the TypeScript files.
+### Create First User
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/users \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Auth: your-admin-key" \
+  -d '{"email":"user@example.com","password":"password123"}'
+```
 
-## Linting and Formatting
+### Login
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}'
+```
 
-* **Lint:**
-  ```bash
-  pnpm lint
-  ```
-* **Format:**
-  ```bash
-  pnpm format
-  ```
+See [Quick Start Guide](./docs/quick-start.md) for more examples.
+
+## Common Commands
+
+```bash
+# Development
+pnpm dev              # Start dev server
+pnpm build            # Build for production
+pnpm start            # Run production build
+
+# Database
+pnpm prisma studio    # Open Prisma Studio
+pnpm prisma generate  # Generate Prisma client
+pnpm prisma db push   # Push schema to database
+
+# Code Quality
+pnpm lint             # Lint code
+pnpm format           # Format code
+pnpm test             # Run tests
+pnpm test:watch       # Run tests in watch mode
+```
+
+## What's Included
+
+### Backend (35+ files)
+- Complete JWT authentication system
+- Enhanced error handling with Sentry
+- Request logging with breadcrumbs and tracing
+- Base controller with utilities
+- 30+ utility functions (date, validation, array)
+- Async handler wrapper
+- Admin auth middleware
+
+### Frontend (30+ files)
+- 26 production-ready UI components
+- Design system with 275 lines of tokens
+- Type-safe API client (207 lines)
+- Enhanced auth store with JWT support
+- Layout components (PageLayout, PageHeader, etc.)
+- 25+ date utility functions
+- Loading states (spinner, skeleton, empty state)
+
+### Total Stats
+- **60+ files added/modified**
+- **8,000+ lines of code**
+- **26 UI components**
+- **Build size**: 438 kB frontend, 373 kB backend
+
+## Documentation
+
+- **[Quick Start Guide](./docs/quick-start.md)** - Setup and first steps
+- **[Boilerplate Enhancements](./docs/boilerplate-enhancements.md)** - Complete feature reference
+- **[Setup Guide](./docs/SETUP_GUIDE.md)** - Detailed setup instructions
+- **[Documentation Hub](./docs/README.md)** - All available guides
+
+## Production Checklist
+
+Before deploying:
+- [ ] Set strong `JWT_SECRET` (min 32 characters)
+- [ ] Set strong `ADMIN_AUTH_KEY`
+- [ ] Configure production `DATABASE_URL`
+- [ ] Set `SENTRY_DSN` for error tracking (optional)
+- [ ] Update `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD`
+- [ ] Set `NODE_ENV=production`
+- [ ] Test auth endpoints
+- [ ] Run `pnpm build` to verify
+- [ ] Run `pnpm test` to verify tests pass
+
+## License
+
+MIT

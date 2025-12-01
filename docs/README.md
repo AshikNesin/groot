@@ -5,6 +5,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 ## Quick Navigation
 
 ### 🚀 Getting Started
+- **[Quick Start](./quick-start.md)** – Get started in 3 steps with authentication, components, and examples
 - **[Setup Guide](./SETUP_GUIDE.md)** – Environment variables, database, and local workflow
 - **[Development Workflow](./guides/development.md)** – Day-to-day commands, conventions, and scripts
 
@@ -17,9 +18,11 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 - **[Background Jobs](./features/jobs.md)** – pg-boss queues, handlers, and job API
 - **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
 - **[Storage](./features/storage.md)** – S3-backed file browser, secure shares, and rate limits
+- **[Passkey Authentication](./features/passkey-authentication.md)** – WebAuthn/FIDO2 passwordless authentication
 
-### 📚 Examples & History
+### 📚 Examples & Reference
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets
+- **[Boilerplate Enhancements](./boilerplate-enhancements.md)** – Complete reference of all added features (60+ files, 8000+ lines)
 - **[Changelog](./CHANGELOG.md)** – Documentation changes over time
 
 ## Project Overview
