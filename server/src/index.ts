@@ -9,7 +9,7 @@ import { Sentry } from "@/core/instrument";
 import { env } from "@/env";
 import { logger } from "@/core/logger";
 import corsMiddleware from "@/middlewares/cors.middleware";
-import basicAuthMiddleware from "@/middlewares/basicAuth.middleware";
+import { jwtAuthMiddleware } from "@/middlewares/jwt-auth.middleware";
 import { requestLoggerMiddleware } from "@/middlewares/requestLogger.middleware";
 import { errorHandlerMiddleware, notFoundHandler } from "@/middlewares/error-handler.middleware";
 import { apiRouter } from "@/routes";
@@ -68,8 +68,8 @@ import passkeyRoutes from "@/routes/passkey.routes";
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/passkey", passkeyRoutes);
 
-// Protected routes (with basic auth)
-app.use("/api/v1", basicAuthMiddleware, apiRouter);
+// Protected routes (with JWT auth)
+app.use("/api/v1", jwtAuthMiddleware, apiRouter);
 
 app.get(/^(?!\/api)(?!\/health).*/, async (req, res, next) => {
   try {

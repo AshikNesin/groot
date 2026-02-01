@@ -14,10 +14,8 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
-const AUTH_KEY = "auth"; // Keep for backward compatibility with basic auth
-
 export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: Boolean(localStorage.getItem(AUTH_KEY)),
+  isAuthenticated: false,
   user: null,
   isLoading: false,
   error: null,
@@ -49,8 +47,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await apiClient.logout();
     } finally {
-      // Clear basic auth token as well
-      localStorage.removeItem(AUTH_KEY);
       set({ isAuthenticated: false, user: null, error: null });
     }
   },
