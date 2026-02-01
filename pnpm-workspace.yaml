@@ -1,2 +1,8 @@
 onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@sentry-internal/node-cpu-profiler'
   - bcrypt
+  - esbuild
+  - prisma

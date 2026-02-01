@@ -46,7 +46,10 @@ export class KeyvPrismaAdapter {
         return record.value;
       }
     } catch (error) {
-      logger.error({ error, key, namespace: this.namespace }, "Failed to get from Keyv");
+      logger.error(
+        { error, key, namespace: this.namespace },
+        "Failed to get from Keyv",
+      );
       throw error;
     }
   }
@@ -58,7 +61,8 @@ export class KeyvPrismaAdapter {
   async set(key: string, value: unknown, ttl?: number): Promise<void> {
     try {
       const namespacedKey = this.getKey(key);
-      const serializedValue = typeof value === "string" ? value : JSON.stringify(value);
+      const serializedValue =
+        typeof value === "string" ? value : JSON.stringify(value);
 
       await this.prisma.keyv.upsert({
         where: { key: namespacedKey },
@@ -73,10 +77,13 @@ export class KeyvPrismaAdapter {
 
       logger.debug(
         { key, namespace: this.namespace, ttlIgnored: !!ttl },
-        "Set value in Keyv"
+        "Set value in Keyv",
       );
     } catch (error) {
-      logger.error({ error, key, namespace: this.namespace }, "Failed to set in Keyv");
+      logger.error(
+        { error, key, namespace: this.namespace },
+        "Failed to set in Keyv",
+      );
       throw error;
     }
   }
@@ -87,15 +94,23 @@ export class KeyvPrismaAdapter {
   async delete(key: string): Promise<boolean> {
     try {
       const namespacedKey = this.getKey(key);
-      const result = await this.prisma.keyv.delete({
-        where: { key: namespacedKey },
-      }).catch(() => null);
+      const result = await this.prisma.keyv
+        .delete({
+          where: { key: namespacedKey },
+        })
+        .catch(() => null);
 
       const deleted = !!result;
-      logger.debug({ key, namespace: this.namespace, deleted }, "Delete from Keyv");
+      logger.debug(
+        { key, namespace: this.namespace, deleted },
+        "Delete from Keyv",
+      );
       return deleted;
     } catch (error) {
-      logger.error({ error, key, namespace: this.namespace }, "Failed to delete from Keyv");
+      logger.error(
+        { error, key, namespace: this.namespace },
+        "Failed to delete from Keyv",
+      );
       return false;
     }
   }
@@ -114,14 +129,20 @@ export class KeyvPrismaAdapter {
             },
           },
         });
-        logger.debug({ namespace: this.namespace }, "Cleared namespaced Keyv entries");
+        logger.debug(
+          { namespace: this.namespace },
+          "Cleared namespaced Keyv entries",
+        );
       } else {
         // Clear all entries (use with caution!)
         await this.prisma.keyv.deleteMany({});
         logger.warn("Cleared all Keyv entries");
       }
     } catch (error) {
-      logger.error({ error, namespace: this.namespace }, "Failed to clear Keyv");
+      logger.error(
+        { error, namespace: this.namespace },
+        "Failed to clear Keyv",
+      );
       throw error;
     }
   }
@@ -141,9 +162,7 @@ export class KeyvPrismaAdapter {
       });
 
       // Create a map of keys to values
-      const recordMap = new Map(
-        records.map((record) => [record.key, record])
-      );
+      const recordMap = new Map(records.map((record) => [record.key, record]));
 
       // Return values in the same order as keys
       return keys.map((key) => {
@@ -162,7 +181,10 @@ export class KeyvPrismaAdapter {
         }
       });
     } catch (error) {
-      logger.error({ error, keys, namespace: this.namespace }, "Failed to get many from Keyv");
+      logger.error(
+        { error, keys, namespace: this.namespace },
+        "Failed to get many from Keyv",
+      );
       throw error;
     }
   }

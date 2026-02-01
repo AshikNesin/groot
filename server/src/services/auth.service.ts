@@ -1,10 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/core/database";
-import {
-  UnauthorizedError,
-  ConflictError,
-  NotFoundError,
-} from "@/core/errors";
+import { UnauthorizedError, ConflictError, NotFoundError } from "@/core/errors";
 import { generateToken } from "@/utils/jwt.utils";
 import type { CreateUserDTO, LoginDTO } from "@/validations/auth.validation";
 

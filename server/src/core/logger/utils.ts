@@ -45,7 +45,8 @@ export function serializeObject(obj: unknown, depth = 0): unknown {
       try {
         serialized[key] = serializeObject(value, depth + 1);
       } catch (error) {
-        serialized[key] = `[SERIALIZATION_ERROR: ${error instanceof Error ? error.message : String(error)}]`;
+        serialized[key] =
+          `[SERIALIZATION_ERROR: ${error instanceof Error ? error.message : String(error)}]`;
       }
     }
     return serialized;
@@ -86,8 +87,14 @@ export function sanitizeRequestBody(body: unknown): unknown {
 
     if (obj && typeof obj === "object") {
       const result: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-        if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive))) {
+      for (const [key, value] of Object.entries(
+        obj as Record<string, unknown>,
+      )) {
+        if (
+          sensitiveKeys.some((sensitive) =>
+            key.toLowerCase().includes(sensitive),
+          )
+        ) {
           result[key] = "[REDACTED]";
         } else if (typeof value === "object") {
           result[key] = sanitizeObject(value);

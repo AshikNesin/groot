@@ -4,9 +4,20 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "@/hooks/api/useTodos";
+import {
+  useCreateTodo,
+  useDeleteTodo,
+  useTodos,
+  useUpdateTodo,
+} from "@/hooks/api/useTodos";
 
 const todoSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -35,7 +46,11 @@ export function Todos() {
       form.reset();
     } catch (error) {
       console.error(error);
-      toast({ title: "Error", description: "Unable to create todo", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Unable to create todo",
+        variant: "destructive",
+      });
     }
   };
 
@@ -45,7 +60,11 @@ export function Todos() {
       toast({ title: "Updated", description: "Todo status updated" });
     } catch (error) {
       console.error(error);
-      toast({ title: "Error", description: "Unable to update todo", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Unable to update todo",
+        variant: "destructive",
+      });
     }
   };
 
@@ -55,7 +74,11 @@ export function Todos() {
       toast({ title: "Deleted", description: "Todo removed" });
     } catch (error) {
       console.error(error);
-      toast({ title: "Error", description: "Unable to delete todo", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Unable to delete todo",
+        variant: "destructive",
+      });
     }
   };
 
@@ -76,12 +99,22 @@ export function Todos() {
             </DialogHeader>
             <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
               <div className="space-y-2">
-                <Input id="title" placeholder="Todo title" {...form.register("title")} />
+                <Input
+                  id="title"
+                  placeholder="Todo title"
+                  {...form.register("title")}
+                />
                 {form.formState.errors.title && (
-                  <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.title.message}
+                  </p>
                 )}
               </div>
-              <Button className="w-full" type="submit" disabled={createTodo.isPending}>
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={createTodo.isPending}
+              >
                 {createTodo.isPending ? "Creating..." : "Create"}
               </Button>
             </form>
@@ -95,7 +128,13 @@ export function Todos() {
         {todos?.map((todo) => (
           <Card key={todo.id}>
             <CardHeader>
-              <CardTitle className={todo.completed ? "line-through text-muted-foreground" : undefined}>
+              <CardTitle
+                className={
+                  todo.completed
+                    ? "line-through text-muted-foreground"
+                    : undefined
+                }
+              >
                 {todo.title}
               </CardTitle>
             </CardHeader>
@@ -112,7 +151,12 @@ export function Todos() {
                 >
                   {todo.completed ? "Mark Pending" : "Mark Done"}
                 </Button>
-                <Button variant="destructive" size="sm" disabled={deleteTodo.isPending} onClick={() => removeTodo(todo.id)}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleteTodo.isPending}
+                  onClick={() => removeTodo(todo.id)}
+                >
                   Delete
                 </Button>
               </div>

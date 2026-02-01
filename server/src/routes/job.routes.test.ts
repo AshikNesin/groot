@@ -8,7 +8,9 @@ const jobModuleMock = vi.hoisted(() => {
     scheduleJob: vi.fn().mockResolvedValue(undefined),
     cancelScheduledJob: vi.fn().mockResolvedValue(undefined),
     getScheduledJobs: vi.fn().mockResolvedValue([]),
-    getJobById: vi.fn().mockResolvedValue({ id: "job-123", name: "todo-cleanup", data: {} }),
+    getJobById: vi
+      .fn()
+      .mockResolvedValue({ id: "job-123", name: "todo-cleanup", data: {} }),
     getFailedJobs: vi.fn().mockResolvedValue([]),
     retryJob: vi.fn().mockResolvedValue(undefined),
     cancelJob: vi.fn().mockResolvedValue(undefined),
@@ -46,17 +48,25 @@ describe("job routes", () => {
       .send({ jobName: jobModule.JobName.TODO_CLEANUP, data: { demo: true } });
 
     expect(response.status).toBe(201);
-    expect(jobModuleMock.addJob).toHaveBeenCalledWith(jobModule.JobName.TODO_CLEANUP, { demo: true }, undefined);
+    expect(jobModuleMock.addJob).toHaveBeenCalledWith(
+      jobModule.JobName.TODO_CLEANUP,
+      { demo: true },
+      undefined,
+    );
   });
 
   it("rejects invalid job names", async () => {
-    const response = await request(buildApp()).post("/").send({ jobName: "invalid", data: {} });
+    const response = await request(buildApp())
+      .post("/")
+      .send({ jobName: "invalid", data: {} });
     expect(response.status).toBe(400);
     expect(jobModuleMock.addJob).not.toHaveBeenCalled();
   });
 
   it("retries a job via API", async () => {
-    const response = await request(buildApp()).post("/todo-cleanup/abc/retry").send();
+    const response = await request(buildApp())
+      .post("/todo-cleanup/abc/retry")
+      .send();
     expect(response.status).toBe(200);
     expect(jobModuleMock.retryJob).toHaveBeenCalledWith("todo-cleanup", "abc");
   });

@@ -11,7 +11,10 @@ import { logger } from "@/core/logger";
 import corsMiddleware from "@/middlewares/cors.middleware";
 import { jwtAuthMiddleware } from "@/middlewares/jwt-auth.middleware";
 import { requestLoggerMiddleware } from "@/middlewares/requestLogger.middleware";
-import { errorHandlerMiddleware, notFoundHandler } from "@/middlewares/error-handler.middleware";
+import {
+  errorHandlerMiddleware,
+  notFoundHandler,
+} from "@/middlewares/error-handler.middleware";
 import { apiRouter } from "@/routes";
 import publicFileRoutes from "@/routes/public-file.routes";
 import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
@@ -83,7 +86,10 @@ app.get(/^(?!\/api)(?!\/health).*/, async (req, res, next) => {
     }
 
     const html = await fs.readFile(path.join(distPath, "index.html"), "utf-8");
-    res.status(200).set({ "Content-Type": "text/html", "Cache-Control": "no-cache" }).end(html);
+    res
+      .status(200)
+      .set({ "Content-Type": "text/html", "Cache-Control": "no-cache" })
+      .end(html);
   } catch (error) {
     next(error);
   }

@@ -27,7 +27,7 @@ kv.on("error", (error) => {
 /**
  * Creates a namespaced KV instance
  * Useful for separating different types of data (e.g., sessions, cache, etc.)
- * 
+ *
  * @param namespace - The namespace for the KV instance
  * @returns A new Keyv instance with the specified namespace
  */

@@ -63,7 +63,11 @@ export class PublicShareService {
 
   async listSharesForFile(filePath: string): Promise<PublicShareInfo[]> {
     const shares = await prisma.publicFileShare.findMany({
-      where: { filePath, bucketName: env.AWS_DEFAULT_S3_BUCKET, isDeleted: false },
+      where: {
+        filePath,
+        bucketName: env.AWS_DEFAULT_S3_BUCKET,
+        isDeleted: false,
+      },
       orderBy: { createdAt: "desc" },
     });
     return shares.map((share) => this.formatShare(share));
@@ -84,7 +88,10 @@ export class PublicShareService {
     });
   }
 
-  async verifySharePassword(shareId: string, password: string): Promise<boolean> {
+  async verifySharePassword(
+    shareId: string,
+    password: string,
+  ): Promise<boolean> {
     const share = await prisma.publicFileShare.findUnique({
       where: { shareId, isDeleted: false },
     });
@@ -100,18 +107,25 @@ export class PublicShareService {
     return bcrypt.compare(password, share.passwordHash);
   }
 
-  async getShareFileContent(shareId: string): Promise<{ buffer: Buffer; contentType: string; fileName: string }> {
+  async getShareFileContent(
+    shareId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; fileName: string }> {
     const validation = await this.validateShareAccess(shareId);
     if (!validation.isValid || !validation.share) {
       throw new BadRequestError(validation.reason ?? "Share is not accessible");
     }
 
-    const file = await storageFileService.downloadFile({ filePath: validation.share.filePath });
+    const file = await storageFileService.downloadFile({
+      filePath: validation.share.filePath,
+    });
     await this.incrementAccessCount(shareId);
 
     return {
       buffer: file.buffer,
-      contentType: validation.share.contentType ?? file.contentType ?? "application/octet-stream",
+      contentType:
+        validation.share.contentType ??
+        file.contentType ??
+        "application/octet-stream",
       fileName: validation.share.fileName,
     };
   }
@@ -128,7 +142,9 @@ export class PublicShareService {
     return this.formatShare(share);
   }
 
-  async validateShareAccess(shareId: string): Promise<{ isValid: boolean; share?: PublicShareInfo; reason?: string }> {
+  async validateShareAccess(
+    shareId: string,
+  ): Promise<{ isValid: boolean; share?: PublicShareInfo; reason?: string }> {
     try {
       const share = await this.getShareByShareId(shareId);
 
@@ -137,13 +153,19 @@ export class PublicShareService {
       }
 
       if (share.isAccessLimitReached) {
-        return { isValid: false, reason: "This share link has reached its access limit" };
+        return {
+          isValid: false,
+          reason: "This share link has reached its access limit",
+        };
       }
 
       return { isValid: true, share };
     } catch (error) {
       if (error instanceof NotFoundError) {
-        return { isValid: false, reason: "Share not found or has been deleted" };
+        return {
+          isValid: false,
+          reason: "Share not found or has been deleted",
+        };
       }
       throw error;
     }
@@ -175,7 +197,9 @@ export class PublicShareService {
     return result.count;
   }
 
-  private formatShare(share: Awaited<ReturnType<typeof prisma.publicFileShare.create>>): PublicShareInfo {
+  private formatShare(
+    share: Awaited<ReturnType<typeof prisma.publicFileShare.create>>,
+  ): PublicShareInfo {
     const now = new Date();
     const isExpired = share.expiresAt < now;
     const isAccessLimitReached =

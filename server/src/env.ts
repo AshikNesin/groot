@@ -8,9 +8,13 @@ export const env = createEnv({
   // These are validated at build time (or server start)
   // and will throw an error if not set correctly.
   server: {
-    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
     PORT: z.coerce.number().default(3000), // coerce to number, default to 3000
-    DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
+    DATABASE_URL: z
+      .string()
+      .url("DATABASE_URL must be a valid connection string"),
 
     JWT_SECRET: z
       .string()
@@ -25,21 +29,25 @@ export const env = createEnv({
     RP_NAME: z.string().default("Express React Boilerplate"),
     RP_ID: z.string().default("localhost"),
     ORIGIN: z.string().default("http://localhost:3000"),
-    AWS_ACCESS_KEY_ID: z.string().min(1, "AWS access key is required").default("localstack"),
+    AWS_ACCESS_KEY_ID: z
+      .string()
+      .min(1, "AWS access key is required")
+      .default("localstack"),
     AWS_SECRET_ACCESS_KEY: z
       .string()
       .min(1, "AWS secret key is required")
       .default("localstack"),
     AWS_DEFAULT_REGION: z.string().min(1).default("us-east-1"),
     AWS_DEFAULT_S3_BUCKET: z.string().min(1).default("local-bucket"),
-    SENTRY_DSN: z
-      .string()
-      .url("Sentry DSN must be a valid URL")
-      .optional(),
+    SENTRY_DSN: z.string().url("Sentry DSN must be a valid URL").optional(),
     JOB_CONCURRENCY: z.coerce.number().default(5),
     JOB_POLL_INTERVAL: z.coerce.number().default(5),
-    JOB_ARCHIVE_COMPLETED_AFTER_SECONDS: z.coerce.number().default(60 * 60 * 24 * 7),
-    JOB_DELETE_ARCHIVED_AFTER_SECONDS: z.coerce.number().default(60 * 60 * 24 * 30),
+    JOB_ARCHIVE_COMPLETED_AFTER_SECONDS: z.coerce
+      .number()
+      .default(60 * 60 * 24 * 7),
+    JOB_DELETE_ARCHIVED_AFTER_SECONDS: z.coerce
+      .number()
+      .default(60 * 60 * 24 * 30),
     JOB_MONITOR_STATE_INTERVAL: z.coerce.number().default(60),
     // NODE_ENV: z.enum(["development", "production", "test"]).default("development"), // Optional: if you use NODE_ENV
   },
@@ -71,8 +79,10 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     JOB_CONCURRENCY: process.env.JOB_CONCURRENCY,
     JOB_POLL_INTERVAL: process.env.JOB_POLL_INTERVAL,
-    JOB_ARCHIVE_COMPLETED_AFTER_SECONDS: process.env.JOB_ARCHIVE_COMPLETED_AFTER_SECONDS,
-    JOB_DELETE_ARCHIVED_AFTER_SECONDS: process.env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
+    JOB_ARCHIVE_COMPLETED_AFTER_SECONDS:
+      process.env.JOB_ARCHIVE_COMPLETED_AFTER_SECONDS,
+    JOB_DELETE_ARCHIVED_AFTER_SECONDS:
+      process.env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
     JOB_MONITOR_STATE_INTERVAL: process.env.JOB_MONITOR_STATE_INTERVAL,
     // NODE_ENV: process.env.NODE_ENV, // Optional
   },

@@ -3,10 +3,7 @@ import { authController } from "@/controllers/auth.controller";
 import { validate } from "@/middlewares/validation.middleware";
 import { jwtAuthMiddleware } from "@/middlewares/jwt-auth.middleware";
 import { adminAuthMiddleware } from "@/middlewares/admin-auth.middleware";
-import {
-  loginSchema,
-  createUserSchema,
-} from "@/validations/auth.validation";
+import { loginSchema, createUserSchema } from "@/validations/auth.validation";
 
 const router = Router();
 

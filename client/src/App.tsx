@@ -5,6 +5,8 @@ import { Layout } from "@/components/Layout";
 import { Dashboard } from "@/pages/Dashboard";
 import { Todos } from "@/pages/Todos";
 import { Storage } from "@/pages/Storage";
+import { Jobs } from "@/pages/Jobs";
+import { JobDetail } from "@/pages/JobDetail";
 import { Login } from "@/pages/Login";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -25,6 +27,8 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="todos" element={<Todos />} />
             <Route path="storage" element={<Storage />} />
+            <Route path="jobs" element={<Jobs />} />
+            <Route path="jobs/:queueName/:jobId" element={<JobDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -26,7 +26,10 @@ export type CreateUserDTO = z.infer<typeof createUserSchema>;
  */
 export const updateUserSchema = z.object({
   email: z.string().email("Invalid email address").optional(),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .optional(),
   name: z.string().min(1, "Name is required").optional(),
 });
 

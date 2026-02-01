@@ -60,19 +60,23 @@ describe("KV System", () => {
 
     it("should generate namespaced keys correctly", () => {
       // Access private method through type assertion for testing
-      const adapterWithKey = adapter as KeyvPrismaAdapter & { getKey(key: string): string };
+      const adapterWithKey = adapter as KeyvPrismaAdapter & {
+        getKey(key: string): string;
+      };
       expect(adapterWithKey.getKey("test")).toBe("test-adapter:test");
-      
+
       // Test without namespace
       const noNsAdapter = new KeyvPrismaAdapter({ namespace: undefined });
-      const noNamespace = noNsAdapter as KeyvPrismaAdapter & { getKey(key: string): string };
+      const noNamespace = noNsAdapter as KeyvPrismaAdapter & {
+        getKey(key: string): string;
+      };
       expect(noNamespace.getKey("test")).toBe("test");
     });
 
     it("should get a value that exists", async () => {
       const mockValue = { value: '{"name":"test"}' };
       mockPrisma.keyv.findUnique.mockResolvedValue(mockValue);
-      
+
       const result = await adapter.get("test-key");
       expect(result).toEqual({ name: "test" });
       expect(mockPrisma.keyv.findUnique).toHaveBeenCalledWith({
@@ -82,7 +86,7 @@ describe("KV System", () => {
 
     it("should return undefined for non-existent keys", async () => {
       mockPrisma.keyv.findUnique.mockResolvedValue(null);
-      
+
       const result = await adapter.get("non-existent-key");
       expect(result).toBeUndefined();
     });
@@ -90,16 +94,16 @@ describe("KV System", () => {
     it("should handle non-JSON values", async () => {
       const mockValue = { value: "plain string value" };
       mockPrisma.keyv.findUnique.mockResolvedValue(mockValue);
-      
+
       const result = await adapter.get("test-key");
       expect(result).toBe("plain string value");
     });
 
     it("should set a value", async () => {
       mockPrisma.keyv.upsert.mockResolvedValue({});
-      
+
       await adapter.set("test-key", { data: "test" });
-      
+
       expect(mockPrisma.keyv.upsert).toHaveBeenCalledWith({
         where: { key: "test-adapter:test-key" },
         update: { value: '{"data":"test"}' },
@@ -109,9 +113,9 @@ describe("KV System", () => {
 
     it("should handle string values directly", async () => {
       mockPrisma.keyv.upsert.mockResolvedValue({});
-      
+
       await adapter.set("test-key", "string value");
-      
+
       expect(mockPrisma.keyv.upsert).toHaveBeenCalledWith({
         where: { key: "test-adapter:test-key" },
         update: { value: "string value" },
@@ -120,10 +124,12 @@ describe("KV System", () => {
     });
 
     it("should delete a key", async () => {
-      mockPrisma.keyv.delete.mockResolvedValue({ key: "test-adapter:test-key" });
-      
+      mockPrisma.keyv.delete.mockResolvedValue({
+        key: "test-adapter:test-key",
+      });
+
       const result = await adapter.delete("test-key");
-      
+
       expect(result).toBe(true);
       expect(mockPrisma.keyv.delete).toHaveBeenCalledWith({
         where: { key: "test-adapter:test-key" },
@@ -132,17 +138,17 @@ describe("KV System", () => {
 
     it("should return false when deleting non-existent key", async () => {
       mockPrisma.keyv.delete.mockRejectedValue(new Error("Record not found"));
-      
+
       const result = await adapter.delete("non-existent-key");
-      
+
       expect(result).toBe(false);
     });
 
     it("should clear all entries in namespace", async () => {
       mockPrisma.keyv.deleteMany.mockResolvedValue({ count: 5 });
-      
+
       await adapter.clear();
-      
+
       expect(mockPrisma.keyv.deleteMany).toHaveBeenCalledWith({
         where: {
           key: {
@@ -155,9 +161,9 @@ describe("KV System", () => {
     it("should clear all entries when no namespace", async () => {
       const noNsAdapter = new KeyvPrismaAdapter({ namespace: undefined });
       mockPrisma.keyv.deleteMany.mockResolvedValue({ count: 10 });
-      
+
       await noNsAdapter.clear();
-      
+
       expect(mockPrisma.keyv.deleteMany).toHaveBeenCalledWith({});
     });
 
@@ -167,9 +173,9 @@ describe("KV System", () => {
         { key: "test-adapter:key2", value: '"value2"' },
       ];
       mockPrisma.keyv.findMany.mockResolvedValue(mockRecords);
-      
+
       const results = await adapter.getMany(["key1", "key2", "key3"]);
-      
+
       expect(results).toEqual(["value1", "value2", undefined]);
       expect(mockPrisma.keyv.findMany).toHaveBeenCalledWith({
         where: {
@@ -182,9 +188,9 @@ describe("KV System", () => {
 
     it("should check if key exists", async () => {
       mockPrisma.keyv.findUnique.mockResolvedValue({ value: '"exists"' });
-      
+
       const result = await adapter.has("test-key");
-      
+
       expect(result).toBe(true);
       expect(mockPrisma.keyv.findUnique).toHaveBeenCalledWith({
         where: { key: "test-adapter:test-key" },
@@ -193,9 +199,9 @@ describe("KV System", () => {
 
     it("should check if non-existent key exists", async () => {
       mockPrisma.keyv.findUnique.mockResolvedValue(null);
-      
+
       const result = await adapter.has("non-existent-key");
-      
+
       expect(result).toBe(false);
     });
 
@@ -209,7 +215,7 @@ describe("KV System", () => {
     it("should handle database errors gracefully", async () => {
       const adapter = new KeyvPrismaAdapter({ namespace: "error-test" });
       mockPrisma.keyv.findUnique.mockRejectedValue(new Error("Database error"));
-      
+
       // Should reject with error
       await expect(adapter.get("test-key")).rejects.toThrow("Database error");
     });
