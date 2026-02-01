@@ -18,15 +18,30 @@ interface ApiResponse<T = unknown> {
 }
 
 export const ResponseHandler = {
-  success<T>(res: Response, data: T, message?: string, statusCode = 200): Response<ApiResponse<T>> {
+  success<T>(
+    res: Response,
+    data: T,
+    message?: string,
+    statusCode = 200,
+  ): Response<ApiResponse<T>> {
     return res.status(statusCode).json({ success: true, data, message });
   },
 
-  created<T>(res: Response, data: T, message = "Resource created successfully"): Response<ApiResponse<T>> {
+  created<T>(
+    res: Response,
+    data: T,
+    message = "Resource created successfully",
+  ): Response<ApiResponse<T>> {
     return ResponseHandler.success(res, data, message, 201);
   },
 
-  error(res: Response, message: string, code: string, statusCode = 500, details?: unknown): Response<ApiResponse> {
+  error(
+    res: Response,
+    message: string,
+    code: string,
+    statusCode = 500,
+    details?: unknown,
+  ): Response<ApiResponse> {
     return res.status(statusCode).json({
       success: false,
       error: {

@@ -2,13 +2,19 @@ import type { PgBoss, Job, Queue, WorkOptions } from "pg-boss";
 import { logger } from "@/core/logger";
 import { jobConfig, defaultJobOptions, jobOptions } from "@/core/job/config";
 import type { JobName } from "@/core/job/queue";
-import { withSentryErrorCapture, type JobHandler } from "@/core/job/error-handler";
+import {
+  withSentryErrorCapture,
+  type JobHandler,
+} from "@/core/job/error-handler";
 
 let workersStarted = false;
 const jobHandlers = new Map<JobName, JobHandler<unknown>>();
 const workerIds = new Map<JobName, string[]>();
 
-export const registerJobHandler = <T,>(name: JobName, handler: JobHandler<T>): void => {
+export const registerJobHandler = <T>(
+  name: JobName,
+  handler: JobHandler<T>,
+): void => {
   const wrappedHandler = withSentryErrorCapture(handler as JobHandler, name);
   jobHandlers.set(name, wrappedHandler as JobHandler<unknown>);
   logger.debug({ jobName: name }, "Job handler registered");
@@ -25,7 +31,9 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   await import("@/jobs");
 
   if (jobHandlers.size === 0) {
-    throw new Error("No job handlers registered. Ensure '@/jobs' exports handlers.");
+    throw new Error(
+      "No job handlers registered. Ensure '@/jobs' exports handlers.",
+    );
   }
 
   for (const [name, handler] of jobHandlers.entries()) {
@@ -49,11 +57,15 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     };
 
     for (let i = 0; i < jobConfig.concurrency; i++) {
-      const workerId = await activeBoss.work(name, workOptions, async (jobs: Job<unknown>[]) => {
-        for (const job of jobs) {
-          await handler(job);
-        }
-      });
+      const workerId = await activeBoss.work(
+        name,
+        workOptions,
+        async (jobs: Job<unknown>[]) => {
+          for (const job of jobs) {
+            await handler(job);
+          }
+        },
+      );
 
       const ids = workerIds.get(name) ?? [];
       ids.push(workerId);
@@ -78,7 +90,10 @@ export const stopWorkers = async (): Promise<void> => {
         await boss.offWork(name, { id, wait: true });
         logger.debug({ jobName: name, workerId: id }, "Worker stopped");
       } catch (error) {
-        logger.error({ jobName: name, workerId: id, error }, "Failed to stop worker");
+        logger.error(
+          { jobName: name, workerId: id, error },
+          "Failed to stop worker",
+        );
       }
     }
   }
@@ -87,4 +102,5 @@ export const stopWorkers = async (): Promise<void> => {
   workersStarted = false;
 };
 
-export const getRegisteredHandlers = (): JobName[] => Array.from(jobHandlers.keys());
+export const getRegisteredHandlers = (): JobName[] =>
+  Array.from(jobHandlers.keys());

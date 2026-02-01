@@ -35,9 +35,10 @@ class PasskeyService {
   async registerPasskey(credentialName?: string): Promise<Passkey> {
     try {
       // 1. Get registration options from server
-      const options = await apiClient.post<
-        PublicKeyCredentialCreationOptionsJSON
-      >("/passkey/register/options");
+      const options =
+        await apiClient.post<PublicKeyCredentialCreationOptionsJSON>(
+          "/passkey/register/options",
+        );
 
       if (!options) {
         throw new Error("Failed to get registration options");
@@ -84,11 +85,13 @@ class PasskeyService {
   ): Promise<{ token: string; user: User }> {
     try {
       // 1. Get authentication options from server
-      const options = await apiClient.post<
-        PublicKeyCredentialRequestOptionsJSON
-      >("/passkey/login/options", {
-        email,
-      });
+      const options =
+        await apiClient.post<PublicKeyCredentialRequestOptionsJSON>(
+          "/passkey/login/options",
+          {
+            email,
+          },
+        );
 
       if (!options) {
         throw new Error("Failed to get authentication options");
@@ -149,12 +152,9 @@ class PasskeyService {
     passkeyId: number,
     credentialName: string,
   ): Promise<Passkey> {
-    const passkey = await apiClient.patch<Passkey>(
-      `/passkey/${passkeyId}`,
-      {
-        credentialName,
-      },
-    );
+    const passkey = await apiClient.patch<Passkey>(`/passkey/${passkeyId}`, {
+      credentialName,
+    });
 
     if (!passkey) {
       throw new Error("Failed to update passkey name");
@@ -170,8 +170,8 @@ class PasskeyService {
     return (
       typeof window !== "undefined" &&
       window.PublicKeyCredential !== undefined &&
-      typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ===
-        "function"
+      typeof window.PublicKeyCredential
+        .isUserVerifyingPlatformAuthenticatorAvailable === "function"
     );
   }
 

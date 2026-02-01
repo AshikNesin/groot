@@ -8,7 +8,9 @@ import {
 /**
  * Check if an error is a Prisma error
  */
-export function isPrismaError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+export function isPrismaError(
+  error: unknown,
+): error is Prisma.PrismaClientKnownRequestError {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError ||
     error instanceof Prisma.PrismaClientValidationError ||
@@ -28,9 +30,7 @@ export function handlePrismaError(error: unknown): never {
         // Unique constraint violation
         const target = error.meta?.target as string[] | undefined;
         const field = target ? target[0] : "field";
-        throw new ConflictError(
-          `A record with this ${field} already exists`,
-        );
+        throw new ConflictError(`A record with this ${field} already exists`);
       }
 
       case "P2025": {

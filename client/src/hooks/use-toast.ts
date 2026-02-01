@@ -27,7 +27,10 @@ function genId() {
 
 type ToastAction =
   | { type: typeof actionTypes.ADD_TOAST; toast: ToasterToast }
-  | { type: typeof actionTypes.UPDATE_TOAST; toast: Partial<ToasterToast> & { id: string } }
+  | {
+      type: typeof actionTypes.UPDATE_TOAST;
+      toast: Partial<ToasterToast> & { id: string };
+    }
   | { type: typeof actionTypes.DISMISS_TOAST; toastId?: string }
   | { type: typeof actionTypes.REMOVE_TOAST; toastId?: string };
 
@@ -57,13 +60,17 @@ const reducer = (state: ToastState, action: ToastAction): ToastState => {
         ...state,
         toasts: [
           action.toast,
-          ...state.toasts.filter((toast) => toast.id !== action.toast.id).slice(0, TOAST_LIMIT - 1),
+          ...state.toasts
+            .filter((toast) => toast.id !== action.toast.id)
+            .slice(0, TOAST_LIMIT - 1),
         ],
       };
     case actionTypes.UPDATE_TOAST:
       return {
         ...state,
-        toasts: state.toasts.map((toast) => (toast.id === action.toast.id ? { ...toast, ...action.toast } : toast)),
+        toasts: state.toasts.map((toast) =>
+          toast.id === action.toast.id ? { ...toast, ...action.toast } : toast,
+        ),
       };
     case actionTypes.DISMISS_TOAST: {
       const { toastId } = action;
@@ -79,7 +86,9 @@ const reducer = (state: ToastState, action: ToastAction): ToastState => {
       return {
         ...state,
         toasts: state.toasts.map((toast) =>
-          toast.id === toastId || toastId === undefined ? { ...toast, open: false } : toast,
+          toast.id === toastId || toastId === undefined
+            ? { ...toast, open: false }
+            : toast,
         ),
       };
     }

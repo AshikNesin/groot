@@ -21,11 +21,7 @@ export const authController = {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    return ResponseHandler.success(
-      res,
-      { token, user },
-      "Login successful",
-    );
+    return ResponseHandler.success(res, { token, user }, "Login successful");
   }),
 
   /**

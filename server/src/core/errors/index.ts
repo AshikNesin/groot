@@ -9,4 +9,7 @@ export {
   InternalError,
 } from "@/core/errors/base.errors";
 
-export { isPrismaError, handlePrismaError } from "@/core/errors/prisma-error-handler";
+export {
+  isPrismaError,
+  handlePrismaError,
+} from "@/core/errors/prisma-error-handler";

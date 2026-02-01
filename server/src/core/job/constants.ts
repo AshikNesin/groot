@@ -21,7 +21,9 @@ export function isValidJobState(state: string): boolean {
 }
 
 export function isReservedQueueName(name: string): boolean {
-  return RESERVED_QUEUE_NAMES.includes(name as (typeof RESERVED_QUEUE_NAMES)[number]);
+  return RESERVED_QUEUE_NAMES.includes(
+    name as (typeof RESERVED_QUEUE_NAMES)[number],
+  );
 }
 
 export function getJobStateDescription(state: string): string {

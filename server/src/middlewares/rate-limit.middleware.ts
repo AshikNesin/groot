@@ -11,7 +11,8 @@ export const storageRateLimiter = rateLimit({
       success: false,
       error: {
         code: "RATE_LIMIT_EXCEEDED",
-        message: "Too many storage operations from this IP, please try again later.",
+        message:
+          "Too many storage operations from this IP, please try again later.",
       },
     });
   },

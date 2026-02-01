@@ -1,6 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
@@ -72,7 +85,10 @@ export function PasskeyManager() {
     setError(null);
     setSuccess(null);
     try {
-      await passkeyService.updatePasskeyName(passkeyToEdit.id, editedPasskeyName);
+      await passkeyService.updatePasskeyName(
+        passkeyToEdit.id,
+        editedPasskeyName,
+      );
       setSuccess("Passkey name updated successfully");
       setPasskeyToEdit(null);
       setEditedPasskeyName("");
@@ -119,27 +135,17 @@ export function PasskeyManager() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            🔐 Passkeys
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2">🔐 Passkeys</CardTitle>
           <CardDescription>
-            Manage your passkeys for secure, passwordless authentication. Passkeys use biometric
-            authentication (like Face ID or fingerprint) or device PINs for a more secure login
-            experience.
+            Manage your passkeys for secure, passwordless authentication.
+            Passkeys use biometric authentication (like Face ID or fingerprint)
+            or device PINs for a more secure login experience.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Error/Success Messages */}
-          {error && (
-            <Alert variant="destructive">
-              {error}
-            </Alert>
-          )}
-          {success && (
-            <Alert variant="success">
-              {success}
-            </Alert>
-          )}
+          {error && <Alert variant="destructive">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
 
           {/* Add New Passkey */}
           <div className="flex items-end gap-4">
@@ -163,7 +169,9 @@ export function PasskeyManager() {
             <div className="text-center py-8 text-gray-500">
               <div className="text-4xl mb-4">🔐</div>
               <p>No passkeys configured yet.</p>
-              <p className="text-sm mt-2">Add a passkey above to enable passwordless authentication.</p>
+              <p className="text-sm mt-2">
+                Add a passkey above to enable passwordless authentication.
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -175,10 +183,16 @@ export function PasskeyManager() {
                   <div className="flex items-center gap-3 flex-1">
                     <div className="text-2xl">{getPasskeyIcon(passkey)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{passkey.credentialName || "Unnamed Passkey"}</p>
+                      <p className="font-medium truncate">
+                        {passkey.credentialName || "Unnamed Passkey"}
+                      </p>
                       <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                         <span>Added {formatDate(passkey.createdAt)}</span>
-                        {passkey.lastUsedAt && <span>Last used {formatDate(passkey.lastUsedAt)}</span>}
+                        {passkey.lastUsedAt && (
+                          <span>
+                            Last used {formatDate(passkey.lastUsedAt)}
+                          </span>
+                        )}
                         {passkey.backedUp && (
                           <Badge variant="secondary">Backed up</Badge>
                         )}
@@ -213,17 +227,21 @@ export function PasskeyManager() {
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!passkeyToDelete} onOpenChange={() => setPasskeyToDelete(null)}>
+      <Dialog
+        open={!!passkeyToDelete}
+        onOpenChange={() => setPasskeyToDelete(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Passkey</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{passkeyToDelete?.credentialName || "this passkey"}"?
-              You won't be able to use it to sign in anymore.
+              Are you sure you want to delete "
+              {passkeyToDelete?.credentialName || "this passkey"}"? You won't be
+              able to use it to sign in anymore.
               {passkeys.length === 1 && (
                 <span className="block mt-2 text-red-600 font-medium">
-                  This is your last passkey. Make sure you can still access your account with a
-                  password.
+                  This is your last passkey. Make sure you can still access your
+                  account with a password.
                 </span>
               )}
             </DialogDescription>
@@ -240,7 +258,10 @@ export function PasskeyManager() {
       </Dialog>
 
       {/* Edit Name Dialog */}
-      <Dialog open={!!passkeyToEdit} onOpenChange={() => setPasskeyToEdit(null)}>
+      <Dialog
+        open={!!passkeyToEdit}
+        onOpenChange={() => setPasskeyToEdit(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Passkey Name</DialogTitle>
@@ -263,7 +284,10 @@ export function PasskeyManager() {
             <Button variant="outline" onClick={() => setPasskeyToEdit(null)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdatePasskeyName} disabled={!editedPasskeyName.trim()}>
+            <Button
+              onClick={handleUpdatePasskeyName}
+              disabled={!editedPasskeyName.trim()}
+            >
               Save
             </Button>
           </DialogFooter>

@@ -20,7 +20,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
-              {isLoading ? "--" : todos?.length ?? 0}
+              {isLoading ? "--" : (todos?.length ?? 0)}
             </p>
           </CardContent>
         </Card>

@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance } from "axios";
+import type { Job, JobName, JobStats, ScheduledJob } from "@/types";
 
 /**
  * Standard API response format
@@ -168,9 +169,10 @@ class ApiClient {
    */
   async getCurrentUser(): Promise<{ id: number; email: string } | null> {
     try {
-      const response = await this.client.get<
-        ApiResponse<{ id: number; email: string }>
-      >("/auth/me");
+      const response =
+        await this.client.get<ApiResponse<{ id: number; email: string }>>(
+          "/auth/me",
+        );
 
       if (!response.data.data) return null;
 
@@ -183,6 +185,160 @@ class ApiClient {
       this.cachedUserEmail = null;
       return null;
     }
+  }
+
+  // Jobs API
+  async getJobStats(): Promise<JobStats> {
+    const response =
+      await this.client.get<ApiResponse<JobStats>>("/jobs/stats");
+    if (!response.data.data) {
+      throw new Error("Failed to fetch job stats");
+    }
+    return response.data.data;
+  }
+
+  async getJobs(options?: {
+    state?: string;
+    name?: string;
+    limit?: number;
+    offset?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{ jobs: Job[]; total: number }> {
+    const params = new URLSearchParams();
+    if (options?.state) params.append("state", options.state);
+    if (options?.name) params.append("name", options.name);
+    if (options?.limit) params.append("limit", options.limit.toString());
+    if (options?.offset) params.append("offset", options.offset.toString());
+    if (options?.startDate) params.append("startDate", options.startDate);
+    if (options?.endDate) params.append("endDate", options.endDate);
+
+    const response = await this.client.get<
+      ApiResponse<{ jobs: Job[]; total: number }>
+    >(`/jobs?${params.toString()}`);
+    return {
+      jobs: response.data.data?.jobs ?? [],
+      total: response.data.metadata?.total ?? response.data.data?.total ?? 0,
+    };
+  }
+
+  async getJob(queueName: string, jobId: string): Promise<Job> {
+    const response = await this.client.get<ApiResponse<Job>>(
+      `/jobs/${queueName}/${jobId}`,
+    );
+    if (!response.data.data) {
+      throw new Error("Job not found");
+    }
+    return response.data.data;
+  }
+
+  async retryJob(queueName: string, jobId: string): Promise<void> {
+    await this.client.post(`/jobs/${queueName}/${jobId}/retry`);
+  }
+
+  async cancelJob(queueName: string, jobId: string): Promise<void> {
+    await this.client.post(`/jobs/${queueName}/${jobId}/cancel`);
+  }
+
+  async resumeJob(queueName: string, jobId: string): Promise<void> {
+    await this.client.post(`/jobs/${queueName}/${jobId}/resume`);
+  }
+
+  async deleteJob(queueName: string, jobId: string): Promise<void> {
+    await this.client.delete(`/jobs/${queueName}/${jobId}`);
+  }
+
+  async rerunJob(
+    queueName: string,
+    jobId: string,
+  ): Promise<{ originalJobId: string; newJobId: string; queueName: string }> {
+    const response = await this.client.post<
+      ApiResponse<{
+        originalJobId: string;
+        newJobId: string;
+        queueName: string;
+      }>
+    >(`/jobs/${queueName}/${jobId}/rerun`);
+    if (!response.data.data) {
+      throw new Error("Failed to re-run job");
+    }
+    return response.data.data;
+  }
+
+  async rerunJobs(jobs: { queueName: string; jobId: string }[]): Promise<
+    Array<{
+      queueName: string;
+      jobId: string;
+      success: boolean;
+      newJobId?: string | null;
+      error?: string;
+    }>
+  > {
+    const response = await this.client.post<
+      ApiResponse<
+        Array<{
+          queueName: string;
+          jobId: string;
+          success: boolean;
+          newJobId?: string | null;
+          error?: string;
+        }>
+      >
+    >("/jobs/bulk-rerun", { jobs });
+    if (!response.data.data) {
+      throw new Error("Failed to re-run jobs");
+    }
+    return response.data.data;
+  }
+
+  async purgeJobsByState(state: string): Promise<{ deletedCount: number }> {
+    const response = await this.client.delete<
+      ApiResponse<{ deletedCount: number; state: string }>
+    >(`/jobs/state/${state}`);
+    if (!response.data.data) {
+      throw new Error("Failed to purge jobs");
+    }
+    return { deletedCount: response.data.data.deletedCount };
+  }
+
+  async addJob(
+    jobName: JobName,
+    data: Record<string, unknown>,
+    options?: Record<string, unknown>,
+  ): Promise<string> {
+    const response = await this.client.post<ApiResponse<{ jobId: string }>>(
+      "/jobs",
+      { jobName, data, options },
+    );
+    if (!response.data.data) {
+      throw new Error("Failed to add job");
+    }
+    return response.data.data.jobId;
+  }
+
+  async getAvailableJobs(): Promise<string[]> {
+    const response =
+      await this.client.get<ApiResponse<string[]>>("/jobs/available");
+    return response.data.data ?? [];
+  }
+
+  async getScheduledJobs(): Promise<ScheduledJob[]> {
+    const response =
+      await this.client.get<ApiResponse<ScheduledJob[]>>("/jobs/schedule");
+    return response.data.data ?? [];
+  }
+
+  async scheduleJob(
+    jobName: JobName,
+    cron: string,
+    data: Record<string, unknown>,
+    options?: Record<string, unknown>,
+  ): Promise<void> {
+    await this.client.post("/jobs/schedule", { jobName, data, cron, options });
+  }
+
+  async cancelScheduledJob(jobName: string): Promise<void> {
+    await this.client.delete(`/jobs/schedule/${jobName}`);
   }
 }
 

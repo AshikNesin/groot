@@ -28,7 +28,11 @@ describe("TodoService", () => {
   });
 
   it("creates a todo", async () => {
-    mockedTodoModel.create.mockResolvedValue({ id: 1, title: "New todo", completed: false });
+    mockedTodoModel.create.mockResolvedValue({
+      id: 1,
+      title: "New todo",
+      completed: false,
+    });
 
     const todo = await todoService.create({ title: "New todo" });
 
@@ -43,7 +47,11 @@ describe("TodoService", () => {
   });
 
   it("deletes an existing todo", async () => {
-    mockedTodoModel.findById.mockResolvedValue({ id: 1, title: "Todo", completed: false });
+    mockedTodoModel.findById.mockResolvedValue({
+      id: 1,
+      title: "Todo",
+      completed: false,
+    });
     mockedTodoModel.delete.mockResolvedValue({ id: 1 });
 
     await todoService.delete(1);

@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { getJobStateDescription, isValidJobState, JOB_STATES } from "@/core/job/constants";
+import {
+  getJobStateDescription,
+  isValidJobState,
+  JOB_STATES,
+} from "@/core/job/constants";
 
 describe("job state helpers", () => {
   it("validates known states", () => {

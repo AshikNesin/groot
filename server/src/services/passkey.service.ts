@@ -198,9 +198,7 @@ export class PasskeyService {
     );
 
     if (!verification.verified) {
-      throw new UnauthorizedError(
-        "Passkey authentication verification failed",
-      );
+      throw new UnauthorizedError("Passkey authentication verification failed");
     }
 
     // Get user

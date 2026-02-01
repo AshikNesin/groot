@@ -19,7 +19,10 @@ if (process.env.NODE_ENV !== "production") {
 
 if (process.env.NODE_ENV === "development") {
   prisma.$on("query", (event) => {
-    logger.debug({ query: event.query, duration: `${event.duration}ms` }, "DB query");
+    logger.debug(
+      { query: event.query, duration: `${event.duration}ms` },
+      "DB query",
+    );
   });
 }
 

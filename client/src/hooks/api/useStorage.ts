@@ -29,16 +29,20 @@ export interface PublicShare {
 export const storageKeys = {
   root: ["storage"] as const,
   files: (prefix: string) => [...storageKeys.root, "files", prefix] as const,
-  shares: (filePath: string) => [...storageKeys.root, "shares", filePath] as const,
+  shares: (filePath: string) =>
+    [...storageKeys.root, "shares", filePath] as const,
 };
 
 export function useStorageFiles(prefix: string) {
   return useQuery({
     queryKey: storageKeys.files(prefix),
     queryFn: async () => {
-      const { data } = await api.get<{ data: StorageFile[] }>("/storage/files", {
-        params: { prefix: prefix || undefined, delimiter: "/" },
-      });
+      const { data } = await api.get<{ data: StorageFile[] }>(
+        "/storage/files",
+        {
+          params: { prefix: prefix || undefined, delimiter: "/" },
+        },
+      );
       return data.data;
     },
   });
@@ -47,7 +51,11 @@ export function useStorageFiles(prefix: string) {
 export function useUploadFile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { file: File; filePath?: string; contentType?: string }) => {
+    mutationFn: async (params: {
+      file: File;
+      filePath?: string;
+      contentType?: string;
+    }) => {
       const formData = new FormData();
       formData.append("file", params.file);
       if (params.filePath) {
@@ -56,9 +64,13 @@ export function useUploadFile() {
       if (params.contentType) {
         formData.append("contentType", params.contentType);
       }
-      const { data } = await api.post<{ data: { filePath: string } }>("/storage/files/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const { data } = await api.post<{ data: { filePath: string } }>(
+        "/storage/files/upload",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -75,13 +87,14 @@ export function useBulkUpload() {
       for (const file of Array.from(files)) {
         formData.append("files", file);
       }
-      const { data } = await api.post<{ data: { uploadedFiles: string[]; failedFiles: Array<{ filePath: string; error: string }> } }>(
-        "/storage/files/bulk-upload",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
+      const { data } = await api.post<{
+        data: {
+          uploadedFiles: string[];
+          failedFiles: Array<{ filePath: string; error: string }>;
+        };
+      }>("/storage/files/bulk-upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       return data.data;
     },
     onSuccess: () => {
@@ -94,9 +107,12 @@ export function useDeleteFiles() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (filePaths: string[]) => {
-      const { data } = await api.delete<{ data: { deletedCount: number } }>("/storage/files", {
-        data: { filePaths },
-      });
+      const { data } = await api.delete<{ data: { deletedCount: number } }>(
+        "/storage/files",
+        {
+          data: { filePaths },
+        },
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -109,7 +125,10 @@ export function useCreateFolder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (folderPath: string) => {
-      const { data } = await api.post<{ data: { folderPath: string } }>("/storage/folders", { folderPath });
+      const { data } = await api.post<{ data: { folderPath: string } }>(
+        "/storage/folders",
+        { folderPath },
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -137,7 +156,10 @@ export function useRenameFile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: { oldPath: string; newPath: string }) => {
-      const { data } = await api.put<{ data: { newPath: string } }>("/storage/files/rename", params);
+      const { data } = await api.put<{ data: { newPath: string } }>(
+        "/storage/files/rename",
+        params,
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -148,12 +170,17 @@ export function useRenameFile() {
 
 export function useStorageShares(filePath: string | null) {
   return useQuery({
-    queryKey: filePath ? storageKeys.shares(filePath) : ["storage", "shares", "none"],
+    queryKey: filePath
+      ? storageKeys.shares(filePath)
+      : ["storage", "shares", "none"],
     enabled: Boolean(filePath),
     queryFn: async () => {
-      const { data } = await api.get<{ data: PublicShare[] }>("/storage/shares", {
-        params: { filePath },
-      });
+      const { data } = await api.get<{ data: PublicShare[] }>(
+        "/storage/shares",
+        {
+          params: { filePath },
+        },
+      );
       return data.data;
     },
   });
@@ -162,12 +189,22 @@ export function useStorageShares(filePath: string | null) {
 export function useCreateShare() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { filePath: string; expiresInHours?: number; maxAccessCount?: number; password?: string }) => {
-      const { data } = await api.post<{ data: PublicShare }>("/storage/shares", input);
+    mutationFn: async (input: {
+      filePath: string;
+      expiresInHours?: number;
+      maxAccessCount?: number;
+      password?: string;
+    }) => {
+      const { data } = await api.post<{ data: PublicShare }>(
+        "/storage/shares",
+        input,
+      );
       return data.data;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: storageKeys.shares(variables.filePath) });
+      queryClient.invalidateQueries({
+        queryKey: storageKeys.shares(variables.filePath),
+      });
     },
   });
 }
@@ -180,7 +217,9 @@ export function useRevokeShare() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
-      queryClient.invalidateQueries({ queryKey: storageKeys.shares(variables.filePath) });
+      queryClient.invalidateQueries({
+        queryKey: storageKeys.shares(variables.filePath),
+      });
     },
   });
 }

@@ -304,7 +304,9 @@ export class StorageService {
       return {
         data: {
           files: (response.Contents || [])
-            .filter((obj) => obj.Key && obj.Size !== undefined && obj.LastModified)
+            .filter(
+              (obj) => obj.Key && obj.Size !== undefined && obj.LastModified,
+            )
             .map((obj) => ({
               key: obj.Key as string,
               size: obj.Size as number,

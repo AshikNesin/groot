@@ -78,7 +78,9 @@ describe("PublicShareService", () => {
       expiresAt: new Date(Date.now() - 1000),
     });
 
-    const result = await publicShareService.validateShareAccess(baseShare.shareId);
+    const result = await publicShareService.validateShareAccess(
+      baseShare.shareId,
+    );
 
     expect(result.isValid).toBe(false);
     expect(result.reason).toMatch(/expired/i);
@@ -92,7 +94,9 @@ describe("PublicShareService", () => {
       fileName: "file.pdf",
     });
 
-    const result = await publicShareService.getShareFileContent(baseShare.shareId);
+    const result = await publicShareService.getShareFileContent(
+      baseShare.shareId,
+    );
 
     expect(result.buffer.toString()).toBe("hello");
     expect(mockPrisma.publicFileShare.update).toHaveBeenCalledWith({

@@ -4,7 +4,10 @@ import { logger } from "@/core/logger";
 
 export type JobHandler<T = unknown> = (job: Job<T>) => Promise<void>;
 
-export const withSentryErrorCapture = <T,>(handler: JobHandler<T>, jobName: string): JobHandler<T> => {
+export const withSentryErrorCapture = <T>(
+  handler: JobHandler<T>,
+  jobName: string,
+): JobHandler<T> => {
   return async (job) => {
     try {
       await handler(job);

@@ -18,7 +18,9 @@ export interface BucketInfo {
 export class StorageFileService {
   private readonly storage = new StorageService();
 
-  async listFiles(params: { prefix?: string; delimiter?: string }): Promise<FileInfo[]> {
+  async listFiles(params: { prefix?: string; delimiter?: string }): Promise<
+    FileInfo[]
+  > {
     const { prefix, delimiter = "/" } = params;
     const result = await this.storage.list(prefix, 1000);
 
@@ -40,7 +42,9 @@ export class StorageFileService {
         if (dirName && !directories.has(dirName)) {
           directories.add(dirName);
           files.push({
-            key: prefix ? `${prefix}${dirName}${delimiter}` : `${dirName}${delimiter}`,
+            key: prefix
+              ? `${prefix}${dirName}${delimiter}`
+              : `${dirName}${delimiter}`,
             name: dirName,
             size: 0,
             lastModified: file.lastModified,
@@ -99,19 +103,29 @@ export class StorageFileService {
 
   async bulkUpload(params: {
     files: Array<{ filePath: string; fileData: Buffer; contentType?: string }>;
-  }): Promise<{ uploadedFiles: string[]; failedFiles: Array<{ filePath: string; error: string }> }> {
+  }): Promise<{
+    uploadedFiles: string[];
+    failedFiles: Array<{ filePath: string; error: string }>;
+  }> {
     const uploadedFiles: string[] = [];
     const failedFiles: Array<{ filePath: string; error: string }> = [];
 
     await Promise.all(
       params.files.map(async (file) => {
         try {
-          const result = await this.storage.upload(file.filePath, file.fileData, {
-            contentType: file.contentType,
-          });
+          const result = await this.storage.upload(
+            file.filePath,
+            file.fileData,
+            {
+              contentType: file.contentType,
+            },
+          );
 
           if (result.error) {
-            failedFiles.push({ filePath: file.filePath, error: result.error.message });
+            failedFiles.push({
+              filePath: file.filePath,
+              error: result.error.message,
+            });
           } else {
             uploadedFiles.push(file.filePath);
           }
@@ -127,7 +141,11 @@ export class StorageFileService {
     return { uploadedFiles, failedFiles };
   }
 
-  async downloadFile(params: { filePath: string }): Promise<{ buffer: Buffer; contentType?: string; fileName: string }> {
+  async downloadFile(params: { filePath: string }): Promise<{
+    buffer: Buffer;
+    contentType?: string;
+    fileName: string;
+  }> {
     const exists = await this.storage.fileExists(params.filePath);
     if (exists.error) {
       throw new Error(`Failed to verify file: ${exists.error.message}`);
@@ -139,7 +157,9 @@ export class StorageFileService {
 
     const file = await this.storage.getBuffer(params.filePath);
     if (file.error || !file.data) {
-      throw new Error(`Failed to download file: ${file.error?.message ?? "Unknown error"}`);
+      throw new Error(
+        `Failed to download file: ${file.error?.message ?? "Unknown error"}`,
+      );
     }
 
     const fileName = params.filePath.split("/").pop() ?? "file";
@@ -150,7 +170,9 @@ export class StorageFileService {
     };
   }
 
-  async deleteFiles(params: { filePaths: string[] }): Promise<{ deletedCount: number }> {
+  async deleteFiles(params: { filePaths: string[] }): Promise<{
+    deletedCount: number;
+  }> {
     if (!params.filePaths.length) {
       throw new BadRequestError("No files specified for deletion");
     }
@@ -199,7 +221,9 @@ export class StorageFileService {
     }
     const listResult = await this.storage.list(folderPath, 1000);
     if (listResult.error) {
-      throw new Error(`Failed to list folder contents: ${listResult.error.message}`);
+      throw new Error(
+        `Failed to list folder contents: ${listResult.error.message}`,
+      );
     }
     const fileKeys = listResult.data?.files.map((file) => file.key) ?? [];
     if (!fileKeys.length) {
@@ -212,7 +236,9 @@ export class StorageFileService {
     return { deletedCount: fileKeys.length };
   }
 
-  async renameFile(params: { oldPath: string; newPath: string }): Promise<{ newPath: string }> {
+  async renameFile(params: { oldPath: string; newPath: string }): Promise<{
+    newPath: string;
+  }> {
     const exists = await this.storage.fileExists(params.oldPath);
     if (exists.error || !exists.data?.exists) {
       throw new NotFoundError(`Source file not found: ${params.oldPath}`);
@@ -225,7 +251,9 @@ export class StorageFileService {
 
     const deleteResult = await this.storage.remove([params.oldPath]);
     if (deleteResult.error) {
-      throw new Error(`Failed to delete old file: ${deleteResult.error.message}`);
+      throw new Error(
+        `Failed to delete old file: ${deleteResult.error.message}`,
+      );
     }
 
     return { newPath: params.newPath };
