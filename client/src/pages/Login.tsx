@@ -11,10 +11,14 @@ export function Login() {
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({ username: "", password: "" });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    login(credentials.username, credentials.password);
-    navigate("/");
+    try {
+      await login(credentials.username, credentials.password);
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (

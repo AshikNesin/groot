@@ -11,12 +11,7 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     PORT: z.coerce.number().default(3000), // coerce to number, default to 3000
     DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
-    BASIC_AUTH_USERNAME: z
-      .string()
-      .min(1, "Basic auth username cannot be empty"),
-    BASIC_AUTH_PASSWORD: z
-      .string()
-      .min(1, "Basic auth password cannot be empty"),
+
     JWT_SECRET: z
       .string()
       .min(32, "JWT secret must be at least 32 characters")
@@ -62,8 +57,6 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
     DATABASE_URL: process.env.DATABASE_URL,
-    BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
-    BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
     JWT_SECRET: process.env.JWT_SECRET,
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
     ADMIN_AUTH_KEY: process.env.ADMIN_AUTH_KEY,

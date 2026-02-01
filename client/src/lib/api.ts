@@ -37,20 +37,6 @@ class ApiClient {
       withCredentials: true, // Important for cookies
     });
 
-    // Request interceptor - add basic auth if available
-    this.client.interceptors.request.use(
-      (config) => {
-        const auth = localStorage.getItem("auth");
-        if (auth) {
-          config.headers.Authorization = `Basic ${auth}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      },
-    );
-
     // Response interceptor - handle errors and 401s
     this.client.interceptors.response.use(
       (response) => response,
