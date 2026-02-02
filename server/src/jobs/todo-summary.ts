@@ -1,10 +1,12 @@
 import type { Job } from "pg-boss";
 import { prisma } from "@/core/database";
-import { logger } from "@/core/logger";
+import { createJobLogger } from "@/core/logger";
 import { registerJobHandler } from "@/core/job/worker";
 import { JobName, type TodoSummaryJobData } from "@/core/job/queue";
 
 const todoSummaryJob = async (job: Job<TodoSummaryJobData>): Promise<void> => {
+  const logger = createJobLogger(job.id, JobName.TODO_SUMMARY);
+
   const [total, completed, pending] = await Promise.all([
     prisma.todo.count(),
     prisma.todo.count({ where: { completed: true } }),
