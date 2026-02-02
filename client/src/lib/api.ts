@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance } from "axios";
-import type { Job, JobName, JobStats, ScheduledJob } from "@/types";
+import type { Job, JobLog, JobName, JobStats, ScheduledJob } from "@/types";
 
 /**
  * Standard API response format
@@ -230,6 +230,20 @@ class ApiClient {
       throw new Error("Job not found");
     }
     return response.data.data;
+  }
+
+  async getJobLogs(
+    queueName: string,
+    jobId: string,
+    afterId?: number,
+  ): Promise<JobLog[]> {
+    const params = new URLSearchParams();
+    if (afterId) params.append("afterId", afterId.toString());
+
+    const response = await this.client.get<ApiResponse<JobLog[]>>(
+      `/jobs/${queueName}/${jobId}/logs?${params.toString()}`,
+    );
+    return response.data.data ?? [];
   }
 
   async retryJob(queueName: string, jobId: string): Promise<void> {
