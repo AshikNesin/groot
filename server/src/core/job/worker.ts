@@ -1,5 +1,5 @@
 import type { PgBoss, Job, Queue, WorkOptions } from "pg-boss";
-import { logger } from "@/core/logger";
+import { logger, createJobLogger } from "@/core/logger";
 import { jobConfig, defaultJobOptions, jobOptions } from "@/core/job/config";
 import type { JobName } from "@/core/job/queue";
 import {
@@ -62,7 +62,32 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
         workOptions,
         async (jobs: Job<unknown>[]) => {
           for (const job of jobs) {
-            await handler(job);
+            const jobLogger = createJobLogger(job.id, name);
+            const startTime = Date.now();
+
+            jobLogger.info(
+              { data: job.data },
+              `Starting job ${name}`,
+            );
+
+            try {
+              await handler(job);
+              const duration = Date.now() - startTime;
+              jobLogger.info(
+                { duration: `${duration}ms` },
+                `Job ${name} completed successfully`,
+              );
+            } catch (error) {
+              const duration = Date.now() - startTime;
+              jobLogger.error(
+                {
+                  duration: `${duration}ms`,
+                  error: error instanceof Error ? error.message : String(error),
+                },
+                `Job ${name} failed`,
+              );
+              throw error;
+            }
           }
         },
       );

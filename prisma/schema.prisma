@@ -82,3 +82,18 @@ model Keyv {
   @@ignore
 }
 
+// Job execution logs for real-time monitoring
+model JobLog {
+  id        Int      @id @default(autoincrement())
+  jobId     String   @db.VarChar
+  jobName   String?  @db.VarChar
+  level     String   @db.VarChar
+  message   String   @db.Text
+  data      Json?    @db.Json
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([jobId])
+  @@index([timestamp])
+  @@map("job_logs")
+}
+

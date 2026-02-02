@@ -40,6 +40,7 @@ export const env = createEnv({
     AWS_DEFAULT_REGION: z.string().min(1).default("us-east-1"),
     AWS_DEFAULT_S3_BUCKET: z.string().min(1).default("local-bucket"),
     SENTRY_DSN: z.string().url("Sentry DSN must be a valid URL").optional(),
+    SENTRY_RELEASE: z.string().optional(),
     JOB_CONCURRENCY: z.coerce.number().default(5),
     JOB_POLL_INTERVAL: z.coerce.number().default(5),
     JOB_ARCHIVE_COMPLETED_AFTER_SECONDS: z.coerce
@@ -77,6 +78,7 @@ export const env = createEnv({
     AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION,
     AWS_DEFAULT_S3_BUCKET: process.env.AWS_DEFAULT_S3_BUCKET,
     SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_RELEASE: process.env.SENTRY_RELEASE,
     JOB_CONCURRENCY: process.env.JOB_CONCURRENCY,
     JOB_POLL_INTERVAL: process.env.JOB_POLL_INTERVAL,
     JOB_ARCHIVE_COMPLETED_AFTER_SECONDS:

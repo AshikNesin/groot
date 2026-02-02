@@ -4,10 +4,11 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import { formatLocaleDateTime } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
-import type { Job } from "@/types";
+import type { Job, JobLog } from "@/types";
 import { json } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
+import { Console } from "console-feed";
 import {
   Activity,
   AlertCircle,
@@ -33,10 +34,41 @@ export function JobDetail() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logs, setLogs] = useState<JobLog[]>([]);
+  const [lastLogId, setLastLogId] = useState<number>(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadJob depends on url params
   useEffect(() => {
+    setLogs([]);
+    setLastLogId(0);
+
     loadJob();
+    const interval = setInterval(fetchLogs, 2000);
+    return () => clearInterval(interval);
   }, [queueName, jobId]);
+
+  const fetchLogs = async () => {
+    if (!queueName || !jobId) return;
+    try {
+      setLastLogId((currentLastId) => {
+        apiClient
+          .getJobLogs(queueName, jobId, currentLastId)
+          .then((newLogs) => {
+            if (newLogs.length > 0) {
+              setLogs((prevLogs) => [...prevLogs, ...newLogs]);
+              const maxId = Math.max(...newLogs.map((l) => l.id));
+              setLastLogId(Math.max(currentLastId, maxId));
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to fetch logs", err);
+          });
+        return currentLastId;
+      });
+    } catch (err) {
+      console.error("Failed to fetch logs", err);
+    }
+  };
 
   const loadJob = async () => {
     if (!queueName || !jobId) return;
@@ -480,6 +512,36 @@ export function JobDetail() {
               </dl>
             </div>
           )}
+
+          {/* Real-time Logs */}
+          <div className="pt-6 border-t border-gray-200">
+            <h2 className="text-sm font-medium text-gray-900 mb-4">
+              Real-time Logs
+            </h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+              {logs.length === 0 ? (
+                <div className="p-4 text-gray-500 italic text-sm">
+                  No logs available
+                </div>
+              ) : (
+                <Console
+                  logs={logs.map((log) => ({
+                    id: log.id.toString(),
+                    // biome-ignore lint/suspicious/noExplicitAny: console-feed types are strict
+                    method: (log.level === "warning" ? "warn" : log.level) as any,
+                    data: [
+                      `[${formatLocaleDateTime(new Date(log.timestamp))}]`,
+                      log.message,
+                      ...(log.data && Object.keys(log.data as object).length > 0
+                        ? [log.data]
+                        : []),
+                    ],
+                  }))}
+                  variant="light"
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

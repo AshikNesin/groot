@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { Request } from "express";
 import pino, { type Logger } from "pino";
+import pinoPretty from "pino-pretty";
 import { serializeObject } from "@/core/logger/utils";
+import { createJobLogStream } from "@/core/logger/job-stream";
 
 // Enhanced logger configuration
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -16,15 +18,16 @@ const loggerConfig = {
   },
   formatters: {
     level: (label: string) => ({ level: label }),
-    log: (object: unknown) => {
+    log: (object: unknown): Record<string, unknown> => {
       const serialized = serializeObject(object);
       if (typeof serialized === "object" && serialized !== null) {
         const obj = serialized as Record<string, unknown>;
         if (!obj.timestamp) {
           obj.timestamp = new Date().toISOString();
         }
+        return obj;
       }
-      return serialized;
+      return { value: serialized };
     },
   },
   serializers: {
@@ -72,13 +75,44 @@ export function createRequestLogger(
   });
 }
 
-// Job-aware logger factory
+// Job-aware logger factory with DB persistence
 export function createJobLogger(
   jobId: string,
   jobName: string,
   additionalContext: Record<string, unknown> = {},
 ): Logger {
-  return logger.child({
+  const dbStream = createJobLogStream(jobId, jobName);
+
+  // biome-ignore lint/suspicious/noExplicitAny: streams array type is complex
+  let streams: any[];
+  if (isDevelopment) {
+    const pretty = pinoPretty({
+      colorize: true,
+      translateTime: "yyyy-mm-dd HH:MM:ss Z",
+      ignore: "pid,hostname",
+      singleLine: true,
+    });
+
+    streams = [{ stream: pretty }, { stream: dbStream }];
+  } else {
+    streams = [{ stream: process.stdout }, { stream: dbStream }];
+  }
+
+  // Create config without transport for multistream usage
+  const jobLoggerConfig = {
+    level: logLevel,
+    base: {
+      env: process.env.NODE_ENV || "development",
+      service: "express-react-boilerplate",
+      pid: process.pid,
+    },
+    formatters: loggerConfig.formatters,
+    serializers: loggerConfig.serializers,
+  };
+
+  const jobLogger = pino(jobLoggerConfig, pino.multistream(streams));
+
+  return jobLogger.child({
     jobId,
     jobName,
     ...additionalContext,

@@ -20,6 +20,7 @@ import {
 } from "@/core/job";
 import { ResponseHandler } from "@/core/response-handler";
 import { logger } from "@/core/logger";
+import { prisma } from "@/core/database";
 
 const router = Router();
 
@@ -341,6 +342,36 @@ router.get("/:queueName/:jobId", async (req, res) => {
       res,
       "Failed to get job details",
       "JOB_DETAIL_ERROR",
+    );
+  }
+});
+
+router.get("/:queueName/:jobId/logs", async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const afterId = req.query.afterId
+      ? Number.parseInt(req.query.afterId as string, 10)
+      : 0;
+
+    const logs = await prisma.jobLog.findMany({
+      where: {
+        jobId,
+        id: {
+          gt: afterId,
+        },
+      },
+      orderBy: {
+        id: "asc",
+      },
+    });
+
+    return ResponseHandler.success(res, logs, "Job logs retrieved");
+  } catch (error) {
+    logger.error({ error }, "Failed to get job logs");
+    return ResponseHandler.error(
+      res,
+      "Failed to get job logs",
+      "JOB_LOGS_ERROR",
     );
   }
 });

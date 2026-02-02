@@ -51,3 +51,13 @@ export interface ScheduledJob {
   timezone: string | null;
   data: Record<string, unknown>;
 }
+
+export interface JobLog {
+  id: number;
+  jobId: string;
+  jobName: string | null;
+  level: string;
+  message: string;
+  data: unknown;
+  timestamp: string;
+}
