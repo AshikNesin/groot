@@ -18,6 +18,7 @@ import {
 import { apiRouter } from "@/routes";
 import publicFileRoutes from "@/routes/public-file.routes";
 import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
+import { notificationService } from "@/services/notification.service";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,9 +100,24 @@ Sentry.setupExpressErrorHandler(app);
 app.use(notFoundHandler);
 app.use(errorHandlerMiddleware);
 
-const server = app.listen(port, () => {
+const server = app.listen(port, async () => {
   logger.info(`Server is running on http://localhost:${port}`);
+
+  // Initialize job queue
   void initializeJobQueue();
+
+  // Send server startup notification in production
+  if (isProd) {
+    try {
+      await notificationService.sendServerStartupNotification(
+        port,
+        env.NODE_ENV || "unknown",
+      );
+    } catch (error) {
+      // Notification failure should not prevent server startup
+      logger.error({ error }, "Failed to send server startup notification");
+    }
+  }
 });
 
 const initializeJobQueue = async () => {

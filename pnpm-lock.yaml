@@ -149,6 +149,9 @@ importers:
       react-router-dom:
         specifier: ^7.9.5
         version: 7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      send-push-notification:
+        specifier: ^2.2.0
+        version: 2.2.0
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.4.0
@@ -3654,6 +3657,9 @@ packages:
     resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  send-push-notification@2.2.0:
+    resolution: {integrity: sha512-H2VYlapOXL0KP2kXUV2d1Zf0GRwWEZAWmf5meIjyqty1gLVSKfLsRNk45tMyngoLh+eQqVK/K024M8UuzO9NmA==}
 
   send@1.2.0:
     resolution: {integrity: sha512-uaW0WwXKpL9blXE2o0bRhoL2EGXIrZxQ2ZQ4mgcfoBxdFmQold+qWsD2jLrfZ0trjKL6vOw0j//eAwcALFjKSw==}
@@ -8048,6 +8054,12 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.2: {}
+
+  send-push-notification@2.2.0:
+    dependencies:
+      axios: 1.13.2
+    transitivePeerDependencies:
+      - debug
 
   send@1.2.0:
     dependencies:
