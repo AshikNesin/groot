@@ -107,5 +107,6 @@
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.25.42",
     "zustand": "^5.0.8"
-  }
+  },
+  "packageManager": "pnpm@10.26.0"
 }
