@@ -9,6 +9,22 @@ async function getExternalDependencies() {
   return Object.keys(packageJson.dependencies || {});
 }
 
+const generatedPrismaExternalPlugin = {
+  name: "generated-prisma-external",
+  setup(build) {
+    build.onResolve({ filter: /^@\/generated\/prisma/ }, (args) => {
+      let relativePath = args.path.replace(
+        /^@\/generated\/prisma/,
+        "../server/src/generated/prisma"
+      );
+      if (relativePath === "../server/src/generated/prisma") {
+        relativePath = "../server/src/generated/prisma/index.js";
+      }
+      return { path: relativePath, external: true };
+    });
+  },
+};
+
 async function build() {
   try {
     const externals = await getExternalDependencies();
@@ -30,6 +46,7 @@ async function build() {
         "fsevents",
       ],
       plugins: [
+        generatedPrismaExternalPlugin,
         alias({
           "@": path.resolve(process.cwd(), "server/src"),
         }),
