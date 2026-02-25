@@ -198,12 +198,25 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 # Final setup steps
 final_steps() {
     echo ""
+    print_info "Installing dependencies..."
+    
+    if command -v pnpm &> /dev/null; then
+        pnpm install
+        print_success "Dependencies installed"
+    else
+        print_error "pnpm not found. Please install pnpm first: npm install -g pnpm"
+        exit 1
+    fi
+    
+    print_info "Generating Prisma client..."
+    pnpm run generate
+    print_success "Prisma client generated"
+    
+    echo ""
     print_info "Next steps:"
     echo "  1. Edit .env and update DATABASE_URL with your database credentials"
-    echo "  2. Run: pnpm install"
-    echo "  3. Run: pnpm prisma generate"
-    echo "  4. Run: pnpm prisma db push"
-    echo "  5. Run: pnpm dev"
+    echo "  2. Run: pnpm prisma db push"
+    echo "  3. Run: pnpm dev"
     echo ""
     print_success "Setup complete! Your environment is ready."
     print_warning "IMPORTANT: Keep your .env file secure and never commit it to git!"
