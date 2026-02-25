@@ -35,6 +35,30 @@ A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a co
 
 ## Quick Start
 
+### Option 1: Automated Setup (Recommended)
+
+Run the setup script to automatically configure your environment with secure secrets:
+
+```bash
+./setup-boilerplate.sh
+```
+
+This script will:
+- Copy `.env.example` to `.env`
+- Generate secure `JWT_SECRET` and `ADMIN_AUTH_KEY`
+- Prompt for your app name and update `RP_NAME`
+- Optionally update package.json and code references
+
+After running the script:
+```bash
+pnpm install
+pnpm prisma generate
+pnpm prisma db push
+pnpm dev
+```
+
+### Option 2: Manual Setup
+
 1. **Setup environment:**
    ```bash
    cp .env.example .env
@@ -182,8 +206,9 @@ pnpm test:watch       # Run tests in watch mode
 ## Production Checklist
 
 Before deploying:
-- [ ] Set strong `JWT_SECRET` (min 32 characters)
-- [ ] Set strong `ADMIN_AUTH_KEY`
+- [ ] Run `./setup-boilerplate.sh` to generate secure secrets (or manually set):
+  - [ ] Strong `JWT_SECRET` (min 32 characters)
+  - [ ] Strong `ADMIN_AUTH_KEY`
 - [ ] Configure production `DATABASE_URL`
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
 - [ ] Update `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD`

@@ -9,3 +9,4 @@ dist/
 pnpm-debug.log*
 
 /server/src/generated/prisma
+.env.*
