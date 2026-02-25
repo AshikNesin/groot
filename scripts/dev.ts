@@ -63,6 +63,9 @@ async function main() {
 			...process.env,
 			NODE_ENV: "development",
 			DATABASE_URL: connectionString,
+			// Disable job queue by default on local PGlite (single connection limit).
+			// User can override by setting ENABLE_JOB_QUEUE=true in .env
+			ENABLE_JOB_QUEUE: process.env.ENABLE_JOB_QUEUE ?? "false",
 		},
 	});
 
