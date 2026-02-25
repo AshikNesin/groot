@@ -7,8 +7,13 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "dev": "NODE_ENV=development tsx scripts/dev.ts",
+    "dev:pglite": "LOCAL_DB_MODE=pglite NODE_ENV=development tsx scripts/dev.ts",
+    "dev:docker": "LOCAL_DB_MODE=docker NODE_ENV=development tsx scripts/dev.ts",
     "dev:server": "NODE_ENV=development tsx watch server/src/index.ts",
     "dev:db:stop": "prisma dev stop",
+    "dev:db:docker:stop": "tsx scripts/docker-db-cleanup.ts --stop",
+    "dev:db:docker:reset": "tsx scripts/docker-db-cleanup.ts --reset",
+    "dev:db:docker:status": "tsx scripts/docker-db-cleanup.ts --status",
     "dev:studio": "test -f .dev-db-url && DATABASE_URL=$(cat .dev-db-url) prisma studio || echo '❌ Start the dev server first: pnpm dev'",
     "build": "vite build && node scripts/build.mjs",
     "start": "NODE_ENV=production node dist/bundle.js",

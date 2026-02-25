@@ -1,8 +1,11 @@
 /**
  * Dev orchestrator script
  *
- * Automatically starts a local Prisma Postgres instance (PGlite),
- * pushes the schema, and launches the dev server.
+ * Automatically starts a local database and launches the dev server.
+ *
+ * Database mode (auto-detected, can be overridden via LOCAL_DB_MODE env var):
+ * - Docker PostgreSQL: Multi-connection support (Prisma Studio, job queue, etc.)
+ * - PGlite: Zero-config fallback (single connection limit)
  *
  * This is ONLY used for local development (`pnpm dev`).
  * Production uses `pnpm start` with an externally-provided DATABASE_URL.
@@ -12,6 +15,10 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { startPrismaDevServer } from "@prisma/dev";
+import {
+	isDockerAvailable,
+	ensurePostgresContainer,
+} from "./lib/docker-db.js";
 
 const pkg = JSON.parse(
 	readFileSync(resolve(process.cwd(), "package.json"), "utf-8"),
@@ -22,24 +29,72 @@ let devServer: ChildProcess | null = null;
 let dbServer: Awaited<ReturnType<typeof startPrismaDevServer>> | null = null;
 let isShuttingDown = false;
 
+type DbMode = "docker" | "pglite";
+
+/**
+ * Resolve database mode: env var override > auto-detect > fallback
+ */
+async function resolveDbMode(): Promise<DbMode> {
+	const envMode = process.env.LOCAL_DB_MODE;
+
+	if (envMode === "docker") return "docker";
+	if (envMode === "pglite") return "pglite";
+
+	// Auto-detect: use Docker if available
+	if (await isDockerAvailable()) return "docker";
+
+	return "pglite";
+}
+
 async function main() {
-	console.log(`\n🗄️  Starting local Prisma Postgres (${dbName})...\n`);
+	console.log(`\n🗄️  Starting local development database...\n`);
 
-	// Start local PGlite-based Postgres
-	dbServer = await startPrismaDevServer({
-		name: dbName,
-		persistenceMode: "stateful", // Data persists between runs
-	});
+	const mode = await resolveDbMode();
+	let connectionString!: string; // Definite assignment - always set in one of the branches below
+	let dbMode: DbMode = mode;
 
-	const connectionString = dbServer.database.connectionString;
+	if (mode === "docker") {
+		try {
+			const docker = await ensurePostgresContainer({
+				projectName: pkg.name,
+				port: process.env.LOCAL_DB_DOCKER_PORT
+					? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
+					: undefined,
+			});
+			connectionString = docker.connectionString;
+			console.log("🐳 Using Docker PostgreSQL (auto-detected)\n");
+		} catch (err) {
+			console.warn("⚠️  Docker PostgreSQL failed, falling back to PGlite:");
+			console.warn(`   ${err instanceof Error ? err.message : err}\n`);
+			dbMode = "pglite";
+		}
+	}
+
+	if (dbMode === "pglite") {
+		// Start local PGlite-based Postgres
+		dbServer = await startPrismaDevServer({
+			name: dbName,
+			persistenceMode: "stateful", // Data persists between runs
+		});
+		connectionString = dbServer.database.connectionString;
+		console.log("📦 Using PGlite (Docker not available or disabled)\n");
+	}
 
 	// Write connection string so `pnpm dev:studio` can pick it up
 	writeFileSync(resolve(process.cwd(), ".dev-db-url"), connectionString);
 
 	console.log("✅ Local DB ready!\n");
-	console.log(`   TCP URL:    ${connectionString}`);
-	console.log(`   Prisma URL: ${dbServer.ppg.url}`);
-	console.log(`   Studio:     pnpm dev:studio (in another terminal)\n`);
+	console.log(`   Connection: ${connectionString}`);
+	if (dbServer?.ppg?.url) {
+		console.log(`   Prisma URL: ${dbServer.ppg.url}`);
+	}
+	if (dbMode === "docker") {
+		console.log(`   Studio:     pnpm dev:studio (in another terminal)`);
+		console.log(`   Job Queue:  Set ENABLE_JOB_QUEUE=true in .env`);
+	} else {
+		console.log(`   Note:       Single-connection mode (PGlite)`);
+	}
+	console.log();
 
 	// Push schema to the local DB
 	console.log("📦 Pushing Prisma schema...\n");
@@ -61,6 +116,10 @@ async function main() {
 
 	console.log("\n🚀 Starting dev server...\n");
 
+	// Determine if job queue should be enabled
+	// Default: enabled for Docker (multi-connection), disabled for PGlite (single connection)
+	const defaultJobQueue = dbMode === "docker" ? "true" : "false";
+
 	// Spawn the actual dev server with the local DB URL
 	devServer = spawn("tsx", ["watch", "server/src/index.ts"], {
 		stdio: "inherit",
@@ -68,9 +127,10 @@ async function main() {
 			...process.env,
 			NODE_ENV: "development",
 			DATABASE_URL: connectionString,
-			// Disable job queue by default on local PGlite (single connection limit).
-			// User can override by setting ENABLE_JOB_QUEUE=true in .env
-			ENABLE_JOB_QUEUE: process.env.ENABLE_JOB_QUEUE ?? "false",
+			LOCAL_DB_MODE: dbMode,
+			// Job queue: enabled by default for Docker, disabled for PGlite
+			// User can override by setting ENABLE_JOB_QUEUE in .env
+			ENABLE_JOB_QUEUE: process.env.ENABLE_JOB_QUEUE ?? defaultJobQueue,
 		},
 	});
 
@@ -104,7 +164,9 @@ async function shutdown() {
 	}
 
 	// Clean up the connection string file
-	try { unlinkSync(resolve(process.cwd(), ".dev-db-url")); } catch {}
+	try {
+		unlinkSync(resolve(process.cwd(), ".dev-db-url"));
+	} catch {}
 
 	process.exit(0);
 }
