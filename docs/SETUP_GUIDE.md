@@ -9,7 +9,24 @@ Follow these steps to boot the Express API, job queue, and React client locally 
 - PostgreSQL instance reachable via `DATABASE_URL`
 - OpenSSL or another tool for generating basic auth credentials
 
-## Environment Variables
+## Quick Setup
+
+### Automated Setup (Recommended)
+
+Run the setup script to automatically configure your environment:
+
+```bash
+./setup-boilerplate.sh
+```
+
+This script will:
+- Copy `.env.example` to `.env`
+- Generate secure `JWT_SECRET` (64 characters)
+- Generate secure `ADMIN_AUTH_KEY` (48 characters)
+- Prompt for your app name and update `RP_NAME`
+- Optionally update package.json and code references
+
+### Manual Setup
 
 Copy `.env.example` to `.env` and populate these keys (validated in `server/src/env.ts`):
 

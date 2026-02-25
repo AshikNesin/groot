@@ -22,6 +22,23 @@ Your boilerplate now includes everything you need to ship a production-ready Saa
 
 ### 1. Setup Environment
 
+#### Option A: Automated Setup (Recommended)
+
+Run the setup script to automatically configure your environment:
+
+```bash
+./setup-boilerplate.sh
+```
+
+This will:
+- Copy `.env.example` to `.env`
+- Generate secure `JWT_SECRET` (64 characters)
+- Generate secure `ADMIN_AUTH_KEY` (48 characters)
+- Prompt for your app name and update `RP_NAME`
+- Optionally update package.json and code references
+
+#### Option B: Manual Setup
+
 ```bash
 # Copy environment file
 cp .env.example .env
@@ -31,6 +48,9 @@ cp .env.example .env
 # ADMIN_AUTH_KEY=your-admin-auth-key
 # DATABASE_URL=your-database-url
 ```
+
+> ⚠️ **Security Note**: Always use strong, randomly generated secrets in production!
+> You can generate secure secrets with: `openssl rand -base64 48 | tr -d '/+=' | cut -c1-64`
 
 ### 2. Install & Generate
 
@@ -366,8 +386,9 @@ import {
 
 Before deploying to production:
 
-- [ ] Change `JWT_SECRET` to a strong random value (min 32 chars)
-- [ ] Change `ADMIN_AUTH_KEY` to a strong random value
+- [ ] Run `./setup-boilerplate.sh` to generate secure secrets (or manually set):
+  - [ ] Change `JWT_SECRET` to a strong random value (min 32 chars)
+  - [ ] Change `ADMIN_AUTH_KEY` to a strong random value
 - [ ] Set `DATABASE_URL` to your production database
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
 - [ ] Update `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD`
