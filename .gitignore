@@ -5,8 +5,9 @@ dist/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 /.DS_Store
 pnpm-debug.log*
 
 /server/src/generated/prisma
-.env.*
