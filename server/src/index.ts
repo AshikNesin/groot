@@ -124,12 +124,9 @@ const server = app.listen(port, async () => {
 });
 
 const initializeJobQueue = async () => {
-  // Skip PgBoss on local PGlite — it holds the single connection permanently,
-  // blocking external DB tools (TablePlus, psql, etc.) from connecting via TCP.
-  const { isLocalPGlite } = await import("@/core/job/config");
-  if (isLocalPGlite) {
+  if (!env.ENABLE_JOB_QUEUE) {
     logger.info(
-      "Job queue skipped (local PGlite — single connection reserved for external tools)",
+      "Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)",
     );
     return;
   }

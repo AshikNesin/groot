@@ -50,7 +50,10 @@ export const env = createEnv({
       .number()
       .default(60 * 60 * 24 * 30),
     JOB_MONITOR_STATE_INTERVAL: z.coerce.number().default(60),
-    // NODE_ENV: z.enum(["development", "production", "test"]).default("development"), // Optional: if you use NODE_ENV
+    ENABLE_JOB_QUEUE: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((v) => v === "true"),
   },
 
   // Environment variables available on the client (and server).
@@ -86,7 +89,7 @@ export const env = createEnv({
     JOB_DELETE_ARCHIVED_AFTER_SECONDS:
       process.env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
     JOB_MONITOR_STATE_INTERVAL: process.env.JOB_MONITOR_STATE_INTERVAL,
-    // NODE_ENV: process.env.NODE_ENV, // Optional
+    ENABLE_JOB_QUEUE: process.env.ENABLE_JOB_QUEUE,
   },
 
   /**

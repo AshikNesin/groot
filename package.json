@@ -9,6 +9,7 @@
     "dev": "NODE_ENV=development tsx scripts/dev.ts",
     "dev:server": "NODE_ENV=development tsx watch server/src/index.ts",
     "dev:db:stop": "prisma dev stop",
+    "dev:studio": "prisma studio",
     "build": "vite build && node scripts/build.mjs",
     "start": "NODE_ENV=production node dist/bundle.js",
     "lint": "biome lint .",
