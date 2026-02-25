@@ -42,7 +42,10 @@ if (!isProd) {
   viteServer = await createServer({
     root: clientRoot,
     configFile: path.resolve(process.cwd(), "vite.config.ts"),
-    server: { middlewareMode: true },
+    server: {
+      middlewareMode: true,
+      hmr: { port: port + 1 },
+    },
     appType: "custom",
   });
 
@@ -121,6 +124,16 @@ const server = app.listen(port, async () => {
 });
 
 const initializeJobQueue = async () => {
+  // Skip PgBoss on local PGlite — it holds the single connection permanently,
+  // blocking external DB tools (TablePlus, psql, etc.) from connecting via TCP.
+  const { isLocalPGlite } = await import("@/core/job/config");
+  if (isLocalPGlite) {
+    logger.info(
+      "Job queue skipped (local PGlite — single connection reserved for external tools)",
+    );
+    return;
+  }
+
   try {
     await initJobQueue();
     await startWorkers();
