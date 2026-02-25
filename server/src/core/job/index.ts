@@ -2,7 +2,7 @@ import { PgBoss } from "pg-boss";
 import type { Job as BossJob } from "pg-boss";
 import { logger } from "@/core/logger";
 import { prisma } from "@/core/database";
-import { jobConfig, jobOptions, defaultJobOptions } from "@/core/job/config";
+import { jobConfig, jobOptions, defaultJobOptions, isLocalPGlite } from "@/core/job/config";
 import type { JobName, JobDataMap } from "@/core/job/queue";
 import { startWorkers, stopWorkers } from "@/core/job/worker";
 import {
@@ -31,6 +31,8 @@ export const initJobQueue = async (): Promise<void> => {
     archiveCompletedAfterSeconds: jobConfig.archiveCompletedAfterSeconds,
     deleteArchivedAfterSeconds: jobConfig.deleteArchivedAfterSeconds,
     monitorStateIntervalSeconds: jobConfig.monitorStateIntervalSeconds,
+    // PGlite only accepts one connection at a time
+    ...(isLocalPGlite && { max: 1 }),
   });
 
   bossInstance.on("error", (error) => {
@@ -42,7 +44,11 @@ export const initJobQueue = async (): Promise<void> => {
   });
 
   await bossInstance.start();
-  logger.info("Job queue initialized");
+  logger.info(
+    isLocalPGlite
+      ? "Job queue initialized (local PGlite — single connection mode)"
+      : "Job queue initialized",
+  );
 };
 
 export const stopJobQueue = async (): Promise<void> => {
