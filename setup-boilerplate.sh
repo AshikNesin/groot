@@ -214,9 +214,8 @@ final_steps() {
     
     echo ""
     print_info "Next steps:"
-    echo "  1. Edit .env and update DATABASE_URL with your database credentials"
-    echo "  2. Run: pnpm prisma db push"
-    echo "  3. Run: pnpm dev"
+    echo "  1. Run: pnpm dev (auto-starts local database)"
+    echo "  2. For production: set DATABASE_URL in .env with your database credentials"
     echo ""
     print_success "Setup complete! Your environment is ready."
     print_warning "IMPORTANT: Keep your .env file secure and never commit it to git!"

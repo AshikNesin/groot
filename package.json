@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "dev": "NODE_ENV=development tsx watch server/src/index.ts",
+    "dev": "NODE_ENV=development tsx scripts/dev.ts",
+    "dev:server": "NODE_ENV=development tsx watch server/src/index.ts",
+    "dev:db:stop": "prisma dev stop",
     "build": "vite build && node scripts/build.mjs",
     "start": "NODE_ENV=production node dist/bundle.js",
     "lint": "biome lint .",
@@ -31,6 +33,7 @@
   "homepage": "https://github.com/AshikNesin/express-react-boilerplate#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@prisma/dev": "^0.20.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.18",
