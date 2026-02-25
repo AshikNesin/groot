@@ -32,7 +32,9 @@ async function main() {
 	});
 
 	const connectionString = dbServer.database.connectionString;
-	console.log(`✅ Local DB ready: ${connectionString}\n`);
+	console.log("✅ Local DB ready!\n");
+	console.log(`   TCP URL:    ${connectionString}`);
+	console.log(`   Prisma URL: ${dbServer.ppg.url}\n`);
 
 	// Push schema to the local DB
 	console.log("📦 Pushing Prisma schema...\n");
