@@ -101,7 +101,7 @@ async function main() {
 	await new Promise<void>((resolvePromise, reject) => {
 		const push = spawn(
 			"npx",
-			["prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
+			["prisma", "db", "push", "--accept-data-loss"],
 			{
 				stdio: "inherit",
 				env: { ...process.env, DATABASE_URL: connectionString },
@@ -112,6 +112,20 @@ async function main() {
 			else reject(new Error(`prisma db push exited with code ${code}`));
 		});
 		push.on("error", reject);
+	});
+
+	// Seed default user for local development
+	console.log("\n👤 Seeding default user...\n");
+	await new Promise<void>((resolvePromise, reject) => {
+		const seed = spawn("tsx", ["scripts/seed-user.ts"], {
+			stdio: "inherit",
+			env: { ...process.env, DATABASE_URL: connectionString },
+		});
+		seed.on("close", (code) => {
+			if (code === 0) resolvePromise();
+			else reject(new Error(`seed-user exited with code ${code}`));
+		});
+		seed.on("error", reject);
 	});
 
 	console.log("\n🚀 Starting dev server...\n");
