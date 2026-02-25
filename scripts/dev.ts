@@ -9,7 +9,7 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { startPrismaDevServer } from "@prisma/dev";
 
@@ -32,9 +32,14 @@ async function main() {
 	});
 
 	const connectionString = dbServer.database.connectionString;
+
+	// Write connection string so `pnpm dev:studio` can pick it up
+	writeFileSync(resolve(process.cwd(), ".dev-db-url"), connectionString);
+
 	console.log("✅ Local DB ready!\n");
 	console.log(`   TCP URL:    ${connectionString}`);
-	console.log(`   Prisma URL: ${dbServer.ppg.url}\n`);
+	console.log(`   Prisma URL: ${dbServer.ppg.url}`);
+	console.log(`   Studio:     pnpm dev:studio (in another terminal)\n`);
 
 	// Push schema to the local DB
 	console.log("📦 Pushing Prisma schema...\n");
@@ -97,6 +102,9 @@ async function shutdown() {
 		dbServer = null;
 		console.log("   Local DB stopped.");
 	}
+
+	// Clean up the connection string file
+	try { unlinkSync(resolve(process.cwd(), ".dev-db-url")); } catch {}
 
 	process.exit(0);
 }
