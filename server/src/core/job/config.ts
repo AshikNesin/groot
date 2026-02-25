@@ -1,13 +1,21 @@
 import { env } from "@/env";
 import { JobName } from "@/core/job/queue";
 
+// Detect local PGlite (from prisma dev) — only supports single connection
+export const isLocalPGlite =
+  env.DATABASE_URL.includes("sslmode=disable") &&
+  env.DATABASE_URL.includes("localhost");
+
 export const jobConfig = {
   connectionString: env.DATABASE_URL,
-  concurrency: env.JOB_CONCURRENCY,
+  // PGlite only supports 1 connection, so limit concurrency
+  concurrency: isLocalPGlite ? 1 : env.JOB_CONCURRENCY,
   pollIntervalSeconds: env.JOB_POLL_INTERVAL,
   archiveCompletedAfterSeconds: env.JOB_ARCHIVE_COMPLETED_AFTER_SECONDS,
   deleteArchivedAfterSeconds: env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
-  monitorStateIntervalSeconds: env.JOB_MONITOR_STATE_INTERVAL,
+  monitorStateIntervalSeconds: isLocalPGlite
+    ? 0
+    : env.JOB_MONITOR_STATE_INTERVAL,
 } as const;
 
 export const defaultJobOptions = {
