@@ -51,6 +51,113 @@ curl -u user:pass -X POST http://localhost:3000/api/v1/jobs/todo-cleanup/job-123
 curl -u user:pass -X DELETE http://localhost:3000/api/v1/jobs/todo-cleanup/job-123
 ```
 
+## Storage
+
+```bash
+# List files (with optional prefix filter)
+curl -u user:pass "http://localhost:3000/api/v1/storage/files?prefix=docs/&delimiter=/"
+
+# Upload a single file
+curl -u user:pass -F "file=@document.pdf" -F "filePath=docs/document.pdf" \
+  http://localhost:3000/api/v1/storage/files/upload
+
+# Upload multiple files (bulk)
+curl -u user:pass -F "files=@file1.pdf" -F "files=@file2.pdf" \
+  http://localhost:3000/api/v1/storage/files/bulk-upload
+
+# Download a file
+curl -u user:pass "http://localhost:3000/api/v1/storage/files/download?filePath=docs/document.pdf" -o document.pdf
+
+# Get file metadata
+curl -u user:pass "http://localhost:3000/api/v1/storage/files/metadata?filePath=docs/document.pdf"
+
+# Create a folder
+curl -u user:pass -X POST http://localhost:3000/api/v1/storage/folders \
+  -H "Content-Type: application/json" \
+  -d '{"folderPath":"archive/2024/"}'
+
+# Rename a file
+curl -u user:pass -X PUT http://localhost:3000/api/v1/storage/files/rename \
+  -H "Content-Type: application/json" \
+  -d '{"oldPath":"docs/old.pdf","newPath":"docs/new.pdf"}'
+
+# Delete files
+curl -u user:pass -X DELETE http://localhost:3000/api/v1/storage/files \
+  -H "Content-Type: application/json" \
+  -d '{"filePaths":["docs/document.pdf"]}'
+
+# Create a public share link
+curl -u user:pass -X POST http://localhost:3000/api/v1/storage/shares \
+  -H "Content-Type: application/json" \
+  -d '{"filePath":"docs/document.pdf","expiresInHours":24,"password":"optional-password"}'
+
+# List shares for a file
+curl -u user:pass "http://localhost:3000/api/v1/storage/shares?filePath=docs/document.pdf"
+
+# Revoke a share
+curl -u user:pass -X DELETE http://localhost:3000/api/v1/storage/shares/share-uuid-here
+```
+
+## Public File Sharing
+
+```bash
+# Access a shared file (no auth required, rate-limited)
+curl http://localhost:3000/api/v1/public/files/share-uuid-here -o downloaded-file.pdf
+
+# Get share info/metadata
+curl http://localhost:3000/api/v1/public/files/share-uuid-here/info
+
+# Verify password for password-protected share
+curl -X POST http://localhost:3000/api/v1/public/files/share-uuid-here/verify-password \
+  -H "Content-Type: application/json" \
+  -d '{"password":"optional-password"}'
+```
+
+## Auth User Management (Admin)
+
+```bash
+# Create a new user (requires admin auth key)
+curl -X POST http://localhost:3000/api/v1/auth/users \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Auth: your-admin-key" \
+  -d '{"email":"newuser@example.com","password":"secure-password"}'
+
+# List all users (requires admin auth key)
+curl -H "X-Admin-Auth: your-admin-key" \
+  http://localhost:3000/api/v1/auth/users
+
+# Login
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}'
+
+# Get current user (requires JWT from login)
+curl -H "Authorization: Bearer your-jwt-token" \
+  http://localhost:3000/api/v1/auth/me
+
+# Logout (requires JWT)
+curl -X POST -H "Authorization: Bearer your-jwt-token" \
+  http://localhost:3000/api/v1/auth/logout
+```
+
+## App Settings
+
+```bash
+# Get all settings
+curl http://localhost:3000/api/v1/settings
+
+# Get specific setting
+curl http://localhost:3000/api/v1/settings/app-name
+
+# Update a setting
+curl -X PUT http://localhost:3000/api/v1/settings/app-name \
+  -H "Content-Type: application/json" \
+  -d '{"value":"My App"}'
+
+# Delete a setting
+curl -X DELETE http://localhost:3000/api/v1/settings/app-name
+```
+
 ## Combined Workflow
 
 1. Create todos via the first snippet.
