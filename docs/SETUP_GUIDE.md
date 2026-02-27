@@ -36,12 +36,49 @@ Copy `.env.example` to `.env` and populate these keys (validated in `server/src/
 | `PORT` | HTTP port for Express (default `3000`) |
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma and pg-boss |
 | `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD` | Credentials enforced by `basicAuthMiddleware` for all `/api/v1` routes |
-| `SENTRY_DSN` | Optional URL for capturing backend errors |
+
+### Authentication Variables
+
+| Variable | Description |
+| --- | --- |
+| `JWT_SECRET` | Secret key for signing JWT tokens (min 32 characters) |
+| `ADMIN_AUTH_KEY` | Key for admin-only routes (X-Admin-Auth header) |
+
+### Passkey (WebAuthn) Variables
+
+| Variable | Description |
+| --- | --- |
+| `RP_ID` | Relying Party ID (e.g., `localhost` for dev, your domain for prod) |
+| `RP_NAME` | Display name for passkey prompts |
+| `RP_ORIGIN` | Full origin URL (e.g., `http://localhost:3000`) |
+
+### File Storage (S3) Variables
+
+| Variable | Description |
+| --- | --- |
+| `AWS_ACCESS_KEY_ID` | AWS access key for S3 |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3 |
+| `AWS_DEFAULT_REGION` | AWS region (default: `us-east-1`) |
+| `AWS_DEFAULT_S3_BUCKET` | S3 bucket name for file storage |
+
+### Job Queue Variables
+
+| Variable | Description |
+| --- | --- |
+| `ENABLE_JOB_QUEUE` | Enable/disable job processing (default: `true`) |
 | `JOB_CONCURRENCY` | Number of workers registered per job (default `5`) |
-| `JOB_POLL_INTERVAL` | Worker polling interval in seconds |
-| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | Pg-boss archival window |
-| `JOB_DELETE_ARCHIVED_AFTER_SECONDS` | Pg-boss deletion window |
-| `JOB_MONITOR_STATE_INTERVAL` | Interval for emitting queue state metrics |
+| `JOB_POLL_INTERVAL` | Worker polling interval in milliseconds (default `2000`) |
+| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | Pg-boss archival window (default `86400`) |
+| `JOB_DELETE_ARCHIVED_AFTER_SECONDS` | Pg-boss deletion window (default `604800`) |
+| `JOB_MONITOR_STATE_INTERVAL` | Interval for emitting queue state metrics (default `30000`) |
+
+### Monitoring Variables
+
+| Variable | Description |
+| --- | --- |
+| `SENTRY_DSN` | Optional URL for capturing backend errors in Sentry |
+| `SENTRY_RELEASE` | Release version for Sentry (optional) |
+| `LOG_LEVEL` | Logging verbosity: `trace`, `debug`, `info`, `warn`, `error` (default: `info`) |
 
 ## Local Development
 

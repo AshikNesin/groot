@@ -122,14 +122,16 @@ See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
 | Area | Technologies |
 |------|-------------|
 | **Backend** | Node.js, Express 5, TypeScript, Prisma, PostgreSQL |
-| **Auth** | JWT, bcryptjs, cookie-parser |
+| **Auth** | JWT (bcryptjs), Passkeys (@simplewebauthn/server), cookie-parser |
+| **File Storage** | AWS S3 SDK (@aws-sdk/client-s3), Multer |
 | **Jobs** | pg-boss (PostgreSQL-backed queue) |
+| **Key-Value Store** | Keyv with PostgreSQL adapter |
 | **Logging** | Pino, Sentry |
 | **Frontend** | React 19, TypeScript, Vite 7 |
-| **UI** | Radix UI, Tailwind CSS, shadcn/ui patterns |
+| **UI** | Radix UI primitives, Tailwind CSS, shadcn/ui patterns |
 | **State** | Zustand, React Query |
 | **Routing** | React Router 7 |
-| **Tooling** | Biome, Vitest, pnpm |
+| **Tooling** | Biome, Vitest, Playwright, pnpm |
 
 ## Authentication
 
