@@ -12,3 +12,5 @@ pnpm-debug.log*
 
 /server/src/generated/prisma
 .dev-db-url
+playwright-report/
+test-results/
