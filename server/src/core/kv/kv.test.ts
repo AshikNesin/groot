@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createNamespaceKv } from "@/core/kv";
 import Keyv from "keyv";
 
-// Mock the Prisma client for testing
-const mockPrisma = {
+// Mock the Prisma client for testing - use vi.hoisted to avoid initialization order issues
+const mockPrisma = vi.hoisted(() => ({
   keyv: {
     findUnique: vi.fn(),
     upsert: vi.fn(),
@@ -11,7 +11,7 @@ const mockPrisma = {
     deleteMany: vi.fn(),
     findMany: vi.fn(),
   },
-};
+}));
 
 vi.mock("@/core/database", () => ({
   prisma: mockPrisma,
