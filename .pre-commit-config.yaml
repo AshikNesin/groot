@@ -8,6 +8,7 @@ repos:
     rev: v8.21.2
     hooks:
       - id: gitleaks
+        args: ["--verbose", "--redact", "--staged", "--config", ".gitleaks.toml"]
 
   # Linting and formatting with Biome
   - repo: local
