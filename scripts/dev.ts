@@ -100,8 +100,8 @@ async function main() {
 	console.log("📦 Pushing Prisma schema...\n");
 	await new Promise<void>((resolvePromise, reject) => {
 		const push = spawn(
-			"npx",
-			["prisma", "db", "push", "--accept-data-loss"],
+			"pnpm",
+			["exec", "prisma", "db", "push", "--accept-data-loss"],
 			{
 				stdio: "inherit",
 				env: { ...process.env, DATABASE_URL: connectionString },
