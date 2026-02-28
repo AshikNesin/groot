@@ -1,0 +1,17 @@
+# Gitleaks configuration
+# See: https://github.com/gitleaks/gitleaks#configuration
+
+title = "Gitleaks Config"
+
+[extend]
+# Use the default ruleset
+useDefault = true
+
+# Global allowlist - paths to ignore
+[allowlist]
+paths = [
+    '''^\.env\.example$''',
+    '''^docs/''',
+    '''\.test\.''',
+    '''\.spec\.''',
+]
