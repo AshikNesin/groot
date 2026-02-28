@@ -6,9 +6,9 @@ export default defineWorkspace([
     extends: "./vitest.config.ts",
     test: {
       name: "server",
-      include: ["server/src/**/*.test.ts"],
+      include: ["tests/server/**/*.test.ts"],
       environment: "node",
-      setupFiles: [path.resolve(__dirname, "server/src/test/setup.ts")],
+      setupFiles: [path.resolve(__dirname, "tests/server/setup.ts")],
     },
     resolve: {
       alias: {
@@ -20,9 +20,9 @@ export default defineWorkspace([
     extends: "./vitest.config.ts",
     test: {
       name: "client",
-      include: ["client/src/**/*.test.{ts,tsx}"],
+      include: ["tests/client/**/*.test.{ts,tsx}"],
       environment: "jsdom",
-      setupFiles: [path.resolve(__dirname, "client/src/test/setup.ts")],
+      setupFiles: [path.resolve(__dirname, "tests/client/setup.ts")],
     },
     resolve: {
       alias: {
