@@ -23,7 +23,7 @@ repos:
 
       - id: biome-format
         name: Biome format
-        entry: pnpm exec biome format --write server/src client/src
+        entry: bash -c 'pnpm exec biome format --write server/src client/src && git add server/src client/src'
         language: system
         types: [file]
         files: \.(ts|tsx|js|jsx|json)$
