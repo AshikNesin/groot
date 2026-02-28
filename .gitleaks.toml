@@ -7,6 +7,21 @@ title = "Gitleaks Config"
 # Use the default ruleset
 useDefault = true
 
+# Custom rules for generic secrets
+[[rules]]
+id = "generic-password-assignment"
+description = "Generic password assignment in config files"
+regex = '''(?i)(password|passwd|pwd)\s*[=:]\s*['"]?[^\s'"<>]{4,}['"]?'''
+keywords = ["password", "passwd", "pwd"]
+tags = ["password", "secret"]
+
+[[rules]]
+id = "generic-secret-assignment"
+description = "Generic secret/key assignment in config files"
+regex = '''(?i)(secret|api_key|apikey|access_key|private_key|token)\s*[=:]\s*['"]?[^\s'"<>]{8,}['"]?'''
+keywords = ["secret", "api_key", "apikey", "access_key", "private_key", "token"]
+tags = ["secret", "key"]
+
 # Global allowlist - paths to ignore
 [allowlist]
 paths = [
