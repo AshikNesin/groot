@@ -45,6 +45,16 @@ client/src/
 ├── store/           # Zustand stores (auth, etc.)
 └── hooks/           # Custom React hooks
 
+tests/               # Centralized test files
+├── server/          # Server unit tests (mirrors server/src structure)
+│   ├── setup.ts     # Server test setup
+│   ├── core/        # Core utility tests
+│   ├── routes/      # Route tests
+│   └── services/    # Service tests
+└── client/          # Client unit tests (mirrors client/src structure)
+    ├── setup.ts     # Client test setup
+    └── components/  # Component tests
+
 docs/                # Documentation files
 prisma/              # Database schema and migrations
 ```
@@ -158,7 +168,10 @@ RP_NAME=Express React Boilerplate
 ## Testing
 
 ### Unit Tests (Vitest)
-- Located alongside source files as `*.test.ts`
+- Located in centralized `tests/` directory
+- Server tests in `tests/server/` mirror `server/src/` structure
+- Client tests in `tests/client/` mirror `client/src/` structure
+- Use `@/` alias for imports (resolves to server/src or client/src based on workspace)
 - Run with `pnpm test`
 - Uses `@testing-library/react` for component tests
 
