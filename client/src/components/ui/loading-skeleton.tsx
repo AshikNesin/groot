@@ -83,8 +83,9 @@ export function SkeletonList({
 
   return (
     <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <SkeletonComponent key={i} />
+      {Array.from({ length: count }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Skeletons are static placeholders with no state
+        <SkeletonComponent key={`skeleton-${variant}-${i}`} />
       ))}
     </div>
   );

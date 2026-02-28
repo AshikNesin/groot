@@ -379,11 +379,7 @@ export function Storage() {
               Browse and manage your files and folders
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetchFiles()}
-          >
+          <Button variant="outline" size="icon" onClick={() => refetchFiles()}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -433,10 +429,7 @@ export function Storage() {
               Upload
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => setFolderDialogOpen(true)}
-            >
+            <Button variant="outline" onClick={() => setFolderDialogOpen(true)}>
               <FolderPlus className="mr-2 h-4 w-4" />
               New Folder
             </Button>
@@ -490,7 +483,9 @@ export function Storage() {
                         {!file.isDirectory && (
                           <Checkbox
                             checked={selectedFiles.has(file.key)}
-                            onCheckedChange={() => toggleFileSelection(file.key)}
+                            onCheckedChange={() =>
+                              toggleFileSelection(file.key)
+                            }
                             onClick={(e) => e.stopPropagation()}
                           />
                         )}
@@ -754,7 +749,9 @@ export function Storage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Rename File</DialogTitle>
-              <DialogDescription>Enter a new name for the file</DialogDescription>
+              <DialogDescription>
+                Enter a new name for the file
+              </DialogDescription>
             </DialogHeader>
             <form className="space-y-4" onSubmit={handleRename}>
               <div className="space-y-2">
@@ -901,9 +898,8 @@ export function Storage() {
                         <div>
                           <p className="font-medium">{share.shareId}</p>
                           <p className="text-gray-500">
-                            Expires{" "}
-                            {new Date(share.expiresAt).toLocaleString()} ·
-                            Accesses {share.accessCount}
+                            Expires {new Date(share.expiresAt).toLocaleString()}{" "}
+                            · Accesses {share.accessCount}
                           </p>
                           {share.isPasswordProtected && (
                             <p className="text-gray-500">Password protected</p>

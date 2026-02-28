@@ -17,7 +17,7 @@ export type AsyncRequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction,
-) => Promise<undefined | Response | void>;
+) => Promise<undefined | Response>;
 
 export function asyncWrapper(handler: AsyncRequestHandler): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {

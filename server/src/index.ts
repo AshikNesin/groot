@@ -125,9 +125,7 @@ const server = app.listen(port, async () => {
 
 const initializeJobQueue = async () => {
   if (!env.ENABLE_JOB_QUEUE) {
-    logger.info(
-      "Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)",
-    );
+    logger.info("Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)");
     return;
   }
 

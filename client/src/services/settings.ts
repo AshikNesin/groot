@@ -37,9 +37,12 @@ export const settingsService = {
   },
 
   async getSetting(key: string): Promise<AppSetting> {
-    const response = await fetch(`/api/v1/settings/${encodeURIComponent(key)}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `/api/v1/settings/${encodeURIComponent(key)}`,
+      {
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) {
       throw new Error("Failed to fetch setting");
     }
@@ -47,12 +50,18 @@ export const settingsService = {
     return result.data;
   },
 
-  async upsertSetting(key: string, data: UpsertSettingData): Promise<AppSetting> {
-    const response = await fetch(`/api/v1/settings/${encodeURIComponent(key)}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
+  async upsertSetting(
+    key: string,
+    data: UpsertSettingData,
+  ): Promise<AppSetting> {
+    const response = await fetch(
+      `/api/v1/settings/${encodeURIComponent(key)}`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      },
+    );
     if (!response.ok) {
       throw new Error("Failed to save setting");
     }
@@ -61,10 +70,13 @@ export const settingsService = {
   },
 
   async deleteSetting(key: string): Promise<void> {
-    const response = await fetch(`/api/v1/settings/${encodeURIComponent(key)}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `/api/v1/settings/${encodeURIComponent(key)}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) {
       throw new Error("Failed to delete setting");
     }

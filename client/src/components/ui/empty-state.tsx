@@ -64,6 +64,8 @@ export function EmptyTableState({
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          role="img"
+          aria-label="Empty inbox"
         >
           <path
             strokeLinecap="round"
@@ -106,6 +108,8 @@ export function ErrorState({
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          role="img"
+          aria-label="Warning"
         >
           <path
             strokeLinecap="round"
