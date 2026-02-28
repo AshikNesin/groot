@@ -1,0 +1,29 @@
+# Pre-commit hooks configuration
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Gitleaks - detect hardcoded secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # Linting and formatting with Biome
+  - repo: local
+    hooks:
+      - id: biome-lint
+        name: Biome lint
+        entry: pnpm exec biome lint .
+        language: system
+        types: [file]
+        files: \.(ts|tsx|js|jsx|json)$
+        pass_filenames: false
+
+      - id: biome-format
+        name: Biome format
+        entry: pnpm exec biome format --write server/src client/src
+        language: system
+        types: [file]
+        files: \.(ts|tsx|js|jsx|json)$
+        pass_filenames: false
