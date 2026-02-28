@@ -19,17 +19,16 @@ export function LoadingSpinner({
   };
 
   return (
-    <div
+    <output
       className={cn(
         "animate-spin rounded-full border-gray-300 border-t-gray-900",
         sizeClasses[size],
         className,
       )}
-      role="status"
       aria-label="Loading"
     >
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
 }
 

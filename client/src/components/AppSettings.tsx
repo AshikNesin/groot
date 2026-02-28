@@ -18,10 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import {
-  type AppSetting,
-  settingsService,
-} from "@/services/settings";
+import { type AppSetting, settingsService } from "@/services/settings";
 import { json } from "@codemirror/lang-json";
 import CodeMirror from "@uiw/react-codemirror";
 import { useCallback, useEffect, useState } from "react";
@@ -47,8 +44,8 @@ export function AppSettings() {
       setError(null);
       const data = await settingsService.getSettings();
       setSettings(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load settings");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load settings");
     } finally {
       setIsLoading(false);
     }
@@ -98,8 +95,8 @@ export function AppSettings() {
       });
       setSuccess(`"${selectedKey}" has been updated successfully`);
       await loadSettings();
-    } catch (err: any) {
-      setError(err.message || "Failed to save setting");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save setting");
     } finally {
       setIsSaving(false);
     }
@@ -121,8 +118,8 @@ export function AppSettings() {
       setSelectedKey(null);
       setShowDeleteDialog(false);
       await loadSettings();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete setting");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete setting");
     } finally {
       setIsDeleting(false);
     }
@@ -147,8 +144,8 @@ export function AppSettings() {
       setNewSettingKey("");
       setShowNewSettingForm(false);
       await loadSettings();
-    } catch (err: any) {
-      setError(err.message || "Failed to create setting");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create setting");
     } finally {
       setIsCreating(false);
     }
@@ -350,7 +347,11 @@ export function AppSettings() {
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>

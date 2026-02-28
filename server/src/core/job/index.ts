@@ -2,7 +2,13 @@ import { PgBoss } from "pg-boss";
 import type { Job as BossJob } from "pg-boss";
 import { logger } from "@/core/logger";
 import { prisma } from "@/core/database";
-import { jobConfig, jobOptions, defaultJobOptions, isSingleConnection, LOCAL_DB_MODE } from "@/core/job/config";
+import {
+  jobConfig,
+  jobOptions,
+  defaultJobOptions,
+  isSingleConnection,
+  LOCAL_DB_MODE,
+} from "@/core/job/config";
 import type { JobName, JobDataMap } from "@/core/job/queue";
 import { startWorkers, stopWorkers } from "@/core/job/worker";
 import {

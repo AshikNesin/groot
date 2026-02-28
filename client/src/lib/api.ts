@@ -360,4 +360,4 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 // Also export the raw axios instance for backward compatibility
-export const api = apiClient["client"];
+export const api = apiClient.client;

@@ -62,13 +62,13 @@ class PasskeyService {
       }
 
       return passkey;
-    } catch (error: any) {
-      if (error.name === "NotAllowedError") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "NotAllowedError") {
         throw new Error(
           "Passkey registration was cancelled or not allowed. Please try again.",
         );
       }
-      if (error.name === "NotSupportedError") {
+      if (error instanceof Error && error.name === "NotSupportedError") {
         throw new Error(
           "Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn.",
         );
@@ -115,13 +115,13 @@ class PasskeyService {
       }
 
       return result;
-    } catch (error: any) {
-      if (error.name === "NotAllowedError") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "NotAllowedError") {
         throw new Error(
           "Passkey authentication was cancelled or not allowed. Please try again.",
         );
       }
-      if (error.name === "NotSupportedError") {
+      if (error instanceof Error && error.name === "NotSupportedError") {
         throw new Error(
           "Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn.",
         );

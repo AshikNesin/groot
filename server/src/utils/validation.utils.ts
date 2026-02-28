@@ -39,7 +39,7 @@ export function isValidISODate(date: string): boolean {
   if (!isoRegex.test(date)) return false;
 
   const d = new Date(date);
-  return d instanceof Date && !isNaN(d.getTime());
+  return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
 /**
@@ -50,7 +50,7 @@ export function isValidDateString(date: string): boolean {
   if (!dateRegex.test(date)) return false;
 
   const d = new Date(date);
-  return d instanceof Date && !isNaN(d.getTime());
+  return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
 /**
