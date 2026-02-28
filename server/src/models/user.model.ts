@@ -1,5 +1,5 @@
 import { prisma } from "@/core/database";
-import type { User } from "@/generated/prisma";
+import type { User } from "@/generated/prisma/models";
 
 /**
  * Find user by ID

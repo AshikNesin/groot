@@ -1,6 +1,6 @@
 import { prisma } from "@/core/database";
 import { logger } from "@/core/logger";
-import type { PrismaClient } from "@/generated/prisma";
+import type { PrismaClient } from "@/generated/prisma/client";
 
 /**
  * Prisma-based Keyv Storage Adapter

@@ -7,10 +7,15 @@
  * Credentials: test@test.com / password
  */
 
-import { PrismaClient } from "../server/src/generated/prisma/index.js";
+import { PrismaClient } from "../server/src/generated/prisma/client.js";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+	connectionString: process.env.DATABASE_URL!,
+});
+
+const prisma = new PrismaClient({ adapter });
 
 const SEED_USER = {
 	email: "test@test.com",

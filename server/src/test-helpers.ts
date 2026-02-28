@@ -1,5 +1,5 @@
 import { prisma } from "@/core/database";
-import type { User, Todo } from "@/generated/prisma";
+import type { User, Todo } from "@/generated/prisma/models";
 
 let counter = 0;
 
