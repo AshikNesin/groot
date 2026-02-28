@@ -1,5 +1,5 @@
 {
-  "name": "express-react-boilerplate",
+  "name": "groot",
   "version": "1.0.0",
   "description": "A minimal boilerplate for building Express.js and React.js applications",
   "type": "module",
@@ -30,15 +30,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AshikNesin/express-react-boilerplate.git"
+    "url": "git+https://github.com/AshikNesin/groot.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/AshikNesin/express-react-boilerplate/issues"
+    "url": "https://github.com/AshikNesin/groot/issues"
   },
-  "homepage": "https://github.com/AshikNesin/express-react-boilerplate#readme",
+  "homepage": "https://github.com/AshikNesin/groot#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@playwright/test": "^1.50.0",

@@ -1,7 +1,7 @@
 # SaaS Boilerplate Enhancements
 
 ## Overview
-This document outlines all the generic, reusable components extracted from `nesins-finance-api` and integrated into the `express-react-boilerplate`.
+This document outlines all the generic, reusable components extracted from `nesins-finance-api` and integrated into `groot`.
 
 ---
 
@@ -371,7 +371,7 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
 ## 📦 File Structure
 
 ```
-express-react-boilerplate/
+groot/
 ├── server/src/
 │   ├── core/
 │   │   ├── async-handler.ts ✨ NEW

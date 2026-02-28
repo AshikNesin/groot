@@ -13,7 +13,7 @@ const loggerConfig = {
   level: logLevel,
   base: {
     env: process.env.NODE_ENV || "development",
-    service: "express-react-boilerplate",
+    service: "groot",
     pid: process.pid,
   },
   formatters: {
@@ -103,7 +103,7 @@ export function createJobLogger(
     level: logLevel,
     base: {
       env: process.env.NODE_ENV || "development",
-      service: "express-react-boilerplate",
+      service: "groot",
       pid: process.pid,
     },
     formatters: loggerConfig.formatters,

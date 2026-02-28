@@ -124,7 +124,7 @@ update_app_name() {
     slug_name=$(to_slug "$app_name")
     
     # Ask if user wants to update package.json and code references
-    read -p "Also update package.json and code references from 'express-react-boilerplate' to '$slug_name'? (y/N): " -n 1 -r
+    read -p "Also update package.json and code references from 'groot' to '$slug_name'? (y/N): " -n 1 -r
     echo
     
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -136,7 +136,7 @@ update_app_name() {
 update_code_references() {
     local app_name="$1"      # Human-readable name (e.g., "Gandalf App")
     local slug_name="$2"     # Slug for code (e.g., "gandalf-app")
-    local old_name="express-react-boilerplate"
+    local old_name="groot"
     
     print_info "Updating code references from '$old_name' to '$slug_name'..."
     print_info "RP_NAME will remain as '$app_name' (human-readable)"
@@ -225,7 +225,7 @@ final_steps() {
 main() {
     echo ""
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║          🚀 Express React Boilerplate Setup                ║"
+    echo "║          🚀 Groot Setup                                    ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
     

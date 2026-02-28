@@ -49,7 +49,7 @@ Add these environment variables to configure the Relying Party (RP):
 
 ```bash
 # Relying Party Name (shown to users during registration)
-RP_NAME="Express React Boilerplate"
+RP_NAME="Groot"
 
 # Relying Party ID (your domain)
 # For localhost development: "localhost"

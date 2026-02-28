@@ -15,7 +15,7 @@ import type {
 } from "@simplewebauthn/types";
 
 // Configuration for WebAuthn
-export const RP_NAME = process.env.RP_NAME || "Express React Boilerplate";
+export const RP_NAME = process.env.RP_NAME || "Groot";
 export const RP_ID = process.env.RP_ID || "localhost";
 export const ORIGIN = process.env.ORIGIN || "http://localhost:3000";
 
