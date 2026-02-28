@@ -4,8 +4,9 @@
 # This script sets up your new project by:
 # 1. Copying .env.example to .env
 # 2. Generating secure secrets for JWT_SECRET and ADMIN_AUTH_KEY
-# 3. Asking for app name and updating it across the project
-# 4. Updating package.json with the new app name
+# 3. Installing pre-commit hooks (gitleaks + biome format)
+# 4. Asking for app name and updating it across the project
+# 5. Updating package.json with the new app name
 
 set -e
 
@@ -88,6 +89,27 @@ setup_env() {
     
     print_success "Generated secure JWT_SECRET (64 chars)"
     print_success "Generated secure ADMIN_AUTH_KEY (48 chars)"
+}
+
+# Setup pre-commit hooks (includes gitleaks)
+setup_pre_commit() {
+    print_info "Setting up pre-commit hooks..."
+
+    # Check if pre-commit is installed
+    if ! command -v pre-commit &> /dev/null; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            print_info "Installing pre-commit via Homebrew..."
+            brew install pre-commit
+        else
+            print_error "pre-commit not found. Please install it:"
+            echo "  pip install pre-commit"
+            echo "  Then run: pre-commit install"
+            return 1
+        fi
+    fi
+
+    pre-commit install
+    print_success "Pre-commit hooks installed (gitleaks + biome format)"
 }
 
 # Convert app name to slug format (lowercase, hyphenated)
@@ -237,6 +259,7 @@ main() {
     
     # Run setup steps
     setup_env
+    setup_pre_commit
     update_app_name
     final_steps
 }
