@@ -5,7 +5,7 @@ import {
   UnauthorizedError,
 } from "@/core/errors";
 import { logger } from "@/core/logger";
-import type { Passkey, User } from "@/generated/prisma";
+import type { Passkey, User } from "@/generated/prisma/models";
 import * as passkeyModel from "@/models/passkey.model";
 import * as userModel from "@/models/user.model";
 import { generateToken } from "@/utils/jwt.utils";

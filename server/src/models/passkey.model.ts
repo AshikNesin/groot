@@ -1,5 +1,5 @@
 import { prisma } from "@/core/database";
-import type { Passkey } from "@/generated/prisma";
+import type { Passkey } from "@/generated/prisma/models";
 
 export type CreatePasskeyData = {
   userId: number;

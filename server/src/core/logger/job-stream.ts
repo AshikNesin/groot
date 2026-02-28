@@ -1,6 +1,6 @@
 import { Writable } from "node:stream";
 import { prisma } from "@/core/database";
-import { Prisma } from "@/generated/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 interface LogEntry {
   level: string;
