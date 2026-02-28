@@ -527,10 +527,12 @@ export function JobDetail() {
                 <Console
                   logs={logs.map((log) => ({
                     id: log.id.toString(),
-                    // biome-ignore lint/suspicious/noExplicitAny: console-feed types are strict
-                    method: (log.level === "warning"
-                      ? "warn"
-                      : log.level) as any,
+                    method: (log.level === "warning" ? "warn" : log.level) as
+                      | "log"
+                      | "warn"
+                      | "error"
+                      | "info"
+                      | "debug",
                     data: [
                       `[${formatLocaleDateTime(new Date(log.timestamp))}]`,
                       log.message,
