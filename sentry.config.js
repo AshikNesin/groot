@@ -7,7 +7,7 @@ export default {
   include: ["./dist"],
   ignore: ["node_modules"],
   deploy: {
-    env: process.env.NODE_ENV || "production"
+    env: process.env.NODE_ENV || "production",
   },
   // Set this to true if you don't want to upload source maps
   // Useful for development

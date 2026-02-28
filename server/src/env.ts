@@ -12,9 +12,7 @@ export const env = createEnv({
       .enum(["development", "production", "test"])
       .default("development"),
     PORT: z.coerce.number().default(3000), // coerce to number, default to 3000
-    DATABASE_URL: z
-      .string()
-      .min(1, "DATABASE_URL must be set"),
+    DATABASE_URL: z.string().min(1, "DATABASE_URL must be set"),
 
     JWT_SECRET: z
       .string()

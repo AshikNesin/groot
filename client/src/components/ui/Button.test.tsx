@@ -31,10 +31,14 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toBeInTheDocument();
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole("button", { name: /secondary/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /secondary/i }),
+    ).toBeInTheDocument();
 
     rerender(<Button variant="destructive">Destructive</Button>);
-    expect(screen.getByRole("button", { name: /destructive/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /destructive/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders different sizes", () => {

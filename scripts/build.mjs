@@ -15,7 +15,7 @@ const generatedPrismaExternalPlugin = {
     build.onResolve({ filter: /^@\/generated\/prisma/ }, (args) => {
       let relativePath = args.path.replace(
         /^@\/generated\/prisma/,
-        "../server/src/generated/prisma"
+        "../server/src/generated/prisma",
       );
       if (relativePath === "../server/src/generated/prisma") {
         relativePath = "../server/src/generated/prisma/index.js";

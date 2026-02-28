@@ -37,8 +37,10 @@ export function PasskeyManager() {
     try {
       const data = await passkeyService.listPasskeys();
       setPasskeys(data);
-    } catch (error: any) {
-      setError(error.message || "Failed to load passkeys");
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error ? error.message : "Failed to load passkeys",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -57,8 +59,10 @@ export function PasskeyManager() {
       setSuccess("Passkey added successfully");
       setNewPasskeyName("");
       await loadPasskeys();
-    } catch (error: any) {
-      setError(error.message || "Failed to add passkey");
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error ? error.message : "Failed to add passkey",
+      );
     } finally {
       setIsAddingPasskey(false);
     }
@@ -74,8 +78,10 @@ export function PasskeyManager() {
       setSuccess("Passkey deleted successfully");
       setPasskeyToDelete(null);
       await loadPasskeys();
-    } catch (error: any) {
-      setError(error.message || "Failed to delete passkey");
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error ? error.message : "Failed to delete passkey",
+      );
     }
   };
 
@@ -93,8 +99,12 @@ export function PasskeyManager() {
       setPasskeyToEdit(null);
       setEditedPasskeyName("");
       await loadPasskeys();
-    } catch (error: any) {
-      setError(error.message || "Failed to update passkey name");
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to update passkey name",
+      );
     }
   };
 
