@@ -15,3 +15,11 @@ pnpm-debug.log*
 playwright-report/
 test-results/
 .pnpm-store/
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+secrets/
+credentials.json
+service-account.json

@@ -12,6 +12,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 ### 🧱 Guides
 - **[Architecture](./guides/architecture.md)** – Server layers, job system, and client structure
 - **[Testing](./guides/testing.md)** – Vitest + Supertest guidance and patterns
+- **[Pre-commit Hooks](./precommit-hooks.md)** – Gitleaks secret detection and linting automation
 
 ### ✨ Features
 - **[Todos API](./features/todos.md)** – CRUD contract, validation, and React integration
