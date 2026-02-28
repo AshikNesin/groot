@@ -1,4 +1,4 @@
-# Express + React SaaS Boilerplate
+# Groot
 
 A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a complete UI component library.
 
