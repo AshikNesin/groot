@@ -95,7 +95,10 @@ export class JobLogStream extends Writable {
           jobName: this.jobName || (jobName as string) || "unknown",
           level: levelStr,
           message: msg || message || "",
-          data: Object.keys(rest).length > 0 ? (rest as Prisma.InputJsonValue) : Prisma.JsonNull,
+          data:
+            Object.keys(rest).length > 0
+              ? (rest as Prisma.InputJsonValue)
+              : Prisma.JsonNull,
           timestamp: time ? new Date(time) : new Date(),
         };
       });

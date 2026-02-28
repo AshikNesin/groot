@@ -67,7 +67,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export function Jobs() {
@@ -116,7 +116,6 @@ export function Jobs() {
         case "this-month":
           start = startOfMonth(now);
           break;
-        case "all":
         default:
           start = undefined;
           end = undefined;
@@ -219,7 +218,13 @@ export function Jobs() {
     }
   }, []);
 
+  const hasInitialized = useRef(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run once on mount
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     loadAvailableJobs();
     loadScheduledJobs();
 

@@ -11,41 +11,46 @@ import { PrismaClient } from "../server/src/generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+
 const adapter = new PrismaPg({
-	connectionString: process.env.DATABASE_URL!,
+  connectionString: databaseUrl,
 });
 
 const prisma = new PrismaClient({ adapter });
 
 const SEED_USER = {
-	email: "test@test.com",
-	password: "password",
-	name: "Test User",
+  email: "test@test.com",
+  password: "password",
+  name: "Test User",
 };
 
 async function seedUser() {
-	const existing = await prisma.user.findUnique({
-		where: { email: SEED_USER.email },
-	});
+  const existing = await prisma.user.findUnique({
+    where: { email: SEED_USER.email },
+  });
 
-	if (existing) {
-		console.log("   Seed user already exists");
-		return;
-	}
+  if (existing) {
+    console.log("   Seed user already exists");
+    return;
+  }
 
-	const hashedPassword = await bcrypt.hash(SEED_USER.password, 10);
+  const hashedPassword = await bcrypt.hash(SEED_USER.password, 10);
 
-	await prisma.user.create({
-		data: {
-			email: SEED_USER.email,
-			password: hashedPassword,
-			name: SEED_USER.name,
-		},
-	});
+  await prisma.user.create({
+    data: {
+      email: SEED_USER.email,
+      password: hashedPassword,
+      name: SEED_USER.name,
+    },
+  });
 
-	console.log("   ✅ Seed user created");
+  console.log("   ✅ Seed user created");
 }
 
 seedUser()
-	.catch(console.error)
-	.finally(() => prisma.$disconnect());
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

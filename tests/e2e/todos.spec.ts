@@ -20,9 +20,9 @@ test.describe("Todos page (authenticated)", () => {
     await page.goto("/todos");
 
     // Find and fill the new todo input
-    const todoInput = page.getByPlaceholder(/add.*todo|new.*todo/i).or(
-      page.getByLabel(/add.*todo|new.*todo/i),
-    );
+    const todoInput = page
+      .getByPlaceholder(/add.*todo|new.*todo/i)
+      .or(page.getByLabel(/add.*todo|new.*todo/i));
 
     if (await todoInput.isVisible()) {
       const uniqueTodo = `Test Todo ${Date.now()}`;

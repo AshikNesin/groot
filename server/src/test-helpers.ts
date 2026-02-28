@@ -6,9 +6,7 @@ let counter = 0;
 /**
  * Create a test user with unique email
  */
-export async function createUser(
-  overrides: Partial<User> = {},
-): Promise<User> {
+export async function createUser(overrides: Partial<User> = {}): Promise<User> {
   counter++;
   const uniqueId = `${Date.now()}-${counter}`;
   return prisma.user.create({
@@ -24,9 +22,7 @@ export async function createUser(
 /**
  * Create a test todo
  */
-export async function createTodo(
-  overrides: Partial<Todo> = {},
-): Promise<Todo> {
+export async function createTodo(overrides: Partial<Todo> = {}): Promise<Todo> {
   const user = overrides.userId ? { id: overrides.userId } : await createUser();
 
   counter++;
