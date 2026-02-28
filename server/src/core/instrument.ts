@@ -5,8 +5,7 @@ import { env } from "@/env";
 const getSentryRelease = () => {
   if (env.SENTRY_RELEASE) return env.SENTRY_RELEASE;
   const sourceVersion = process.env.SOURCE_VERSION;
-  if (sourceVersion)
-    return `express-react-boilerplate@${sourceVersion.slice(0, 7)}`;
+  if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
   return undefined;
 };
 

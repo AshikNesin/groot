@@ -162,7 +162,7 @@ LOG_LEVEL=info
 
 # Passkeys
 RP_ID=localhost
-RP_NAME=Express React Boilerplate
+RP_NAME=Groot
 ```
 
 ## Testing

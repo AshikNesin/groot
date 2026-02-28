@@ -45,7 +45,7 @@ export class NotificationService {
     const message = `<b>Environment:</b><br/>${environment}<br/><b>Port:</b><br/>${port}<br/><b>Time:</b><br/>${new Date().toISOString()}`;
 
     await this.sendNotification({
-      title: "Express React Boilerplate API Started",
+      title: "Groot API Started",
       message: message,
       sound: "pushover",
       html: 1,

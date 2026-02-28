@@ -24,7 +24,7 @@ export const env = createEnv({
       .min(1, "Admin auth key cannot be empty")
       .default("change-this-in-production"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
-    RP_NAME: z.string().default("Express React Boilerplate"),
+    RP_NAME: z.string().default("Groot"),
     RP_ID: z.string().default("localhost"),
     ORIGIN: z.string().default("http://localhost:3000"),
     AWS_ACCESS_KEY_ID: z
