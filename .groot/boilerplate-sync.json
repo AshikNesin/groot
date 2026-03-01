@@ -1,0 +1,54 @@
+{
+  "boilerplate": {
+    "name": "groot",
+    "repo": "https://github.com/AshikNesin/groot",
+    "local_path": "/Users/ashiknesin/Code/groot"
+  },
+  "last_sync": {
+    "commit": "ab4f8a45d657b75bf442169aea2735f8c18f2e24",
+    "date": "2026-03-01",
+    "message": "Initial sync setup"
+  },
+  "sync_config": {
+    "include_patterns": [
+      ".pre-commit-config.yaml",
+      ".gitleaks.toml",
+      "biome.json",
+      "tsconfig.json",
+      "vite.config.ts",
+      "vitest.config.ts",
+      "vitest.workspace.ts",
+      "playwright.config.ts",
+      "postcss.config.js",
+      "tailwind.config.js",
+      "sentry.config.js",
+      "Procfile",
+      "pnpm-workspace.yaml",
+      "prisma.config.ts",
+      "nixpacks.toml",
+      "setup-boilerplate.sh",
+      "scripts/**",
+      "tests/**",
+      "docs/boilerplate/**",
+      ".claude/settings.json",
+      ".claude/commands/**"
+    ],
+    "exclude_patterns": [
+      "README.md",
+      "package.json",
+      "pnpm-lock.yaml",
+      ".env*",
+      "prisma/schema.prisma",
+      "prisma/migrations/**",
+      "client/**",
+      "server/**",
+      "dist/**",
+      "node_modules/**"
+    ],
+    "merge_strategy": {
+      "package.json": "merge_deps",
+      ".gitignore": "append_missing"
+    }
+  },
+  "sync_history": []
+}
