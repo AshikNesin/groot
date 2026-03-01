@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../server/src/generated/prisma"
+  provider            = "prisma-client"
+  output              = "../server/src/generated/prisma"
+  importFileExtension = "js"
 }
 
 datasource db {
