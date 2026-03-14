@@ -13,7 +13,8 @@
       "@/*": ["server/src/*"]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "verbatimModuleSyntax": true
   },
   "include": ["server/src/**/*", "server/src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]

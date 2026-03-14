@@ -12,6 +12,13 @@ import { randomUUID } from "node:crypto";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+export interface ChatOptions {
+  /** AbortSignal for cancellation */
+  signal?: AbortSignal;
+  /** Timeout in milliseconds (default: 60000) */
+  timeout?: number;
+}
+
 export interface ChatResult {
   text: string;
   usage?: {
@@ -52,74 +59,126 @@ class AIService {
   private defaultProvider = env.AI_DEFAULT_PROVIDER;
   private defaultModel = env.AI_DEFAULT_MODEL;
   private trackUsage = env.AI_TRACK_USAGE;
+  private defaultTimeout = 60000; // 60 seconds
 
   /**
    * Non-streaming chat — returns the full response text.
+   * Supports cancellation via AbortSignal.
    */
-  async chat(input: ChatDTO, userId?: number): Promise<ChatResult> {
+  async chat(input: ChatDTO, userId?: number, options?: ChatOptions): Promise<ChatResult> {
     const ai = this.createAI(input);
     const requestId = randomUUID();
+    const timeout = options?.timeout ?? this.defaultTimeout;
 
-    const text = await ai.complete(input.message, {
-      systemPrompt: input.systemPrompt,
-      temperature: input.temperature,
-      maxTokens: input.maxTokens,
-    });
+    // Create AbortController with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    if (this.trackUsage) {
-      const provider = input.provider || this.defaultProvider;
-      const model = input.model || this.defaultModel;
-      const inputTokens = Math.ceil(input.message.length / 4);
-      const outputTokens = Math.ceil(text.length / 4);
+    // Combine timeout signal with user-provided signal
+    let signal = controller.signal;
+    if (options?.signal) {
+      // If user provides a signal, abort when either fires
+      const userSignal = options.signal;
+      const combinedController = new AbortController();
 
-      await aiUsageModel.create({
-        userId,
-        provider,
-        model,
-        inputTokens,
-        outputTokens,
-        totalCost: this.estimateCost(provider, model, inputTokens, outputTokens),
-        stopReason: "stop",
-        requestId,
-      });
+      userSignal.addEventListener("abort", () => combinedController.abort(userSignal.reason));
+      controller.signal.addEventListener("abort", () => combinedController.abort(controller.signal.reason));
+
+      signal = combinedController.signal;
     }
 
-    return { text };
+    try {
+      const text = await ai.complete(input.message, {
+        systemPrompt: input.systemPrompt,
+        temperature: input.temperature,
+        maxTokens: input.maxTokens,
+        signal,
+      });
+
+      if (this.trackUsage) {
+        const provider = input.provider || this.defaultProvider;
+        const model = input.model || this.defaultModel;
+        const inputTokens = Math.ceil(input.message.length / 4);
+        const outputTokens = Math.ceil(text.length / 4);
+
+        await aiUsageModel.create({
+          userId,
+          provider,
+          model,
+          inputTokens,
+          outputTokens,
+          totalCost: this.estimateCost(provider, model, inputTokens, outputTokens),
+          stopReason: "stop",
+          requestId,
+        });
+      }
+
+      return { text };
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   /**
    * Streaming chat — returns an async generator of text deltas.
+   * Supports cancellation via AbortSignal.
    */
-  async *chatStream(input: ChatDTO, userId?: number): AsyncGenerator<string, void, undefined> {
+  async *chatStream(
+    input: ChatDTO,
+    userId?: number,
+    options?: ChatOptions,
+  ): AsyncGenerator<string, void, undefined> {
     const ai = this.createAI(input);
     const requestId = randomUUID();
+    const timeout = options?.timeout ?? this.defaultTimeout;
     let fullText = "";
 
-    for await (const chunk of ai.stream(input.message, {
-      systemPrompt: input.systemPrompt,
-      temperature: input.temperature,
-      maxTokens: input.maxTokens,
-    })) {
-      fullText += chunk;
-      yield chunk;
+    // Create AbortController with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    // Combine timeout signal with user-provided signal
+    let signal = controller.signal;
+    if (options?.signal) {
+      const userSignal = options.signal;
+      const combinedController = new AbortController();
+
+      userSignal.addEventListener("abort", () => combinedController.abort(userSignal.reason));
+      controller.signal.addEventListener("abort", () => combinedController.abort(controller.signal.reason));
+
+      signal = combinedController.signal;
     }
 
-    if (this.trackUsage) {
-      const provider = input.provider || this.defaultProvider;
-      const model = input.model || this.defaultModel;
-      const inputTokens = Math.ceil(input.message.length / 4);
-      const outputTokens = Math.ceil(fullText.length / 4);
+    try {
+      for await (const chunk of ai.stream(input.message, {
+        systemPrompt: input.systemPrompt,
+        temperature: input.temperature,
+        maxTokens: input.maxTokens,
+        signal,
+      })) {
+        fullText += chunk;
+        yield chunk;
+      }
 
-      await aiUsageModel.create({
-        userId,
-        provider,
-        model,
-        inputTokens,
-        outputTokens,
-        totalCost: this.estimateCost(provider, model, inputTokens, outputTokens),
-        stopReason: "stop",
-        requestId,
-      });
+      if (this.trackUsage) {
+        const provider = input.provider || this.defaultProvider;
+        const model = input.model || this.defaultModel;
+        const inputTokens = Math.ceil(input.message.length / 4);
+        const outputTokens = Math.ceil(fullText.length / 4);
+
+        await aiUsageModel.create({
+          userId,
+          provider,
+          model,
+          inputTokens,
+          outputTokens,
+          totalCost: this.estimateCost(provider, model, inputTokens, outputTokens),
+          stopReason: "stop",
+          requestId,
+        });
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 

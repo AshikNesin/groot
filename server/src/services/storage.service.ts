@@ -1,4 +1,5 @@
 import type { Readable } from "node:stream";
+import pLimit from "p-limit";
 import { StorageService } from "@/core/storage";
 import { BadRequestError, NotFoundError } from "@/core/errors/base.errors";
 
@@ -105,29 +106,32 @@ export class StorageFileService {
   }> {
     const uploadedFiles: string[] = [];
     const failedFiles: Array<{ filePath: string; error: string }> = [];
+    const limit = pLimit(5); // Max 5 concurrent uploads
 
     await Promise.all(
-      params.files.map(async (file) => {
-        try {
-          const result = await this.storage.upload(file.filePath, file.fileData, {
-            contentType: file.contentType,
-          });
+      params.files.map((file) =>
+        limit(async () => {
+          try {
+            const result = await this.storage.upload(file.filePath, file.fileData, {
+              contentType: file.contentType,
+            });
 
-          if (result.error) {
+            if (result.error) {
+              failedFiles.push({
+                filePath: file.filePath,
+                error: result.error.message,
+              });
+            } else {
+              uploadedFiles.push(file.filePath);
+            }
+          } catch (error) {
             failedFiles.push({
               filePath: file.filePath,
-              error: result.error.message,
+              error: error instanceof Error ? error.message : "Unknown error",
             });
-          } else {
-            uploadedFiles.push(file.filePath);
           }
-        } catch (error) {
-          failedFiles.push({
-            filePath: file.filePath,
-            error: error instanceof Error ? error.message : "Unknown error",
-          });
-        }
-      }),
+        }),
+      ),
     );
 
     return { uploadedFiles, failedFiles };
