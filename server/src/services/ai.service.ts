@@ -158,11 +158,16 @@ class AIService {
 
   /**
    * Get usage statistics.
+   * Requires userId to prevent cross-user data exposure.
    */
   async getUsage(
     userId: number | undefined,
     params: UsageQueryDTO,
   ): Promise<UsageStats> {
+    if (userId === undefined) {
+      throw new Error("Authentication required for usage statistics");
+    }
+
     const startDate = params.startDate
       ? new Date(params.startDate)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -191,8 +196,13 @@ class AIService {
 
   /**
    * Get detailed usage records.
+   * Requires userId to prevent cross-user data exposure.
    */
   async getUsageRecords(userId: number | undefined, params: UsageQueryDTO) {
+    if (userId === undefined) {
+      throw new Error("Authentication required for usage records");
+    }
+
     return aiUsageModel.findByUser({
       userId,
       startDate: params.startDate ? new Date(params.startDate) : undefined,
@@ -220,10 +230,19 @@ class AIService {
   }
 
   async listConversations(userId: number | undefined, limit = 20, offset = 0) {
+    if (userId === undefined) {
+      throw new Error("Authentication required for listing conversations");
+    }
     return aiConversationModel.findByUser(userId, limit, offset);
   }
 
-  async updateConversation(id: number, data: UpdateConversationDTO) {
+  async updateConversation(id: number, data: UpdateConversationDTO, userId?: number) {
+    // First verify ownership
+    const existing = await aiConversationModel.findById(id, userId);
+    if (!existing) {
+      return null;
+    }
+
     const updateData: Parameters<typeof aiConversationModel.update>[1] = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.context !== undefined)
@@ -233,7 +252,13 @@ class AIService {
     return aiConversationModel.update(id, updateData);
   }
 
-  async deleteConversation(id: number) {
+  async deleteConversation(id: number, userId?: number) {
+    // First verify ownership
+    const existing = await aiConversationModel.findById(id, userId);
+    if (!existing) {
+      return null;
+    }
+
     return aiConversationModel.delete(id);
   }
 

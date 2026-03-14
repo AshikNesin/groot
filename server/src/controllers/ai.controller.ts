@@ -15,30 +15,31 @@ class AIController extends BaseController {
 
   chat = async (req: Request, res: Response) => {
     const payload = (req.validated?.body || req.body) as ChatDTO;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
+    const result = await aiService.chat(payload, userId);
+    ResponseHandler.success(res, result);
+  };
 
-    if (payload.stream) {
-      // SSE streaming response
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
+  chatStream = async (req: Request, res: Response) => {
+    const payload = (req.validated?.body || req.body) as ChatDTO;
+    const userId = req.user?.userId;
 
-      try {
-        for await (const chunk of aiService.chatStream(payload, userId)) {
-          res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-        }
-        res.write("data: [DONE]\n\n");
-        res.end();
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "AI streaming error";
-        res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-        res.end();
+    // SSE streaming response
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    try {
+      for await (const chunk of aiService.chatStream(payload, userId)) {
+        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
       }
-    } else {
-      // Standard JSON response
-      const result = await aiService.chat(payload, userId);
-      ResponseHandler.success(res, result);
+      res.write("data: [DONE]\n\n");
+      res.end();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "AI streaming error";
+      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+      res.end();
     }
   };
 
@@ -52,14 +53,14 @@ class AIController extends BaseController {
   // ── Usage ───────────────────────────────────────────────────────────────────
 
   getUsage = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as UsageQueryDTO;
     const stats = await aiService.getUsage(userId, query);
     ResponseHandler.success(res, stats);
   };
 
   getUsageRecords = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as UsageQueryDTO;
     const records = await aiService.getUsageRecords(userId, query);
     ResponseHandler.success(res, records);
@@ -68,7 +69,7 @@ class AIController extends BaseController {
   // ── Conversations ───────────────────────────────────────────────────────────
 
   listConversations = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as ListConversationsQueryDTO;
     const conversations = await aiService.listConversations(
       userId,
@@ -79,8 +80,8 @@ class AIController extends BaseController {
   };
 
   getConversation = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const id = Number.parseInt(req.params.id, 10);
+    const userId = req.user?.userId;
+    const id = this.parseId(req.params.id);
     const conversation = await aiService.getConversation(id, userId);
 
     if (!conversation) {
@@ -91,22 +92,34 @@ class AIController extends BaseController {
   };
 
   createConversation = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const payload = (req.validated?.body || req.body) as CreateConversationDTO;
     const conversation = await aiService.createConversation(payload, userId);
     ResponseHandler.created(res, conversation);
   };
 
   updateConversation = async (req: Request, res: Response) => {
-    const id = Number.parseInt(req.params.id, 10);
+    const userId = req.user?.userId;
+    const id = this.parseId(req.params.id);
     const payload = (req.validated?.body || req.body) as UpdateConversationDTO;
-    const conversation = await aiService.updateConversation(id, payload);
+    const conversation = await aiService.updateConversation(id, payload, userId);
+
+    if (!conversation) {
+      return ResponseHandler.notFound(res, "Conversation not found");
+    }
+
     ResponseHandler.success(res, conversation);
   };
 
   deleteConversation = async (req: Request, res: Response) => {
-    const id = Number.parseInt(req.params.id, 10);
-    await aiService.deleteConversation(id);
+    const userId = req.user?.userId;
+    const id = this.parseId(req.params.id);
+    const deleted = await aiService.deleteConversation(id, userId);
+
+    if (!deleted) {
+      return ResponseHandler.notFound(res, "Conversation not found");
+    }
+
     ResponseHandler.noContent(res);
   };
 }

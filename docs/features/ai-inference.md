@@ -128,17 +128,18 @@ Check `server/src/controllers/ai.controller.ts` and `server/src/services/ai.serv
 The adapter automatically picks up API keys from your environment using standard naming conventions:
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
-- `GOOGLE_GENERATIVE_AI_API_KEY`
+- `GEMINI_API_KEY`
+- `MISTRAL_API_KEY`
+- `GROQ_API_KEY`
 - `XAI_API_KEY`
-- `DEEPSEEK_API_KEY`
-- etc.
+- `OPENROUTER_API_KEY`
 
 You can also pass an `apiKey` explicitly when instantiating the `AI` class, which overrides the environment variable.
 
 ```typescript
-const ai = new AI({ 
-  provider: "anthropic", 
+const ai = new AI({
+  provider: "anthropic",
   model: "claude-sonnet-4-6",
-  apiKey: "custom-key" 
+  apiKey: "custom-key"
 });
 ```

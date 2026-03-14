@@ -178,12 +178,24 @@ export class AI {
    * Uses a tool-calling approach: the schema is converted to a TypeBox
    * tool definition, the model is forced to call it, and the result is
    * validated against the Zod schema.
+   *
+   * @throws Error if schema is not a ZodObject (tool parameters must be objects)
    */
   async generateObject<T>(
     prompt: string | (TextContent | ImageContent)[],
     schema: z.ZodType<T>,
     options: GenerateObjectOptions = {},
   ): Promise<T> {
+    // Validate that the schema is an object type - tool parameters must be objects
+    const def = (schema as any)._def;
+    const typeName = def?.typeName;
+    if (typeName !== "ZodObject") {
+      throw new Error(
+        "generateObject requires a ZodObject schema. Tool parameters must be objects, " +
+          `received: ${typeName || "unknown"}`,
+      );
+    }
+
     const typeboxSchema = zodToTypeBox(schema);
 
     const toolName = options.schemaName || "extract_data";
@@ -204,7 +216,14 @@ export class AI {
     };
 
     const streamOptions = this.buildStreamOptions(options);
-    const response = await piComplete(this._model, context, streamOptions);
+
+    // Support reasoning option - use simple variants when reasoning is specified
+    const response = options.reasoning
+      ? await piCompleteSimple(this._model, context, {
+          ...streamOptions,
+          reasoning: options.reasoning,
+        })
+      : await piComplete(this._model, context, streamOptions);
 
     const toolCalls = response.content.filter(
       (block) => block.type === "toolCall",

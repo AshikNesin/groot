@@ -65,8 +65,6 @@ export const env = createEnv({
     // AI Configuration
     AI_DEFAULT_PROVIDER: z.string().default("anthropic"),
     AI_DEFAULT_MODEL: z.string().default("claude-3-7-sonnet"),
-    AI_TIMEOUT_MS: z.coerce.number().default(60000),
-    AI_MAX_TOKENS_DEFAULT: z.coerce.number().default(4096),
     AI_ENABLE_STREAMING: z
       .enum(["true", "false"])
       .default("true")
@@ -124,8 +122,6 @@ export const env = createEnv({
     // AI Configuration
     AI_DEFAULT_PROVIDER: process.env.AI_DEFAULT_PROVIDER,
     AI_DEFAULT_MODEL: process.env.AI_DEFAULT_MODEL,
-    AI_TIMEOUT_MS: process.env.AI_TIMEOUT_MS,
-    AI_MAX_TOKENS_DEFAULT: process.env.AI_MAX_TOKENS_DEFAULT,
     AI_ENABLE_STREAMING: process.env.AI_ENABLE_STREAMING,
     AI_TRACK_USAGE: process.env.AI_TRACK_USAGE,
   },

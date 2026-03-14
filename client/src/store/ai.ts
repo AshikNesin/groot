@@ -10,6 +10,17 @@ interface Message {
   timestamp: number;
 }
 
+// Default models for each provider
+const PROVIDER_DEFAULTS: Record<string, { model: string }> = {
+  openai: { model: "gpt-4o-mini" },
+  anthropic: { model: "claude-3-7-sonnet" },
+  google: { model: "gemini-2.0-flash" },
+  mistral: { model: "mistral-large-latest" },
+  groq: { model: "llama-3.3-70b-versatile" },
+  xai: { model: "grok-2-1212" },
+  openrouter: { model: "anthropic/claude-sonnet-4" },
+};
+
 interface AIState {
   // Conversation state
   messages: Message[];
@@ -33,7 +44,7 @@ interface AIState {
   setError: (error: string | null) => void;
 
   // Helpers
-  getRequest: () => ChatRequest;
+  getRequest: () => ChatRequest | null;
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -78,7 +89,11 @@ export const useAIStore = create<AIState>((set, get) => ({
 
   setModel: (model) => set({ currentModel: model }),
 
-  setProvider: (provider) => set({ currentProvider: provider }),
+  setProvider: (provider) => {
+    // Reset model to a compatible default for the new provider
+    const defaultModel = PROVIDER_DEFAULTS[provider]?.model ?? "";
+    set({ currentProvider: provider, currentModel: defaultModel });
+  },
 
   setSystemPrompt: (prompt) => set({ systemPrompt: prompt }),
 
@@ -94,8 +109,13 @@ export const useAIStore = create<AIState>((set, get) => ({
       .reverse()
       .find((m) => m.role === "user");
 
+    // Don't build a request with empty message - API rejects it
+    if (!lastUserMessage?.content) {
+      return null;
+    }
+
     return {
-      message: lastUserMessage?.content ?? "",
+      message: lastUserMessage.content,
       provider: state.currentProvider,
       model: state.currentModel,
       systemPrompt: state.systemPrompt ?? undefined,
