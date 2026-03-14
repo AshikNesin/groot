@@ -28,7 +28,7 @@ I need to sync changes from my boilerplate repo to this project.
 
    # List commits since last sync
    git -C /Users/ashiknesin/Code/groot log --oneline <LAST_SYNC_COMMIT>..HEAD
-````
+   ```
 
 3. **Identify changed files** that match the include patterns:
 
@@ -63,6 +63,7 @@ I need to sync changes from my boilerplate repo to this project.
 - For .gitignore: append new entries, don't remove existing ones
 - Always show me a summary of what will change before applying
 - If a change looks breaking or major, ask for confirmation
+````
 
 ---
 
