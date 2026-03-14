@@ -22,7 +22,7 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
-const SEED_USER = {
+export const SEED_USER = {
   email: "test@test.com",
   password: "password",
   name: "Test User",
@@ -49,6 +49,10 @@ async function seedUser() {
   });
 
   console.log("   ✅ Seed user created");
+  console.log();
+  console.log("   📧 Email:    test@test.com");
+  console.log("   🔑 Password: password");
+  console.log();
 }
 
 seedUser()
