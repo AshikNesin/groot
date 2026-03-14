@@ -37,12 +37,7 @@ export const authController = {
    */
   getCurrentUser: asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
-      return ResponseHandler.error(
-        res,
-        "Not authenticated",
-        "UNAUTHORIZED",
-        401,
-      );
+      return ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
     }
 
     const user = await authService.getUserById(req.user.userId);

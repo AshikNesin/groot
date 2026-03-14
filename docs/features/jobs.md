@@ -13,10 +13,10 @@ Pg-boss powers asynchronous work for this project. Jobs are enqueued via HTTP en
 
 Defined in `core/job/queue.ts` and implemented inside `server/src/jobs`.
 
-| Job | Handler | Description |
-| --- | --- | --- |
+| Job            | Handler                | Description                                                  |
+| -------------- | ---------------------- | ------------------------------------------------------------ |
 | `todo-cleanup` | `jobs/todo-cleanup.ts` | Deletes completed todos older than `daysToKeep` (default 30) |
-| `todo-summary` | `jobs/todo-summary.ts` | Counts total/completed/pending todos and logs aggregates |
+| `todo-summary` | `jobs/todo-summary.ts` | Counts total/completed/pending todos and logs aggregates     |
 
 Each handler receives `{ jobId, data }` via PgBoss and can access Prisma, Logger, or other services.
 

@@ -1,9 +1,4 @@
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/core/errors";
+import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from "@/core/errors";
 import { logger } from "@/core/logger";
 import type { Passkey, User } from "@/generated/prisma/models";
 import * as passkeyModel from "@/models/passkey.model";
@@ -45,18 +40,12 @@ export class PasskeyService {
     const existingPasskeys = await passkeyModel.findByUserId(userId);
 
     // Generate options
-    const options = await generatePasskeyRegistrationOptions(
-      user,
-      existingPasskeys,
-    );
+    const options = await generatePasskeyRegistrationOptions(user, existingPasskeys);
 
     // Store challenge for verification
     challengeStore.set(`reg:${userId}`, options.challenge);
 
-    logger.debug(
-      { userId, email: user.email },
-      "Generated passkey registration options",
-    );
+    logger.debug({ userId, email: user.email }, "Generated passkey registration options");
 
     return options;
   }
@@ -76,18 +65,14 @@ export class PasskeyService {
     }
 
     // Verify the registration response
-    const verification = await verifyPasskeyRegistration(
-      response,
-      expectedChallenge,
-    );
+    const verification = await verifyPasskeyRegistration(response, expectedChallenge);
 
     if (!verification.verified || !verification.registrationInfo) {
       throw new BadRequestError("Passkey registration verification failed");
     }
 
     const { registrationInfo } = verification;
-    const { credential, credentialDeviceType, credentialBackedUp } =
-      registrationInfo;
+    const { credential, credentialDeviceType, credentialBackedUp } = registrationInfo;
 
     if (!credential?.id) {
       throw new BadRequestError("Missing credential ID in registration info");
@@ -98,19 +83,14 @@ export class PasskeyService {
 
     // credential.id is already a base64url string in v13
     const credentialIdBase64 = credential.id;
-    const existingPasskey =
-      await passkeyModel.findByCredentialId(credentialIdBase64);
+    const existingPasskey = await passkeyModel.findByCredentialId(credentialIdBase64);
     if (existingPasskey) {
       throw new ConflictError("This passkey is already registered");
     }
 
     // Generate default name if not provided
     const defaultName =
-      credentialName ||
-      generateDeviceName(
-        response.authenticatorAttachment,
-        credential.transports,
-      );
+      credentialName || generateDeviceName(response.authenticatorAttachment, credential.transports);
 
     // Create passkey in database
     // credential.publicKey is a Uint8Array in v13
@@ -181,21 +161,14 @@ export class PasskeyService {
     }
 
     // Find passkey by credential ID
-    const credentialIdBase64 = Buffer.from(
-      response.rawId,
-      "base64url",
-    ).toString("base64url");
+    const credentialIdBase64 = Buffer.from(response.rawId, "base64url").toString("base64url");
     const passkey = await passkeyModel.findByCredentialId(credentialIdBase64);
     if (!passkey) {
       throw new UnauthorizedError("Passkey not found");
     }
 
     // Verify the authentication response
-    const verification = await verifyPasskeyAuthentication(
-      response,
-      expectedChallenge,
-      passkey,
-    );
+    const verification = await verifyPasskeyAuthentication(response, expectedChallenge, passkey);
 
     if (!verification.verified) {
       throw new UnauthorizedError("Passkey authentication verification failed");
@@ -238,19 +211,15 @@ export class PasskeyService {
   /**
    * List all passkeys for a user
    */
-  async listPasskeys(
-    userId: number,
-  ): Promise<Omit<Passkey, "publicKey" | "credentialId">[]> {
+  async listPasskeys(userId: number): Promise<Omit<Passkey, "publicKey" | "credentialId">[]> {
     const passkeys = await passkeyModel.findByUserId(userId);
 
     // Remove sensitive data (public key and credential ID)
     // Convert BigInt counter to Number for JSON serialization
-    return passkeys.map(
-      ({ publicKey, credentialId, counter, ...safePasskey }) => ({
-        ...safePasskey,
-        counter: Number(counter),
-      }),
-    );
+    return passkeys.map(({ publicKey, credentialId, counter, ...safePasskey }) => ({
+      ...safePasskey,
+      counter: Number(counter),
+    }));
   }
 
   /**
@@ -294,10 +263,7 @@ export class PasskeyService {
       credentialName,
     });
 
-    logger.info(
-      { userId, passkeyId, credentialName },
-      "Passkey name updated successfully",
-    );
+    logger.info({ userId, passkeyId, credentialName }, "Passkey name updated successfully");
 
     return updatedPasskey;
   }

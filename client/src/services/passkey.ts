@@ -1,8 +1,5 @@
 import { apiClient } from "@/lib/api";
-import {
-  startRegistration,
-  startAuthentication,
-} from "@simplewebauthn/browser";
+import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -35,27 +32,22 @@ class PasskeyService {
   async registerPasskey(credentialName?: string): Promise<Passkey> {
     try {
       // 1. Get registration options from server
-      const options =
-        await apiClient.post<PublicKeyCredentialCreationOptionsJSON>(
-          "/passkey/register/options",
-        );
+      const options = await apiClient.post<PublicKeyCredentialCreationOptionsJSON>(
+        "/passkey/register/options",
+      );
 
       if (!options) {
         throw new Error("Failed to get registration options");
       }
 
       // 2. Start WebAuthn registration
-      const registrationResponse: RegistrationResponseJSON =
-        await startRegistration(options);
+      const registrationResponse: RegistrationResponseJSON = await startRegistration(options);
 
       // 3. Verify registration with server
-      const passkey = await apiClient.post<Passkey>(
-        "/passkey/register/verify",
-        {
-          response: registrationResponse,
-          credentialName,
-        },
-      );
+      const passkey = await apiClient.post<Passkey>("/passkey/register/verify", {
+        response: registrationResponse,
+        credentialName,
+      });
 
       if (!passkey) {
         throw new Error("Failed to verify registration");
@@ -64,9 +56,7 @@ class PasskeyService {
       return passkey;
     } catch (error: unknown) {
       if (error instanceof Error && error.name === "NotAllowedError") {
-        throw new Error(
-          "Passkey registration was cancelled or not allowed. Please try again.",
-        );
+        throw new Error("Passkey registration was cancelled or not allowed. Please try again.");
       }
       if (error instanceof Error && error.name === "NotSupportedError") {
         throw new Error(
@@ -80,35 +70,28 @@ class PasskeyService {
   /**
    * Authenticate using a passkey
    */
-  async loginWithPasskey(
-    email?: string,
-  ): Promise<{ token: string; user: User }> {
+  async loginWithPasskey(email?: string): Promise<{ token: string; user: User }> {
     try {
       // 1. Get authentication options from server
-      const options =
-        await apiClient.post<PublicKeyCredentialRequestOptionsJSON>(
-          "/passkey/login/options",
-          {
-            email,
-          },
-        );
+      const options = await apiClient.post<PublicKeyCredentialRequestOptionsJSON>(
+        "/passkey/login/options",
+        {
+          email,
+        },
+      );
 
       if (!options) {
         throw new Error("Failed to get authentication options");
       }
 
       // 2. Start WebAuthn authentication
-      const authenticationResponse: AuthenticationResponseJSON =
-        await startAuthentication(options);
+      const authenticationResponse: AuthenticationResponseJSON = await startAuthentication(options);
 
       // 3. Verify authentication with server
-      const result = await apiClient.post<{ token: string; user: User }>(
-        "/passkey/login/verify",
-        {
-          response: authenticationResponse,
-          email,
-        },
-      );
+      const result = await apiClient.post<{ token: string; user: User }>("/passkey/login/verify", {
+        response: authenticationResponse,
+        email,
+      });
 
       if (!result) {
         throw new Error("Failed to verify authentication");
@@ -117,9 +100,7 @@ class PasskeyService {
       return result;
     } catch (error: unknown) {
       if (error instanceof Error && error.name === "NotAllowedError") {
-        throw new Error(
-          "Passkey authentication was cancelled or not allowed. Please try again.",
-        );
+        throw new Error("Passkey authentication was cancelled or not allowed. Please try again.");
       }
       if (error instanceof Error && error.name === "NotSupportedError") {
         throw new Error(
@@ -148,10 +129,7 @@ class PasskeyService {
   /**
    * Update passkey name
    */
-  async updatePasskeyName(
-    passkeyId: number,
-    credentialName: string,
-  ): Promise<Passkey> {
+  async updatePasskeyName(passkeyId: number, credentialName: string): Promise<Passkey> {
     const passkey = await apiClient.patch<Passkey>(`/passkey/${passkeyId}`, {
       credentialName,
     });
@@ -170,8 +148,7 @@ class PasskeyService {
     return (
       typeof window !== "undefined" &&
       window.PublicKeyCredential !== undefined &&
-      typeof window.PublicKeyCredential
-        .isUserVerifyingPlatformAuthenticatorAvailable === "function"
+      typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === "function"
     );
   }
 

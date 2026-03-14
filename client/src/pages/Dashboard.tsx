@@ -19,9 +19,7 @@ export function Dashboard() {
             <CardTitle>Total Todos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">
-              {isLoading ? "--" : (todos?.length ?? 0)}
-            </p>
+            <p className="text-3xl font-bold">{isLoading ? "--" : (todos?.length ?? 0)}</p>
           </CardContent>
         </Card>
         <Card>

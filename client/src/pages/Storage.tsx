@@ -44,10 +44,7 @@ import { api } from "@/lib/api";
 import { formatBytes, formatDate } from "@/lib/utils";
 
 export function Storage() {
-  const [currentPath, setCurrentPath] = useQueryState(
-    "path",
-    parseAsString.withDefault(""),
-  );
+  const [currentPath, setCurrentPath] = useQueryState("path", parseAsString.withDefault(""));
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
@@ -69,11 +66,7 @@ export function Storage() {
   const bulkInputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
 
-  const {
-    data: files = [],
-    isLoading,
-    refetch: refetchFiles,
-  } = useStorageFiles(currentPath);
+  const { data: files = [], isLoading, refetch: refetchFiles } = useStorageFiles(currentPath);
   const uploadFile = useUploadFile();
   const bulkUpload = useBulkUpload();
   const deleteFiles = useDeleteFiles();
@@ -261,9 +254,7 @@ export function Storage() {
     }
   };
 
-  const handleCreateFolder = async (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const handleCreateFolder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!folderName.trim()) return;
     const path = `${currentPath}${folderName.trim().replace(/\/+$/u, "")}/`;
@@ -312,9 +303,7 @@ export function Storage() {
       await createShare.mutateAsync({
         filePath: shareTarget.key,
         expiresInHours: shareForm.expiresInHours,
-        maxAccessCount: shareForm.maxAccessCount
-          ? Number(shareForm.maxAccessCount)
-          : undefined,
+        maxAccessCount: shareForm.maxAccessCount ? Number(shareForm.maxAccessCount) : undefined,
         password: shareForm.password || undefined,
       });
       toast({ title: "Share created", description: "Public link ready" });
@@ -375,9 +364,7 @@ export function Storage() {
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-medium text-gray-900">Storage</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Browse and manage your files and folders
-            </p>
+            <p className="mt-1 text-sm text-gray-500">Browse and manage your files and folders</p>
           </div>
           <Button variant="outline" size="icon" onClick={() => refetchFiles()}>
             <RefreshCw className="h-4 w-4" />
@@ -410,12 +397,7 @@ export function Storage() {
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2">
-            <input
-              ref={uploadInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleUpload}
-            />
+            <input ref={uploadInputRef} type="file" className="hidden" onChange={handleUpload} />
             <input
               ref={bulkInputRef}
               type="file"
@@ -455,18 +437,13 @@ export function Storage() {
 
           {/* File list */}
           {isLoading ? (
-            <div className="py-10 text-center text-sm text-gray-500">
-              Loading files...
-            </div>
+            <div className="py-10 text-center text-sm text-gray-500">Loading files...</div>
           ) : files.length === 0 ? (
             <div className="py-20 text-center">
               <Folder className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-              <h3 className="mb-2 text-base font-medium text-gray-900">
-                No files found
-              </h3>
+              <h3 className="mb-2 text-base font-medium text-gray-900">No files found</h3>
               <p className="text-sm text-gray-500">
-                This folder is empty. Upload files or create a new folder to get
-                started.
+                This folder is empty. Upload files or create a new folder to get started.
               </p>
             </div>
           ) : (
@@ -483,9 +460,7 @@ export function Storage() {
                         {!file.isDirectory && (
                           <Checkbox
                             checked={selectedFiles.has(file.key)}
-                            onCheckedChange={() =>
-                              toggleFileSelection(file.key)
-                            }
+                            onCheckedChange={() => toggleFileSelection(file.key)}
                             onClick={(e) => e.stopPropagation()}
                           />
                         )}
@@ -496,9 +471,7 @@ export function Storage() {
                             onClick={() => navigateToFolder(file.key)}
                           >
                             <Folder className="h-5 w-5 flex-shrink-0 text-blue-500" />
-                            <span className="truncate font-medium text-blue-500">
-                              {file.name}
-                            </span>
+                            <span className="truncate font-medium text-blue-500">{file.name}</span>
                           </button>
                         ) : (
                           <>
@@ -567,12 +540,8 @@ export function Storage() {
                       <th className="w-12 px-4 py-3" />
                       <th className="px-4 py-3 text-left font-medium">Name</th>
                       <th className="px-4 py-3 text-left font-medium">Size</th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Modified
-                      </th>
-                      <th className="px-4 py-3 text-right font-medium">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 text-left font-medium">Modified</th>
+                      <th className="px-4 py-3 text-right font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -585,9 +554,7 @@ export function Storage() {
                           {!file.isDirectory && (
                             <Checkbox
                               checked={selectedFiles.has(file.key)}
-                              onCheckedChange={() =>
-                                toggleFileSelection(file.key)
-                              }
+                              onCheckedChange={() => toggleFileSelection(file.key)}
                             />
                           )}
                         </td>
@@ -607,13 +574,7 @@ export function Storage() {
                             ) : (
                               <FileIcon className="h-4 w-4 text-gray-500" />
                             )}
-                            <span
-                              className={
-                                file.isDirectory
-                                  ? "font-medium text-blue-500"
-                                  : ""
-                              }
-                            >
+                            <span className={file.isDirectory ? "font-medium text-blue-500" : ""}>
                               {file.name}
                             </span>
                           </button>
@@ -621,9 +582,7 @@ export function Storage() {
                         <td className="px-4 py-3">
                           {file.isDirectory ? "-" : formatBytes(file.size)}
                         </td>
-                        <td className="px-4 py-3">
-                          {formatDate(file.lastModified)}
-                        </td>
+                        <td className="px-4 py-3">{formatDate(file.lastModified)}</td>
                         <td className="px-4 py-3 text-right">
                           {file.isDirectory ? (
                             <div className="flex justify-end gap-2">
@@ -647,9 +606,7 @@ export function Storage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() =>
-                                  handleDownload(file.key, file.name)
-                                }
+                                onClick={() => handleDownload(file.key, file.name)}
                               >
                                 <Download className="h-4 w-4" />
                               </Button>
@@ -717,20 +674,14 @@ export function Storage() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      handleCreateFolder(
-                        e as unknown as React.FormEvent<HTMLFormElement>,
-                      );
+                      handleCreateFolder(e as unknown as React.FormEvent<HTMLFormElement>);
                     }
                   }}
                   required
                 />
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFolderDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setFolderDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={createFolder.isPending}>
@@ -749,9 +700,7 @@ export function Storage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Rename File</DialogTitle>
-              <DialogDescription>
-                Enter a new name for the file
-              </DialogDescription>
+              <DialogDescription>Enter a new name for the file</DialogDescription>
             </DialogHeader>
             <form className="space-y-4" onSubmit={handleRename}>
               <div className="space-y-2">
@@ -764,23 +713,15 @@ export function Storage() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      handleRename(
-                        e as unknown as React.FormEvent<HTMLFormElement>,
-                      );
+                      handleRename(e as unknown as React.FormEvent<HTMLFormElement>);
                     }
                   }}
                   required
                 />
-                <p className="text-xs text-gray-500">
-                  Current: {renameTarget?.name}
-                </p>
+                <p className="text-xs text-gray-500">Current: {renameTarget?.name}</p>
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setRenameTarget(null)}
-                >
+                <Button type="button" variant="outline" onClick={() => setRenameTarget(null)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={renameFile.isPending}>
@@ -792,16 +733,11 @@ export function Storage() {
         </Dialog>
 
         {/* Share Dialog */}
-        <Dialog
-          open={Boolean(shareTarget)}
-          onOpenChange={(open) => !open && setShareTarget(null)}
-        >
+        <Dialog open={Boolean(shareTarget)} onOpenChange={(open) => !open && setShareTarget(null)}>
           <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>Share {shareTarget?.name}</DialogTitle>
-              <DialogDescription>
-                Generate a time-limited public link
-              </DialogDescription>
+              <DialogDescription>Generate a time-limited public link</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <form className="space-y-4" onSubmit={handleShareSubmit}>
@@ -860,19 +796,14 @@ export function Storage() {
                   </p>
                 </div>
                 <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShareTarget(null)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setShareTarget(null)}>
                     Close
                   </Button>
                   <Button
                     type="submit"
                     disabled={
                       createShare.isPending ||
-                      (shareForm.password.length > 0 &&
-                        shareForm.password.length < 4)
+                      (shareForm.password.length > 0 && shareForm.password.length < 4)
                     }
                   >
                     {createShare.isPending ? "Creating..." : "Create Link"}
@@ -881,9 +812,7 @@ export function Storage() {
               </form>
 
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-500">
-                  Existing shares
-                </h3>
+                <h3 className="text-sm font-medium text-gray-500">Existing shares</h3>
                 {sharesLoading ? (
                   <p className="text-sm text-gray-500">Loading shares...</p>
                 ) : shares.length === 0 ? (
@@ -898,19 +827,15 @@ export function Storage() {
                         <div>
                           <p className="font-medium">{share.shareId}</p>
                           <p className="text-gray-500">
-                            Expires {new Date(share.expiresAt).toLocaleString()}{" "}
-                            · Accesses {share.accessCount}
+                            Expires {new Date(share.expiresAt).toLocaleString()} · Accesses{" "}
+                            {share.accessCount}
                           </p>
                           {share.isPasswordProtected && (
                             <p className="text-gray-500">Password protected</p>
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyShareLink(share)}
-                          >
+                          <Button variant="outline" size="sm" onClick={() => copyShareLink(share)}>
                             <LinkIcon className="mr-2 h-4 w-4" /> Copy link
                           </Button>
                           <Button

@@ -12,9 +12,7 @@ import { dockerDb, isDockerAvailable } from "./lib/docker-db.js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const pkg = JSON.parse(
-  readFileSync(resolve(process.cwd(), "package.json"), "utf-8"),
-);
+const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
 const dbName = pkg.name.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
 
 async function main() {
@@ -39,15 +37,9 @@ async function main() {
       break;
     default:
       console.log("Usage:");
-      console.log(
-        "  tsx scripts/docker-db-cleanup.ts --stop    Stop container (keeps data)",
-      );
-      console.log(
-        "  tsx scripts/docker-db-cleanup.ts --reset   Drop and recreate database",
-      );
-      console.log(
-        "  tsx scripts/docker-db-cleanup.ts --status  Show container status",
-      );
+      console.log("  tsx scripts/docker-db-cleanup.ts --stop    Stop container (keeps data)");
+      console.log("  tsx scripts/docker-db-cleanup.ts --reset   Drop and recreate database");
+      console.log("  tsx scripts/docker-db-cleanup.ts --status  Show container status");
       process.exit(1);
   }
 }
@@ -100,9 +92,7 @@ async function handleStatus() {
   if (port) {
     console.log(`   Mapped port: ${port}`);
     console.log(`   Database: ${dbName}`);
-    console.log(
-      `   Connection: postgresql://postgres:postgres@localhost:${port}/${dbName}`,
-    );
+    console.log(`   Connection: postgresql://postgres:postgres@localhost:${port}/${dbName}`);
   }
 
   if (!exists) {

@@ -1,40 +1,42 @@
-# Pre-commit Hooks & Secret Detection
+# Git Hooks & Secret Detection
 
-This project uses [pre-commit](https://pre-commit.com/) framework with [gitleaks](https://github.com/gitleaks/gitleaks) to prevent secrets from being committed to the repository.
+This project uses Vite+ git hooks with [gitleaks](https://github.com/gitleaks/gitleaks) to prevent secrets from being committed to the repository.
 
 ## What Gets Checked
 
 On every commit, the following checks run automatically:
 
-| Hook | Purpose |
-|------|---------|
-| **Gitleaks** | Detects hardcoded secrets (API keys, passwords, tokens, private keys) |
-| **Biome lint** | Lints TypeScript/JavaScript files |
-| **Biome format** | Auto-formats code to match project style |
+| Hook             | Purpose                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| **Gitleaks**     | Detects hardcoded secrets (API keys, passwords, tokens, private keys) |
+| **Vite+ staged** | Lints and formats staged files (Oxlint + Oxfmt)                       |
 
 ## Setup
 
-Pre-commit hooks are configured in `.pre-commit-config.yaml`. To install them:
+Git hooks are configured in `.vite-hooks/pre-commit`. To install them:
 
 ```bash
-# Install pre-commit (if not already installed)
-brew install pre-commit
+# Install gitleaks (if not already installed)
+brew install gitleaks  # macOS
+# or: go install github.com/gitleaks/gitleaks/v8@latest  # Other platforms
 
-# Install the hooks
-pre-commit install
+# Install hooks via Vite+
+pnpm prepare
 ```
+
+This runs `vp config` which sets up the git hooks from `.vite-hooks/`.
 
 ## Running Manually
 
 ```bash
-# Run all hooks on all files
-pre-commit run --all-files
+# Run the pre-commit hook manually
+.vite-hooks/pre-commit
 
 # Run only gitleaks
-pre-commit run gitleaks --all-files
+gitleaks protect --config .gitleaks.toml
 
-# Run only linting
-pre-commit run biome-lint --all-files
+# Run only Vite+ staged checks
+vp staged
 ```
 
 ## How Gitleaks Works
@@ -65,6 +67,18 @@ paths = [
 ]
 ```
 
+### Vite+ Staged Config (`vite.config.ts`)
+
+Configure what runs on staged files:
+
+```typescript
+export default defineConfig({
+  staged: {
+    "*": "vp check --fix",
+  },
+});
+```
+
 ### Adding Allowlist Entries
 
 If you have a legitimate secret pattern (like an example key in docs):
@@ -79,12 +93,6 @@ If you have a legitimate secret pattern (like an example key in docs):
 ```bash
 # Skip all hooks
 git commit --no-verify -m "message"
-
-# Skip only gitleaks
-SKIP=gitleaks git commit -m "message"
-
-# Skip multiple hooks
-SKIP=gitleaks,biome-lint git commit -m "message"
 ```
 
 ## Sensitive Files
@@ -107,24 +115,15 @@ service-account.json     # Service account keys
 1. **Never commit secrets** - Use environment variables instead
 2. **Use `.env.example`** - Document required env vars without actual values
 3. **Rotate compromised keys immediately** - If a secret was committed, rotate it
-4. **Review pre-commit output** - Don't blindly skip hooks
-5. **Keep hooks updated** - Run `pre-commit autoupdate` periodically
+4. **Review hook output** - Don't blindly skip hooks
 
 ## Troubleshooting
-
-### "Permission denied" errors
-
-```bash
-# Fix pre-commit cache permissions
-rm -rf ~/.cache/pre-commit/.lock
-pre-commit install
-```
 
 ### Hooks not running
 
 ```bash
 # Reinstall hooks
-pre-commit install --install-hooks
+pnpm prepare
 ```
 
 ### False positives
@@ -146,5 +145,5 @@ For additional protection, add gitleaks to your CI pipeline:
 ## Resources
 
 - [Gitleaks Documentation](https://github.com/gitleaks/gitleaks)
-- [Pre-commit Documentation](https://pre-commit.com/)
+- [Vite+ Documentation](https://viteplus.dev)
 - [OWASP Secret Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheatsheet.html)

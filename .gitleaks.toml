@@ -24,9 +24,4 @@ tags = ["secret", "key"]
 
 # Global allowlist - paths to ignore
 [allowlist]
-paths = [
-    '''^\.env\.example$''',
-    '''^docs/''',
-    '''\.test\.''',
-    '''\.spec\.''',
-]
+paths = ['''^\.env\.example$''', '''^docs/''', '''\.test\.''', '''\.spec\.''']

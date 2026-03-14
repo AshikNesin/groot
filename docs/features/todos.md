@@ -6,13 +6,13 @@ The todo domain demonstrates the recommended CRUD patterns across validation, co
 
 All routes are mounted under `/api/v1/todos` and require Basic Auth.
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `POST` | `/` | Create a todo |
-| `GET` | `/` | List todos (latest first) |
-| `GET` | `/:id` | Fetch a single todo |
-| `PUT` | `/:id` | Update title/completion |
-| `DELETE` | `/:id` | Remove a todo |
+| Method   | Path   | Description               |
+| -------- | ------ | ------------------------- |
+| `POST`   | `/`    | Create a todo             |
+| `GET`    | `/`    | List todos (latest first) |
+| `GET`    | `/:id` | Fetch a single todo       |
+| `PUT`    | `/:id` | Update title/completion   |
+| `DELETE` | `/:id` | Remove a todo             |
 
 ### Request/Response Shape
 
@@ -20,7 +20,7 @@ Schemas live in `server/src/validations/todo.validation.ts`.
 
 ```ts
 type CreateTodoDTO = {
-  title: string;      // required
+  title: string; // required
   completed?: boolean; // defaults to false
 };
 
@@ -60,13 +60,13 @@ Expect validation errors like:
 
 ## Implementation Path
 
-| Layer | File |
-| --- | --- |
+| Layer      | File                                        |
+| ---------- | ------------------------------------------- |
 | Validation | `server/src/validations/todo.validation.ts` |
 | Controller | `server/src/controllers/todo.controller.ts` |
-| Service | `server/src/services/todo.service.ts` |
-| Model | `server/src/models/todo.model.ts` |
-| Routes | `server/src/routes/todo.routes.ts` |
+| Service    | `server/src/services/todo.service.ts`       |
+| Model      | `server/src/models/todo.model.ts`           |
+| Routes     | `server/src/routes/todo.routes.ts`          |
 
 `BaseController` enforces numeric IDs, while `todoService` throws `NotFoundError` if records are missing. All Prisma calls are wrapped in `todoModel` for testability.
 

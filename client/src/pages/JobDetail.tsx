@@ -104,8 +104,7 @@ export function JobDetail() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to retry job",
+        description: error instanceof Error ? error.message : "Failed to retry job",
       });
     }
   };
@@ -124,8 +123,7 @@ export function JobDetail() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to cancel job",
+        description: error instanceof Error ? error.message : "Failed to cancel job",
       });
     }
   };
@@ -144,8 +142,7 @@ export function JobDetail() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to resume job",
+        description: error instanceof Error ? error.message : "Failed to resume job",
       });
     }
   };
@@ -154,9 +151,7 @@ export function JobDetail() {
     if (!job) return;
 
     if (
-      !window.confirm(
-        "Are you sure you want to delete this job? This action cannot be undone.",
-      )
+      !window.confirm("Are you sure you want to delete this job? This action cannot be undone.")
     ) {
       return;
     }
@@ -172,8 +167,7 @@ export function JobDetail() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to delete job",
+        description: error instanceof Error ? error.message : "Failed to delete job",
       });
     }
   };
@@ -201,8 +195,7 @@ export function JobDetail() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to re-run job",
+        description: error instanceof Error ? error.message : "Failed to re-run job",
       });
     }
   };
@@ -280,19 +273,13 @@ export function JobDetail() {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/jobs")}
-            className="mb-4 -ml-2"
-          >
+          <Button variant="ghost" onClick={() => navigate("/jobs")} className="mb-4 -ml-2">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Jobs
           </Button>
           <div className="text-center py-20">
             <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-lg font-medium text-gray-900 mb-2">
-              Job Not Found
-            </h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Job Not Found</h2>
             <p className="text-sm text-gray-500">
               {error || "The job you are looking for does not exist."}
             </p>
@@ -307,20 +294,14 @@ export function JobDetail() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/jobs")}
-            className="mb-4 -ml-2"
-          >
+          <Button variant="ghost" onClick={() => navigate("/jobs")} className="mb-4 -ml-2">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Jobs
           </Button>
 
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-medium text-gray-900">
-                Job Details
-              </h1>
+              <h1 className="text-2xl font-medium text-gray-900">Job Details</h1>
               <p className="text-sm font-mono text-gray-500 mt-1">{job.id}</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -342,9 +323,7 @@ export function JobDetail() {
                   Resume
                 </Button>
               )}
-              {(job.state === "active" ||
-                job.state === "created" ||
-                job.state === "retry") && (
+              {(job.state === "active" || job.state === "created" || job.state === "retry") && (
                 <Button variant="outline" onClick={handleCancel} size="sm">
                   <X className="w-4 h-4 mr-2" />
                   Cancel
@@ -361,15 +340,11 @@ export function JobDetail() {
         <div className="space-y-8">
           {/* Job Overview */}
           <div>
-            <h2 className="text-sm font-medium text-gray-900 mb-4">
-              Job Overview
-            </h2>
+            <h2 className="text-sm font-medium text-gray-900 mb-4">Job Overview</h2>
             <dl className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
               <div>
                 <dt className="text-sm text-gray-500">Job Name</dt>
-                <dd className="text-sm font-mono text-gray-900 mt-1">
-                  {job.name}
-                </dd>
+                <dd className="text-sm font-mono text-gray-900 mt-1">{job.name}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">State</dt>
@@ -387,21 +362,15 @@ export function JobDetail() {
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Created</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {formatDate(job.createdon)}
-                </dd>
+                <dd className="text-sm text-gray-900 mt-1">{formatDate(job.createdon)}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Started</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {formatDate(job.startedon)}
-                </dd>
+                <dd className="text-sm text-gray-900 mt-1">{formatDate(job.startedon)}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Completed</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {formatDate(job.completedon)}
-                </dd>
+                <dd className="text-sm text-gray-900 mt-1">{formatDate(job.completedon)}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Duration</dt>
@@ -411,15 +380,11 @@ export function JobDetail() {
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Retry Delay</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {job.retrydelay}s
-                </dd>
+                <dd className="text-sm text-gray-900 mt-1">{job.retrydelay}s</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Retry Backoff</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {job.retrybackoff ? "Yes" : "No"}
-                </dd>
+                <dd className="text-sm text-gray-900 mt-1">{job.retrybackoff ? "Yes" : "No"}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Expire In</dt>
@@ -427,9 +392,7 @@ export function JobDetail() {
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Keep Until</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {formatDate(job.keepuntil)}
-                </dd>
+                <dd className="text-sm text-gray-900 mt-1">{formatDate(job.keepuntil)}</dd>
               </div>
             </dl>
           </div>
@@ -455,9 +418,7 @@ export function JobDetail() {
           {/* Job Output */}
           {job.output && (
             <div className="pt-6 border-t border-gray-200">
-              <h2 className="text-sm font-medium text-gray-900 mb-4">
-                Job Output
-              </h2>
+              <h2 className="text-sm font-medium text-gray-900 mb-4">Job Output</h2>
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <CodeMirror
                   value={JSON.stringify(job.output, null, 2)}
@@ -477,9 +438,7 @@ export function JobDetail() {
           {/* Error Details */}
           {job.deadletter && (
             <div className="pt-6 border-t border-gray-200">
-              <h2 className="text-sm font-medium text-red-600 mb-4">
-                Error Details
-              </h2>
+              <h2 className="text-sm font-medium text-red-600 mb-4">Error Details</h2>
               <pre className="p-4 bg-red-50 border border-red-200 rounded-lg text-xs overflow-x-auto text-red-900">
                 {job.deadletter}
               </pre>
@@ -489,24 +448,18 @@ export function JobDetail() {
           {/* Singleton Info */}
           {(job.singletonkey || job.singletonon) && (
             <div className="pt-6 border-t border-gray-200">
-              <h2 className="text-sm font-medium text-gray-900 mb-4">
-                Singleton Configuration
-              </h2>
+              <h2 className="text-sm font-medium text-gray-900 mb-4">Singleton Configuration</h2>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {job.singletonkey && (
                   <div>
                     <dt className="text-sm text-gray-500">Singleton Key</dt>
-                    <dd className="text-sm font-mono text-gray-900 mt-1">
-                      {job.singletonkey}
-                    </dd>
+                    <dd className="text-sm font-mono text-gray-900 mt-1">{job.singletonkey}</dd>
                   </div>
                 )}
                 {job.singletonon && (
                   <div>
                     <dt className="text-sm text-gray-500">Singleton On</dt>
-                    <dd className="text-sm text-gray-900 mt-1">
-                      {formatDate(job.singletonon)}
-                    </dd>
+                    <dd className="text-sm text-gray-900 mt-1">{formatDate(job.singletonon)}</dd>
                   </div>
                 )}
               </dl>
@@ -515,14 +468,10 @@ export function JobDetail() {
 
           {/* Real-time Logs */}
           <div className="pt-6 border-t border-gray-200">
-            <h2 className="text-sm font-medium text-gray-900 mb-4">
-              Real-time Logs
-            </h2>
+            <h2 className="text-sm font-medium text-gray-900 mb-4">Real-time Logs</h2>
             <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
               {logs.length === 0 ? (
-                <div className="p-4 text-gray-500 italic text-sm">
-                  No logs available
-                </div>
+                <div className="p-4 text-gray-500 italic text-sm">No logs available</div>
               ) : (
                 <Console
                   logs={logs.map((log) => ({
@@ -536,9 +485,7 @@ export function JobDetail() {
                     data: [
                       `[${formatLocaleDateTime(new Date(log.timestamp))}]`,
                       log.message,
-                      ...(log.data && Object.keys(log.data as object).length > 0
-                        ? [log.data]
-                        : []),
+                      ...(log.data && Object.keys(log.data as object).length > 0 ? [log.data] : []),
                     ],
                   }))}
                   variant="light"

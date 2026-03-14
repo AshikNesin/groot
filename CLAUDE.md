@@ -8,20 +8,20 @@ A production-ready SaaS boilerplate combining Express.js backend with React fron
 
 ## Tech Stack
 
-| Area | Technologies |
-|------|-------------|
-| **Backend** | Node.js, Express 5, TypeScript, Prisma, PostgreSQL |
-| **Auth** | JWT (bcryptjs), Passkeys (@simplewebauthn/server) |
-| **File Storage** | AWS S3 SDK (@aws-sdk/client-s3) |
-| **Background Jobs** | pg-boss (PostgreSQL-backed queue) |
-| **Key-Value Store** | Keyv with PostgreSQL adapter |
-| **Logging** | Pino, Sentry |
-| **File Uploads** | Multer |
-| **Frontend** | React 19, TypeScript, Vite 7 |
-| **UI** | Radix UI primitives, Tailwind CSS, shadcn/ui patterns |
-| **State** | Zustand, React Query |
-| **Routing** | React Router 7 |
-| **Tooling** | Biome (linting/formatting), Vitest, Playwright, pnpm |
+| Area                | Technologies                                          |
+| ------------------- | ----------------------------------------------------- |
+| **Backend**         | Node.js, Express 5, TypeScript, Prisma, PostgreSQL    |
+| **Auth**            | JWT (bcryptjs), Passkeys (@simplewebauthn/server)     |
+| **File Storage**    | AWS S3 SDK (@aws-sdk/client-s3)                       |
+| **Background Jobs** | pg-boss (PostgreSQL-backed queue)                     |
+| **Key-Value Store** | Keyv with PostgreSQL adapter                          |
+| **Logging**         | Pino, Sentry                                          |
+| **File Uploads**    | Multer                                                |
+| **Frontend**        | React 19, TypeScript, Vite 7                          |
+| **UI**              | Radix UI primitives, Tailwind CSS, shadcn/ui patterns |
+| **State**           | Zustand, React Query                                  |
+| **Routing**         | React Router 7                                        |
+| **Tooling**         | Vite+ (Oxlint, Oxfmt), Vitest, Playwright, pnpm       |
 
 ## Key Directories
 
@@ -77,8 +77,9 @@ pnpm build            # Build client (Vite) + server (esbuild)
 pnpm start            # Run production build
 
 # Code Quality
-pnpm lint             # Lint with Biome
-pnpm format           # Format with Biome
+pnpm lint             # Lint with Vite+ (Oxlint)
+pnpm format           # Format with Vite+ (Oxfmt)
+pnpm check            # Lint and format check
 
 # Testing
 pnpm test             # Run Vitest unit tests
@@ -89,12 +90,14 @@ pnpm test:e2e         # Run Playwright E2E tests
 ## Code Patterns
 
 ### Backend Architecture
+
 - **Routes** → Define endpoints and apply middleware
 - **Controllers** → Parse/validate request, call service, format response
 - **Services** → Business logic, database access via Prisma
 - **Models** → Re-export Prisma client types
 
 ### Request Flow
+
 ```
 Route (validation middleware)
   → Controller (asyncHandler wrapper)
@@ -103,15 +106,18 @@ Route (validation middleware)
 ```
 
 ### Error Handling
+
 - Throw `AppError` from `core/errors` for expected errors
 - Errors automatically caught by `asyncHandler`
 - Unexpected errors logged with Sentry breadcrumbs
 
 ### Validation
+
 - All request bodies validated with Zod schemas in `validations/`
 - Use `validate(schema, "body" | "params" | "query")` middleware
 
 ### Authentication
+
 - **Basic Auth**: `basicAuthMiddleware` for API routes
 - **JWT**: `jwtAuthMiddleware` for user sessions
 - **Admin**: `adminAuthMiddleware` for admin-only routes (X-Admin-Auth header)
@@ -119,15 +125,15 @@ Route (validation middleware)
 
 ## API Endpoints Summary
 
-| Prefix | Purpose | Auth |
-|--------|---------|------|
-| `/api/v1/todos` | CRUD operations | Basic Auth |
-| `/api/v1/auth` | Login, logout, user management | Mixed |
-| `/api/v1/storage` | File storage operations | Basic Auth |
-| `/api/v1/public/files` | Public file sharing | None (rate-limited) |
-| `/api/v1/jobs` | Background job management | Basic Auth |
-| `/api/v1/passkeys` | Passkey registration/auth | JWT |
-| `/api/v1/settings` | App key-value settings | None |
+| Prefix                 | Purpose                        | Auth                |
+| ---------------------- | ------------------------------ | ------------------- |
+| `/api/v1/todos`        | CRUD operations                | Basic Auth          |
+| `/api/v1/auth`         | Login, logout, user management | Mixed               |
+| `/api/v1/storage`      | File storage operations        | Basic Auth          |
+| `/api/v1/public/files` | Public file sharing            | None (rate-limited) |
+| `/api/v1/jobs`         | Background job management      | Basic Auth          |
+| `/api/v1/passkeys`     | Passkey registration/auth      | JWT                 |
+| `/api/v1/settings`     | App key-value settings         | None                |
 
 ## Environment Variables
 
@@ -168,6 +174,7 @@ RP_NAME=Groot
 ## Testing
 
 ### Unit Tests (Vitest)
+
 - Located in centralized `tests/` directory
 - Server tests in `tests/server/` mirror `server/src/` structure
 - Client tests in `tests/client/` mirror `client/src/` structure
@@ -176,6 +183,7 @@ RP_NAME=Groot
 - Uses `@testing-library/react` for component tests
 
 ### E2E Tests (Playwright)
+
 - Located in `e2e/` directory
 - Run with `pnpm test:e2e`
 - Tests real user flows in browser
@@ -189,10 +197,19 @@ RP_NAME=Groot
 - **Async**: Always use async/await, never raw Promises
 - **Errors**: Throw `AppError` with appropriate status code
 
+## Git Hooks
+
+The project uses Vite+ git hooks (`.vite-hooks/pre-commit`):
+
+- **Gitleaks**: Secret detection on staged files
+- **Vite+ `vp staged`**: Linting and formatting on staged files
+
+Install hooks: `pnpm prepare` (runs `vp config`)
+
 ## Quick Start for AI Assistants
 
 1. Read this file and `docs/SETUP_GUIDE.md` for context
 2. Check `prisma/schema.prisma` for data models
 3. Review existing patterns in similar files before creating new ones
-4. Run `pnpm lint` and `pnpm test` before suggesting changes
+4. Run `pnpm check` and `pnpm test` before suggesting changes
 5. Ensure environment variables are documented when adding new features
