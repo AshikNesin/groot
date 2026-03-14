@@ -91,8 +91,8 @@ See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
 - **`pnpm build`**: Compiles TypeScript code to JavaScript in the `dist` directory.
 - **`pnpm start`**: Starts the application from the compiled code in `dist`.
 - **`pnpm dev`**: Starts the application in development mode using `tsx`. It watches for changes in `src/index.ts` and automatically restarts the server.
-- **`pnpm lint`**: Lints the TypeScript code in the `src` directory using Biome.
-- **`pnpm format`**: Formats the TypeScript code in the `src` directory using Biome.
+- **`pnpm lint`**: Lints the TypeScript code in the `src` directory using Vite+ (Oxlint).
+- **`pnpm format`**: Formats the TypeScript code in the `src` directory using Vite+ (Oxfmt).
 
 ## Project Structure
 
@@ -137,7 +137,7 @@ See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
 | **UI**              | Radix UI primitives, Tailwind CSS, shadcn/ui patterns            |
 | **State**           | Zustand, React Query                                             |
 | **Routing**         | React Router 7                                                   |
-| **Tooling**         | Biome, Vitest, Playwright, pnpm                                  |
+| **Tooling**         | Vite+ (Oxlint, Oxfmt), Vitest, Playwright, pnpm                  |
 
 ## Authentication
 
