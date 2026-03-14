@@ -1,0 +1,77 @@
+name: Cleanup Merged Branches
+
+on:
+  schedule:
+    # Runs every day at 12:00 AM UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: |
+          git fetch --all --prune
+
+      - name: Delete merged branches
+        run: |
+          echo "Starting cleanup of merged branches..."
+
+          # Get the default branch (usually main or master)
+          DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+          echo "Default branch: $DEFAULT_BRANCH"
+
+          # Protected branches that should never be deleted
+          PROTECTED_BRANCHES=("main" "master" "develop" "development" "staging" "production")
+
+          # Get all remote branches except the default branch
+          for branch in $(git branch -r --merged origin/$DEFAULT_BRANCH | grep -v 'HEAD' | sed 's/origin\///'); do
+            # Skip if it's the default branch
+            if [ "$branch" = "$DEFAULT_BRANCH" ]; then
+              echo "⏭️  Skipping default branch: $branch"
+              continue
+            fi
+
+            # Skip if it's a protected branch
+            skip=false
+            for protected in "${PROTECTED_BRANCHES[@]}"; do
+              if [ "$branch" = "$protected" ]; then
+                echo "🔒 Skipping protected branch: $branch"
+                skip=true
+                break
+              fi
+            done
+
+            if [ "$skip" = true ]; then
+              continue
+            fi
+
+            # Delete the merged branch
+            echo "🗑️  Deleting merged branch: $branch"
+            git push origin --delete "$branch" || echo "⚠️  Failed to delete $branch (may be protected)"
+          done
+
+          echo "✅ Cleanup completed!"
+
+      - name: Summary
+        run: |
+          echo "## Merged Branches Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Cleanup job completed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
