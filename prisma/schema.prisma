@@ -23,13 +23,15 @@ model Todo {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique @db.VarChar
-  password  String    @db.VarChar
-  name      String?   @db.VarChar
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  passkeys  Passkey[]
+  id             Int              @id @default(autoincrement())
+  email          String           @unique @db.VarChar
+  password       String           @db.VarChar
+  name           String?          @db.VarChar
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  passkeys       Passkey[]
+  aiUsage        AIUsage[]
+  aiConversations AIConversation[]
 }
 
 model Passkey {
@@ -95,5 +97,44 @@ model JobLog {
   @@index([jobId])
   @@index([timestamp])
   @@map("job_logs")
+}
+
+// AI usage tracking
+model AIUsage {
+  id           Int      @id @default(autoincrement())
+  userId       Int?
+  provider     String   @db.VarChar
+  model        String   @db.VarChar
+  inputTokens  Int
+  outputTokens Int
+  totalCost    Decimal  @db.Decimal(10, 6)
+  stopReason   String   @db.VarChar
+  requestId    String   @unique @db.VarChar
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([provider, model])
+  @@index([createdAt])
+  @@map("ai_usage")
+}
+
+// Conversation persistence
+model AIConversation {
+  id           Int      @id @default(autoincrement())
+  userId       Int?
+  title        String?  @db.VarChar
+  context      Json
+  lastModel    String   @db.VarChar
+  messageCount Int      @default(0)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([updatedAt])
+  @@map("ai_conversations")
 }
 

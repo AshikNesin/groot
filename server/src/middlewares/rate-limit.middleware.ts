@@ -48,3 +48,35 @@ export const publicFileRateLimiter = rateLimit({
     });
   },
 });
+
+export const aiRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100, // 100 requests per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      success: false,
+      error: {
+        code: "AI_RATE_LIMIT_EXCEEDED",
+        message: "Too many AI requests. Please try again later.",
+      },
+    });
+  },
+});
+
+export const aiStreamRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // 50 streaming requests per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      success: false,
+      error: {
+        code: "AI_STREAM_RATE_LIMIT_EXCEEDED",
+        message: "Too many streaming AI requests. Please try again later.",
+      },
+    });
+  },
+});

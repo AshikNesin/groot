@@ -40,6 +40,27 @@ export const env = createEnv({
       .enum(["true", "false"])
       .default("true")
       .transform((v) => v === "true"),
+
+    // AI Provider API Keys
+    OPENAI_API_KEY: z.string().min(1).optional(),
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
+    GEMINI_API_KEY: z.string().min(1).optional(),
+    MISTRAL_API_KEY: z.string().min(1).optional(),
+    GROQ_API_KEY: z.string().min(1).optional(),
+    XAI_API_KEY: z.string().min(1).optional(),
+    OPENROUTER_API_KEY: z.string().min(1).optional(),
+
+    // AI Configuration
+    AI_DEFAULT_PROVIDER: z.string().default("anthropic"),
+    AI_DEFAULT_MODEL: z.string().default("claude-3-7-sonnet"),
+    AI_ENABLE_STREAMING: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((v) => v === "true"),
+    AI_TRACK_USAGE: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((v) => v === "true"),
   },
 
   // Environment variables available on the client (and server).
@@ -74,6 +95,21 @@ export const env = createEnv({
     JOB_DELETE_ARCHIVED_AFTER_SECONDS: process.env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
     JOB_MONITOR_STATE_INTERVAL: process.env.JOB_MONITOR_STATE_INTERVAL,
     ENABLE_JOB_QUEUE: process.env.ENABLE_JOB_QUEUE,
+
+    // AI Provider Keys
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
+    GROQ_API_KEY: process.env.GROQ_API_KEY,
+    XAI_API_KEY: process.env.XAI_API_KEY,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+
+    // AI Configuration
+    AI_DEFAULT_PROVIDER: process.env.AI_DEFAULT_PROVIDER,
+    AI_DEFAULT_MODEL: process.env.AI_DEFAULT_MODEL,
+    AI_ENABLE_STREAMING: process.env.AI_ENABLE_STREAMING,
+    AI_TRACK_USAGE: process.env.AI_TRACK_USAGE,
   },
 
   /**
