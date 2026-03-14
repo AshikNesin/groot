@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -38,9 +32,7 @@ export function PasskeyManager() {
       const data = await passkeyService.listPasskeys();
       setPasskeys(data);
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Failed to load passkeys",
-      );
+      setError(error instanceof Error ? error.message : "Failed to load passkeys");
     } finally {
       setIsLoading(false);
     }
@@ -60,9 +52,7 @@ export function PasskeyManager() {
       setNewPasskeyName("");
       await loadPasskeys();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Failed to add passkey",
-      );
+      setError(error instanceof Error ? error.message : "Failed to add passkey");
     } finally {
       setIsAddingPasskey(false);
     }
@@ -79,9 +69,7 @@ export function PasskeyManager() {
       setPasskeyToDelete(null);
       await loadPasskeys();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Failed to delete passkey",
-      );
+      setError(error instanceof Error ? error.message : "Failed to delete passkey");
     }
   };
 
@@ -91,20 +79,13 @@ export function PasskeyManager() {
     setError(null);
     setSuccess(null);
     try {
-      await passkeyService.updatePasskeyName(
-        passkeyToEdit.id,
-        editedPasskeyName,
-      );
+      await passkeyService.updatePasskeyName(passkeyToEdit.id, editedPasskeyName);
       setSuccess("Passkey name updated successfully");
       setPasskeyToEdit(null);
       setEditedPasskeyName("");
       await loadPasskeys();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to update passkey name",
-      );
+      setError(error instanceof Error ? error.message : "Failed to update passkey name");
     }
   };
 
@@ -147,9 +128,9 @@ export function PasskeyManager() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">🔐 Passkeys</CardTitle>
           <CardDescription>
-            Manage your passkeys for secure, passwordless authentication.
-            Passkeys use biometric authentication (like Face ID or fingerprint)
-            or device PINs for a more secure login experience.
+            Manage your passkeys for secure, passwordless authentication. Passkeys use biometric
+            authentication (like Face ID or fingerprint) or device PINs for a more secure login
+            experience.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -199,13 +180,9 @@ export function PasskeyManager() {
                       <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                         <span>Added {formatDate(passkey.createdAt)}</span>
                         {passkey.lastUsedAt && (
-                          <span>
-                            Last used {formatDate(passkey.lastUsedAt)}
-                          </span>
+                          <span>Last used {formatDate(passkey.lastUsedAt)}</span>
                         )}
-                        {passkey.backedUp && (
-                          <Badge variant="secondary">Backed up</Badge>
-                        )}
+                        {passkey.backedUp && <Badge variant="secondary">Backed up</Badge>}
                       </div>
                     </div>
                   </div>
@@ -237,21 +214,17 @@ export function PasskeyManager() {
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={!!passkeyToDelete}
-        onOpenChange={() => setPasskeyToDelete(null)}
-      >
+      <Dialog open={!!passkeyToDelete} onOpenChange={() => setPasskeyToDelete(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Passkey</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "
-              {passkeyToDelete?.credentialName || "this passkey"}"? You won't be
-              able to use it to sign in anymore.
+              Are you sure you want to delete "{passkeyToDelete?.credentialName || "this passkey"}"?
+              You won't be able to use it to sign in anymore.
               {passkeys.length === 1 && (
                 <span className="block mt-2 text-red-600 font-medium">
-                  This is your last passkey. Make sure you can still access your
-                  account with a password.
+                  This is your last passkey. Make sure you can still access your account with a
+                  password.
                 </span>
               )}
             </DialogDescription>
@@ -268,10 +241,7 @@ export function PasskeyManager() {
       </Dialog>
 
       {/* Edit Name Dialog */}
-      <Dialog
-        open={!!passkeyToEdit}
-        onOpenChange={() => setPasskeyToEdit(null)}
-      >
+      <Dialog open={!!passkeyToEdit} onOpenChange={() => setPasskeyToEdit(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Passkey Name</DialogTitle>
@@ -294,10 +264,7 @@ export function PasskeyManager() {
             <Button variant="outline" onClick={() => setPasskeyToEdit(null)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleUpdatePasskeyName}
-              disabled={!editedPasskeyName.trim()}
-            >
+            <Button onClick={handleUpdatePasskeyName} disabled={!editedPasskeyName.trim()}>
               Save
             </Button>
           </DialogFooter>

@@ -14,9 +14,7 @@ export interface AppSetting<T = unknown> {
   metadata?: AppSettingMetadata;
 }
 
-export const get = async <T = unknown>(
-  key: string,
-): Promise<AppSetting<T> | null> => {
+export const get = async <T = unknown>(key: string): Promise<AppSetting<T> | null> => {
   try {
     const value = await appSettingsKv.get<AppSetting<T>>(key);
     if (!value) {

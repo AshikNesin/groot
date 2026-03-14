@@ -1,9 +1,6 @@
 import { todoModel } from "@/models/todo.model";
 import { NotFoundError } from "@/core/errors/base.errors";
-import type {
-  CreateTodoDTO,
-  UpdateTodoDTO,
-} from "@/validations/todo.validation";
+import type { CreateTodoDTO, UpdateTodoDTO } from "@/validations/todo.validation";
 
 class TodoService {
   create(data: CreateTodoDTO) {

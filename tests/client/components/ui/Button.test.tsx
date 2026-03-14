@@ -1,15 +1,16 @@
+/**
+ * @vitest-environment jsdom
+ */
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi } from "vite-plus/test";
 import { Button } from "@/components/ui/Button";
 
 describe("Button", () => {
   it("renders with text", () => {
     render(<Button>Click me</Button>);
-    expect(
-      screen.getByRole("button", { name: /click me/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
   });
 
   it("calls onClick when clicked", async () => {
@@ -32,14 +33,10 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toBeInTheDocument();
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(
-      screen.getByRole("button", { name: /secondary/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /secondary/i })).toBeInTheDocument();
 
     rerender(<Button variant="destructive">Destructive</Button>);
-    expect(
-      screen.getByRole("button", { name: /destructive/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /destructive/i })).toBeInTheDocument();
   });
 
   it("renders different sizes", () => {

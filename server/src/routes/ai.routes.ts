@@ -2,10 +2,7 @@ import { Router } from "express";
 import { aiController } from "@/controllers/ai.controller";
 import { validate } from "@/middlewares/validation.middleware";
 import { jwtAuthMiddleware } from "@/middlewares/jwt-auth.middleware";
-import {
-  aiRateLimiter,
-  aiStreamRateLimiter,
-} from "@/middlewares/rate-limit.middleware";
+import { aiRateLimiter, aiStreamRateLimiter } from "@/middlewares/rate-limit.middleware";
 import {
   chatSchema,
   usageQuerySchema,
@@ -19,20 +16,10 @@ const router = Router();
 // ── Chat ─────────────────────────────────────────────────────────────────────
 
 // Non-streaming chat with rate limiter
-router.post(
-  "/chat",
-  aiRateLimiter,
-  validate(chatSchema),
-  aiController.chat,
-);
+router.post("/chat", aiRateLimiter, validate(chatSchema), aiController.chat);
 
 // Streaming chat with stricter rate limiter (dedicated endpoint)
-router.post(
-  "/chat/stream",
-  aiStreamRateLimiter,
-  validate(chatSchema),
-  aiController.chatStream,
-);
+router.post("/chat/stream", aiStreamRateLimiter, validate(chatSchema), aiController.chatStream);
 
 // ── Models ───────────────────────────────────────────────────────────────────
 
@@ -40,12 +27,7 @@ router.get("/models", aiController.getModels);
 
 // ── Usage (requires auth to scope to user) ────────────────────────────────────
 
-router.get(
-  "/usage",
-  jwtAuthMiddleware,
-  validate(usageQuerySchema, "query"),
-  aiController.getUsage,
-);
+router.get("/usage", jwtAuthMiddleware, validate(usageQuerySchema, "query"), aiController.getUsage);
 
 router.get(
   "/usage/records",
@@ -70,11 +52,7 @@ router.post(
   aiController.createConversation,
 );
 
-router.get(
-  "/conversations/:id",
-  jwtAuthMiddleware,
-  aiController.getConversation,
-);
+router.get("/conversations/:id", jwtAuthMiddleware, aiController.getConversation);
 
 router.patch(
   "/conversations/:id",
@@ -83,10 +61,6 @@ router.patch(
   aiController.updateConversation,
 );
 
-router.delete(
-  "/conversations/:id",
-  jwtAuthMiddleware,
-  aiController.deleteConversation,
-);
+router.delete("/conversations/:id", jwtAuthMiddleware, aiController.deleteConversation);
 
 export default router;

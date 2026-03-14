@@ -17,11 +17,7 @@ declare global {
  * Request logger middleware
  * Attaches a request-specific logger and tracks request timing
  */
-export function requestLoggerMiddleware(
-  req: Request,
-  _res: Response,
-  next: NextFunction,
-): void {
+export function requestLoggerMiddleware(req: Request, _res: Response, next: NextFunction): void {
   // Create trace context for this request
   createTraceContext();
 

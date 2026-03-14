@@ -12,11 +12,7 @@ import {
 const router = Router();
 
 // Generate registration options (requires authentication)
-router.post(
-  "/register/options",
-  jwtAuthMiddleware,
-  passkeyController.generateRegistrationOptions,
-);
+router.post("/register/options", jwtAuthMiddleware, passkeyController.generateRegistrationOptions);
 
 // Verify registration (requires authentication)
 router.post(

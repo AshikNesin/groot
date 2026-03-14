@@ -86,9 +86,7 @@ export async function verifyPasskeyRegistration(
 /**
  * Generate authentication options for passkey login
  */
-export async function generatePasskeyAuthenticationOptions(
-  userPasskeys: PasskeyData[] = [],
-) {
+export async function generatePasskeyAuthenticationOptions(userPasskeys: PasskeyData[] = []) {
   const opts: GenerateAuthenticationOptionsOpts = {
     rpID: RP_ID,
     // Allow credentials from all user's passkeys
@@ -129,9 +127,7 @@ export async function verifyPasskeyAuthentication(
 /**
  * Convert authenticator transports to database format
  */
-export function serializeTransports(
-  transports?: AuthenticatorTransportFuture[],
-): string[] {
+export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string[] {
   return transports || [];
 }
 

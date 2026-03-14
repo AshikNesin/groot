@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
 import { todoService } from "@/services/todo.service";
 import { todoModel } from "@/models/todo.model";
 

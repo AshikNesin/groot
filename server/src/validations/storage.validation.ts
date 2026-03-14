@@ -12,9 +12,7 @@ export const downloadFileSchema = z.object({
 export type DownloadFileDTO = z.infer<typeof downloadFileSchema>;
 
 export const deleteFilesSchema = z.object({
-  filePaths: z
-    .array(z.string().min(1))
-    .min(1, "At least one file path is required"),
+  filePaths: z.array(z.string().min(1)).min(1, "At least one file path is required"),
 });
 export type DeleteFilesDTO = z.infer<typeof deleteFilesSchema>;
 

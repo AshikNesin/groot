@@ -1,10 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import {
-  AppError,
-  ValidationError,
-  handlePrismaError,
-  isPrismaError,
-} from "@/core/errors";
+import { AppError, ValidationError, handlePrismaError, isPrismaError } from "@/core/errors";
 import { Sentry } from "@/core/instrument";
 import { logBusinessEvent } from "@/core/logger";
 import { getBreadcrumbs } from "@/core/logger/breadcrumbs";
@@ -32,9 +27,7 @@ export function errorHandlerMiddleware(
 
   // Get request logger for correlation
   const requestLogger = getRequestLogger(req);
-  const requestDuration = req.startTime
-    ? Date.now() - req.startTime
-    : undefined;
+  const requestDuration = req.startTime ? Date.now() - req.startTime : undefined;
 
   // Get trace context and breadcrumbs
   const traceContext = getCurrentTraceContext();
@@ -163,13 +156,7 @@ export function errorHandlerMiddleware(
       "warn",
     );
 
-    ResponseHandler.error(
-      res,
-      "Validation failed",
-      "VALIDATION_ERROR",
-      400,
-      errors,
-    );
+    ResponseHandler.error(res, "Validation failed", "VALIDATION_ERROR", 400, errors);
     return;
   }
 
@@ -195,13 +182,7 @@ export function errorHandlerMiddleware(
     // Check if it's a ValidationError with field-level errors
     const details = error instanceof ValidationError ? error.errors : undefined;
 
-    ResponseHandler.error(
-      res,
-      error.message,
-      error.code,
-      error.statusCode,
-      details,
-    );
+    ResponseHandler.error(res, error.message, error.code, error.statusCode, details);
     return;
   }
 
@@ -235,10 +216,5 @@ export function notFoundHandler(req: Request, res: Response): void {
     `Route not found: ${req.method} ${req.path}`,
   );
 
-  ResponseHandler.error(
-    res,
-    `Cannot ${req.method} ${req.path}`,
-    "NOT_FOUND",
-    404,
-  );
+  ResponseHandler.error(res, `Cannot ${req.method} ${req.path}`, "NOT_FOUND", 404);
 }

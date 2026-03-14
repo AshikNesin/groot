@@ -30,7 +30,7 @@ Passkey authentication uses the WebAuthn standard to provide a more secure and u
 ### Authentication Flow
 
 1. User navigates to login page
-2. Calls `passkeyService.loginWithPasskey(email)` 
+2. Calls `passkeyService.loginWithPasskey(email)`
 3. Browser prompts for biometric authentication or security key
 4. System verifies signature using stored public key
 5. User is authenticated and logged in
@@ -95,14 +95,14 @@ npx prisma db push
 #### Signing In with a Passkey
 
 ```typescript
-import { passkeyService } from '@/services/passkey';
+import { passkeyService } from "@/services/passkey";
 
 // Login with passkey
 try {
-  const { token, user } = await passkeyService.loginWithPasskey('user@example.com');
+  const { token, user } = await passkeyService.loginWithPasskey("user@example.com");
   // Store token and redirect to dashboard
 } catch (error) {
-  console.error('Passkey login failed:', error);
+  console.error("Passkey login failed:", error);
 }
 ```
 
@@ -122,14 +122,17 @@ import { PasskeyManager } from '@/components/PasskeyManager';
 All passkey endpoints are prefixed with `/api/v1/passkey`:
 
 **Registration Endpoints** (requires authentication):
+
 - `POST /register/options` - Generate registration options for creating a new passkey
 - `POST /register/verify` - Verify registration response and save the passkey
 
 **Authentication Endpoints** (public):
+
 - `POST /login/options` - Generate authentication options for passkey login
 - `POST /login/verify` - Verify authentication response and return JWT token
 
 **Management Endpoints** (requires authentication):
+
 - `GET /list` - List all passkeys for the authenticated user
 - `PATCH /:id` - Update a passkey's name
 - `DELETE /:id` - Delete a passkey
@@ -139,22 +142,22 @@ All passkey endpoints are prefixed with `/api/v1/passkey`:
 **Using the Passkey Service**:
 
 ```typescript
-import { passkeyService } from '@/services/passkey';
+import { passkeyService } from "@/services/passkey";
 
 // Check if passkeys are supported
 const isSupported = await passkeyService.isPlatformAuthenticatorAvailable();
 
 // Register a new passkey
-const passkey = await passkeyService.registerPasskey('My iPhone');
+const passkey = await passkeyService.registerPasskey("My iPhone");
 
 // Login with a passkey
-const { token, user } = await passkeyService.loginWithPasskey('user@example.com');
+const { token, user } = await passkeyService.loginWithPasskey("user@example.com");
 
 // List user's passkeys
 const passkeys = await passkeyService.listPasskeys();
 
 // Update passkey name
-await passkeyService.updatePasskeyName(passkeyId, 'My New Device Name');
+await passkeyService.updatePasskeyName(passkeyId, "My New Device Name");
 
 // Delete a passkey
 await passkeyService.deletePasskey(passkeyId);
@@ -163,7 +166,7 @@ await passkeyService.deletePasskey(passkeyId);
 **Using the PasskeyManager Component**:
 
 ```tsx
-import { PasskeyManager } from '@/components/PasskeyManager';
+import { PasskeyManager } from "@/components/PasskeyManager";
 
 // In your settings/profile page
 export function SettingsPage() {
@@ -215,6 +218,7 @@ The system automatically detects support using `passkeyService.isPlatformAuthent
 **Issue**: Unable to register a new passkey.
 
 **Solutions**:
+
 1. Check browser console for errors
 2. Ensure RP_ID matches your domain (or "localhost" for development)
 3. Verify ORIGIN environment variable is set correctly
@@ -225,6 +229,7 @@ The system automatically detects support using `passkeyService.isPlatformAuthent
 **Issue**: Can't log in with an existing passkey.
 
 **Solutions**:
+
 1. Ensure the passkey hasn't been deleted
 2. Check that the device/authenticator is still available
 3. Verify RP_ID and ORIGIN haven't changed
@@ -235,6 +240,7 @@ The system automatically detects support using `passkeyService.isPlatformAuthent
 **Issue**: Browser shows "NotAllowedError" or operation was cancelled.
 
 **Solutions**:
+
 1. User may have cancelled the operation - try again
 2. Check if passkey is already registered (duplicate registration)
 3. Ensure user gesture (button click) initiated the request
@@ -245,6 +251,7 @@ The system automatically detects support using `passkeyService.isPlatformAuthent
 **Issue**: Server returns "Challenge not found or expired".
 
 **Solutions**:
+
 1. Complete the registration/authentication within a reasonable time
 2. Don't refresh the page during the process
 3. In production, consider using Redis for challenge storage instead of in-memory
@@ -256,9 +263,10 @@ The system automatically detects support using `passkeyService.isPlatformAuthent
 The current implementation uses in-memory storage for challenges. For production with multiple server instances:
 
 1. **Use Redis**:
+
 ```typescript
 // Example using Redis
-import Redis from 'ioredis';
+import Redis from "ioredis";
 const redis = new Redis(process.env.REDIS_URL);
 
 // Store challenge
@@ -273,6 +281,7 @@ const challenge = await redis.get(`passkey:challenge:${userId}`);
 ### HTTPS Requirement
 
 WebAuthn requires HTTPS in production (except localhost). Ensure:
+
 - SSL certificate is valid
 - ORIGIN environment variable uses `https://`
 - RP_ID matches your domain
@@ -291,6 +300,7 @@ ORIGIN="https://yourdomain.com"
 ### Monitoring
 
 Monitor these metrics:
+
 - Passkey registration success/failure rates
 - Authentication success/failure rates
 - Challenge expiration rates
@@ -299,6 +309,7 @@ Monitor these metrics:
 ### Backup Authentication
 
 Always maintain password-based authentication as a backup:
+
 - Users who lose their devices can still access accounts
 - Provides fallback for unsupported browsers
 - Allows account recovery
