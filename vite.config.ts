@@ -1,25 +1,39 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const clientRoot = path.resolve(__dirname, "client");
+const clientSrc = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "client/src");
 
 export default defineConfig({
-  root: clientRoot,
+  // Git hooks configuration
+  staged: {
+    "*": "vp check --fix",
+  },
+
+  // Vite build configuration - build from client directory
+  root: "client",
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(clientRoot, "src"),
+      "@": clientSrc,
     },
   },
   build: {
-    outDir: path.resolve(__dirname, "dist"),
+    outDir: "../dist",
     emptyOutDir: false,
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
+        // Vite 8/Rolldown expects manualChunks as a function
+        manualChunks(id) {
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/react-router-dom/")
+          ) {
+            return "react-vendor";
+          }
         },
       },
     },
@@ -27,5 +41,25 @@ export default defineConfig({
   server: {
     middlewareMode: true,
   },
-  publicDir: path.resolve(clientRoot, "public"),
+  publicDir: "./public",
+
+  // Linting configuration
+  lint: {
+    ignorePatterns: ["dist/**", "node_modules/**"],
+  },
+
+  // Formatting configuration
+  fmt: {
+    semi: true,
+    singleQuote: false,
+  },
+
+  // Test configuration - client tests only
+  // Server tests run from vitest.config.server.ts
+  test: {
+    include: ["../tests/client/**/*.test.{ts,tsx}"],
+    exclude: ["src/**/*.test.{ts,tsx}"],
+    environment: "jsdom",
+    setupFiles: ["../tests/client/setup.ts"],
+  },
 });

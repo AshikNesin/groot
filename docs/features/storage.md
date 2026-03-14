@@ -17,6 +17,7 @@ Public shares
 ```
 
 ### Key server modules
+
 - `core/storage/index.ts` – thin wrapper around `@aws-sdk/client-s3` for upload, download, list, copy, and signed URLs.
 - `services/storage.service.ts` – higher-level operations (folder markers, metadata, rename, bulk upload).
 - `services/public-share.service.ts` – share creation, password hashing (`bcryptjs`), expiry + access enforcement, cleanup helpers.
@@ -27,6 +28,7 @@ Public shares
 - `prisma/schema.prisma` – `PublicFileShare` model tracks share state.
 
 ### Environment variables
+
 Add these to your `.env` (defaults exist for LocalStack/dev):
 
 ```
@@ -42,23 +44,23 @@ Point them at a real IAM user + bucket in production.
 
 All endpoints below require Basic Auth unless noted.
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| GET | `/api/v1/storage/files?prefix=docs/&delimiter=/` | List files + pseudo folders under `prefix`. |
-| POST | `/api/v1/storage/files/upload` *(multipart)* | Single upload (`file` field) with optional `filePath`. |
-| POST | `/api/v1/storage/files/bulk-upload` *(multipart)* | Up to 50 files (`files` array field). |
-| GET | `/api/v1/storage/files/download?filePath=docs/invoice.pdf` | Streams file contents. |
-| DELETE | `/api/v1/storage/files` | Body: `{ "filePaths": ["docs/invoice.pdf"] }`. |
-| GET | `/api/v1/storage/files/metadata?filePath=docs/invoice.pdf` | Size + modified timestamp. |
-| POST | `/api/v1/storage/folders` | Body: `{ "folderPath": "docs/2025/" }`. |
-| DELETE | `/api/v1/storage/folders/:folderPath` | Removes folder recursively (supply URL-encoded path). |
-| PUT | `/api/v1/storage/files/rename` | Body: `{ "oldPath": "docs/a.pdf", "newPath": "docs/b.pdf" }`. |
-| POST | `/api/v1/storage/shares` | Create public share (optional password, expiry, max access). |
-| GET | `/api/v1/storage/shares?filePath=docs/a.pdf` | List existing shares for a file. |
-| DELETE | `/api/v1/storage/shares/:shareId` | Soft-delete share. |
-| **GET** | `/api/v1/public/files/:shareId` *(no auth)* | Stream shared file, rate limited to 200 req/15 min. |
-| **GET** | `/api/v1/public/files/:shareId/info` *(no auth)* | Metadata for share preview. |
-| **POST** | `/api/v1/public/files/:shareId/verify-password` *(no auth)* | Body `{ password: "..." }` when share is protected. |
+| Method   | Path                                                        | Notes                                                         |
+| -------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
+| GET      | `/api/v1/storage/files?prefix=docs/&delimiter=/`            | List files + pseudo folders under `prefix`.                   |
+| POST     | `/api/v1/storage/files/upload` _(multipart)_                | Single upload (`file` field) with optional `filePath`.        |
+| POST     | `/api/v1/storage/files/bulk-upload` _(multipart)_           | Up to 50 files (`files` array field).                         |
+| GET      | `/api/v1/storage/files/download?filePath=docs/invoice.pdf`  | Streams file contents.                                        |
+| DELETE   | `/api/v1/storage/files`                                     | Body: `{ "filePaths": ["docs/invoice.pdf"] }`.                |
+| GET      | `/api/v1/storage/files/metadata?filePath=docs/invoice.pdf`  | Size + modified timestamp.                                    |
+| POST     | `/api/v1/storage/folders`                                   | Body: `{ "folderPath": "docs/2025/" }`.                       |
+| DELETE   | `/api/v1/storage/folders/:folderPath`                       | Removes folder recursively (supply URL-encoded path).         |
+| PUT      | `/api/v1/storage/files/rename`                              | Body: `{ "oldPath": "docs/a.pdf", "newPath": "docs/b.pdf" }`. |
+| POST     | `/api/v1/storage/shares`                                    | Create public share (optional password, expiry, max access).  |
+| GET      | `/api/v1/storage/shares?filePath=docs/a.pdf`                | List existing shares for a file.                              |
+| DELETE   | `/api/v1/storage/shares/:shareId`                           | Soft-delete share.                                            |
+| **GET**  | `/api/v1/public/files/:shareId` _(no auth)_                 | Stream shared file, rate limited to 200 req/15 min.           |
+| **GET**  | `/api/v1/public/files/:shareId/info` _(no auth)_            | Metadata for share preview.                                   |
+| **POST** | `/api/v1/public/files/:shareId/verify-password` _(no auth)_ | Body `{ password: "..." }` when share is protected.           |
 
 Multer caps uploads at 100 MB per file; the upload endpoint has an additional 50-requests/15-min rate limit.
 

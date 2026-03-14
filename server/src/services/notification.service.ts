@@ -17,28 +17,19 @@ export class NotificationService {
 
   constructor() {
     // Check if required environment variables are set
-    this.isEnabled = !!(
-      process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_API_TOKEN
-    );
+    this.isEnabled = !!(process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_API_TOKEN);
 
     if (!this.isEnabled) {
-      logger.warn(
-        "Push notification credentials not found, notifications will be disabled",
-      );
+      logger.warn("Push notification credentials not found, notifications will be disabled");
     }
   }
 
   /**
    * Send server startup notification
    */
-  async sendServerStartupNotification(
-    port: number,
-    environment: string,
-  ): Promise<void> {
+  async sendServerStartupNotification(port: number, environment: string): Promise<void> {
     if (!this.isEnabled) {
-      logger.debug(
-        "Push notifications disabled, skipping startup notification",
-      );
+      logger.debug("Push notifications disabled, skipping startup notification");
       return;
     }
 
@@ -70,15 +61,9 @@ export class NotificationService {
         html: options.html || 0,
       });
 
-      logger.info(
-        { title: options.title },
-        "Push notification sent successfully",
-      );
+      logger.info({ title: options.title }, "Push notification sent successfully");
     } catch (error) {
-      logger.error(
-        { error, title: options.title },
-        "Failed to send push notification",
-      );
+      logger.error({ error, title: options.title }, "Failed to send push notification");
       // Don't throw error - notification failures shouldn't break the main flow
     }
   }

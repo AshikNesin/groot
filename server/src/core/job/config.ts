@@ -17,9 +17,7 @@ export const jobConfig = {
   archiveCompletedAfterSeconds: env.JOB_ARCHIVE_COMPLETED_AFTER_SECONDS,
   deleteArchivedAfterSeconds: env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
   // Disable state monitor for single-connection mode (it opens another connection)
-  monitorStateIntervalSeconds: isSingleConnection
-    ? 0
-    : env.JOB_MONITOR_STATE_INTERVAL,
+  monitorStateIntervalSeconds: isSingleConnection ? 0 : env.JOB_MONITOR_STATE_INTERVAL,
 } as const;
 
 export const defaultJobOptions = {

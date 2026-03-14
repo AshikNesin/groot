@@ -1,13 +1,5 @@
 import { cn } from "@/lib/utils";
-import {
-  Activity,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  RefreshCw,
-  X,
-  XCircle,
-} from "lucide-react";
+import { Activity, AlertCircle, CheckCircle, Clock, RefreshCw, X, XCircle } from "lucide-react";
 import { Badge } from "./badge";
 import type { BadgeProps } from "./badge";
 
@@ -31,12 +23,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({
-  status,
-  label,
-  showIcon = true,
-  className,
-}: StatusBadgeProps) {
+export function StatusBadge({ status, label, showIcon = true, className }: StatusBadgeProps) {
   const statusLower = status.toLowerCase();
 
   const getStatusConfig = (
@@ -111,10 +98,7 @@ export function StatusBadge({
   const displayLabel = label || config.defaultLabel;
 
   return (
-    <Badge
-      variant={config.variant}
-      className={cn("flex items-center gap-1 w-fit", className)}
-    >
+    <Badge variant={config.variant} className={cn("flex items-center gap-1 w-fit", className)}>
       {showIcon && config.icon}
       {displayLabel}
     </Badge>

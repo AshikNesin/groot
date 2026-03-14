@@ -12,12 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useCreateTodo,
-  useDeleteTodo,
-  useTodos,
-  useUpdateTodo,
-} from "@/hooks/api/useTodos";
+import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "@/hooks/api/useTodos";
 
 const todoSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -99,22 +94,12 @@ export function Todos() {
             </DialogHeader>
             <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
               <div className="space-y-2">
-                <Input
-                  id="title"
-                  placeholder="Todo title"
-                  {...form.register("title")}
-                />
+                <Input id="title" placeholder="Todo title" {...form.register("title")} />
                 {form.formState.errors.title && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.title.message}
-                  </p>
+                  <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
                 )}
               </div>
-              <Button
-                className="w-full"
-                type="submit"
-                disabled={createTodo.isPending}
-              >
+              <Button className="w-full" type="submit" disabled={createTodo.isPending}>
                 {createTodo.isPending ? "Creating..." : "Create"}
               </Button>
             </form>
@@ -129,11 +114,7 @@ export function Todos() {
           <Card key={todo.id}>
             <CardHeader>
               <CardTitle
-                className={
-                  todo.completed
-                    ? "line-through text-muted-foreground"
-                    : undefined
-                }
+                className={todo.completed ? "line-through text-muted-foreground" : undefined}
               >
                 {todo.title}
               </CardTitle>

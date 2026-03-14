@@ -12,10 +12,7 @@ import {
   createPublicShareSchema,
   listSharesForFileSchema,
 } from "@/validations/storage.validation";
-import {
-  storageRateLimiter,
-  uploadRateLimiter,
-} from "@/middlewares/rate-limit.middleware";
+import { storageRateLimiter, uploadRateLimiter } from "@/middlewares/rate-limit.middleware";
 
 const router = Router();
 
@@ -28,11 +25,7 @@ const upload = multer({
   },
 });
 
-router.get(
-  "/files",
-  validate(listFilesSchema, "query"),
-  storageController.listFiles,
-);
+router.get("/files", validate(listFilesSchema, "query"), storageController.listFiles);
 
 router.post(
   "/files/upload",
@@ -54,11 +47,7 @@ router.get(
   storageController.downloadFile,
 );
 
-router.delete(
-  "/files",
-  validate(deleteFilesSchema),
-  storageController.deleteFiles,
-);
+router.delete("/files", validate(deleteFilesSchema), storageController.deleteFiles);
 
 router.get(
   "/files/metadata",
@@ -66,25 +55,13 @@ router.get(
   storageController.getFileMetadata,
 );
 
-router.post(
-  "/folders",
-  validate(createFolderSchema),
-  storageController.createFolder,
-);
+router.post("/folders", validate(createFolderSchema), storageController.createFolder);
 
 router.delete("/folders/:folderPath", storageController.deleteFolder);
 
-router.put(
-  "/files/rename",
-  validate(renameFileSchema),
-  storageController.renameFile,
-);
+router.put("/files/rename", validate(renameFileSchema), storageController.renameFile);
 
-router.post(
-  "/shares",
-  validate(createPublicShareSchema),
-  storageController.createPublicShare,
-);
+router.post("/shares", validate(createPublicShareSchema), storageController.createPublicShare);
 
 router.get(
   "/shares",

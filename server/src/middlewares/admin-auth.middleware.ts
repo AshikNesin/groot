@@ -5,11 +5,7 @@ import { ForbiddenError, UnauthorizedError } from "@/core/errors";
  * Admin authentication middleware
  * Requires X-Admin-Auth header with admin auth key
  */
-export function adminAuthMiddleware(
-  req: Request,
-  _res: Response,
-  next: NextFunction,
-): void {
+export function adminAuthMiddleware(req: Request, _res: Response, next: NextFunction): void {
   const adminAuthKey = req.headers["x-admin-auth"];
 
   if (!adminAuthKey) {

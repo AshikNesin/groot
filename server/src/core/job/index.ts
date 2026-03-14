@@ -11,11 +11,7 @@ import {
 } from "@/core/job/config";
 import type { JobName, JobDataMap } from "@/core/job/queue";
 import { startWorkers, stopWorkers } from "@/core/job/worker";
-import {
-  JOB_STATES,
-  VALID_JOB_STATES,
-  isValidJobState,
-} from "@/core/job/constants";
+import { JOB_STATES, VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
 
 let bossInstance: PgBoss | null = null;
 
@@ -117,10 +113,7 @@ export const getScheduledJobs = async (): Promise<
   `;
 };
 
-export const getJobById = async (
-  queueName: string,
-  jobId: string,
-): Promise<BossJob | null> => {
+export const getJobById = async (queueName: string, jobId: string): Promise<BossJob | null> => {
   const boss = getBoss();
   return boss.getJobById(queueName, jobId);
 };
@@ -267,14 +260,10 @@ export const getJobs = async ({
     paramIndex++;
   }
 
-  const whereClause =
-    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const countQuery = `SELECT COUNT(*) as count FROM pgboss.job ${whereClause}`;
-  const totalResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-    countQuery,
-    ...params,
-  );
+  const totalResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(countQuery, ...params);
 
   const jobsQuery = `
     SELECT
@@ -300,12 +289,7 @@ export const getJobs = async ({
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 
-  const jobs = await prisma.$queryRawUnsafe<BossJob[]>(
-    jobsQuery,
-    ...params,
-    limit,
-    offset,
-  );
+  const jobs = await prisma.$queryRawUnsafe<BossJob[]>(jobsQuery, ...params, limit, offset);
 
   return { jobs, total: Number(totalResult[0]?.count ?? 0) };
 };
@@ -324,10 +308,7 @@ export const purgeJobsByState = async (state: string): Promise<number> => {
   return Number(deleted);
 };
 
-export const deleteJob = async (
-  queueName: string,
-  jobId: string,
-): Promise<void> => {
+export const deleteJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
   const job = await boss.getJobById(queueName, jobId);
   if (!job) {
@@ -339,10 +320,7 @@ export const deleteJob = async (
   }
 };
 
-export const retryJob = async (
-  queueName: string,
-  jobId: string,
-): Promise<void> => {
+export const retryJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
   const job = await boss.getJobById(queueName, jobId);
   if (!job) {
@@ -357,10 +335,7 @@ export const retryJob = async (
   }
 };
 
-export const cancelJob = async (
-  queueName: string,
-  jobId: string,
-): Promise<void> => {
+export const cancelJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
   const job = await boss.getJobById(queueName, jobId);
   if (!job) {
@@ -379,10 +354,7 @@ export const cancelJob = async (
   }
 };
 
-export const resumeJob = async (
-  queueName: string,
-  jobId: string,
-): Promise<void> => {
+export const resumeJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
   const job = await boss.getJobById(queueName, jobId);
   if (!job) {
@@ -397,17 +369,13 @@ export const resumeJob = async (
   }
 };
 
-export const rerunJob = async (
-  queueName: string,
-  jobId: string,
-): Promise<string | null> => {
+export const rerunJob = async (queueName: string, jobId: string): Promise<string | null> => {
   const boss = getBoss();
   const job = await boss.getJobById(queueName, jobId);
   if (!job) {
     throw new Error(`Job not found: ${queueName}/${jobId}`);
   }
-  const jobSpecificOptions =
-    jobOptions[job.name as JobName] ?? defaultJobOptions;
+  const jobSpecificOptions = jobOptions[job.name as JobName] ?? defaultJobOptions;
   const newJobId = await boss.send(job.name, job.data, jobSpecificOptions);
   return newJobId;
 };
@@ -444,18 +412,11 @@ export const rerunJobs = async (
       queueName: originalJob.queueName,
       jobId: originalJob.jobId,
       success: false,
-      error:
-        result.reason instanceof Error
-          ? result.reason.message
-          : String(result.reason),
+      error: result.reason instanceof Error ? result.reason.message : String(result.reason),
     };
   });
 };
 
 export { startWorkers, stopWorkers } from "@/core/job/worker";
 export { JobName, type JobDataMap } from "@/core/job/queue";
-export {
-  JOB_STATES,
-  VALID_JOB_STATES,
-  isValidJobState,
-} from "@/core/job/constants";
+export { JOB_STATES, VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";

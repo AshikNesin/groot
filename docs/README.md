@@ -5,16 +5,19 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 ## Quick Navigation
 
 ### 🚀 Getting Started
+
 - **[Quick Start](./quick-start.md)** – Get started in 3 steps with authentication, components, and examples
 - **[Setup Guide](./SETUP_GUIDE.md)** – Environment variables, database, and local workflow
 - **[Development Workflow](./guides/development.md)** – Day-to-day commands, conventions, and scripts
 
 ### 🧱 Guides
+
 - **[Architecture](./guides/architecture.md)** – Server layers, job system, and client structure
 - **[Testing](./guides/testing.md)** – Vitest + Supertest guidance and patterns
 - **[Pre-commit Hooks](./precommit-hooks.md)** – Gitleaks secret detection and linting automation
 
 ### ✨ Features
+
 - **[Todos API](./features/todos.md)** – CRUD contract, validation, and React integration
 - **[Background Jobs](./features/jobs.md)** – pg-boss queues, handlers, and job API
 - **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
@@ -22,6 +25,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 - **[Passkey Authentication](./features/passkey-authentication.md)** – WebAuthn/FIDO2 passwordless authentication
 
 ### 📚 Examples & Reference
+
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets
 - **[Boilerplate Enhancements](./boilerplate-enhancements.md)** – Complete reference of all added features (60+ files, 8000+ lines)
 - **[Changelog](./CHANGELOG.md)** – Documentation changes over time
@@ -31,17 +35,18 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 This boilerplate ships a secure Express 5 + TypeScript server inside `server/src` and a Vite-powered React 19 client inside `client/src`. The API exposes `/api/v1/todos` for CRUD operations and `/api/v1/jobs` for pg-boss queue management, all protected by basic authentication. The SPA consumes the same API via Axios + React Query, rendering dashboards and todo lists for authenticated users.
 
 Key capabilities:
+
 - **Todo lifecycle** – Validation via `todo.validation.ts`, persistence through Prisma, and consistent responses via `ResponseHandler`
 - **Background processing** – Pg-boss queues boot from `core/job`, with workers registered in `server/src/jobs`
 - **Full-stack DX** – Shared TypeScript tooling, Biome linting, Vitest tests, and Tailwind UI components
 
 ## Tech Stack Highlights
 
-| Area | Technologies |
-| --- | --- |
-| Server | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry |
-| Client | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
-| Tooling | TypeScript 5.8, Biome, Vitest + Supertest, pnpm |
+| Area    | Technologies                                                       |
+| ------- | ------------------------------------------------------------------ |
+| Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry                 |
+| Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
+| Tooling | TypeScript 5.8, Biome, Vitest + Supertest, pnpm                    |
 
 ## API Surface
 
