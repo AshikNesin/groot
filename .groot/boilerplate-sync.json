@@ -5,18 +5,19 @@
     "local_path": "/Users/ashiknesin/Code/groot"
   },
   "last_sync": {
-    "commit": "ab4f8a45d657b75bf442169aea2735f8c18f2e24",
-    "date": "2026-03-01",
-    "message": "Initial sync setup"
+    "commit": "69fe3f5",
+    "date": "2026-03-14",
+    "message": "Vite+ migration, AI inference, formatting updates"
   },
   "sync_config": {
     "include_patterns": [
-      ".pre-commit-config.yaml",
+      "AGENTS.md",
       ".gitleaks.toml",
-      "biome.json",
+      ".vite-hooks/**",
       "tsconfig.json",
       "vite.config.ts",
       "vitest.config.ts",
+      "vitest.config.server.ts",
       "vitest.workspace.ts",
       "playwright.config.ts",
       "postcss.config.js",
@@ -30,8 +31,7 @@
       "scripts/**",
       "tests/**",
       "docs/boilerplate/**",
-      ".claude/settings.json",
-      ".claude/commands/**"
+      ".claude/**"
     ],
     "exclude_patterns": [
       "README.md",
