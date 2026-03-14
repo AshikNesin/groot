@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import compression from "compression";
 import cookieParser from "cookie-parser";
+import closeWithGrace from "close-with-grace";
 import type { ViteDevServer } from "vite-plus";
 import { Sentry } from "@/core/instrument";
 import { env } from "@/env";
@@ -27,6 +28,12 @@ const clientRoot = path.resolve(process.cwd(), "client");
 const distPath = path.resolve(__dirname);
 
 let viteServer: ViteDevServer | null = null;
+let isShuttingDown = false;
+
+export function getIsShuttingDown(): boolean {
+  return isShuttingDown;
+}
+
 app.use(requestLoggerMiddleware);
 app.use(corsMiddleware);
 app.use(compression());
@@ -60,7 +67,19 @@ if (!isProd) {
 }
 
 app.get("/health", (_req, res) => {
+  if (isShuttingDown) {
+    res.status(503).json({ status: "shutting_down", timestamp: new Date().toISOString() });
+    return;
+  }
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.get("/ready", (_req, res) => {
+  if (isShuttingDown) {
+    res.status(503).json({ ready: false, reason: "shutting_down" });
+    return;
+  }
+  res.json({ ready: true });
 });
 
 // Public routes (no basic auth)
@@ -129,8 +148,15 @@ const initializeJobQueue = async () => {
   }
 };
 
-const shutdown = async (signal: string) => {
+closeWithGrace({ delay: 10000 }, async ({ signal, err }) => {
+  isShuttingDown = true;
+  if (err) {
+    logger.error({ err }, "Error triggered shutdown");
+  }
   logger.info(`${signal} received. Shutting down gracefully...`);
+
+  // Wait for load balancer to stop sending traffic
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   try {
     await stopJobQueue();
@@ -148,13 +174,4 @@ const shutdown = async (signal: string) => {
   }
 
   await new Promise<void>((resolve) => server.close(() => resolve()));
-  process.exit(0);
-};
-
-process.on("SIGINT", () => {
-  void shutdown("SIGINT");
-});
-
-process.on("SIGTERM", () => {
-  void shutdown("SIGTERM");
 });
