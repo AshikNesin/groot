@@ -20,6 +20,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 - **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
 - **[Storage](./features/storage.md)** – S3-backed file browser, secure shares, and rate limits
 - **[Passkey Authentication](./features/passkey-authentication.md)** – WebAuthn/FIDO2 passwordless authentication
+- **[AI Inference](./features/ai-inference.md)** – Unified LLM API integration with Zod structured output
 
 ### 📚 Examples & Reference
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets

@@ -22,6 +22,7 @@ A production-ready SaaS boilerplate combining Express.js backend with React fron
 | **State** | Zustand, React Query |
 | **Routing** | React Router 7 |
 | **Tooling** | Biome (linting/formatting), Vitest, Playwright, pnpm |
+| **AI** | @mariozechner/pi-ai (unified LLM API) |
 
 ## Key Directories
 
@@ -128,6 +129,7 @@ Route (validation middleware)
 | `/api/v1/jobs` | Background job management | Basic Auth |
 | `/api/v1/passkeys` | Passkey registration/auth | JWT |
 | `/api/v1/settings` | App key-value settings | None |
+| `/api/v1/ai` | AI inference (chat, streaming) | None |
 
 ## Environment Variables
 
