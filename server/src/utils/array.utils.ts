@@ -55,11 +55,7 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
 /**
  * Sort an array of objects by a key
  */
-export function sortBy<T>(
-  array: T[],
-  key: keyof T,
-  order: "asc" | "desc" = "asc",
-): T[] {
+export function sortBy<T>(array: T[], key: keyof T, order: "asc" | "desc" = "asc"): T[] {
   return [...array].sort((a, b) => {
     const aValue = a[key];
     const bValue = b[key];
@@ -106,10 +102,7 @@ export function average(array: number[]): number {
 /**
  * Partition an array based on a predicate
  */
-export function partition<T>(
-  array: T[],
-  predicate: (item: T) => boolean,
-): [T[], T[]] {
+export function partition<T>(array: T[], predicate: (item: T) => boolean): [T[], T[]] {
   const truthy: T[] = [];
   const falsy: T[] = [];
 

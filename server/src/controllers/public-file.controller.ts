@@ -58,10 +58,7 @@ export class PublicFileController extends BaseController {
       throw new BadRequestError("Share ID is required");
     }
 
-    const isValid = await publicShareService.verifySharePassword(
-      shareId,
-      body.password,
-    );
+    const isValid = await publicShareService.verifySharePassword(shareId, body.password);
 
     res.json({
       success: true,

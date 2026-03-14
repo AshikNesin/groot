@@ -5,6 +5,7 @@ This project uses Keyv for key-value storage with PostgreSQL as the backend. The
 ## Installation
 
 The KV system uses these packages:
+
 - `keyv` - The core Keyv library
 - `@keyv/postgres` - PostgreSQL adapter for Keyv
 
@@ -59,7 +60,7 @@ import Keyv from "keyv";
 
 // Create a custom adapter with a namespace
 const adapter = new KeyvPrismaAdapter({
-  namespace: "cache"
+  namespace: "cache",
 });
 
 // Create a Keyv instance with the custom adapter
@@ -82,12 +83,12 @@ const cacheKv = createNamespaceKv("api-cache");
 // Cache API responses for 5 minutes (300000ms)
 async function getCachedData(key: string, fetchFn: () => Promise<any>) {
   let data = await cacheKv.get(key);
-  
+
   if (!data) {
     data = await fetchFn();
     await cacheKv.set(key, data, 300000); // 5 minutes TTL
   }
-  
+
   return data;
 }
 ```
@@ -103,7 +104,7 @@ async function createSession(userId: string, sessionData: any) {
   const sessionId = generateSessionId();
   await sessionKv.set(sessionId, {
     userId,
-    ...sessionData
+    ...sessionData,
   });
   return sessionId;
 }
@@ -126,12 +127,12 @@ const rateLimitKv = createNamespaceKv("rate-limit");
 
 async function checkRateLimit(ip: string, limit: number, window: number) {
   const key = `ip:${ip}`;
-  const count = await rateLimitKv.get(key) || 0;
-  
+  const count = (await rateLimitKv.get(key)) || 0;
+
   if (count >= limit) {
     return false; // Limit exceeded
   }
-  
+
   // Increment the counter
   await rateLimitKv.set(key, count + 1, window);
   return true;

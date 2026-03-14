@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -197,11 +191,7 @@ export function AppSettings() {
               >
                 {isCreating ? "Creating..." : "Create"}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowNewSettingForm(false)}
-                size="sm"
-              >
+              <Button variant="outline" onClick={() => setShowNewSettingForm(false)} size="sm">
                 Cancel
               </Button>
             </div>
@@ -223,13 +213,9 @@ export function AppSettings() {
               className="h-9"
             />
             {settings.length === 0 ? (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No settings found
-              </p>
+              <p className="py-4 text-center text-sm text-gray-500">No settings found</p>
             ) : filteredSettings.length === 0 ? (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No matches
-              </p>
+              <p className="py-4 text-center text-sm text-gray-500">No matches</p>
             ) : (
               <div className="space-y-1">
                 {filteredSettings.map((setting) => (
@@ -262,19 +248,12 @@ export function AppSettings() {
               <div className="flex-1">
                 <CardTitle>{selectedKey || "No setting selected"}</CardTitle>
                 <CardDescription>
-                  {selectedKey
-                    ? "Edit the configuration below"
-                    : "Select a setting from the list"}
+                  {selectedKey ? "Edit the configuration below" : "Select a setting from the list"}
                 </CardDescription>
               </div>
               {selectedKey && (
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                  >
+                  <Button variant="outline" size="sm" onClick={handleDelete} disabled={isDeleting}>
                     Delete
                   </Button>
                   <Button size="sm" onClick={handleSave} disabled={isSaving}>
@@ -322,9 +301,7 @@ export function AppSettings() {
               </div>
             ) : (
               <div className="flex h-96 items-center justify-center">
-                <p className="text-sm text-gray-500">
-                  Select a setting from the list to edit
-                </p>
+                <p className="text-sm text-gray-500">Select a setting from the list to edit</p>
               </div>
             )}
           </CardContent>
@@ -336,22 +313,14 @@ export function AppSettings() {
           <DialogHeader>
             <DialogTitle>Delete Setting</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedKey}"? This action
-              cannot be undone.
+              Are you sure you want to delete "{selectedKey}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={isDeleting}
-            >
+            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
               {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>

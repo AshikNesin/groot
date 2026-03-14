@@ -6,7 +6,7 @@ Use this prompt to sync changes from the boilerplate repo to this project.
 
 ## Prompt for AI
 
-```
+````
 I need to sync changes from my boilerplate repo to this project.
 
 **Setup:**
@@ -28,9 +28,10 @@ I need to sync changes from my boilerplate repo to this project.
 
    # List commits since last sync
    git -C /Users/ashiknesin/Code/groot log --oneline <LAST_SYNC_COMMIT>..HEAD
-   ```
+````
 
 3. **Identify changed files** that match the include patterns:
+
    ```bash
    git -C /Users/ashiknesin/Code/groot diff --name-only <LAST_SYNC_COMMIT>..HEAD
    ```
@@ -56,7 +57,8 @@ I need to sync changes from my boilerplate repo to this project.
    ```
 
 **Important guidelines:**
-- Never overwrite project-specific files (client/*, server/*, prisma/schema.prisma)
+
+- Never overwrite project-specific files (client/_, server/_, prisma/schema.prisma)
 - For package.json: only suggest dependency additions, don't remove project-specific deps
 - For .gitignore: append new entries, don't remove existing ones
 - Always show me a summary of what will change before applying
@@ -67,16 +69,18 @@ I need to sync changes from my boilerplate repo to this project.
 ## Quick Reference
 
 ### Files that ARE synced:
+
 - Config files (biome.json, tsconfig.json, vite.config.ts, etc.)
-- Scripts (scripts/**)
-- Test infrastructure (tests/**)
+- Scripts (scripts/\*\*)
+- Test infrastructure (tests/\*\*)
 - Pre-commit hooks (.pre-commit-config.yaml, .gitleaks.toml)
-- Claude settings (.claude/**)
+- Claude settings (.claude/\*\*)
 - Deployment config (nixpacks.toml, Procfile)
 
 ### Files that are NOT synced:
+
 - Application code (client/**, server/**)
-- Database schema (prisma/schema.prisma, prisma/migrations/**)
+- Database schema (prisma/schema.prisma, prisma/migrations/\*\*)
 - Project-specific docs (README.md)
 - Dependencies (package.json, pnpm-lock.yaml) - handled specially
-- Environment files (.env*)
+- Environment files (.env\*)

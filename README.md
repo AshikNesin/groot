@@ -5,6 +5,7 @@ A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a co
 ## ✨ Features
 
 ### Backend
+
 - ✅ **JWT Authentication** - Complete auth system with login, logout, and protected routes
 - ✅ **Production Error Handling** - Sentry integration, breadcrumbs, and request tracing
 - ✅ **Enhanced Logging** - Request correlation, performance tracking, and business events
@@ -14,6 +15,7 @@ A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a co
 - ✅ **File Storage** - S3-backed storage with public sharing
 
 ### Frontend
+
 - ✅ **26 UI Components** - Complete component library with Radix UI
 - ✅ **Design System** - Stripe-inspired, data-first design tokens
 - ✅ **Type-Safe API Client** - Automatic 401 handling and error management
@@ -44,12 +46,14 @@ Run the setup script to automatically configure your environment with secure sec
 ```
 
 This script will:
+
 - Copy `.env.example` to `.env`
 - Generate secure `JWT_SECRET` and `ADMIN_AUTH_KEY`
 - Prompt for your app name and update `RP_NAME`
 - Optionally update package.json and code references
 
 After running the script:
+
 ```bash
 pnpm install
 pnpm prisma generate
@@ -60,12 +64,14 @@ pnpm dev
 ### Option 2: Manual Setup
 
 1. **Setup environment:**
+
    ```bash
    cp .env.example .env
    # Edit .env and set JWT_SECRET, ADMIN_AUTH_KEY, DATABASE_URL
    ```
 
 2. **Install and generate:**
+
    ```bash
    pnpm install
    pnpm prisma generate
@@ -82,11 +88,11 @@ See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
 
 ## Available Scripts
 
-* **`pnpm build`**: Compiles TypeScript code to JavaScript in the `dist` directory.
-* **`pnpm start`**: Starts the application from the compiled code in `dist`.
-* **`pnpm dev`**: Starts the application in development mode using `tsx`. It watches for changes in `src/index.ts` and automatically restarts the server.
-* **`pnpm lint`**: Lints the TypeScript code in the `src` directory using Biome.
-* **`pnpm format`**: Formats the TypeScript code in the `src` directory using Biome.
+- **`pnpm build`**: Compiles TypeScript code to JavaScript in the `dist` directory.
+- **`pnpm start`**: Starts the application from the compiled code in `dist`.
+- **`pnpm dev`**: Starts the application in development mode using `tsx`. It watches for changes in `src/index.ts` and automatically restarts the server.
+- **`pnpm lint`**: Lints the TypeScript code in the `src` directory using Biome.
+- **`pnpm format`**: Formats the TypeScript code in the `src` directory using Biome.
 
 ## Project Structure
 
@@ -119,23 +125,24 @@ See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
 
 ## Tech Stack
 
-| Area | Technologies |
-|------|-------------|
-| **Backend** | Node.js, Express 5, TypeScript, Prisma, PostgreSQL |
-| **Auth** | JWT (bcryptjs), Passkeys (@simplewebauthn/server), cookie-parser |
-| **File Storage** | AWS S3 SDK (@aws-sdk/client-s3), Multer |
-| **Jobs** | pg-boss (PostgreSQL-backed queue) |
-| **Key-Value Store** | Keyv with PostgreSQL adapter |
-| **Logging** | Pino, Sentry |
-| **Frontend** | React 19, TypeScript, Vite 7 |
-| **UI** | Radix UI primitives, Tailwind CSS, shadcn/ui patterns |
-| **State** | Zustand, React Query |
-| **Routing** | React Router 7 |
-| **Tooling** | Biome, Vitest, Playwright, pnpm |
+| Area                | Technologies                                                     |
+| ------------------- | ---------------------------------------------------------------- |
+| **Backend**         | Node.js, Express 5, TypeScript, Prisma, PostgreSQL               |
+| **Auth**            | JWT (bcryptjs), Passkeys (@simplewebauthn/server), cookie-parser |
+| **File Storage**    | AWS S3 SDK (@aws-sdk/client-s3), Multer                          |
+| **Jobs**            | pg-boss (PostgreSQL-backed queue)                                |
+| **Key-Value Store** | Keyv with PostgreSQL adapter                                     |
+| **Logging**         | Pino, Sentry                                                     |
+| **Frontend**        | React 19, TypeScript, Vite 7                                     |
+| **UI**              | Radix UI primitives, Tailwind CSS, shadcn/ui patterns            |
+| **State**           | Zustand, React Query                                             |
+| **Routing**         | React Router 7                                                   |
+| **Tooling**         | Biome, Vitest, Playwright, pnpm                                  |
 
 ## Authentication
 
 ### Create First User
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/auth/users \
   -H "Content-Type: application/json" \
@@ -144,6 +151,7 @@ curl -X POST http://localhost:3000/api/v1/auth/users \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -175,6 +183,7 @@ pnpm test:watch       # Run tests in watch mode
 ## What's Included
 
 ### Backend (35+ files)
+
 - Complete JWT authentication system
 - Enhanced error handling with Sentry
 - Request logging with breadcrumbs and tracing
@@ -184,6 +193,7 @@ pnpm test:watch       # Run tests in watch mode
 - Admin auth middleware
 
 ### Frontend (30+ files)
+
 - 26 production-ready UI components
 - Design system with 275 lines of tokens
 - Type-safe API client (207 lines)
@@ -193,6 +203,7 @@ pnpm test:watch       # Run tests in watch mode
 - Loading states (spinner, skeleton, empty state)
 
 ### Total Stats
+
 - **60+ files added/modified**
 - **8,000+ lines of code**
 - **26 UI components**
@@ -208,6 +219,7 @@ pnpm test:watch       # Run tests in watch mode
 ## Production Checklist
 
 Before deploying:
+
 - [ ] Run `./setup-boilerplate.sh` to generate secure secrets (or manually set):
   - [ ] Strong `JWT_SECRET` (min 32 characters)
   - [ ] Strong `ADMIN_AUTH_KEY`

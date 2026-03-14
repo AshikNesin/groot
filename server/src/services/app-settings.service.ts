@@ -16,10 +16,7 @@ class AppSettingsService {
     return appSettingsModel.getAll();
   }
 
-  async upsert<T = unknown>(
-    key: string,
-    data: UpsertAppSettingDTO,
-  ): Promise<AppSetting<T>> {
+  async upsert<T = unknown>(key: string, data: UpsertAppSettingDTO): Promise<AppSetting<T>> {
     return appSettingsModel.set<T>(key, data.value as T, data.metadata);
   }
 

@@ -11,12 +11,7 @@ export function serializeObject(obj: unknown, depth = 0): unknown {
 
   // Handle primitives
   if (obj === null || obj === undefined) return obj;
-  if (
-    typeof obj === "string" ||
-    typeof obj === "number" ||
-    typeof obj === "boolean"
-  )
-    return obj;
+  if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return obj;
 
   // Handle BigInt
   if (typeof obj === "bigint") return obj.toString();
@@ -87,14 +82,8 @@ export function sanitizeRequestBody(body: unknown): unknown {
 
     if (obj && typeof obj === "object") {
       const result: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(
-        obj as Record<string, unknown>,
-      )) {
-        if (
-          sensitiveKeys.some((sensitive) =>
-            key.toLowerCase().includes(sensitive),
-          )
-        ) {
+      for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+        if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive))) {
           result[key] = "[REDACTED]";
         } else if (typeof value === "object") {
           result[key] = sanitizeObject(value);

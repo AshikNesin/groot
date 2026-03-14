@@ -170,9 +170,7 @@ class ApiClient {
   async getCurrentUser(): Promise<{ id: number; email: string } | null> {
     try {
       const response =
-        await this.client.get<ApiResponse<{ id: number; email: string }>>(
-          "/auth/me",
-        );
+        await this.client.get<ApiResponse<{ id: number; email: string }>>("/auth/me");
 
       if (!response.data.data) return null;
 
@@ -189,8 +187,7 @@ class ApiClient {
 
   // Jobs API
   async getJobStats(): Promise<JobStats> {
-    const response =
-      await this.client.get<ApiResponse<JobStats>>("/jobs/stats");
+    const response = await this.client.get<ApiResponse<JobStats>>("/jobs/stats");
     if (!response.data.data) {
       throw new Error("Failed to fetch job stats");
     }
@@ -213,9 +210,9 @@ class ApiClient {
     if (options?.startDate) params.append("startDate", options.startDate);
     if (options?.endDate) params.append("endDate", options.endDate);
 
-    const response = await this.client.get<
-      ApiResponse<{ jobs: Job[]; total: number }>
-    >(`/jobs?${params.toString()}`);
+    const response = await this.client.get<ApiResponse<{ jobs: Job[]; total: number }>>(
+      `/jobs?${params.toString()}`,
+    );
     return {
       jobs: response.data.data?.jobs ?? [],
       total: response.data.metadata?.total ?? response.data.data?.total ?? 0,
@@ -223,20 +220,14 @@ class ApiClient {
   }
 
   async getJob(queueName: string, jobId: string): Promise<Job> {
-    const response = await this.client.get<ApiResponse<Job>>(
-      `/jobs/${queueName}/${jobId}`,
-    );
+    const response = await this.client.get<ApiResponse<Job>>(`/jobs/${queueName}/${jobId}`);
     if (!response.data.data) {
       throw new Error("Job not found");
     }
     return response.data.data;
   }
 
-  async getJobLogs(
-    queueName: string,
-    jobId: string,
-    afterId?: number,
-  ): Promise<JobLog[]> {
+  async getJobLogs(queueName: string, jobId: string, afterId?: number): Promise<JobLog[]> {
     const params = new URLSearchParams();
     if (afterId) params.append("afterId", afterId.toString());
 
@@ -306,9 +297,9 @@ class ApiClient {
   }
 
   async purgeJobsByState(state: string): Promise<{ deletedCount: number }> {
-    const response = await this.client.delete<
-      ApiResponse<{ deletedCount: number; state: string }>
-    >(`/jobs/state/${state}`);
+    const response = await this.client.delete<ApiResponse<{ deletedCount: number; state: string }>>(
+      `/jobs/state/${state}`,
+    );
     if (!response.data.data) {
       throw new Error("Failed to purge jobs");
     }
@@ -320,10 +311,11 @@ class ApiClient {
     data: Record<string, unknown>,
     options?: Record<string, unknown>,
   ): Promise<string> {
-    const response = await this.client.post<ApiResponse<{ jobId: string }>>(
-      "/jobs",
-      { jobName, data, options },
-    );
+    const response = await this.client.post<ApiResponse<{ jobId: string }>>("/jobs", {
+      jobName,
+      data,
+      options,
+    });
     if (!response.data.data) {
       throw new Error("Failed to add job");
     }
@@ -331,14 +323,12 @@ class ApiClient {
   }
 
   async getAvailableJobs(): Promise<string[]> {
-    const response =
-      await this.client.get<ApiResponse<string[]>>("/jobs/available");
+    const response = await this.client.get<ApiResponse<string[]>>("/jobs/available");
     return response.data.data ?? [];
   }
 
   async getScheduledJobs(): Promise<ScheduledJob[]> {
-    const response =
-      await this.client.get<ApiResponse<ScheduledJob[]>>("/jobs/schedule");
+    const response = await this.client.get<ApiResponse<ScheduledJob[]>>("/jobs/schedule");
     return response.data.data ?? [];
   }
 

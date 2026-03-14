@@ -30,10 +30,7 @@ export abstract class BaseController {
   /**
    * Parse boolean query parameter
    */
-  protected parseBoolean(
-    value: string | undefined,
-    defaultValue = false,
-  ): boolean {
+  protected parseBoolean(value: string | undefined, defaultValue = false): boolean {
     if (value === undefined) return defaultValue;
     return value === "true";
   }
@@ -42,10 +39,7 @@ export abstract class BaseController {
    * Parse pagination parameters
    */
   protected parsePagination(req: Request) {
-    const page = Math.max(
-      1,
-      Number.parseInt(req.query.page as string, 10) || 1,
-    );
+    const page = Math.max(1, Number.parseInt(req.query.page as string, 10) || 1);
     const rawLimit = Number.parseInt(req.query.limit as string, 10);
     // If limit is NaN or missing, default to 20; if 0 or negative, clamp to 1; max 100
     const defaultLimit = Number.isNaN(rawLimit) ? 20 : Math.max(1, rawLimit);
@@ -65,9 +59,7 @@ export abstract class BaseController {
     defaultOrder: "asc" | "desc" = "desc",
   ) {
     const sortBy = (req.query.sortBy as string) || defaultField;
-    const sortOrder = ((req.query.sortOrder as string) || defaultOrder) as
-      | "asc"
-      | "desc";
+    const sortOrder = ((req.query.sortOrder as string) || defaultOrder) as "asc" | "desc";
 
     if (!allowedFields.includes(sortBy)) {
       throw new BadRequestError(`Invalid sort field: ${sortBy}`);

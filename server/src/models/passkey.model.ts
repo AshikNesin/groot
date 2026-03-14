@@ -30,9 +30,7 @@ export const create = async (data: CreatePasskeyData): Promise<Passkey> => {
 /**
  * Find passkey by credential ID
  */
-export const findByCredentialId = async (
-  credentialId: string,
-): Promise<Passkey | null> => {
+export const findByCredentialId = async (credentialId: string): Promise<Passkey | null> => {
   return prisma.passkey.findUnique({
     where: { credentialId },
   });
@@ -60,10 +58,7 @@ export const findByUserId = async (userId: number): Promise<Passkey[]> => {
 /**
  * Update passkey (typically counter and lastUsedAt after authentication)
  */
-export const update = async (
-  id: number,
-  data: UpdatePasskeyData,
-): Promise<Passkey> => {
+export const update = async (id: number, data: UpdatePasskeyData): Promise<Passkey> => {
   return prisma.passkey.update({
     where: { id },
     data,
@@ -91,10 +86,7 @@ export const countByUserId = async (userId: number): Promise<number> => {
 /**
  * Find passkey by ID and user ID (for authorization checks)
  */
-export const findByIdAndUserId = async (
-  id: number,
-  userId: number,
-): Promise<Passkey | null> => {
+export const findByIdAndUserId = async (id: number, userId: number): Promise<Passkey | null> => {
   return prisma.passkey.findFirst({
     where: {
       id,

@@ -44,9 +44,7 @@ export async function isDockerAvailable(): Promise<boolean> {
  */
 async function isContainerRunning(containerName: string): Promise<boolean> {
   try {
-    const { stdout } = await execAsync(
-      `docker inspect -f '{{.State.Running}}' ${containerName}`,
-    );
+    const { stdout } = await execAsync(`docker inspect -f '{{.State.Running}}' ${containerName}`);
     return stdout.trim() === "true";
   } catch {
     return false;
@@ -119,9 +117,7 @@ async function waitForPostgres(port: number, maxAttempts = 30): Promise<void> {
       return;
     } catch {
       if (attempt === maxAttempts) {
-        throw new Error(
-          `PostgreSQL failed to start after ${maxAttempts} attempts`,
-        );
+        throw new Error(`PostgreSQL failed to start after ${maxAttempts} attempts`);
       }
       // Wait 500ms before next attempt
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -209,9 +205,7 @@ async function removeContainer(): Promise<void> {
 /**
  * Main entry point: Ensure a PostgreSQL container is running with a database for the project
  */
-export async function ensurePostgresContainer(
-  options: DockerDbOptions,
-): Promise<DockerDbResult> {
+export async function ensurePostgresContainer(options: DockerDbOptions): Promise<DockerDbResult> {
   const { projectName, port = DEFAULT_PORT } = options;
   const dbName = sanitizeDbName(projectName);
 

@@ -18,12 +18,7 @@ interface ApiResponse<T = unknown> {
 }
 
 export const ResponseHandler = {
-  success<T>(
-    res: Response,
-    data: T,
-    message?: string,
-    statusCode = 200,
-  ): Response<ApiResponse<T>> {
+  success<T>(res: Response, data: T, message?: string, statusCode = 200): Response<ApiResponse<T>> {
     return res.status(statusCode).json({ success: true, data, message });
   },
 
