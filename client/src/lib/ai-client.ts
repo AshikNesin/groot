@@ -36,10 +36,10 @@ class AIClient {
   stream(request: ChatRequest, handlers: StreamHandlers): StreamConnection {
     const controller = new AbortController();
 
-    fetch("/api/v1/ai/chat", {
+    fetch("/api/v1/ai/chat/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...request, stream: true }),
+      body: JSON.stringify(request),
       signal: controller.signal,
       credentials: "include",
     })

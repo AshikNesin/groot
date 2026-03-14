@@ -155,9 +155,11 @@ export const aiConversationModel = {
     id: number,
     userId?: number,
   ): Promise<AIConversation | null> => {
-    return prisma.aIConversation.findFirst({
-      where: { id, userId: userId ?? null },
-    });
+    const where: Prisma.AIConversationWhereInput = { id };
+    if (userId !== undefined) {
+      where.userId = userId;
+    }
+    return prisma.aIConversation.findFirst({ where });
   },
 
   findByUser: async (

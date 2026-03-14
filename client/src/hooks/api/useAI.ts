@@ -33,6 +33,11 @@ export function useAIStream() {
 
   const stream = useCallback(
     (request: ChatRequest) => {
+      // Abort any existing stream before starting a new one
+      if (connectionRef.current) {
+        connectionRef.current.abort();
+      }
+
       setText("");
       setError(null);
       setIsStreaming(true);

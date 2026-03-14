@@ -17,8 +17,8 @@ export type ChatDTO = z.infer<typeof chatSchema>;
 // ── Usage Query Schema ───────────────────────────────────────────────────────
 
 export const usageQuerySchema = z.object({
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.string().datetime({ offset: true }).optional(),
+  endDate: z.string().datetime({ offset: true }).optional(),
   provider: z.string().optional(),
   model: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).default(50),

@@ -198,11 +198,14 @@ describe("AI Adapter", () => {
         result: async () => ({}),
       }) as any);
 
-      await expect(async () => {
-        for await (const _ of ai.stream("Hello")) {
-          // consume
-        }
-      }).rejects.toThrow("Rate limit exceeded");
+      // Must invoke the async function inside expect().rejects
+      await expect(
+        (async () => {
+          for await (const _ of ai.stream("Hello")) {
+            // consume
+          }
+        })()
+      ).rejects.toThrow("Rate limit exceeded");
     });
   });
 
