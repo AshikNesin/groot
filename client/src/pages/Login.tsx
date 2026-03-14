@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth";
+import { useToast } from "@/hooks/use-toast";
 
 export function Login() {
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [credentials, setCredentials] = useState({
     username: "",
     password: "",
@@ -21,6 +23,11 @@ export function Login() {
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
+      toast({
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "Invalid credentials",
+        variant: "destructive",
+      });
     }
   };
 
