@@ -57,10 +57,7 @@ export class StorageController extends BaseController {
       filePath: query.filePath,
     });
 
-    res.setHeader(
-      "Content-Type",
-      file.contentType ?? "application/octet-stream",
-    );
+    res.setHeader("Content-Type", file.contentType ?? "application/octet-stream");
     res.setHeader("Content-Disposition", `inline; filename="${file.fileName}"`);
     res.send(file.buffer);
   };
@@ -96,10 +93,7 @@ export class StorageController extends BaseController {
     ResponseHandler.created(res, result, "Folder created successfully");
   };
 
-  deleteFolder = async (
-    req: Request<{ folderPath?: string }>,
-    res: Response,
-  ): Promise<void> => {
+  deleteFolder = async (req: Request<{ folderPath?: string }>, res: Response): Promise<void> => {
     const { folderPath } = req.params;
     if (!folderPath) {
       throw new BadRequestError("Folder path is required");
@@ -148,11 +142,7 @@ export class StorageController extends BaseController {
   ): Promise<void> => {
     const body = req.validated?.body ?? req.body;
     const share = await publicShareService.createShare(body);
-    ResponseHandler.created(
-      res,
-      share,
-      "Public share link created successfully",
-    );
+    ResponseHandler.created(res, share, "Public share link created successfully");
   };
 
   listSharesForFile = async (
@@ -164,10 +154,7 @@ export class StorageController extends BaseController {
     ResponseHandler.success(res, shares);
   };
 
-  revokeShare = async (
-    req: Request<{ shareId: string }>,
-    res: Response,
-  ): Promise<void> => {
+  revokeShare = async (req: Request<{ shareId: string }>, res: Response): Promise<void> => {
     const { shareId } = req.params;
     await publicShareService.revokeShare(shareId);
     ResponseHandler.success(res, null, "Share revoked successfully");

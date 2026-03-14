@@ -1,0 +1,11 @@
+#!/bin/bash
+# Vite+ pre-commit hook
+# Runs Gitleaks (secret detection) then Vite+ staged checks
+
+set -e
+
+# Run Gitleaks for secret detection on staged files
+gitleaks protect --verbose --redact --config .gitleaks.toml
+
+# Run Vite+ staged checks (lint + format)
+vp staged

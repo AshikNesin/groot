@@ -85,20 +85,14 @@ export class JobLogStream extends Writable {
 
       const createData: Prisma.JobLogCreateManyInput[] = batch.map((log) => {
         const { level, time, msg, message, jobId, jobName, ...rest } = log;
-        const levelStr =
-          typeof level === "number"
-            ? levelMap[level] || "info"
-            : (level as string);
+        const levelStr = typeof level === "number" ? levelMap[level] || "info" : (level as string);
 
         return {
           jobId: this.jobId,
           jobName: this.jobName || (jobName as string) || "unknown",
           level: levelStr,
           message: msg || message || "",
-          data:
-            Object.keys(rest).length > 0
-              ? (rest as Prisma.InputJsonValue)
-              : Prisma.JsonNull,
+          data: Object.keys(rest).length > 0 ? (rest as Prisma.InputJsonValue) : Prisma.JsonNull,
           timestamp: time ? new Date(time) : new Date(),
         };
       });
@@ -124,10 +118,7 @@ export class JobLogStream extends Writable {
       .catch((err) => callback(err));
   }
 
-  _destroy(
-    error: Error | null,
-    callback: (error?: Error | null) => void,
-  ): void {
+  _destroy(error: Error | null, callback: (error?: Error | null) => void): void {
     this.isDestroyed = true;
     if (this.timer) clearTimeout(this.timer);
     this.flush()
@@ -136,9 +127,6 @@ export class JobLogStream extends Writable {
   }
 }
 
-export function createJobLogStream(
-  jobId: string,
-  jobName?: string,
-): JobLogStream {
+export function createJobLogStream(jobId: string, jobName?: string): JobLogStream {
   return new JobLogStream(jobId, jobName);
 }

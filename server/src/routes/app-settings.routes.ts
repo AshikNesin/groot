@@ -7,11 +7,7 @@ const router = Router();
 
 router.get("/", appSettingsController.getAll);
 router.get("/:key", appSettingsController.getByKey);
-router.put(
-  "/:key",
-  validate(upsertAppSettingSchema),
-  appSettingsController.upsert,
-);
+router.put("/:key", validate(upsertAppSettingSchema), appSettingsController.upsert);
 router.delete("/:key", appSettingsController.delete);
 
 export default router;

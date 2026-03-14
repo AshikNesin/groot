@@ -1,7 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "WebFetch(domain:github.com)"
-    ]
+    "allow": ["WebFetch(domain:github.com)"]
   }
 }

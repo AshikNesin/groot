@@ -2,10 +2,7 @@ import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { todoService } from "@/services/todo.service";
-import type {
-  CreateTodoDTO,
-  UpdateTodoDTO,
-} from "@/validations/todo.validation";
+import type { CreateTodoDTO, UpdateTodoDTO } from "@/validations/todo.validation";
 
 class TodoController extends BaseController {
   create = async (req: Request, res: Response) => {

@@ -6,12 +6,7 @@ export abstract class AppError extends Error {
   public readonly code: string;
   public readonly isOperational: boolean;
 
-  constructor(
-    message: string,
-    statusCode: number,
-    code: string,
-    isOperational = true,
-  ) {
+  constructor(message: string, statusCode: number, code: string, isOperational = true) {
     super(message);
     Object.setPrototypeOf(this, AppError.prototype);
 

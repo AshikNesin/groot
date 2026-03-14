@@ -9,21 +9,14 @@ export const JOB_STATES = {
 
 export const VALID_JOB_STATES = Object.values(JOB_STATES);
 
-export const RESERVED_QUEUE_NAMES = [
-  "schedule",
-  "stats",
-  "available",
-  "state",
-] as const;
+export const RESERVED_QUEUE_NAMES = ["schedule", "stats", "available", "state"] as const;
 
 export function isValidJobState(state: string): boolean {
   return VALID_JOB_STATES.includes(state as (typeof VALID_JOB_STATES)[number]);
 }
 
 export function isReservedQueueName(name: string): boolean {
-  return RESERVED_QUEUE_NAMES.includes(
-    name as (typeof RESERVED_QUEUE_NAMES)[number],
-  );
+  return RESERVED_QUEUE_NAMES.includes(name as (typeof RESERVED_QUEUE_NAMES)[number]);
 }
 
 export function getJobStateDescription(state: string): string {

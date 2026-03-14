@@ -88,10 +88,7 @@ export class PublicShareService {
     });
   }
 
-  async verifySharePassword(
-    shareId: string,
-    password: string,
-  ): Promise<boolean> {
+  async verifySharePassword(shareId: string, password: string): Promise<boolean> {
     const share = await prisma.publicFileShare.findUnique({
       where: { shareId, isDeleted: false },
     });
@@ -122,10 +119,7 @@ export class PublicShareService {
 
     return {
       buffer: file.buffer,
-      contentType:
-        validation.share.contentType ??
-        file.contentType ??
-        "application/octet-stream",
+      contentType: validation.share.contentType ?? file.contentType ?? "application/octet-stream",
       fileName: validation.share.fileName,
     };
   }

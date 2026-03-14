@@ -21,11 +21,7 @@ declare global {
  * Verifies JWT token from cookie or Authorization header
  * Attaches user information to request object if valid
  */
-export function jwtAuthMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
   try {
     // Try to get token from cookie first, then from Authorization header
     let token: string | undefined;
@@ -61,8 +57,7 @@ export function jwtAuthMiddleware(
 
     next();
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Invalid token";
+    const errorMessage = error instanceof Error ? error.message : "Invalid token";
     logger.debug({ error: errorMessage }, "JWT authentication failed");
 
     res.status(401).json({
@@ -77,11 +72,7 @@ export function jwtAuthMiddleware(
  * Verifies JWT token if present, but doesn't require it
  * Attaches user information to request object if token is valid
  */
-export function optionalJwtAuthMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+export function optionalJwtAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
   try {
     // Try to get token from cookie first, then from Authorization header
     let token: string | undefined;

@@ -115,10 +115,7 @@ export class StorageService {
     }
   }
 
-  async download(
-    s3Path: string,
-    localPath: string,
-  ): Promise<StorageResult<DownloadResult>> {
+  async download(s3Path: string, localPath: string): Promise<StorageResult<DownloadResult>> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
@@ -195,9 +192,7 @@ export class StorageService {
     };
   }
 
-  async remove(
-    filePaths: string[],
-  ): Promise<StorageResult<{ filePaths: string[] }>> {
+  async remove(filePaths: string[]): Promise<StorageResult<{ filePaths: string[] }>> {
     try {
       const command = new DeleteObjectsCommand({
         Bucket: this.bucketName,
@@ -304,9 +299,7 @@ export class StorageService {
       return {
         data: {
           files: (response.Contents || [])
-            .filter(
-              (obj) => obj.Key && obj.Size !== undefined && obj.LastModified,
-            )
+            .filter((obj) => obj.Key && obj.Size !== undefined && obj.LastModified)
             .map((obj) => ({
               key: obj.Key as string,
               size: obj.Size as number,

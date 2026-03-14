@@ -17,9 +17,7 @@ import { resolve } from "node:path";
 import { startPrismaDevServer } from "@prisma/dev";
 import { isDockerAvailable, ensurePostgresContainer } from "./lib/docker-db.js";
 
-const pkg = JSON.parse(
-  readFileSync(resolve(process.cwd(), "package.json"), "utf-8"),
-);
+const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
 const dbName = `${pkg.name}-db`;
 
 let devServer: ChildProcess | null = null;
@@ -96,14 +94,10 @@ async function main() {
   // Push schema to the local DB
   console.log("📦 Pushing Prisma schema...\n");
   await new Promise<void>((resolvePromise, reject) => {
-    const push = spawn(
-      "pnpm",
-      ["exec", "prisma", "db", "push", "--accept-data-loss"],
-      {
-        stdio: "inherit",
-        env: { ...process.env, DATABASE_URL: connectionString },
-      },
-    );
+    const push = spawn("pnpm", ["exec", "prisma", "db", "push", "--accept-data-loss"], {
+      stdio: "inherit",
+      env: { ...process.env, DATABASE_URL: connectionString },
+    });
     push.on("close", (code) => {
       if (code === 0) resolvePromise();
       else reject(new Error(`prisma db push exited with code ${code}`));
