@@ -34,19 +34,13 @@ function zodToTypeBox(schema: z.ZodTypeAny): TSchema {
 
   switch (typeName) {
     case "ZodString":
-      return Type.String(
-        def.description ? { description: def.description } : undefined,
-      );
+      return Type.String(def.description ? { description: def.description } : undefined);
 
     case "ZodNumber":
-      return Type.Number(
-        def.description ? { description: def.description } : undefined,
-      );
+      return Type.Number(def.description ? { description: def.description } : undefined);
 
     case "ZodBoolean":
-      return Type.Boolean(
-        def.description ? { description: def.description } : undefined,
-      );
+      return Type.Boolean(def.description ? { description: def.description } : undefined);
 
     case "ZodObject": {
       const shape = def.shape?.();
@@ -68,9 +62,7 @@ function zodToTypeBox(schema: z.ZodTypeAny): TSchema {
       return Type.Union([zodToTypeBox(def.innerType), Type.Null()]);
 
     case "ZodEnum":
-      return Type.Union(
-        (def.values as string[]).map((v: string) => Type.Literal(v)),
-      );
+      return Type.Union((def.values as string[]).map((v: string) => Type.Literal(v)));
 
     case "ZodLiteral":
       return Type.Literal(def.value);
@@ -165,9 +157,7 @@ export class AI {
       if (event.type === "text_delta") {
         yield event.delta;
       } else if (event.type === "error") {
-        throw new Error(
-          event.error.errorMessage || "AI streaming error",
-        );
+        throw new Error(event.error.errorMessage || "AI streaming error");
       }
     }
   }
@@ -201,9 +191,7 @@ export class AI {
     const toolName = options.schemaName || "extract_data";
     const tool: PiAITool = {
       name: toolName,
-      description:
-        options.schemaDescription ||
-        "Extract structured data from the provided text",
+      description: options.schemaDescription || "Extract structured data from the provided text",
       parameters: typeboxSchema,
     };
 
@@ -225,9 +213,7 @@ export class AI {
         })
       : await piComplete(this._model, context, streamOptions);
 
-    const toolCalls = response.content.filter(
-      (block) => block.type === "toolCall",
-    );
+    const toolCalls = response.content.filter((block) => block.type === "toolCall");
 
     if (toolCalls.length === 0) {
       throw new Error(
@@ -244,9 +230,7 @@ export class AI {
     // Validate with Zod
     const parsed = schema.safeParse(toolCall.arguments);
     if (!parsed.success) {
-      throw new Error(
-        `AI output failed schema validation: ${parsed.error.message}`,
-      );
+      throw new Error(`AI output failed schema validation: ${parsed.error.message}`);
     }
 
     return parsed.data;
@@ -275,7 +259,10 @@ export class AI {
 
   // ── Private helpers ──────────────────────────────────────────────────
 
-  private buildContext(prompt: string | (TextContent | ImageContent)[], options: CompletionOptions): Context {
+  private buildContext(
+    prompt: string | (TextContent | ImageContent)[],
+    options: CompletionOptions,
+  ): Context {
     return {
       systemPrompt: options.systemPrompt,
       messages: [{ role: "user", content: prompt, timestamp: Date.now() }],
@@ -294,9 +281,7 @@ export class AI {
   }
 
   private extractText(response: AssistantMessage): string {
-    const textBlocks = response.content.filter(
-      (block) => block.type === "text",
-    );
+    const textBlocks = response.content.filter((block) => block.type === "text");
     return textBlocks.map((block) => (block as any).text).join("");
   }
 }

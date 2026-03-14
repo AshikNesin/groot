@@ -1,16 +1,10 @@
 import { Prisma } from "@/generated/prisma/client";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-} from "@/core/errors/base.errors";
+import { BadRequestError, ConflictError, NotFoundError } from "@/core/errors/base.errors";
 
 /**
  * Check if an error is a Prisma error
  */
-export function isPrismaError(
-  error: unknown,
-): error is Prisma.PrismaClientKnownRequestError {
+export function isPrismaError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError ||
     error instanceof Prisma.PrismaClientValidationError ||
@@ -40,16 +34,12 @@ export function handlePrismaError(error: unknown): never {
 
       case "P2003": {
         // Foreign key constraint failed
-        throw new BadRequestError(
-          "Cannot perform this operation due to related records",
-        );
+        throw new BadRequestError("Cannot perform this operation due to related records");
       }
 
       case "P2014": {
         // Required relation violation
-        throw new BadRequestError(
-          "The change would violate the required relation",
-        );
+        throw new BadRequestError("The change would violate the required relation");
       }
 
       case "P2021": {

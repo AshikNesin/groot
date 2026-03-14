@@ -120,8 +120,7 @@ export function useCreateAIConversation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: CreateConversationRequest) =>
-      aiClient.createConversation(request),
+    mutationFn: (request: CreateConversationRequest) => aiClient.createConversation(request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai", "conversations"] });
     },

@@ -5,12 +5,14 @@
 Your boilerplate now includes everything you need to ship a production-ready SaaS:
 
 ### Backend ✅
+
 - **JWT Authentication** - Login, logout, protected routes
 - **Production Error Handling** - Sentry, breadcrumbs, logging
 - **Enhanced Logging** - Request correlation, performance tracking
 - **Utilities** - Date, validation, array helpers
 
 ### Frontend ✅
+
 - **23 UI Components** - Tables, forms, modals, alerts, etc.
 - **Design System** - Stripe-inspired, data-first design
 - **Enhanced API Client** - Type-safe, auto 401 handling
@@ -31,6 +33,7 @@ Run the setup script to automatically configure your environment:
 ```
 
 This will:
+
 - Copy `.env.example` to `.env`
 - Generate secure `JWT_SECRET` (64 characters)
 - Generate secure `ADMIN_AUTH_KEY` (48 characters)
@@ -102,7 +105,14 @@ Create a new page using the built-in components:
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 export function MyPage() {
   return (
@@ -171,12 +181,8 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md space-y-4">
         <h1 className="text-2xl font-medium">Login</h1>
-        
-        {error && (
-          <div className="p-4 text-sm text-red-600 bg-red-50 rounded">
-            {error}
-          </div>
-        )}
+
+        {error && <div className="p-4 text-sm text-red-600 bg-red-50 rounded">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -257,7 +263,7 @@ router.get(
     // req.user contains the authenticated user
     const data = { message: "Hello from protected route!" };
     return ResponseHandler.success(res, data);
-  })
+  }),
 );
 
 export default router;
@@ -298,12 +304,14 @@ await apiClient.delete("/todos/1");
 ## Available Components
 
 ### Layout
+
 - `PageLayout` - Complete page wrapper
 - `PageHeader` - Page title & actions
 - `PageContainer` - Max-width container
 - `Section` - Content sections
 
 ### UI Components
+
 - `Button` - 6 variants
 - `Badge` - 7 variants
 - `Card` - Card layouts
@@ -328,12 +336,7 @@ await apiClient.delete("/todos/1");
 
 ```typescript
 // Date utilities
-import { 
-  formatDisplayDate, 
-  formatRelativeTime, 
-  addDays, 
-  startOfMonth 
-} from "@/lib/utils";
+import { formatDisplayDate, formatRelativeTime, addDays, startOfMonth } from "@/lib/utils";
 
 formatDisplayDate(new Date()); // "Jan 1, 2024"
 formatRelativeTime(new Date()); // "2 hours ago"
@@ -366,11 +369,11 @@ const debouncedFn = debounce(() => console.log("Called!"), 300);
 Use the built-in design tokens for consistent styling:
 
 ```typescript
-import { 
-  pageLayout, 
-  typography, 
+import {
+  pageLayout,
+  typography,
   statusColors,
-  iconSizes 
+  iconSizes
 } from "@/lib/utils";
 
 // Use in your components
@@ -433,6 +436,7 @@ pnpm test:watch       # Run tests in watch mode
 **Ready to ship!** 🚀
 
 Your boilerplate is production-ready with:
+
 - ✅ JWT Authentication
 - ✅ 23 UI Components
 - ✅ Error Handling & Logging

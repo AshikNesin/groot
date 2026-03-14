@@ -36,8 +36,7 @@ class AIController extends BaseController {
       res.write("data: [DONE]\n\n");
       res.end();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "AI streaming error";
+      const message = error instanceof Error ? error.message : "AI streaming error";
       res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
       res.end();
     }
@@ -71,11 +70,7 @@ class AIController extends BaseController {
   listConversations = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as ListConversationsQueryDTO;
-    const conversations = await aiService.listConversations(
-      userId,
-      query.limit,
-      query.offset,
-    );
+    const conversations = await aiService.listConversations(userId, query.limit, query.offset);
     ResponseHandler.success(res, conversations);
   };
 

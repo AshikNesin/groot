@@ -37,10 +37,6 @@ export const updatePasskeyNameSchema = z.object({
  * Type definitions
  */
 export type VerifyRegistrationDTO = z.infer<typeof verifyRegistrationSchema>;
-export type VerifyAuthenticationDTO = z.infer<
-  typeof verifyAuthenticationSchema
->;
-export type GenerateAuthenticationOptionsDTO = z.infer<
-  typeof generateAuthenticationOptionsSchema
->;
+export type VerifyAuthenticationDTO = z.infer<typeof verifyAuthenticationSchema>;
+export type GenerateAuthenticationOptionsDTO = z.infer<typeof generateAuthenticationOptionsSchema>;
 export type UpdatePasskeyNameDTO = z.infer<typeof updatePasskeyNameSchema>;

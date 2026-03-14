@@ -165,16 +165,13 @@ export function Jobs() {
         filters.endDate = queryParams.endDate;
       }
 
-      const { jobs: jobsData, total: totalCount } =
-        await apiClient.getJobs(filters);
+      const { jobs: jobsData, total: totalCount } = await apiClient.getJobs(filters);
 
       let filteredJobs = jobsData;
       if (queryParams.search.trim()) {
         const query = queryParams.search.toLowerCase().trim();
         filteredJobs = jobsData.filter(
-          (job) =>
-            job.id.toLowerCase().includes(query) ||
-            job.name.toLowerCase().includes(query),
+          (job) => job.id.toLowerCase().includes(query) || job.name.toLowerCase().includes(query),
         );
       }
 
@@ -184,8 +181,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to load jobs",
+        description: error instanceof Error ? error.message : "Failed to load jobs",
       });
     } finally {
       setLoading(false);
@@ -259,8 +255,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to retry job",
+        description: error instanceof Error ? error.message : "Failed to retry job",
       });
     }
   };
@@ -274,8 +269,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to cancel job",
+        description: error instanceof Error ? error.message : "Failed to cancel job",
       });
     }
   };
@@ -289,8 +283,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to resume job",
+        description: error instanceof Error ? error.message : "Failed to resume job",
       });
     }
   };
@@ -304,8 +297,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to delete job",
+        description: error instanceof Error ? error.message : "Failed to delete job",
       });
     }
   };
@@ -332,8 +324,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to re-run job",
+        description: error instanceof Error ? error.message : "Failed to re-run job",
       });
     }
   };
@@ -341,18 +332,15 @@ export function Jobs() {
   const handleBulkRerun = async () => {
     if (selectedJobs.size === 0) return;
 
-    if (
-      !window.confirm(
-        `Are you sure you want to re-run ${selectedJobs.size} selected jobs?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to re-run ${selectedJobs.size} selected jobs?`)) {
       return;
     }
 
     try {
-      const jobsToRerun = Array.from(selectedJobs).map((key) =>
-        JSON.parse(key),
-      ) as { queueName: string; jobId: string }[];
+      const jobsToRerun = Array.from(selectedJobs).map((key) => JSON.parse(key)) as {
+        queueName: string;
+        jobId: string;
+      }[];
 
       const results = await apiClient.rerunJobs(jobsToRerun);
       const successCount = results.filter((r) => r.success).length;
@@ -368,8 +356,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to re-run jobs",
+        description: error instanceof Error ? error.message : "Failed to re-run jobs",
       });
     }
   };
@@ -391,9 +378,7 @@ export function Jobs() {
     } else {
       const newSelection = new Set<string>();
       for (const job of jobs) {
-        newSelection.add(
-          JSON.stringify({ queueName: job.name, jobId: job.id }),
-        );
+        newSelection.add(JSON.stringify({ queueName: job.name, jobId: job.id }));
       }
       setSelectedJobs(newSelection);
     }
@@ -437,8 +422,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to purge jobs",
+        description: error instanceof Error ? error.message : "Failed to purge jobs",
       });
     }
   };
@@ -478,8 +462,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to add job",
+        description: error instanceof Error ? error.message : "Failed to add job",
       });
     }
   };
@@ -496,11 +479,7 @@ export function Jobs() {
 
     try {
       const data = JSON.parse(scheduledJobData);
-      await apiClient.scheduleJob(
-        scheduledJobName as JobName,
-        scheduledJobCron,
-        data,
-      );
+      await apiClient.scheduleJob(scheduledJobName as JobName, scheduledJobCron, data);
       toast({ title: "Success", description: "Job has been scheduled" });
       setScheduleJobDialogOpen(false);
       setScheduledJobName("");
@@ -511,18 +490,13 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to schedule job",
+        description: error instanceof Error ? error.message : "Failed to schedule job",
       });
     }
   };
 
   const handleCancelScheduledJob = async (jobName: string) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to cancel the scheduled job "${jobName}"?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to cancel the scheduled job "${jobName}"?`)) {
       return;
     }
 
@@ -537,10 +511,7 @@ export function Jobs() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to cancel scheduled job",
+        description: error instanceof Error ? error.message : "Failed to cancel scheduled job",
       });
     }
   };
@@ -562,18 +533,11 @@ export function Jobs() {
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-medium text-gray-900">
-              Job Queue Management
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Monitor and manage background jobs
-            </p>
+            <h1 className="text-2xl font-medium text-gray-900">Job Queue Management</h1>
+            <p className="text-sm text-gray-500 mt-1">Monitor and manage background jobs</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Dialog
-              open={scheduleJobDialogOpen}
-              onOpenChange={setScheduleJobDialogOpen}
-            >
+            <Dialog open={scheduleJobDialogOpen} onOpenChange={setScheduleJobDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="flex-1 sm:flex-none">
                   <CalendarIcon className="w-4 h-4 md:mr-2" />
@@ -592,9 +556,7 @@ export function Jobs() {
                     <Label htmlFor="scheduled-job-name">Job Type</Label>
                     <Select
                       value={scheduledJobName}
-                      onValueChange={(value) =>
-                        setScheduledJobName(value as JobName)
-                      }
+                      onValueChange={(value) => setScheduledJobName(value as JobName)}
                     >
                       <SelectTrigger id="scheduled-job-name">
                         <SelectValue placeholder="Select job type" />
@@ -632,10 +594,7 @@ export function Jobs() {
                     />
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setScheduleJobDialogOpen(false)}
-                    >
+                    <Button variant="outline" onClick={() => setScheduleJobDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button onClick={handleScheduleJob}>Schedule Job</Button>
@@ -653,9 +612,7 @@ export function Jobs() {
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Add New Job</DialogTitle>
-                  <DialogDescription>
-                    Manually trigger a background job
-                  </DialogDescription>
+                  <DialogDescription>Manually trigger a background job</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -688,10 +645,7 @@ export function Jobs() {
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setAddJobDialogOpen(false)}
-                    >
+                    <Button variant="outline" onClick={() => setAddJobDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button onClick={handleAddJob}>Add Job</Button>
@@ -705,9 +659,7 @@ export function Jobs() {
               disabled={refreshing}
               className="flex-1 sm:flex-none"
             >
-              <RefreshCw
-                className={`w-4 h-4 md:mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
+              <RefreshCw className={`w-4 h-4 md:mr-2 ${refreshing ? "animate-spin" : ""}`} />
               <span className="hidden md:inline">Refresh</span>
             </Button>
           </div>
@@ -723,11 +675,7 @@ export function Jobs() {
             >
               <div className="text-sm text-gray-500 mb-1">Total</div>
               <div className="text-2xl font-medium text-gray-900">
-                {stats.active +
-                  stats.created +
-                  stats.retry +
-                  stats.failed +
-                  stats.completed}
+                {stats.active + stats.created + stats.retry + stats.failed + stats.completed}
               </div>
             </button>
             <button
@@ -736,9 +684,7 @@ export function Jobs() {
               className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="text-sm text-gray-500 mb-1">Active</div>
-              <div className="text-2xl font-medium text-blue-600">
-                {stats.active}
-              </div>
+              <div className="text-2xl font-medium text-blue-600">{stats.active}</div>
             </button>
             <button
               type="button"
@@ -746,9 +692,7 @@ export function Jobs() {
               className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="text-sm text-gray-500 mb-1">Created</div>
-              <div className="text-2xl font-medium text-gray-900">
-                {stats.created}
-              </div>
+              <div className="text-2xl font-medium text-gray-900">{stats.created}</div>
             </button>
             <button
               type="button"
@@ -756,9 +700,7 @@ export function Jobs() {
               className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="text-sm text-gray-500 mb-1">Retry</div>
-              <div className="text-2xl font-medium text-yellow-600">
-                {stats.retry}
-              </div>
+              <div className="text-2xl font-medium text-yellow-600">{stats.retry}</div>
             </button>
             <button
               type="button"
@@ -766,9 +708,7 @@ export function Jobs() {
               className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="text-sm text-gray-500 mb-1">Failed</div>
-              <div className="text-2xl font-medium text-red-600">
-                {stats.failed}
-              </div>
+              <div className="text-2xl font-medium text-red-600">{stats.failed}</div>
             </button>
             <button
               type="button"
@@ -776,9 +716,7 @@ export function Jobs() {
               className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="text-sm text-gray-500 mb-1">Completed</div>
-              <div className="text-2xl font-medium text-green-600">
-                {stats.completed}
-              </div>
+              <div className="text-2xl font-medium text-green-600">{stats.completed}</div>
             </button>
             <button
               type="button"
@@ -786,9 +724,7 @@ export function Jobs() {
               className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="text-sm text-gray-500 mb-1">Cancelled</div>
-              <div className="text-2xl font-medium text-gray-900">
-                {stats.cancelled}
-              </div>
+              <div className="text-2xl font-medium text-gray-900">{stats.cancelled}</div>
             </button>
           </div>
         )}
@@ -802,13 +738,8 @@ export function Jobs() {
           <div className="flex flex-col md:flex-row gap-3">
             {/* Date Filter */}
             <div className="flex-1 min-w-[200px]">
-              <Label className="text-sm font-medium mb-2 block">
-                Date Range
-              </Label>
-              <Select
-                value={queryParams.datePreset}
-                onValueChange={handlePresetChange}
-              >
+              <Label className="text-sm font-medium mb-2 block">Date Range</Label>
+              <Select value={queryParams.datePreset} onValueChange={handlePresetChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
@@ -823,14 +754,10 @@ export function Jobs() {
 
             {/* State Filter */}
             <div className="flex-1">
-              <Label className="text-sm font-medium mb-2 block">
-                Job State
-              </Label>
+              <Label className="text-sm font-medium mb-2 block">Job State</Label>
               <Select
                 value={queryParams.state}
-                onValueChange={(value) =>
-                  setQueryParams({ state: value, page: 0 })
-                }
+                onValueChange={(value) => setQueryParams({ state: value, page: 0 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All States" />
@@ -879,14 +806,10 @@ export function Jobs() {
 
             {/* Queue Name Filter */}
             <div className="flex-1">
-              <Label className="text-sm font-medium mb-2 block">
-                Queue Name
-              </Label>
+              <Label className="text-sm font-medium mb-2 block">Queue Name</Label>
               <Select
                 value={queryParams.queue}
-                onValueChange={(value) =>
-                  setQueryParams({ queue: value, page: 0 })
-                }
+                onValueChange={(value) => setQueryParams({ queue: value, page: 0 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Queues" />
@@ -910,9 +833,7 @@ export function Jobs() {
                 <Input
                   placeholder="Search by Job ID or Name..."
                   value={queryParams.search}
-                  onChange={(e) =>
-                    setQueryParams({ search: e.target.value, page: 0 })
-                  }
+                  onChange={(e) => setQueryParams({ search: e.target.value, page: 0 })}
                   className="pl-9"
                 />
               </div>
@@ -937,9 +858,7 @@ export function Jobs() {
           {/* Active Filters Display */}
           {hasActiveFilters && (
             <div className="mt-4 flex flex-wrap gap-2 items-center">
-              <span className="text-sm text-muted-foreground">
-                Active filters:
-              </span>
+              <span className="text-sm text-muted-foreground">Active filters:</span>
               {queryParams.datePreset !== "all" && (
                 <Badge variant="secondary" className="gap-1">
                   Date:{" "}
@@ -1007,9 +926,7 @@ export function Jobs() {
                   className="whitespace-nowrap"
                 >
                   <Play className="w-4 h-4 md:mr-2" />
-                  <span className="hidden md:inline">
-                    Rerun Selected ({selectedJobs.size})
-                  </span>
+                  <span className="hidden md:inline">Rerun Selected ({selectedJobs.size})</span>
                   <span className="md:hidden">Rerun ({selectedJobs.size})</span>
                 </Button>
               )}
@@ -1021,9 +938,7 @@ export function Jobs() {
                   className="whitespace-nowrap"
                 >
                   <Trash2 className="w-4 h-4 md:mr-2" />
-                  <span className="hidden md:inline">
-                    Purge All {queryParams.state} Jobs
-                  </span>
+                  <span className="hidden md:inline">Purge All {queryParams.state} Jobs</span>
                   <span className="md:hidden">Purge</span>
                 </Button>
               )}
@@ -1034,9 +949,7 @@ export function Jobs() {
               <Loader className="w-8 h-8 animate-spin" />
             </div>
           ) : jobs.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No jobs found
-            </div>
+            <div className="text-center py-12 text-muted-foreground">No jobs found</div>
           ) : (
             <>
               {/* Mobile Card View */}
@@ -1049,9 +962,7 @@ export function Jobs() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">
-                          {job.name}
-                        </div>
+                        <div className="font-medium text-sm truncate">{job.name}</div>
                         <div className="font-mono text-xs text-muted-foreground mt-0.5">
                           {job.id.substring(0, 16)}...
                         </div>
@@ -1062,9 +973,7 @@ export function Jobs() {
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-muted-foreground">Created</span>
-                        <div className="font-medium mt-0.5">
-                          {formatDate(job.createdon)}
-                        </div>
+                        <div className="font-medium mt-0.5">{formatDate(job.createdon)}</div>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Retries</span>
@@ -1074,9 +983,7 @@ export function Jobs() {
                       </div>
                       {job.startedon && (
                         <div>
-                          <span className="text-muted-foreground">
-                            Duration
-                          </span>
+                          <span className="text-muted-foreground">Duration</span>
                           <div className="font-medium mt-0.5">
                             {formatDuration(job.startedon, job.completedon)}
                           </div>
@@ -1094,37 +1001,19 @@ export function Jobs() {
                     <TableRow className="bg-gray-50 hover:bg-gray-50">
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={
-                            jobs.length > 0 && selectedJobs.size === jobs.length
-                          }
+                          checked={jobs.length > 0 && selectedJobs.size === jobs.length}
                           onCheckedChange={toggleSelectAll}
                           aria-label="Select all"
                         />
                       </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        ID
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        Job Name
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        State
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        Created
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        Started
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        Completed
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        Duration
-                      </TableHead>
-                      <TableHead className="font-medium text-gray-700">
-                        Retries
-                      </TableHead>
+                      <TableHead className="font-medium text-gray-700">ID</TableHead>
+                      <TableHead className="font-medium text-gray-700">Job Name</TableHead>
+                      <TableHead className="font-medium text-gray-700">State</TableHead>
+                      <TableHead className="font-medium text-gray-700">Created</TableHead>
+                      <TableHead className="font-medium text-gray-700">Started</TableHead>
+                      <TableHead className="font-medium text-gray-700">Completed</TableHead>
+                      <TableHead className="font-medium text-gray-700">Duration</TableHead>
+                      <TableHead className="font-medium text-gray-700">Retries</TableHead>
                       <TableHead className="font-medium text-gray-700 text-right">
                         Actions
                       </TableHead>
@@ -1144,26 +1033,18 @@ export function Jobs() {
                                 jobId: job.id,
                               }),
                             )}
-                            onCheckedChange={() =>
-                              toggleJobSelection(job.name, job.id)
-                            }
+                            onCheckedChange={() => toggleJobSelection(job.name, job.id)}
                             onClick={(e) => e.stopPropagation()}
                             aria-label={`Select job ${job.id}`}
                           />
                         </TableCell>
                         <TableCell className="font-mono text-xs">
-                          <Link
-                            to={`/jobs/${job.name}/${job.id}`}
-                            className="hover:underline"
-                          >
+                          <Link to={`/jobs/${job.name}/${job.id}`} className="hover:underline">
                             {job.id.substring(0, 8)}...
                           </Link>
                         </TableCell>
                         <TableCell className="font-medium">
-                          <Link
-                            to={`/jobs/${job.name}/${job.id}`}
-                            className="hover:underline"
-                          >
+                          <Link to={`/jobs/${job.name}/${job.id}`} className="hover:underline">
                             {job.name}
                           </Link>
                         </TableCell>
@@ -1172,15 +1053,9 @@ export function Jobs() {
                             <StatusBadge status={job.state} showIcon />
                           </Link>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {formatDate(job.createdon)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {formatDate(job.startedon)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {formatDate(job.completedon)}
-                        </TableCell>
+                        <TableCell className="text-sm">{formatDate(job.createdon)}</TableCell>
+                        <TableCell className="text-sm">{formatDate(job.startedon)}</TableCell>
+                        <TableCell className="text-sm">{formatDate(job.completedon)}</TableCell>
                         <TableCell className="text-sm">
                           {formatDuration(job.startedon, job.completedon)}
                         </TableCell>
@@ -1196,26 +1071,19 @@ export function Jobs() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {job.state === "failed" && (
-                                <DropdownMenuItem
-                                  onClick={() => handleRetry(job.name, job.id)}
-                                >
+                                <DropdownMenuItem onClick={() => handleRetry(job.name, job.id)}>
                                   <RefreshCw className="w-4 h-4 mr-2" />
                                   Retry
                                 </DropdownMenuItem>
                               )}
-                              {(job.state === "completed" ||
-                                job.state === "failed") && (
-                                <DropdownMenuItem
-                                  onClick={() => handleRerun(job.name, job.id)}
-                                >
+                              {(job.state === "completed" || job.state === "failed") && (
+                                <DropdownMenuItem onClick={() => handleRerun(job.name, job.id)}>
                                   <Play className="w-4 h-4 mr-2" />
                                   Re-run
                                 </DropdownMenuItem>
                               )}
                               {job.state === "cancelled" && (
-                                <DropdownMenuItem
-                                  onClick={() => handleResume(job.name, job.id)}
-                                >
+                                <DropdownMenuItem onClick={() => handleResume(job.name, job.id)}>
                                   <Play className="w-4 h-4 mr-2" />
                                   Resume
                                 </DropdownMenuItem>
@@ -1223,9 +1091,7 @@ export function Jobs() {
                               {(job.state === "active" ||
                                 job.state === "created" ||
                                 job.state === "retry") && (
-                                <DropdownMenuItem
-                                  onClick={() => handleCancel(job.name, job.id)}
-                                >
+                                <DropdownMenuItem onClick={() => handleCancel(job.name, job.id)}>
                                   <X className="w-4 h-4 mr-2" />
                                   Cancel
                                 </DropdownMenuItem>
@@ -1268,9 +1134,7 @@ export function Jobs() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        setQueryParams({ page: queryParams.page + 1 })
-                      }
+                      onClick={() => setQueryParams({ page: queryParams.page + 1 })}
                       disabled={(queryParams.page + 1) * pageSize >= total}
                     >
                       Next
@@ -1285,47 +1149,30 @@ export function Jobs() {
         {/* Scheduled Jobs */}
         <div className="mb-8">
           <div className="mb-4">
-            <h2 className="text-sm font-medium text-gray-900">
-              Scheduled Jobs
-            </h2>
+            <h2 className="text-sm font-medium text-gray-900">Scheduled Jobs</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Recurring jobs running on cron schedules ({scheduledJobs.length}{" "}
-              total)
+              Recurring jobs running on cron schedules ({scheduledJobs.length} total)
             </p>
           </div>
           {scheduledJobs.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              No scheduled jobs found
-            </div>
+            <div className="text-center py-12 text-gray-500">No scheduled jobs found</div>
           ) : (
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
-                    <TableHead className="font-medium text-gray-700">
-                      Job Name
-                    </TableHead>
-                    <TableHead className="font-medium text-gray-700">
-                      Cron Schedule
-                    </TableHead>
-                    <TableHead className="font-medium text-gray-700">
-                      Timezone
-                    </TableHead>
-                    <TableHead className="font-medium text-gray-700">
-                      Data
-                    </TableHead>
-                    <TableHead className="font-medium text-gray-700 text-right">
-                      Actions
-                    </TableHead>
+                    <TableHead className="font-medium text-gray-700">Job Name</TableHead>
+                    <TableHead className="font-medium text-gray-700">Cron Schedule</TableHead>
+                    <TableHead className="font-medium text-gray-700">Timezone</TableHead>
+                    <TableHead className="font-medium text-gray-700">Data</TableHead>
+                    <TableHead className="font-medium text-gray-700 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {scheduledJobs.map((job) => (
                     <TableRow key={job.name}>
                       <TableCell className="font-medium">{job.name}</TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {job.cron}
-                      </TableCell>
+                      <TableCell className="font-mono text-sm">{job.cron}</TableCell>
                       <TableCell>{job.timezone || "UTC"}</TableCell>
                       <TableCell>
                         <pre className="font-mono text-xs bg-muted p-2 rounded max-w-xs overflow-x-auto">

@@ -90,10 +90,7 @@ class AIService {
   /**
    * Streaming chat — returns an async generator of text deltas.
    */
-  async *chatStream(
-    input: ChatDTO,
-    userId?: number,
-  ): AsyncGenerator<string, void, undefined> {
+  async *chatStream(input: ChatDTO, userId?: number): AsyncGenerator<string, void, undefined> {
     const ai = this.createAI(input);
     const requestId = randomUUID();
     let fullText = "";
@@ -160,10 +157,7 @@ class AIService {
    * Get usage statistics.
    * Requires userId to prevent cross-user data exposure.
    */
-  async getUsage(
-    userId: number | undefined,
-    params: UsageQueryDTO,
-  ): Promise<UsageStats> {
+  async getUsage(userId: number | undefined, params: UsageQueryDTO): Promise<UsageStats> {
     if (userId === undefined) {
       throw new Error("Authentication required for usage statistics");
     }
@@ -245,8 +239,7 @@ class AIService {
 
     const updateData: Parameters<typeof aiConversationModel.update>[1] = {};
     if (data.title !== undefined) updateData.title = data.title;
-    if (data.context !== undefined)
-      updateData.context = data.context as Record<string, unknown>;
+    if (data.context !== undefined) updateData.context = data.context as Record<string, unknown>;
     if (data.lastModel !== undefined) updateData.lastModel = data.lastModel;
 
     return aiConversationModel.update(id, updateData);
@@ -286,11 +279,7 @@ class AIService {
   private getProviderModels(provider: string): string[] {
     const modelMap: Record<string, string[]> = {
       openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "o1", "o3-mini"],
-      anthropic: [
-        "claude-3-7-sonnet",
-        "claude-sonnet-4-20250514",
-        "claude-3-5-haiku",
-      ],
+      anthropic: ["claude-3-7-sonnet", "claude-sonnet-4-20250514", "claude-3-5-haiku"],
       google: ["gemini-2.0-flash", "gemini-2.5-pro"],
       mistral: ["mistral-large-latest", "codestral-latest"],
       groq: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"],

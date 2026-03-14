@@ -82,11 +82,7 @@ export const aiUsageModel = {
     });
   },
 
-  getAggregatedStats: async (
-    userId: number | undefined,
-    startDate: Date,
-    endDate: Date,
-  ) => {
+  getAggregatedStats: async (userId: number | undefined, startDate: Date, endDate: Date) => {
     const where: Prisma.AIUsageWhereInput = {
       createdAt: {
         gte: startDate,
@@ -109,11 +105,7 @@ export const aiUsageModel = {
     });
   },
 
-  getTotalStats: async (
-    userId: number | undefined,
-    startDate: Date,
-    endDate: Date,
-  ) => {
+  getTotalStats: async (userId: number | undefined, startDate: Date, endDate: Date) => {
     const where: Prisma.AIUsageWhereInput = {
       createdAt: {
         gte: startDate,
@@ -151,10 +143,7 @@ export const aiConversationModel = {
     });
   },
 
-  findById: async (
-    id: number,
-    userId?: number,
-  ): Promise<AIConversation | null> => {
+  findById: async (id: number, userId?: number): Promise<AIConversation | null> => {
     const where: Prisma.AIConversationWhereInput = { id };
     if (userId !== undefined) {
       where.userId = userId;
@@ -180,10 +169,7 @@ export const aiConversationModel = {
     });
   },
 
-  update: async (
-    id: number,
-    data: UpdateConversationData,
-  ): Promise<AIConversation> => {
+  update: async (id: number, data: UpdateConversationData): Promise<AIConversation> => {
     return prisma.aIConversation.update({
       where: { id },
       data,

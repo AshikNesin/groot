@@ -1,6 +1,7 @@
 # SaaS Boilerplate Enhancements
 
 ## Overview
+
 This document outlines all the generic, reusable components extracted from `nesins-finance-api` and integrated into `groot`.
 
 ---
@@ -8,6 +9,7 @@ This document outlines all the generic, reusable components extracted from `nesi
 ## ✅ Phase 1: Backend Foundation (COMPLETED)
 
 ### 1. Enhanced Error Handling System
+
 - ✅ **Base errors** (`server/src/core/errors/base.errors.ts`)
   - 7 error types: `AppError`, `BadRequestError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`, `ConflictError`, `InternalError`
   - Proper prototype chain and stack traces
@@ -28,6 +30,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Development vs production error messages
 
 ### 2. Complete JWT Authentication System
+
 - ✅ **JWT utilities** (`server/src/utils/jwt.utils.ts`)
   - Token generation with configurable expiry
   - Token verification with proper error handling
@@ -67,6 +70,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Zod schemas for login, create user, update user
 
 ### 3. Passkey/WebAuthn Authentication
+
 - ✅ **WebAuthn utilities** (`server/src/utils/webauthn.utils.ts`)
   - Generate registration/authentication options
   - Verify registration/authentication responses
@@ -109,6 +113,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - `ORIGIN` - Full frontend URL (must match exactly)
 
 ### 4. Enhanced Logger System
+
 - ✅ **Main logger** (`server/src/core/logger/index.ts`)
   - Enhanced Pino configuration
   - BigInt serialization support
@@ -139,6 +144,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Helper function to get request logger
 
 ### 5. Enhanced Base Controller & Utilities
+
 - ✅ **Base controller** (`server/src/core/base-controller.ts`)
   - `parseId()` - Safe ID parsing with validation
   - `parseBoolean()` - Boolean query param parsing
@@ -169,12 +175,14 @@ This document outlines all the generic, reusable components extracted from `nesi
   - partition
 
 ### 6. Async Handler Wrapper
+
 - ✅ **Async handler** (`server/src/core/async-handler.ts`)
   - Eliminates try-catch boilerplate
   - Automatic error propagation to error middleware
   - Type-safe async handler
 
 ### 7. Environment Configuration
+
 - ✅ **Environment variables** (`server/src/env.ts`)
   - JWT_SECRET (min 32 characters)
   - JWT_EXPIRES_IN (default: 7d)
@@ -187,10 +195,12 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Security reminders for production
 
 ### 8. Dependencies Installed
+
 - ✅ `jsonwebtoken` & `@types/jsonwebtoken`
 - ✅ `cookie-parser` & `@types/cookie-parser`
 
 ### 9. Integration
+
 - ✅ Auth routes registered in main server (`server/src/index.ts`)
 - ✅ Cookie parser middleware added
 - ✅ Auth routes are public (no basic auth required)
@@ -201,6 +211,7 @@ This document outlines all the generic, reusable components extracted from `nesi
 ## ✅ Phase 2: Frontend Foundation (COMPLETE)
 
 ### 1. Design System Tokens
+
 - ✅ **Design tokens** (`client/src/lib/design-tokens.ts`)
   - Gray scale colors (50, 100, 200, 300, 400, 500, 600, 700, 900)
   - Semantic status colors (success, warning, error, info)
@@ -219,6 +230,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Avatar styles
 
 **Design Principles:**
+
 - Data-first design
 - Minimal aesthetic (Stripe-inspired)
 - Consistent gray scale
@@ -227,6 +239,7 @@ This document outlines all the generic, reusable components extracted from `nesi
 - No heavy decoration
 
 ### 2. Date Utilities
+
 - ✅ **Date utilities** (`client/src/lib/date.utils.ts`)
   - Format dates (display, date-time, relative time)
   - Start/end of day/month
@@ -236,6 +249,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Current month helpers
 
 ### 3. Enhanced Utils
+
 - ✅ **Utils** (`client/src/lib/utils.ts`)
   - `cn()` - Tailwind class merging
   - `formatCurrency()` - Locale-aware currency formatting
@@ -247,6 +261,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Re-exports design tokens
 
 ### 4. Layout Components
+
 - ✅ **PageContainer** (`client/src/components/layout/PageContainer.tsx`)
   - Max-width container with padding
   - Configurable max-width (full, 7xl, 6xl, 5xl, 4xl)
@@ -264,6 +279,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - Ready-to-use page wrapper
 
 ### 5. Complete UI Component Library (23 components)
+
 - ✅ **Table** - Full-featured data tables
 - ✅ **Badge** - Status badges (7 variants)
 - ✅ **Form** - React Hook Form integration
@@ -295,6 +311,7 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
 ## ✅ Phase 4: Frontend Integration (COMPLETE)
 
 ### 1. Enhanced API Client
+
 - ✅ **API Client class** (`client/src/lib/api.ts`)
   - Type-safe generic methods (get, post, put, patch, delete)
   - Automatic 401 handling and redirects
@@ -305,6 +322,7 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
   - Backward compatible with existing code
 
 ### 2. Enhanced Auth Store
+
 - ✅ **Auth store** (`client/src/store/auth.ts`)
   - JWT authentication support
   - `hasCheckedAuth` state for initial load
@@ -314,12 +332,14 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
   - Backward compatible with basic auth
 
 ### 3. Tailwind Configuration
+
 - ✅ **Updated** (`tailwind.config.js`)
   - Semantic color tokens (success, warning, info)
   - Popover colors
   - All color variants properly configured
 
 ### 4. CSS Custom Properties
+
 - ✅ **Updated** (`client/src/index.css`)
   - All semantic colors defined
   - Success, warning, info with foreground variants
@@ -331,6 +351,7 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
 ## ✅ Phase 5: Passkey/WebAuthn Support (COMPLETE)
 
 ### 1. Passkey Service
+
 - ✅ **Passkey Service** (`client/src/services/passkey.ts`)
   - `registerPasskey()` - Register new passkey
   - `loginWithPasskey()` - Authenticate with passkey
@@ -343,6 +364,7 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
   - Full error handling with user-friendly messages
 
 ### 2. PasskeyManager Component
+
 - ✅ **PasskeyManager** (`client/src/components/PasskeyManager.tsx`)
   - Complete passkey management UI
   - Add new passkeys with optional names
@@ -355,6 +377,7 @@ All 23 UI components have been added with full TypeScript support and Radix UI p
   - Uses UI components from the library
 
 ### 3. Documentation
+
 - ✅ **Feature documentation** (`docs/features/passkey-authentication.md`)
   - Complete setup guide
   - Environment variable configuration
@@ -430,6 +453,7 @@ groot/
 ## 🎯 What's Working Now
 
 ### Backend
+
 1. ✅ **Full JWT authentication system** - Login, logout, current user
 2. ✅ **Admin-only endpoints** - Create users, get all users
 3. ✅ **Production-ready error handling** - Sentry, breadcrumbs, tracing
@@ -439,6 +463,7 @@ groot/
 7. ✅ **Base controller** - Pagination, sorting, ID parsing
 
 ### Frontend
+
 1. ✅ **Design system** - 275 lines of design tokens
 2. ✅ **Date utilities** - 230 lines of date helpers
 3. ✅ **Layout components** - PageLayout, PageHeader, PageContainer, Section
@@ -454,6 +479,7 @@ groot/
 ### Backend
 
 #### Using Auth Routes
+
 ```bash
 # Create user (admin)
 curl -X POST http://localhost:3000/api/v1/auth/users \
@@ -472,6 +498,7 @@ curl http://localhost:3000/api/v1/auth/me \
 ```
 
 #### Using Base Controller
+
 ```typescript
 import { BaseController } from "@/core/base-controller";
 
@@ -479,30 +506,31 @@ export class MyController extends BaseController {
   async getItems(req: Request, res: Response) {
     const id = this.parseId(req.params.id); // Safe ID parsing
     const { page, limit, skip } = this.parsePagination(req); // Pagination
-    const { sortBy, sortOrder } = this.parseSorting(
-      req,
-      ["name", "createdAt"],
-      "createdAt"
-    ); // Sorting
-    
+    const { sortBy, sortOrder } = this.parseSorting(req, ["name", "createdAt"], "createdAt"); // Sorting
+
     // ... your logic
   }
 }
 ```
 
 #### Using Async Handler
+
 ```typescript
 import { asyncHandler } from "@/core/async-handler";
 
-router.get("/items", asyncHandler(async (req, res) => {
-  const items = await itemService.getAll();
-  return ResponseHandler.success(res, items);
-}));
+router.get(
+  "/items",
+  asyncHandler(async (req, res) => {
+    const items = await itemService.getAll();
+    return ResponseHandler.success(res, items);
+  }),
+);
 ```
 
 ### Frontend
 
 #### Using PageLayout
+
 ```tsx
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -521,8 +549,16 @@ export function MyPage() {
 ```
 
 #### Using Table
+
 ```tsx
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 export function MyTable() {
   return (
@@ -545,6 +581,7 @@ export function MyTable() {
 ```
 
 #### Using Date Utilities
+
 ```tsx
 import { formatDisplayDate, formatRelativeTime } from "@/lib/utils";
 
@@ -558,11 +595,13 @@ formatRelativeTime(date); // "2 hours ago"
 ## 🎨 Design Philosophy
 
 **Data-First Design**
+
 - Focus on displaying data clearly
 - Minimize decorative elements
 - Use color sparingly and meaningfully
 
 **Consistent Gray Scale**
+
 - gray-900: Primary text and headings
 - gray-600: Secondary text
 - gray-500: Metadata and labels
@@ -570,16 +609,19 @@ formatRelativeTime(date); // "2 hours ago"
 - gray-50: Table headers and subtle backgrounds
 
 **Minimal Aesthetic**
+
 - Clean, professional, Stripe-inspired
 - No heavy shadows or gradients
 - Simple, clean table designs
 - Text-based status indicators
 
 **White Space**
+
 - Generous spacing between sections
 - Let content breathe
 
 **Subtle Interactions**
+
 - Use gray-50 for hover states
 - Quick transitions (150-200ms)
 
@@ -610,9 +652,10 @@ formatRelativeTime(date); // "2 hours ago"
 **Status**: ✅ ALL PHASES COMPLETE (Including Passkey/WebAuthn)  
 **Build Status**: ✅ Successful (438.22 kB frontend, 395.3 kB backend)  
 **Total Components Added**: 70+ files  
-**Total Lines of Code**: 10,000+ lines  
+**Total Lines of Code**: 10,000+ lines
 
 ### Latest Addition: Passkey/WebAuthn Authentication
+
 - Full passwordless authentication system
 - Biometric login support (Face ID, Touch ID, Windows Hello)
 - Security key support (YubiKey, etc.)

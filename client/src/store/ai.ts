@@ -105,9 +105,7 @@ export const useAIStore = create<AIState>((set, get) => ({
   getRequest: () => {
     const state = get();
     // Get last user message for simple API
-    const lastUserMessage = [...state.messages]
-      .reverse()
-      .find((m) => m.role === "user");
+    const lastUserMessage = [...state.messages].reverse().find((m) => m.role === "user");
 
     // Don't build a request with empty message - API rejects it
     if (!lastUserMessage?.content) {
@@ -129,5 +127,4 @@ export const useAIMessages = () => useAIStore((state) => state.messages);
 export const useAIIsLoading = () => useAIStore((state) => state.isLoading);
 export const useAIError = () => useAIStore((state) => state.error);
 export const useAICurrentModel = () => useAIStore((state) => state.currentModel);
-export const useAICurrentProvider = () =>
-  useAIStore((state) => state.currentProvider);
+export const useAICurrentProvider = () => useAIStore((state) => state.currentProvider);

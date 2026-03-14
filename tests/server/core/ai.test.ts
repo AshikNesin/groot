@@ -187,16 +187,19 @@ describe("AI Adapter", () => {
     });
 
     it("should throw on error events", async () => {
-      vi.mocked(stream).mockImplementationOnce(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            type: "error",
-            reason: "error",
-            error: { errorMessage: "Rate limit exceeded" },
-          };
-        },
-        result: async () => ({}),
-      }) as any);
+      vi.mocked(stream).mockImplementationOnce(
+        () =>
+          ({
+            [Symbol.asyncIterator]: async function* () {
+              yield {
+                type: "error",
+                reason: "error",
+                error: { errorMessage: "Rate limit exceeded" },
+              };
+            },
+            result: async () => ({}),
+          }) as any,
+      );
 
       // Must invoke the async function inside expect().rejects
       await expect(
@@ -204,7 +207,7 @@ describe("AI Adapter", () => {
           for await (const _ of ai.stream("Hello")) {
             // consume
           }
-        })()
+        })(),
       ).rejects.toThrow("Rate limit exceeded");
     });
   });
@@ -216,14 +219,9 @@ describe("AI Adapter", () => {
 
       // Mock complete to return a tool call
       const piAi = await import("@mariozechner/pi-ai");
-      vi.mocked(complete).mockResolvedValueOnce(
-        (piAi as any)._mockToolCallMessage,
-      );
+      vi.mocked(complete).mockResolvedValueOnce((piAi as any)._mockToolCallMessage);
 
-      const result = await ai.generateObject(
-        "Extract: John is 30 years old",
-        schema,
-      );
+      const result = await ai.generateObject("Extract: John is 30 years old", schema);
 
       expect(result).toEqual({ name: "John", age: 30 });
     });
@@ -238,9 +236,9 @@ describe("AI Adapter", () => {
         content: [{ type: "text", text: "I cannot extract that" }],
       } as any);
 
-      await expect(
-        ai.generateObject("Extract something", schema),
-      ).rejects.toThrow("AI did not return a tool call");
+      await expect(ai.generateObject("Extract something", schema)).rejects.toThrow(
+        "AI did not return a tool call",
+      );
     });
 
     it("should throw when output fails Zod validation", async () => {
@@ -260,9 +258,9 @@ describe("AI Adapter", () => {
         ],
       } as any);
 
-      await expect(
-        ai.generateObject("Extract something", schema),
-      ).rejects.toThrow("schema validation");
+      await expect(ai.generateObject("Extract something", schema)).rejects.toThrow(
+        "schema validation",
+      );
     });
   });
 

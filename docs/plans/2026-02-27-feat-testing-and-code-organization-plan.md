@@ -20,19 +20,20 @@ This plan addresses two practical improvements:
 
 ## Current State
 
-| File | Lines | Status |
-|------|-------|--------|
-| Jobs.tsx | ~1,350 | Large, could benefit from extraction |
-| Storage.tsx | ~940 | Moderately large |
-| Server tests | 5 files | Minimal coverage |
-| Frontend tests | 0 files | None |
-| E2E tests | 0 files | None |
+| File           | Lines   | Status                               |
+| -------------- | ------- | ------------------------------------ |
+| Jobs.tsx       | ~1,350  | Large, could benefit from extraction |
+| Storage.tsx    | ~940    | Moderately large                     |
+| Server tests   | 5 files | Minimal coverage                     |
+| Frontend tests | 0 files | None                                 |
+| E2E tests      | 0 files | None                                 |
 
 ## Phase 1: Testing Infrastructure (4 files)
 
 ### 1.1 Frontend Test Setup
 
 **client/src/test/setup.ts:**
+
 ```typescript
 import { expect, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
@@ -43,6 +44,7 @@ afterEach(() => cleanup());
 ```
 
 **Update vitest.config.ts** to support client tests:
+
 ```typescript
 environmentMatch: {
   jsdom: ["client/src/**/*.test.{ts,tsx}"],
@@ -57,6 +59,7 @@ setupFiles: [
 ### 1.2 Simple Test Helpers
 
 **server/src/test-helpers.ts:**
+
 ```typescript
 import { prisma } from "@/generated/prisma";
 import type { User, Todo } from "@prisma/client";
@@ -76,9 +79,7 @@ export async function createUser(overrides: Partial<User> = {}): Promise<User> {
 }
 
 export async function createTodo(overrides: Partial<Todo> = {}): Promise<Todo> {
-  const user = overrides.userId
-    ? { id: overrides.userId }
-    : await createUser();
+  const user = overrides.userId ? { id: overrides.userId } : await createUser();
 
   counter++;
   return prisma.todo.create({
@@ -103,6 +104,7 @@ export async function cleanupTestData() {
 ### 1.3 E2E Tests (Playwright)
 
 **playwright.config.ts:**
+
 ```typescript
 import { defineConfig, devices } from "@playwright/test";
 
@@ -129,6 +131,7 @@ export default defineConfig({
 ```
 
 **tests/e2e/login.spec.ts:**
+
 ```typescript
 import { test, expect } from "@playwright/test";
 
@@ -150,6 +153,7 @@ test("can login with test user", async ({ page }) => {
 ```
 
 **tests/e2e/todos.spec.ts:**
+
 ```typescript
 import { test, expect } from "@playwright/test";
 
@@ -171,6 +175,7 @@ test("can view todos page", async ({ page }) => {
 ### 1.4 Example Component Test
 
 **client/src/components/ui/Button.test.tsx:**
+
 ```typescript
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -247,8 +252,8 @@ If the file is hard to navigate, consider extracting:
 export function useJobs() {
   const [filters, setFilters] = useState({});
   const { data, isLoading } = useQuery({
-    queryKey: ['jobs', filters],
-    queryFn: () => apiClient.get('/jobs', { params: filters }),
+    queryKey: ["jobs", filters],
+    queryFn: () => apiClient.get("/jobs", { params: filters }),
   });
   return { jobs: data, isLoading, filters, setFilters };
 }
@@ -276,6 +281,7 @@ Same approach - extract only what's clearly separate and causing confusion.
 ## Acceptance Criteria
 
 ### Testing Infrastructure
+
 - [x] React Testing Library configured with Vitest
 - [x] One test helper file with createUser() and createTodo()
 - [x] Playwright configured
@@ -284,6 +290,7 @@ Same approach - extract only what's clearly separate and causing confusion.
 - [x] Scripts: test, test:watch, test:e2e
 
 ### Code Organization
+
 - [ ] Evaluate Jobs.tsx for extraction opportunities
 - [ ] Evaluate Storage.tsx for extraction opportunities
 - [ ] Extract only if it improves maintainability
@@ -291,14 +298,14 @@ Same approach - extract only what's clearly separate and causing confusion.
 
 ## Files Summary
 
-| Category | New Files | Modified |
-|----------|-----------|----------|
-| Test Setup | 2 (setup.ts, test-helpers.ts) | 1 (vitest.config.ts) |
-| E2E Tests | 2 (login.spec.ts, todos.spec.ts) | - |
-| Component Tests | 1 (Button.test.tsx) | - |
-| Playwright | 1 (playwright.config.ts) | - |
-| Package | - | 1 (package.json) |
-| **Total** | **6** | **3** |
+| Category        | New Files                        | Modified             |
+| --------------- | -------------------------------- | -------------------- |
+| Test Setup      | 2 (setup.ts, test-helpers.ts)    | 1 (vitest.config.ts) |
+| E2E Tests       | 2 (login.spec.ts, todos.spec.ts) | -                    |
+| Component Tests | 1 (Button.test.tsx)              | -                    |
+| Playwright      | 1 (playwright.config.ts)         | -                    |
+| Package         | -                                | 1 (package.json)     |
+| **Total**       | **6**                            | **3**                |
 
 ## Success Metrics
 

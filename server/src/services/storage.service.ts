@@ -18,9 +18,7 @@ export interface BucketInfo {
 export class StorageFileService {
   private readonly storage = new StorageService();
 
-  async listFiles(params: { prefix?: string; delimiter?: string }): Promise<
-    FileInfo[]
-  > {
+  async listFiles(params: { prefix?: string; delimiter?: string }): Promise<FileInfo[]> {
     const { prefix, delimiter = "/" } = params;
     const result = await this.storage.list(prefix, 1000);
 
@@ -42,9 +40,7 @@ export class StorageFileService {
         if (dirName && !directories.has(dirName)) {
           directories.add(dirName);
           files.push({
-            key: prefix
-              ? `${prefix}${dirName}${delimiter}`
-              : `${dirName}${delimiter}`,
+            key: prefix ? `${prefix}${dirName}${delimiter}` : `${dirName}${delimiter}`,
             name: dirName,
             size: 0,
             lastModified: file.lastModified,
@@ -113,13 +109,9 @@ export class StorageFileService {
     await Promise.all(
       params.files.map(async (file) => {
         try {
-          const result = await this.storage.upload(
-            file.filePath,
-            file.fileData,
-            {
-              contentType: file.contentType,
-            },
-          );
+          const result = await this.storage.upload(file.filePath, file.fileData, {
+            contentType: file.contentType,
+          });
 
           if (result.error) {
             failedFiles.push({
@@ -157,9 +149,7 @@ export class StorageFileService {
 
     const file = await this.storage.getBuffer(params.filePath);
     if (file.error || !file.data) {
-      throw new Error(
-        `Failed to download file: ${file.error?.message ?? "Unknown error"}`,
-      );
+      throw new Error(`Failed to download file: ${file.error?.message ?? "Unknown error"}`);
     }
 
     const fileName = params.filePath.split("/").pop() ?? "file";
@@ -221,9 +211,7 @@ export class StorageFileService {
     }
     const listResult = await this.storage.list(folderPath, 1000);
     if (listResult.error) {
-      throw new Error(
-        `Failed to list folder contents: ${listResult.error.message}`,
-      );
+      throw new Error(`Failed to list folder contents: ${listResult.error.message}`);
     }
     const fileKeys = listResult.data?.files.map((file) => file.key) ?? [];
     if (!fileKeys.length) {
@@ -251,9 +239,7 @@ export class StorageFileService {
 
     const deleteResult = await this.storage.remove([params.oldPath]);
     if (deleteResult.error) {
-      throw new Error(
-        `Failed to delete old file: ${deleteResult.error.message}`,
-      );
+      throw new Error(`Failed to delete old file: ${deleteResult.error.message}`);
     }
 
     return { newPath: params.newPath };
