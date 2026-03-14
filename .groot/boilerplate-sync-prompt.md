@@ -58,7 +58,7 @@ I need to sync changes from my boilerplate repo to this project.
 
 **Important guidelines:**
 
-- Never overwrite project-specific files (client/_, server/_, prisma/schema.prisma)
+- Never overwrite project-specific files (client/**, server/**, prisma/schema.prisma)
 - For package.json: only suggest dependency additions, don't remove project-specific deps
 - For .gitignore: append new entries, don't remove existing ones
 - Always show me a summary of what will change before applying
@@ -70,7 +70,7 @@ I need to sync changes from my boilerplate repo to this project.
 
 ### Files that ARE synced:
 
-- Config files (biome.json, tsconfig.json, vite.config.ts, etc.)
+- Config files (tsconfig.json, vite.config.ts, etc.)
 - Scripts (scripts/\*\*)
 - Test infrastructure (tests/\*\*)
 - Pre-commit hooks (.pre-commit-config.yaml, .gitleaks.toml)

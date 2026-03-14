@@ -16,6 +16,10 @@ On every commit, the following checks run automatically:
 Git hooks are configured in `.vite-hooks/pre-commit`. To install them:
 
 ```bash
+# Install gitleaks (if not already installed)
+brew install gitleaks  # macOS
+# or: go install github.com/gitleaks/gitleaks/v8@latest  # Other platforms
+
 # Install hooks via Vite+
 pnpm prepare
 ```

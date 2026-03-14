@@ -38,7 +38,7 @@ Key capabilities:
 
 - **Todo lifecycle** – Validation via `todo.validation.ts`, persistence through Prisma, and consistent responses via `ResponseHandler`
 - **Background processing** – Pg-boss queues boot from `core/job`, with workers registered in `server/src/jobs`
-- **Full-stack DX** – Shared TypeScript tooling, Biome linting, Vitest tests, and Tailwind UI components
+- **Full-stack DX** – Shared TypeScript tooling, Vite+ (Oxlint/Oxfmt), Vitest tests, and Tailwind UI components
 
 ## Tech Stack Highlights
 
@@ -46,7 +46,7 @@ Key capabilities:
 | ------- | ------------------------------------------------------------------ |
 | Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry                 |
 | Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
-| Tooling | TypeScript 5.8, Biome, Vitest + Supertest, pnpm                    |
+| Tooling | TypeScript 5.8, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
 
 ## API Surface
 
