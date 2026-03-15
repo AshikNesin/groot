@@ -3,11 +3,6 @@
     "name": "groot",
     "repo": "https://github.com/AshikNesin/groot"
   },
-  "last_sync": {
-    "commit": "69fe3f5",
-    "date": "2026-03-14",
-    "message": "Vite+ migration, AI inference, formatting updates"
-  },
   "sync_config": {
     "exclude_patterns": [
       "README.md",
