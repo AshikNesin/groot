@@ -14,6 +14,7 @@ permissions:
 jobs:
   groot-sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,3 +51,61 @@ jobs:
             - If no changes needed: exit successfully without creating PR
 
             The boilerplate repo is: https://github.com/AshikNesin/groot
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or update PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create or switch to sync branch
+          BRANCH="chore/groot-sync"
+          git fetch origin $BRANCH 2>/dev/null || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/$BRANCH; then
+            git checkout -B $BRANCH origin/$BRANCH
+          else
+            git checkout -B $BRANCH
+          fi
+
+          # Commit changes
+          git add -A
+          git commit -m "chore: sync from groot boilerplate"
+
+          # Push branch
+          git push origin $BRANCH --force-with-lease
+
+          # Create or update PR
+          PR_EXISTS=$(gh pr list --head $BRANCH --base main --state open --json number --jq 'length')
+
+          if [ "$PR_EXISTS" -eq 0 ]; then
+            gh pr create \
+              --title "chore: sync from groot boilerplate" \
+              --body "Keeps this project up to date with the [groot boilerplate](https://github.com/AshikNesin/groot).
+
+          ## What this does
+          - Syncs utility files, configs, and core infrastructure
+          - Preserves project-specific business logic and features
+
+          ## Checklist
+          - [ ] Review changes before merging
+          - [ ] Run tests to ensure nothing is broken" \
+              --base main \
+              --head $BRANCH \
+              --label "dependencies,automated"
+          else
+            echo "PR already exists, branch updated automatically"
+          fi
