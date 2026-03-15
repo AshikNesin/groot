@@ -1,5 +1,16 @@
 -- CreateTable
-CREATE TABLE "User" (
+CREATE TABLE "todos" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "completed" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "todos_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
     "email" VARCHAR NOT NULL,
     "password" VARCHAR NOT NULL,
@@ -7,11 +18,11 @@ CREATE TABLE "User" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Passkey" (
+CREATE TABLE "passkeys" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "credentialId" TEXT NOT NULL,
@@ -25,11 +36,11 @@ CREATE TABLE "Passkey" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Passkey_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "passkeys_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "PublicFileShare" (
+CREATE TABLE "public_file_shares" (
     "id" SERIAL NOT NULL,
     "shareId" VARCHAR NOT NULL,
     "bucketName" VARCHAR NOT NULL,
@@ -45,7 +56,7 @@ CREATE TABLE "PublicFileShare" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT "PublicFileShare_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "public_file_shares_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -100,28 +111,28 @@ CREATE TABLE "ai_conversations" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Passkey_credentialId_key" ON "Passkey"("credentialId");
+CREATE UNIQUE INDEX "passkeys_credentialId_key" ON "passkeys"("credentialId");
 
 -- CreateIndex
-CREATE INDEX "Passkey_userId_idx" ON "Passkey"("userId");
+CREATE INDEX "passkeys_userId_idx" ON "passkeys"("userId");
 
 -- CreateIndex
-CREATE INDEX "Passkey_credentialId_idx" ON "Passkey"("credentialId");
+CREATE INDEX "passkeys_credentialId_idx" ON "passkeys"("credentialId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PublicFileShare_shareId_key" ON "PublicFileShare"("shareId");
+CREATE UNIQUE INDEX "public_file_shares_shareId_key" ON "public_file_shares"("shareId");
 
 -- CreateIndex
-CREATE INDEX "public_file_share_share_id" ON "PublicFileShare"("shareId");
+CREATE INDEX "public_file_share_share_id" ON "public_file_shares"("shareId");
 
 -- CreateIndex
-CREATE INDEX "public_file_share_expires_at" ON "PublicFileShare"("expiresAt");
+CREATE INDEX "public_file_share_expires_at" ON "public_file_shares"("expiresAt");
 
 -- CreateIndex
-CREATE INDEX "public_file_share_bucket_name" ON "PublicFileShare"("bucketName");
+CREATE INDEX "public_file_share_bucket_name" ON "public_file_shares"("bucketName");
 
 -- CreateIndex
 CREATE INDEX "job_logs_jobId_idx" ON "job_logs"("jobId");
@@ -148,10 +159,10 @@ CREATE INDEX "ai_conversations_userId_idx" ON "ai_conversations"("userId");
 CREATE INDEX "ai_conversations_updatedAt_idx" ON "ai_conversations"("updatedAt");
 
 -- AddForeignKey
-ALTER TABLE "Passkey" ADD CONSTRAINT "Passkey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "passkeys" ADD CONSTRAINT "passkeys_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ai_usage" ADD CONSTRAINT "ai_usage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ai_usage" ADD CONSTRAINT "ai_usage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ai_conversations" ADD CONSTRAINT "ai_conversations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ai_conversations" ADD CONSTRAINT "ai_conversations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -20,6 +20,8 @@ model Todo {
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("todos")
 }
 
 model User {
@@ -32,6 +34,8 @@ model User {
   passkeys       Passkey[]
   aiUsage        AIUsage[]
   aiConversations AIConversation[]
+
+  @@map("users")
 }
 
 model Passkey {
@@ -51,6 +55,7 @@ model Passkey {
 
   @@index([userId])
   @@index([credentialId])
+  @@map("passkeys")
 }
 
 model PublicFileShare {
@@ -72,6 +77,7 @@ model PublicFileShare {
   @@index([shareId], map: "public_file_share_share_id")
   @@index([expiresAt], map: "public_file_share_expires_at")
   @@index([bucketName], map: "public_file_share_bucket_name")
+  @@map("public_file_shares")
 }
 
 // Note: The keyv table is managed by @keyv/postgres package

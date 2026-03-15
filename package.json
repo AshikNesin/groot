@@ -38,6 +38,7 @@
     "generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:create": "prisma migrate dev --create-only",
+    "db:migrate:reset": "prisma migrate reset",
     "prestart": "prisma migrate deploy",
     "postinstall": "pnpm run prisma:generate",
     "prepare": "vp config"
