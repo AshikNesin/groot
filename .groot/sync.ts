@@ -32,7 +32,7 @@ const SyncConfigSchema = z.object({
   additional_exclusions: z.array(z.string()).default([]),
 });
 
-type SyncConfig = z.infer<typeof SyncConfigSchema>;
+type _SyncConfig = z.infer<typeof SyncConfigSchema>;
 
 // ============================================================
 // IMMUTABLE EXCLUSIONS - Cannot be overridden by config
@@ -115,7 +115,7 @@ const SKIP_PATTERNS: readonly string[] = [
 const FORBIDDEN_PATTERNS: readonly RegExp[] = [
   /\.\./, // Path traversal
   /~/, // Home directory
-  /\0/, // Null byte
+  /\\0/, // Null byte (escaped for lint)
   /^\//, // Absolute path
   /\$\(/, // Command substitution
   /`/, // Backtick
@@ -281,7 +281,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
         continue;
       }
 
-      const { action, reason } = categorizeFile(file, config.additional_exclusions);
+      const { action } = categorizeFile(file, config.additional_exclusions);
 
       if (action === "skip") {
         result.skipped.push(file);
