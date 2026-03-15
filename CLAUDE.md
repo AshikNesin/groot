@@ -156,7 +156,7 @@ ADMIN_AUTH_KEY=admin-key
 # File Storage (S3)
 AWS_ACCESS_KEY_ID=localstack
 AWS_SECRET_ACCESS_KEY=localstack
-AWS_DEFAULT_REGION=us-east-1
+AWS_REGION=us-east-1
 AWS_DEFAULT_S3_BUCKET=local-bucket
 
 # Job Queue

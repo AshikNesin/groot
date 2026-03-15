@@ -72,7 +72,7 @@ export class StorageService {
 
   constructor(bucketName?: string) {
     this.client = new S3Client({
-      region: env.AWS_DEFAULT_REGION,
+      region: env.AWS_REGION,
       credentials: {
         accessKeyId: env.AWS_ACCESS_KEY_ID,
         secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
