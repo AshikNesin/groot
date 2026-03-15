@@ -187,9 +187,6 @@ importers:
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
-      '@prisma/dev':
-        specifier: ^0.20.0
-        version: 0.20.0(typescript@5.9.3)
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
