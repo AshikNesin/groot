@@ -1,10 +1,11 @@
 #!/bin/bash
 #
-# Boilerplate Sync Status Script
+# Groot Sync Status Script
 #
-# Run: ./scripts/boilerplate-sync.sh
+# Run: ./.groot/sync.sh
 #
-# Shows what changes are available from the boilerplate repo
+# Shows what changes are available from the groot boilerplate repo
+# Always fetches from remote main branch
 
 set -e
 
@@ -19,33 +20,42 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # Load config
-BOILERPLATE_PATH=$(jq -r '.boilerplate.local_path' "$CONFIG_FILE")
+BOILERPLATE_REPO=$(jq -r '.boilerplate.repo' "$CONFIG_FILE")
 LAST_SYNC=$(jq -r '.last_sync.commit' "$CONFIG_FILE")
 LAST_SYNC_DATE=$(jq -r '.last_sync.date' "$CONFIG_FILE")
 
-echo "🔄 Boilerplate Sync Status"
+# Create temp directory for cloning
+TEMP_DIR=$(mktemp -d /tmp/groot-sync.XXXXXX)
+
+# Cleanup function
+cleanup() {
+    rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+
+echo "🔄 Groot Sync Status"
 echo ""
-echo "Boilerplate: $(jq -r '.boilerplate.repo' "$CONFIG_FILE")"
-echo "Local path:  $BOILERPLATE_PATH"
+echo "Boilerplate: $BOILERPLATE_REPO"
+echo "Branch:      main"
 echo "Last sync:   ${LAST_SYNC:0:7} ($LAST_SYNC_DATE)"
 echo ""
 
-# Fetch latest from boilerplate
-echo "📥 Fetching latest from boilerplate..."
-git -C "$BOILERPLATE_PATH" fetch origin 2>/dev/null || true
+# Clone boilerplate repo (shallow clone for speed)
+echo "📥 Fetching latest from remote..."
+git clone --depth 100 --branch main "$BOILERPLATE_REPO" "$TEMP_DIR" 2>/dev/null
 
 # Get new commits
 echo ""
 echo "📝 New commits since last sync:"
 echo ""
-git -C "$BOILERPLATE_PATH" log --oneline "$LAST_SYNC"..HEAD 2>/dev/null || echo "Already up to date!"
+git -C "$TEMP_DIR" log --oneline "$LAST_SYNC"..HEAD 2>/dev/null || echo "Already up to date!"
 
 # Get changed files
 echo ""
 echo "📁 Changed files:"
 echo ""
 
-FILES=$(git -C "$BOILERPLATE_PATH" diff --name-only "$LAST_SYNC"..HEAD 2>/dev/null | grep -v '^$' || true)
+FILES=$(git -C "$TEMP_DIR" diff --name-only "$LAST_SYNC"..HEAD 2>/dev/null | grep -v '^$' || true)
 
 if [ -z "$FILES" ]; then
     echo "No files changed."
@@ -62,20 +72,20 @@ while IFS= read -r file; do
 
     # Simple pattern matching
     case "$file" in
-        .pre-commit-config.yaml|.gitleaks.toml|biome.json|tsconfig.json|vite.config.ts|vitest.config.ts|vitest.workspace.ts|playwright.config.ts|postcss.config.js|tailwind.config.js|sentry.config.js|Procfile|pnpm-workspace.yaml|nixpacks.toml)
+        .pre-commit-config.yaml|.gitleaks.toml|biome.json|tsconfig.json|vite.config.ts|vitest.config.ts|vitest.workspace.ts|playwright.config.ts|postcss.config.js|tailwind.config.js|sentry.config.js|Procfile|pnpm-workspace.yaml|nixpacks.toml|AGENTS.md|prisma.config.ts)
             SHOULD_INCLUDE=true
             ;;
-        scripts/*|tests/*|.claude/settings.json|.claude/commands/*)
+        scripts/*|tests/*|.claude/*|.vite-hooks/*|docs/boilerplate/*)
             SHOULD_INCLUDE=true
             ;;
-        prisma/config.ts)
+        setup-boilerplate.sh)
             SHOULD_INCLUDE=true
             ;;
     esac
 
     # Check exclude patterns
     case "$file" in
-        README.md|package.json|pnpm-lock.yaml|.env*|prisma/schema.prisma|prisma/migrations/*|client/*|server/*|dist/*|node_modules/*)
+        README.md|package.json|pnpm-lock.yaml|.env*|prisma/schema.prisma|prisma/migrations/*|client/*|server/*|dist/*|node_modules/*|.gitignore)
             SHOULD_INCLUDE=false
             ;;
     esac
@@ -103,8 +113,8 @@ else
 fi
 
 # Show latest commit
-NEW_HEAD=$(git -C "$BOILERPLATE_PATH" rev-parse HEAD)
+NEW_HEAD=$(git -C "$TEMP_DIR" rev-parse HEAD)
 echo ""
 echo "📌 Latest boilerplate commit: $NEW_HEAD"
 echo ""
-echo "To sync, run the AI prompt from: .groot/boilerplate-sync-prompt.md"
+echo "To sync, run: /groot-sync"

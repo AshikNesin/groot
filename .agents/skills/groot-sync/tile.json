@@ -1,0 +1,11 @@
+{
+  "name": "groot-sync",
+  "version": "1.0.0",
+  "private": false,
+  "summary": "Sync infrastructure files from the groot boilerplate repo while preserving project-specific code. Use when syncing updates from groot, checking for boilerplate updates, or the user mentions 'groot sync', 'sync from groot', 'pull boilerplate changes', 'update from boilerplate'. Handles smart merging of config files, selective file syncing based on include/exclude patterns, and preserves project-specific customizations.",
+  "skills": {
+    "groot-sync": {
+      "path": "SKILL.md"
+    }
+  }
+}
