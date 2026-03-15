@@ -71,7 +71,7 @@ These files are NEVER synced, even if removed from config:
 
 ## Conflict Detection
 
-The tool uses git three-way comparison:
+The tool compares each local file against the last synced version from git:
 
 1. **New file in boilerplate** → Auto-apply (safe to add)
 2. **Unmodified locally** → Auto-apply (no conflict)
