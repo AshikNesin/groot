@@ -62,20 +62,26 @@ if [ -z "$FILES" ]; then
     exit 0
 fi
 
-# Categorize files by exclude patterns only
+# Load exclude patterns from config
+EXCLUDE_PATTERNS=$(jq -r '.sync_config.exclude_patterns[]' "$CONFIG_FILE")
+
+# Function to check if file matches any exclude pattern
+should_skip() {
+    local file="$1"
+    while IFS= read -r pattern; do
+        case "$file" in
+            $pattern) return 0 ;;
+        esac
+    done <<< "$EXCLUDE_PATTERNS"
+    return 1
+}
+
+# Categorize files by exclude patterns from config
 SYNC_FILES=""
 SKIP_FILES=""
 
 while IFS= read -r file; do
-    # Check exclude patterns (hard skip)
-    SHOULD_SKIP=false
-    case "$file" in
-        README.md|package.json|pnpm-lock.yaml|.env*|prisma/schema.prisma|prisma/migrations/*|dist/*|node_modules/*|.gitignore)
-            SHOULD_SKIP=true
-            ;;
-    esac
-
-    if [ "$SHOULD_SKIP" = true ]; then
+    if should_skip "$file"; then
         SKIP_FILES="$SKIP_FILES\n   $file"
     else
         SYNC_FILES="$SYNC_FILES\n   $file"

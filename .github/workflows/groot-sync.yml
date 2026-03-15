@@ -31,34 +31,19 @@ jobs:
           model: zai/glm-4.7
           use_github_token: true
           prompt: |
-            Run the /groot-sync skill to sync infrastructure files from the groot boilerplate repository.
+            Run the /groot-sync skill to sync reusable core components from the groot boilerplate repository.
 
-            CRITICAL PRESERVATION RULES:
-            - Never override project-specific business logic, routes, or features
-            - Only sync infrastructure/utility patterns (error handling, logging, middlewares)
-            - If the project has REMOVED or MODIFIED boilerplate defaults (schema, routes, seed data), do NOT re-add them
-            - Check git history to distinguish intentional removals vs pending updates
-            - When in doubt, ask before overriding
+            The skill contains all the rules for what to sync (UI components, server core, middlewares, utilities, docs) and what to skip (services, controllers, pages, app-specific code).
 
-            ## Package.json Sync (AI-Powered)
+            Follow the sync process:
+            1. Run `./.groot/sync.sh` to check for available changes
+            2. If changes exist, apply them following the skill's decision framework
+            3. Update `.groot/boilerplate-sync.json` with the new commit hash
 
-            When package.json has changes, use AI to intelligently sync dependencies:
-
-            1. AUTO-APPLY infrastructure dependencies (build tools, testing, core utilities)
-            2. SKIP feature-specific packages (stripe, email providers, optional cloud SDKs)
-            3. FLAG major version bumps for review in PR description
-            4. NEVER remove dependencies that exist locally but not in boilerplate
-
-            Infrastructure packages to auto-apply: typescript, vite, esbuild, vitest, zod, express, react, prisma, @radix-ui/*, tailwindcss, pino, bcryptjs, jsonwebtoken
-
-            Follow the sync process from .agents/skills/groot-sync/SKILL.md:
-            1. Check what changes are available by running `./.groot/sync.sh`
-            2. If there are changes, apply them following the sync config in .groot/boilerplate-sync.json
-            3. Update `.groot/boilerplate-sync.json` with the new commit hash after applying
-
-            Branch: `chore/groot-sync`
-            - If branch doesn't exist: create it and open a PR against main
-            - If branch exists with open PR: update the same branch (PR updates automatically)
+            Branch & PR:
+            - Branch name: `chore/groot-sync`
+            - If no open PR exists for this branch: create a new PR against main
+            - If an open PR already exists: push to the same branch (PR updates automatically)
             - If no changes needed: exit successfully without creating PR
 
             The boilerplate repo is: https://github.com/AshikNesin/groot
