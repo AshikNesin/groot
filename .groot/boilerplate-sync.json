@@ -4,8 +4,8 @@
     "repo": "https://github.com/AshikNesin/groot"
   },
   "last_sync": {
-    "commit": "f3ec6a5",
+    "commit": "5567c83b",
     "date": "2026-03-15T20:00:00Z"
   },
-  "exclude_patterns": []
+  "additional_exclusions": []
 }

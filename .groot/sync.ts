@@ -29,7 +29,7 @@ const SyncConfigSchema = z.object({
     commit: z.string().regex(/^[a-f0-9]{7,40}$/, "Invalid commit SHA"),
     date: z.string(),
   }),
-  exclude_patterns: z.array(z.string()).default([]),
+  additional_exclusions: z.array(z.string()).default([]),
 });
 
 type SyncConfig = z.infer<typeof SyncConfigSchema>;
@@ -281,7 +281,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
         continue;
       }
 
-      const { action, reason } = categorizeFile(file, config.exclude_patterns);
+      const { action, reason } = categorizeFile(file, config.additional_exclusions);
 
       if (action === "skip") {
         result.skipped.push(file);
