@@ -18,8 +18,6 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "dev": "NODE_ENV=development tsx scripts/dev.ts",
-    "dev:pglite": "LOCAL_DB_MODE=pglite NODE_ENV=development tsx scripts/dev.ts",
-    "dev:docker": "LOCAL_DB_MODE=docker NODE_ENV=development tsx scripts/dev.ts",
     "dev:server": "NODE_ENV=development tsx watch server/src/index.ts",
     "dev:db:stop": "prisma dev stop",
     "dev:db:docker:stop": "tsx scripts/docker-db-cleanup.ts --stop",
@@ -103,7 +101,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@prisma/dev": "^0.20.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
