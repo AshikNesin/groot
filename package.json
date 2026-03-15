@@ -26,7 +26,7 @@
     "dev:db:docker:reset": "tsx scripts/docker-db-cleanup.ts --reset",
     "dev:db:docker:status": "tsx scripts/docker-db-cleanup.ts --status",
     "dev:studio": "test -f .dev-db-url && DATABASE_URL=$(cat .dev-db-url) prisma studio || echo '❌ Start the dev server first: pnpm dev'",
-    "build": "vp build && node scripts/build.mjs",
+    "build": "prisma generate && vp build && node scripts/build.mjs",
     "start": "NODE_ENV=production node dist/bundle.js",
     "lint": "vp lint",
     "format": "vp fmt",
@@ -38,6 +38,9 @@
     "prisma:push": "prisma db push",
     "prisma:generate": "prisma generate",
     "generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:create": "prisma migrate dev --create-only",
+    "prestart": "prisma migrate deploy",
     "postinstall": "pnpm run prisma:generate",
     "prepare": "vp config"
   },
