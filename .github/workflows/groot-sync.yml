@@ -1,0 +1,45 @@
+name: Groot Sync
+
+on:
+  schedule:
+    - cron: '30 6 * * *'   # 12PM IST (6:30 AM UTC)
+    - cron: '30 18 * * *'  # 12AM IST (6:30 PM UTC)
+  workflow_dispatch: # Manual on-demand trigger
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  groot-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run OpenCode Sync
+        uses: anomalyco/opencode/github@latest
+        env:
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: zai/glm-5
+          use_github_token: true
+          prompt: |
+            Run the /groot-sync skill to sync infrastructure files from the groot boilerplate repository.
+
+            Follow the sync process from .agents/skills/groot-sync/SKILL.md:
+            1. Check what changes are available by running `./.groot/sync.sh`
+            2. If there are changes, apply them following the sync config in .groot/boilerplate-sync.json
+            3. Update `.groot/boilerplate-sync.json` with the new commit hash after applying
+
+            Branch: `chore/groot-sync`
+            - If branch doesn't exist: create it and open a PR against main
+            - If branch exists with open PR: update the same branch (PR updates automatically)
+            - If no changes needed: exit successfully without creating PR
+
+            The boilerplate repo is: https://github.com/AshikNesin/groot
