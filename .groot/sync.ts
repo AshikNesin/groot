@@ -29,7 +29,12 @@ const SyncConfigSchema = z.object({
     commit: z.string().regex(/^[a-f0-9]{7,40}$/, "Invalid commit SHA"),
     date: z.string(),
   }),
-  additional_exclusions: z.array(z.string()).default([]),
+  additional_exclusions: z
+    .array(z.string())
+    .default([])
+    .describe(
+      "Project-specific patterns to exclude from sync (e.g., custom components, experimental features)",
+    ),
 });
 
 type _SyncConfig = z.infer<typeof SyncConfigSchema>;
@@ -241,12 +246,13 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
       tempDir,
     ]);
 
-    // 4. Get changed files
+    // 4. Get changed files (exclude delet)
     const { stdout: changedFiles } = await exec("git", [
       "-C",
       tempDir,
       "diff",
       "--name-only",
+      "--diff-filter=d",
       `${config.last_sync.commit}..HEAD`,
     ]);
 
