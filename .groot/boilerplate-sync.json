@@ -6,7 +6,6 @@
   "sync_config": {
     "exclude_patterns": [
       "README.md",
-      "package.json",
       "pnpm-lock.yaml",
       ".env*",
       "prisma/schema.prisma",

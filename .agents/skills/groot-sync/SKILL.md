@@ -160,17 +160,58 @@ After applying changes, update `.groot/boilerplate-sync.json`:
 }
 ```
 
-## Merge Strategies
+## Package.json AI Sync
 
-### package.json: `merge_deps`
+When package.json has changes, use AI to intelligently sync dependencies:
 
-Only suggest dependency additions. Never remove project-specific dependencies.
+### Auto-Apply Rules
 
-```bash
-# Compare dependencies
-jq '.dependencies' "$TEMP_DIR/package.json"
-jq '.devDependencies' "$TEMP_DIR/package.json"
+**INFRASTRUCTURE (auto-apply):**
+
+- Build tools: typescript, esbuild, vite, vite-plus
+- Linting/formatting: oxlint, oxfmt, prettier
+- Testing: vitest, @testing-library/\*, playwright
+- Core utilities: zod, dotenv, pino, date-fns
+- Server core: express, @prisma/client, bcryptjs, jsonwebtoken
+- Client core: react, react-router, @radix-ui/\*, tailwindcss, zustand
+
+**FEATURE (skip, don't suggest):**
+
+- Payment: stripe, @stripe/\*
+- Email: @sendgrid/mail, nodemailer
+- Cloud: @aws-sdk/\* (optional, not all projects need S3)
+
+**MAJOR BUMPS (flag for review):**
+
+- Any dependency where major version changes (e.g., ^4.0.0 → ^5.0.0)
+- Present as "REVIEW NEEDED" in sync summary
+
+### AI Sync Process
+
+1. **Compare dependencies** between boilerplate and local package.json
+2. **Classify each change** using the rules above
+3. **Auto-apply** infrastructure additions and minor/patch updates
+4. **Flag** major version bumps for review in the PR description
+5. **Skip** feature-specific packages (don't mention them)
+6. **Preserve** all local-only dependencies (never remove)
+
+### Example Output
+
 ```
+## Package.json Changes
+
+### Auto-Applied (Infrastructure)
++ zod: ^3.23.0 (validation library)
++ vitest: ^2.0.0 (testing framework)
+
+### Flagged for Review (Major Version)
+~ react: ^18.0.0 → ^19.0.0 (BREAKING - review React 19 migration guide)
+
+### Skipped (Feature-specific)
+- @stripe/stripe-js (payment - project may not need)
+```
+
+## Merge Strategies
 
 ### .gitignore: `append_missing`
 
@@ -185,18 +226,17 @@ comm -23 <(sort "$TEMP_DIR/.gitignore") <(sort .gitignore)
 
 ### Files that are NEVER synced:
 
-| Pattern                | Reason                              |
-| ---------------------- | ----------------------------------- |
-| `README.md`            | Project-specific docs               |
-| `package.json`         | Handled specially (merge deps only) |
-| `pnpm-lock.yaml`       | Auto-generated                      |
-| `.env*`                | Local secrets                       |
-| `prisma/schema.prisma` | Project data model                  |
-| `prisma/migrations/**` | Project migrations                  |
-| `dist/**`              | Build artifacts                     |
-| `node_modules/**`      | Dependencies                        |
+| Pattern                | Reason                |
+| ---------------------- | --------------------- |
+| `README.md`            | Project-specific docs |
+| `pnpm-lock.yaml`       | Auto-generated        |
+| `.env*`                | Local secrets         |
+| `prisma/schema.prisma` | Project data model    |
+| `prisma/migrations/**` | Project migrations    |
+| `dist/**`              | Build artifacts       |
+| `node_modules/**`      | Dependencies          |
 
-> **Note:** `client/**` and `server/**` are NOT in exclude patterns. AI decides based on file purpose using the Decision Framework above.
+> **Note:** `package.json`, `client/**` and `server/**` are NOT in exclude patterns. AI decides based on file purpose using the Decision Framework above.
 
 ## Cleanup
 
