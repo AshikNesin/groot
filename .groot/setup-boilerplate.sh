@@ -6,7 +6,7 @@
 # 2. Generating secure secrets for JWT_SECRET and ADMIN_AUTH_KEY
 # 3. Installing pre-commit hooks (gitleaks + biome format)
 # 4. Asking for app name and updating it across the project
-# 5. Updating package.json with the new app name
+# 5. Updating package.json, DATABASE_URL, and code references with the new app name
 
 set -e
 
@@ -213,7 +213,17 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
         fi
         print_success "Updated sentry.config.js to: $slug_name"
     fi
-    
+
+    # Update DATABASE_URL in .env with the slug name
+    if [ -f ".env" ]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|/dbname$|/$slug_name|" .env
+        else
+            sed -i "s|/dbname$|/$slug_name|" .env
+        fi
+        print_success "Updated DATABASE_URL database name to: $slug_name"
+    fi
+
     print_info "Note: You may need to manually update GitHub URLs in package.json"
 }
 
