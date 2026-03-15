@@ -1,8 +1,7 @@
 {
   "boilerplate": {
     "name": "groot",
-    "repo": "https://github.com/AshikNesin/groot",
-    "local_path": "/Users/ashiknesin/Code/groot"
+    "repo": "https://github.com/AshikNesin/groot"
   },
   "last_sync": {
     "commit": "69fe3f5",
