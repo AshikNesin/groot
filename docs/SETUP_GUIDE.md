@@ -59,7 +59,7 @@ Copy `.env.example` to `.env` and populate these keys (validated in `server/src/
 | ----------------------- | --------------------------------- |
 | `AWS_ACCESS_KEY_ID`     | AWS access key for S3             |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3             |
-| `AWS_DEFAULT_REGION`    | AWS region (default: `us-east-1`) |
+| `AWS_REGION`            | AWS region (default: `us-east-1`) |
 | `AWS_DEFAULT_S3_BUCKET` | S3 bucket name for file storage   |
 
 ### Job Queue Variables
