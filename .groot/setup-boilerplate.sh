@@ -172,7 +172,7 @@ const fs = require('fs');
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 pkg.name = '$slug_name';
 if (pkg.repository && pkg.repository.url) {
-    pkg.repository.url = pkg.repository.url.replace(/github\\.com\\/[^/]+\\//, 'github.com/your-username/');
+    pkg.repository.url = pkg.repository.url.replace(/\\/groot\\.git$/, '/$slug_name.git');
 }
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
@@ -223,8 +223,6 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
         fi
         print_success "Updated DATABASE_URL database name to: $slug_name"
     fi
-
-    print_info "Note: You may need to manually update GitHub URLs in package.json"
 }
 
 # Final setup steps
