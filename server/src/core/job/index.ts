@@ -1,5 +1,6 @@
 import { PgBoss } from "pg-boss";
 import type { Job as BossJob } from "pg-boss";
+import dayjs from "dayjs";
 import { logger } from "@/core/logger";
 import { prisma } from "@/core/database";
 import { jobConfig, jobOptions, defaultJobOptions } from "@/core/job/config";
@@ -239,12 +240,12 @@ export const getJobs = async ({
   }
   if (startDate) {
     conditions.push(`created_on >= $${paramIndex}`);
-    params.push(new Date(startDate));
+    params.push(dayjs(startDate).toDate());
     paramIndex++;
   }
   if (endDate) {
     conditions.push(`created_on <= $${paramIndex}`);
-    params.push(new Date(endDate));
+    params.push(dayjs(endDate).toDate());
     paramIndex++;
   }
 

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import dayjs from "dayjs";
 import {
   Dialog,
   DialogContent,
@@ -518,13 +519,13 @@ export function Jobs() {
 
   const formatDate = (date: string | null) => {
     if (!date) return "N/A";
-    return formatLocaleDateTime(new Date(date));
+    return formatLocaleDateTime(date);
   };
 
   const formatDuration = (start: string | null, end: string | null) => {
     if (!start || !end) return "N/A";
-    const duration = new Date(end).getTime() - new Date(start).getTime();
-    return `${(duration / 1000).toFixed(2)}s`;
+    const duration = dayjs(end).diff(dayjs(start), "second", true);
+    return `${duration.toFixed(2)}s`;
   };
 
   return (

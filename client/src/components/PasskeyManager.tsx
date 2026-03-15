@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import dayjs from "dayjs";
 import {
   Dialog,
   DialogContent,
@@ -101,11 +102,7 @@ export function PasskeyManager() {
 
   const formatDate = (date: Date | null) => {
     if (!date) return "Never";
-    return new Date(date).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return dayjs(date).format("MMM D, YYYY");
   };
 
   if (isLoading) {

@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from "@/core/errors";
 import { logger } from "@/core/logger";
 import type { Passkey, User } from "@/generated/prisma/models";
@@ -183,7 +184,7 @@ export class PasskeyService {
     // Update passkey counter and last used date
     await passkeyModel.update(passkey.id, {
       counter: BigInt(verification.authenticationInfo.newCounter),
-      lastUsedAt: new Date(),
+      lastUsedAt: dayjs().toDate(),
     });
 
     // Generate JWT token

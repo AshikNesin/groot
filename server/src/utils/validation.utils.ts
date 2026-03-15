@@ -1,6 +1,10 @@
 /**
  * Validation utility functions
  */
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 /**
  * Check if a value is a valid email
@@ -34,22 +38,14 @@ export function isValidUUID(uuid: string): boolean {
  * Check if a value is a valid ISO date string
  */
 export function isValidISODate(date: string): boolean {
-  const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
-  if (!isoRegex.test(date)) return false;
-
-  const d = new Date(date);
-  return d instanceof Date && !Number.isNaN(d.getTime());
+  return dayjs(date, "YYYY-MM-DDTHH:mm:ss.SSSZ", true).isValid();
 }
 
 /**
  * Check if a value is a valid date string (YYYY-MM-DD)
  */
 export function isValidDateString(date: string): boolean {
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(date)) return false;
-
-  const d = new Date(date);
-  return d instanceof Date && !Number.isNaN(d.getTime());
+  return dayjs(date, "YYYY-MM-DD", true).isValid();
 }
 
 /**
