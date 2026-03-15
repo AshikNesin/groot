@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["WebFetch(domain:github.com)"]
+    "allow": ["WebFetch(domain:github.com)", "Bash(git pull:*)"]
   }
 }
