@@ -2,6 +2,7 @@
  * Breadcrumb tracking for debugging
  * Stores a trail of actions leading up to errors
  */
+import dayjs from "dayjs";
 
 export interface Breadcrumb {
   timestamp: string;
@@ -25,7 +26,7 @@ export function addBreadcrumb(
   data?: Record<string, unknown>,
 ): void {
   const breadcrumb: Breadcrumb = {
-    timestamp: new Date().toISOString(),
+    timestamp: dayjs().toISOString(),
     category,
     message,
     level,

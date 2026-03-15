@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { createNamespaceKv } from "@/core/kv";
 import { logger } from "@/core/logger";
 
@@ -76,7 +77,7 @@ export const set = async <T = unknown>(
       value,
       metadata: {
         ...metadata,
-        updatedAt: new Date().toISOString(),
+        updatedAt: dayjs().toISOString(),
       },
     };
 

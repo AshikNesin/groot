@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Request } from "express";
 import pino, { type Logger } from "pino";
 import pinoPretty from "pino-pretty";
+import dayjs from "dayjs";
 import { serializeObject } from "@/core/logger/utils";
 import { createJobLogStream } from "@/core/logger/job-stream";
 
@@ -23,7 +24,7 @@ const loggerConfig = {
       if (typeof serialized === "object" && serialized !== null) {
         const obj = serialized as Record<string, unknown>;
         if (!obj.timestamp) {
-          obj.timestamp = new Date().toISOString();
+          obj.timestamp = dayjs().toISOString();
         }
         return obj;
       }
@@ -130,7 +131,7 @@ export function logBusinessEvent(
       type: "business_event",
       event,
       ...data,
-      timestamp: new Date().toISOString(),
+      timestamp: dayjs().toISOString(),
     },
     `Business event: ${event}`,
   );

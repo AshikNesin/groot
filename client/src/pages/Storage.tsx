@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import dayjs from "dayjs";
 import {
   ChevronRight,
   Download,
@@ -827,7 +828,7 @@ export function Storage() {
                         <div>
                           <p className="font-medium">{share.shareId}</p>
                           <p className="text-gray-500">
-                            Expires {new Date(share.expiresAt).toLocaleString()} · Accesses{" "}
+                            Expires {dayjs(share.expiresAt).format("LLL")} · Accesses{" "}
                             {share.accessCount}
                           </p>
                           {share.isPasswordProtected && (

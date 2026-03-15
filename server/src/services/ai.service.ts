@@ -9,6 +9,7 @@ import type {
   UpdateConversationDTO,
 } from "@/validations/ai.validation";
 import { randomUUID } from "node:crypto";
+import dayjs from "dayjs";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -226,9 +227,9 @@ class AIService {
     }
 
     const startDate = params.startDate
-      ? new Date(params.startDate)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const endDate = params.endDate ? new Date(params.endDate) : new Date();
+      ? dayjs(params.startDate).toDate()
+      : dayjs().subtract(30, "day").toDate();
+    const endDate = params.endDate ? dayjs(params.endDate).toDate() : dayjs().toDate();
 
     const [totalStats, groupedStats] = await Promise.all([
       aiUsageModel.getTotalStats(userId, startDate, endDate),
@@ -262,8 +263,8 @@ class AIService {
 
     return aiUsageModel.findByUser({
       userId,
-      startDate: params.startDate ? new Date(params.startDate) : undefined,
-      endDate: params.endDate ? new Date(params.endDate) : undefined,
+      startDate: params.startDate ? dayjs(params.startDate).toDate() : undefined,
+      endDate: params.endDate ? dayjs(params.endDate).toDate() : undefined,
       provider: params.provider,
       model: params.model,
       limit: params.limit,

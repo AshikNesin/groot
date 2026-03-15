@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
+import dayjs from "dayjs";
 import { prisma } from "@/core/database";
 import { storageFileService } from "@/services/storage.service";
 import { BadRequestError, NotFoundError } from "@/core/errors/base.errors";
@@ -38,8 +39,7 @@ export class PublicShareService {
       throw new NotFoundError(`File not found: ${filePath}`);
     }
 
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + expiresInHours);
+    const expiresAt = dayjs().add(expiresInHours, "hour").toDate();
 
     const passwordHash = password ? await bcrypt.hash(password, 10) : null;
     const contentType = this.inferContentType(metadata.fileName);
@@ -180,7 +180,7 @@ export class PublicShareService {
     const result = await prisma.publicFileShare.updateMany({
       where: {
         expiresAt: {
-          lt: new Date(),
+          lt: dayjs().toDate(),
         },
         isDeleted: false,
       },
@@ -194,8 +194,7 @@ export class PublicShareService {
   private formatShare(
     share: Awaited<ReturnType<typeof prisma.publicFileShare.create>>,
   ): PublicShareInfo {
-    const now = new Date();
-    const isExpired = share.expiresAt < now;
+    const isExpired = dayjs(share.expiresAt).isBefore(dayjs());
     const isAccessLimitReached =
       share.maxAccessCount !== null &&
       share.maxAccessCount !== undefined &&

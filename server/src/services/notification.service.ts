@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { logger } from "@/core/logger";
 import { sendPushOverNotification } from "send-push-notification";
 
@@ -33,7 +34,7 @@ export class NotificationService {
       return;
     }
 
-    const message = `<b>Environment:</b><br/>${environment}<br/><b>Port:</b><br/>${port}<br/><b>Time:</b><br/>${new Date().toISOString()}`;
+    const message = `<b>Environment:</b><br/>${environment}<br/><b>Port:</b><br/>${port}<br/><b>Time:</b><br/>${dayjs().toISOString()}`;
 
     await this.sendNotification({
       title: "Groot API Started",

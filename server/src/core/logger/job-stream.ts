@@ -1,4 +1,5 @@
 import { Writable } from "node:stream";
+import dayjs from "dayjs";
 import { prisma } from "@/core/database";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -93,7 +94,7 @@ export class JobLogStream extends Writable {
           level: levelStr,
           message: msg || message || "",
           data: Object.keys(rest).length > 0 ? (rest as Prisma.InputJsonValue) : Prisma.JsonNull,
-          timestamp: time ? new Date(time) : new Date(),
+          timestamp: time ? dayjs(time).toDate() : dayjs().toDate(),
         };
       });
 

@@ -9,6 +9,7 @@ import { json } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 import { Console } from "console-feed";
+import dayjs from "dayjs";
 import {
   Activity,
   AlertCircle,
@@ -250,13 +251,13 @@ export function JobDetail() {
 
   const formatDate = (date: string | null) => {
     if (!date) return "N/A";
-    return formatLocaleDateTime(new Date(date));
+    return formatLocaleDateTime(date);
   };
 
   const formatDuration = (start: string | null, end: string | null) => {
     if (!start || !end) return "N/A";
-    const duration = new Date(end).getTime() - new Date(start).getTime();
-    return `${(duration / 1000).toFixed(2)}s`;
+    const duration = dayjs(end).diff(dayjs(start), "second", true);
+    return `${duration.toFixed(2)}s`;
   };
 
   if (loading) {
@@ -483,7 +484,7 @@ export function JobDetail() {
                       | "info"
                       | "debug",
                     data: [
-                      `[${formatLocaleDateTime(new Date(log.timestamp))}]`,
+                      `[${formatLocaleDateTime(log.timestamp)}]`,
                       log.message,
                       ...(log.data && Object.keys(log.data as object).length > 0 ? [log.data] : []),
                     ],

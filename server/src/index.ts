@@ -6,6 +6,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import closeWithGrace from "close-with-grace";
 import type { ViteDevServer } from "vite-plus";
+import dayjs from "dayjs";
 import { Sentry } from "@/core/instrument";
 import { env } from "@/env";
 import { logger } from "@/core/logger";
@@ -68,10 +69,10 @@ if (!isProd) {
 
 app.get("/health", (_req, res) => {
   if (isShuttingDown) {
-    res.status(503).json({ status: "shutting_down", timestamp: new Date().toISOString() });
+    res.status(503).json({ status: "shutting_down", timestamp: dayjs().toISOString() });
     return;
   }
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({ status: "ok", timestamp: dayjs().toISOString() });
 });
 
 app.get("/ready", (_req, res) => {
