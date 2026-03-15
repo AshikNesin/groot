@@ -82,7 +82,9 @@ class AIService {
       const combinedController = new AbortController();
 
       userSignal.addEventListener("abort", () => combinedController.abort(userSignal.reason));
-      controller.signal.addEventListener("abort", () => combinedController.abort(controller.signal.reason));
+      controller.signal.addEventListener("abort", () =>
+        combinedController.abort(controller.signal.reason),
+      );
 
       signal = combinedController.signal;
     }
@@ -144,7 +146,9 @@ class AIService {
       const combinedController = new AbortController();
 
       userSignal.addEventListener("abort", () => combinedController.abort(userSignal.reason));
-      controller.signal.addEventListener("abort", () => combinedController.abort(controller.signal.reason));
+      controller.signal.addEventListener("abort", () =>
+        combinedController.abort(controller.signal.reason),
+      );
 
       signal = combinedController.signal;
     }

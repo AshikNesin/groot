@@ -11,7 +11,7 @@ export abstract class AppError extends Error {
     statusCode: number,
     code: string,
     isOperational = true,
-    cause?: Error
+    cause?: Error,
   ) {
     super(message, { cause });
     Object.setPrototypeOf(this, AppError.prototype);
