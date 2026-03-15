@@ -3,23 +3,9 @@
     "name": "groot",
     "repo": "https://github.com/AshikNesin/groot"
   },
-  "sync_config": {
-    "exclude_patterns": [
-      "README.md",
-      "pnpm-lock.yaml",
-      ".env",
-      ".env.local",
-      ".env.development",
-      ".env.production",
-      "prisma/schema.prisma",
-      "prisma/migrations/**",
-      "dist/**",
-      "node_modules/**"
-    ],
-    "merge_strategy": {
-      "package.json": "merge_deps",
-      ".gitignore": "append_missing"
-    }
+  "last_sync": {
+    "commit": "5567c83b",
+    "date": "2026-03-15T20:00:00Z"
   },
-  "sync_history": []
+  "additional_exclusions": []
 }
