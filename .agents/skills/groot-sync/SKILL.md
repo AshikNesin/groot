@@ -1,17 +1,17 @@
 ---
 name: groot-sync
-description: Sync infrastructure files from the groot boilerplate repo while preserving project-specific code. Use when syncing updates from groot, checking for boilerplate updates, or the user mentions "groot sync", "sync from groot", "pull boilerplate changes", "update from boilerplate".
+description: Sync reusable core components and infrastructure from the groot boilerplate repo. Includes UI components, server core utilities, middlewares, shared hooks, docs, and infrastructure. Use when syncing from groot, pulling boilerplate updates, or keeping apps aligned with the source of truth. Triggers on "groot sync", "sync from groot", "pull boilerplate changes", "update from boilerplate".
 metadata:
-  tags: sync, boilerplate, groot, infrastructure
+  tags: sync, boilerplate, groot, infrastructure, components, utilities
 ---
 
 ## Smart Sync Rules
 
 **CRITICAL PRESERVATION RULES:**
 
-- Never override project-specific business logic, routes, or features
-- Only sync infrastructure/utility patterns (error handling, logging, middlewares)
-- If the project has REMOVED or MODIFIED boilerplate defaults (schema, routes, seed data), do NOT re-add them
+- Never override project-specific business logic, services, controllers, or pages
+- Sync reusable core components (UI, utilities, middlewares, core modules)
+- If the project has REMOVED or MODIFIED boilerplate defaults, do NOT re-add them
 - Check git history to distinguish intentional removals vs pending updates
 - When in doubt, ask before overriding
 
@@ -80,43 +80,57 @@ git diff --name-only "$LAST_SYNC"..HEAD
 
 Files matching these patterns are NEVER synced:
 
-- `.env*` - local secrets
+- `.env`, `.env.local`, `.env.development`, `.env.production` - local secrets
 - `prisma/schema.prisma`, `prisma/migrations/**` - project data model
 - `dist/**`, `node_modules/**` - build artifacts
 - `pnpm-lock.yaml` - auto-generated
 - `README.md` - project docs
 
+> **Note:** `.env.example` IS synced (it's a template, not secrets)
+
 **Step 2: Apply AI Decision Framework**
 
 For all other files, analyze the diff and decide:
 
-#### SYNC (infrastructure/tooling):
+#### SYNC (Reusable Core Components):
 
-- Config files (`*.config.*`, `tsconfig.json`, etc.)
-- Build scripts (`scripts/**`)
-- CI/CD (`.github/workflows/**`)
-- Git hooks (`.vite-hooks/**`, `.gitleaks.toml`)
-- Docs about boilerplate (`docs/boilerplate/**`)
-- Core utilities (`server/src/core/**`, `client/src/lib/**`)
-- Middlewares (`server/src/middlewares/**`)
-- Route definitions (`server/src/routes/**`)
-- Validation schemas (`server/src/validations/**`)
-- Shared hooks (`client/src/hooks/**`)
-- Shared UI components (`client/src/components/ui/**`)
+| Area                  | Paths                                                                                                   | What's Included                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **UI Components**     | `client/src/components/ui/**`                                                                           | All shadcn/Radix components (button, dialog, form, input, toast, table, tabs, etc.)                    |
+| **Layout Components** | `client/src/components/layout/**`                                                                       | PageLayout, PageHeader, PageContainer, Section                                                         |
+| **Client Utilities**  | `client/src/lib/utils.ts`, `client/src/lib/design-tokens.ts`                                            | cn() helper, design tokens                                                                             |
+| **Client Hooks**      | `client/src/hooks/use-toast.ts`                                                                         | Shared React hooks                                                                                     |
+| **Base Styles**       | `client/src/index.css`                                                                                  | Tailwind base styles                                                                                   |
+| **Server Core**       | `server/src/core/**`                                                                                    | Errors, logger, job queue, storage, kv, ai, async-handler, response-handler, database, base-controller |
+| **Middlewares**       | `server/src/middlewares/**`                                                                             | Auth (JWT, admin, basic), rate-limit, validation, error-handler, request-logger, cors                  |
+| **Server Utilities**  | `server/src/utils/**`                                                                                   | Array, date, jwt, validation, webauthn utils                                                           |
+| **Test Helpers**      | `server/src/test-helpers.ts`, `client/src/test/**`, `server/src/test/**`                                | Shared test utilities                                                                                  |
+| **Documentation**     | `docs/**`                                                                                               | All documentation files                                                                                |
+| **Env Template**      | `.env.example`                                                                                          | Environment variable template                                                                          |
+| **Infrastructure**    | `*.config.*`, `tsconfig.json`, `scripts/**`, `.github/workflows/**`, `.vite-hooks/**`, `.gitleaks.toml` | Configs, CI/CD, build scripts, git hooks                                                               |
 
-#### SKIP (application code):
+#### SKIP (App-Specific Code):
 
-- Business logic (`server/src/services/**`)
-- Controllers (`server/src/controllers/**`)
-- Page components (`client/src/pages/**`)
-- State stores (`client/src/store/**`)
-- Feature-specific code
+| Area                | Paths                                                | Reason                                                      |
+| ------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| **Services**        | `server/src/services/**`                             | Business logic                                              |
+| **Controllers**     | `server/src/controllers/**`                          | API handlers                                                |
+| **Routes**          | `server/src/routes/**`                               | App-specific endpoints                                      |
+| **Validations**     | `server/src/validations/**`                          | App-specific schemas                                        |
+| **Jobs**            | `server/src/jobs/**`                                 | App-specific background jobs                                |
+| **Models**          | `server/src/models/**`                               | App-specific data models                                    |
+| **Pages**           | `client/src/pages/**`                                | App-specific UI pages                                       |
+| **Stores**          | `client/src/store/**`                                | App-specific state management                               |
+| **App Components**  | `client/src/components/*.tsx` (root level only)      | App-specific components (AppSettings, PasskeyManager, etc.) |
+| **Client Services** | `client/src/services/**`                             | App-specific API services                                   |
+| **Data Model**      | `prisma/schema.prisma`, `prisma/migrations/**`       | Project schema and migrations                               |
+| **Secrets**         | `.env`, `.env.local`, `.env.*` (except .env.example) | Local configuration                                         |
 
 #### MERGE (if local differs):
 
 - Show diff between boilerplate and local
 - Preserve local customizations
-- Apply only infrastructure/core updates
+- Apply only reusable core updates
 
 ### 5. For each relevant file change
 
@@ -230,13 +244,53 @@ comm -23 <(sort "$TEMP_DIR/.gitignore") <(sort .gitignore)
 | ---------------------- | --------------------- |
 | `README.md`            | Project-specific docs |
 | `pnpm-lock.yaml`       | Auto-generated        |
-| `.env*`                | Local secrets         |
+| `.env`                 | Local secrets         |
+| `.env.local`           | Local secrets         |
+| `.env.development`     | Local secrets         |
+| `.env.production`      | Local secrets         |
 | `prisma/schema.prisma` | Project data model    |
 | `prisma/migrations/**` | Project migrations    |
 | `dist/**`              | Build artifacts       |
 | `node_modules/**`      | Dependencies          |
 
-> **Note:** `package.json`, `client/**` and `server/**` are NOT in exclude patterns. AI decides based on file purpose using the Decision Framework above.
+> **Note:** `.env.example` IS synced (environment template). `package.json`, `client/**`, `server/**`, and `docs/**` are NOT in exclude patterns. AI decides based on file purpose using the Decision Framework above.
+
+## What Gets Synced (Reference)
+
+### Client-side Reusable Components:
+
+- **27 UI components**: button, dialog, form, input, select, textarea, checkbox, switch, toast, toaster, table, tabs, badge, breadcrumb, card, alert, label, separator, dropdown-menu, popover, sheet, progress, pagination, loading-spinner, loading-skeleton, empty-state, status-badge
+- **5 layout components**: PageLayout, PageHeader, PageContainer, Section, index
+- **Utilities**: cn() helper, design tokens
+- **Hooks**: use-toast
+- **Styles**: Base Tailwind CSS
+
+### Server-side Core Modules:
+
+- **Error handling**: AppError, Prisma error handler, base errors
+- **Logging**: Pino setup, breadcrumbs, trace context, job stream
+- **Job queue**: pg-boss setup (queue, worker, config, constants, error-handler)
+- **Storage**: S3 utilities
+- **Key-value store**: Keyv with Prisma adapter
+- **AI client**: Unified LLM API utilities
+- **Core handlers**: async-handler, response-handler, database, base-controller
+
+### Middlewares:
+
+- JWT auth, admin auth, basic auth
+- Rate limiting
+- Validation (Zod)
+- Error handler
+- Request logger
+- CORS
+
+### Utilities:
+
+- Array helpers
+- Date utilities
+- JWT utilities
+- Validation utilities
+- WebAuthn utilities
 
 ## Cleanup
 
