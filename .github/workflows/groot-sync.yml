@@ -41,7 +41,7 @@ jobs:
         run: |
           pnpm groot:check
           # Check if there are auto-apply changes
-          if pnpm groot:check 2>&1 | grep -q "Auto-apply"; then
+          if pnpm groot:check 2>&1 | grep -q "Auto-Apply"; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
