@@ -5,6 +5,16 @@ metadata:
   tags: sync, boilerplate, groot, infrastructure
 ---
 
+## Smart Sync Rules
+
+**CRITICAL PRESERVATION RULES:**
+
+- Never override project-specific business logic, routes, or features
+- Only sync infrastructure/utility patterns (error handling, logging, middlewares)
+- If the project has REMOVED or MODIFIED boilerplate defaults (schema, routes, seed data), do NOT re-add them
+- Check git history to distinguish intentional removals vs pending updates
+- When in doubt, ask before overriding
+
 ## When to use
 
 Use this skill when you need to sync infrastructure files from the groot boilerplate repository to this project. Triggers on:
@@ -37,8 +47,7 @@ This shows:
 Read `.groot/boilerplate-sync.json` to understand:
 
 - Last synced commit (`last_sync.commit`)
-- Include patterns (`sync_config.include_patterns`)
-- Exclude patterns (`sync_config.exclude_patterns`)
+- Exclude patterns (`sync_config.exclude_patterns`) - hard "never sync" rules
 - Merge strategies (`sync_config.merge_strategy`)
 
 ### 2. Fetch latest from remote
@@ -65,23 +74,49 @@ git log --oneline "$LAST_SYNC"..HEAD
 git diff --name-only "$LAST_SYNC"..HEAD
 ```
 
-### 4. Filter files by include/exclude patterns
+### 4. Filter files and apply AI Decision Framework
 
-**Include patterns (sync these):**
+**Step 1: Hard skip exclude patterns**
 
-- `AGENTS.md`
-- `.gitleaks.toml`
-- `.vite-hooks/**`
-- `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, etc.
-- `scripts/**`, `tests/**`
-- `.claude/**`, `docs/boilerplate/**`
-- `prisma.config.ts`, `nixpacks.toml`, `Procfile`
+Files matching these patterns are NEVER synced:
 
-**Exclude patterns (skip these):**
+- `.env*` - local secrets
+- `prisma/schema.prisma`, `prisma/migrations/**` - project data model
+- `dist/**`, `node_modules/**` - build artifacts
+- `pnpm-lock.yaml` - auto-generated
+- `README.md` - project docs
 
-- `README.md`, `package.json`, `pnpm-lock.yaml`
-- `.env*`, `prisma/schema.prisma`, `prisma/migrations/**`
-- `client/**`, `server/**`, `dist/**`, `node_modules/**`
+**Step 2: Apply AI Decision Framework**
+
+For all other files, analyze the diff and decide:
+
+#### SYNC (infrastructure/tooling):
+
+- Config files (`*.config.*`, `tsconfig.json`, etc.)
+- Build scripts (`scripts/**`)
+- CI/CD (`.github/workflows/**`)
+- Git hooks (`.vite-hooks/**`, `.gitleaks.toml`)
+- Docs about boilerplate (`docs/boilerplate/**`)
+- Core utilities (`server/src/core/**`, `client/src/lib/**`)
+- Middlewares (`server/src/middlewares/**`)
+- Route definitions (`server/src/routes/**`)
+- Validation schemas (`server/src/validations/**`)
+- Shared hooks (`client/src/hooks/**`)
+- Shared UI components (`client/src/components/ui/**`)
+
+#### SKIP (application code):
+
+- Business logic (`server/src/services/**`)
+- Controllers (`server/src/controllers/**`)
+- Page components (`client/src/pages/**`)
+- State stores (`client/src/store/**`)
+- Feature-specific code
+
+#### MERGE (if local differs):
+
+- Show diff between boilerplate and local
+- Preserve local customizations
+- Apply only infrastructure/core updates
 
 ### 5. For each relevant file change
 
@@ -146,34 +181,9 @@ Append new entries, don't remove existing ones.
 comm -23 <(sort "$TEMP_DIR/.gitignore") <(sort .gitignore)
 ```
 
-## Include/Exclude Patterns Reference
+## Exclude Patterns Reference
 
-### Files that ARE synced:
-
-| Pattern                | Description             |
-| ---------------------- | ----------------------- |
-| `AGENTS.md`            | AI agent configuration  |
-| `.gitleaks.toml`       | Secret detection config |
-| `.vite-hooks/**`       | Git hooks               |
-| `tsconfig.json`        | TypeScript config       |
-| `vite.config.ts`       | Vite bundler config     |
-| `vitest.config.ts`     | Vitest test config      |
-| `vitest.workspace.ts`  | Vitest workspace        |
-| `playwright.config.ts` | E2E test config         |
-| `postcss.config.js`    | PostCSS config          |
-| `tailwind.config.js`   | Tailwind CSS config     |
-| `sentry.config.js`     | Sentry error tracking   |
-| `Procfile`             | Process manager         |
-| `pnpm-workspace.yaml`  | pnpm workspace          |
-| `prisma.config.ts`     | Prisma client config    |
-| `nixpacks.toml`        | Railway/Nixpacks deploy |
-| `setup-boilerplate.sh` | Setup script            |
-| `scripts/**`           | Utility scripts         |
-| `tests/**`             | Test infrastructure     |
-| `docs/boilerplate/**`  | Boilerplate docs        |
-| `.claude/**`           | Claude settings         |
-
-### Files that are NOT synced:
+### Files that are NEVER synced:
 
 | Pattern                | Reason                              |
 | ---------------------- | ----------------------------------- |
@@ -183,10 +193,10 @@ comm -23 <(sort "$TEMP_DIR/.gitignore") <(sort .gitignore)
 | `.env*`                | Local secrets                       |
 | `prisma/schema.prisma` | Project data model                  |
 | `prisma/migrations/**` | Project migrations                  |
-| `client/**`            | Application frontend                |
-| `server/**`            | Application backend                 |
 | `dist/**`              | Build artifacts                     |
 | `node_modules/**`      | Dependencies                        |
+
+> **Note:** `client/**` and `server/**` are NOT in exclude patterns. AI decides based on file purpose using the Decision Framework above.
 
 ## Cleanup
 

@@ -9,29 +9,6 @@
     "message": "Vite+ migration, AI inference, formatting updates"
   },
   "sync_config": {
-    "include_patterns": [
-      "AGENTS.md",
-      ".gitleaks.toml",
-      ".vite-hooks/**",
-      "tsconfig.json",
-      "vite.config.ts",
-      "vitest.config.ts",
-      "vitest.config.server.ts",
-      "vitest.workspace.ts",
-      "playwright.config.ts",
-      "postcss.config.js",
-      "tailwind.config.js",
-      "sentry.config.js",
-      "Procfile",
-      "pnpm-workspace.yaml",
-      "prisma.config.ts",
-      "nixpacks.toml",
-      "setup-boilerplate.sh",
-      "scripts/**",
-      "tests/**",
-      "docs/boilerplate/**",
-      ".claude/**"
-    ],
     "exclude_patterns": [
       "README.md",
       "package.json",
@@ -39,8 +16,6 @@
       ".env*",
       "prisma/schema.prisma",
       "prisma/migrations/**",
-      "client/**",
-      "server/**",
       "dist/**",
       "node_modules/**"
     ],

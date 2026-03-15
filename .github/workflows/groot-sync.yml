@@ -2,8 +2,8 @@ name: Groot Sync
 
 on:
   schedule:
-    - cron: '30 6 * * *'   # 12PM IST (6:30 AM UTC)
-    - cron: '30 18 * * *'  # 12AM IST (6:30 PM UTC)
+    - cron: "30 6 * * *" # 12PM IST (6:30 AM UTC)
+    - cron: "30 18 * * *" # 12AM IST (6:30 PM UTC)
   workflow_dispatch: # Manual on-demand trigger
 
 permissions:
@@ -31,6 +31,13 @@ jobs:
           use_github_token: true
           prompt: |
             Run the /groot-sync skill to sync infrastructure files from the groot boilerplate repository.
+
+            CRITICAL PRESERVATION RULES:
+            - Never override project-specific business logic, routes, or features
+            - Only sync infrastructure/utility patterns (error handling, logging, middlewares)
+            - If the project has REMOVED or MODIFIED boilerplate defaults (schema, routes, seed data), do NOT re-add them
+            - Check git history to distinguish intentional removals vs pending updates
+            - When in doubt, ask before overriding
 
             Follow the sync process from .agents/skills/groot-sync/SKILL.md:
             1. Check what changes are available by running `./.groot/sync.sh`

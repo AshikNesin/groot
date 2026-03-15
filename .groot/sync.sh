@@ -62,38 +62,23 @@ if [ -z "$FILES" ]; then
     exit 0
 fi
 
-# Categorize files
+# Categorize files by exclude patterns only
 SYNC_FILES=""
 SKIP_FILES=""
 
 while IFS= read -r file; do
-    # Check if file matches include patterns
-    SHOULD_INCLUDE=false
-
-    # Simple pattern matching
+    # Check exclude patterns (hard skip)
+    SHOULD_SKIP=false
     case "$file" in
-        .pre-commit-config.yaml|.gitleaks.toml|biome.json|tsconfig.json|vite.config.ts|vitest.config.ts|vitest.workspace.ts|playwright.config.ts|postcss.config.js|tailwind.config.js|sentry.config.js|Procfile|pnpm-workspace.yaml|nixpacks.toml|AGENTS.md|prisma.config.ts)
-            SHOULD_INCLUDE=true
-            ;;
-        scripts/*|tests/*|.claude/*|.vite-hooks/*|docs/boilerplate/*)
-            SHOULD_INCLUDE=true
-            ;;
-        setup-boilerplate.sh)
-            SHOULD_INCLUDE=true
+        README.md|package.json|pnpm-lock.yaml|.env*|prisma/schema.prisma|prisma/migrations/*|dist/*|node_modules/*|.gitignore)
+            SHOULD_SKIP=true
             ;;
     esac
 
-    # Check exclude patterns
-    case "$file" in
-        README.md|package.json|pnpm-lock.yaml|.env*|prisma/schema.prisma|prisma/migrations/*|client/*|server/*|dist/*|node_modules/*|.gitignore)
-            SHOULD_INCLUDE=false
-            ;;
-    esac
-
-    if [ "$SHOULD_INCLUDE" = true ]; then
-        SYNC_FILES="$SYNC_FILES\n   $file"
-    else
+    if [ "$SHOULD_SKIP" = true ]; then
         SKIP_FILES="$SKIP_FILES\n   $file"
+    else
+        SYNC_FILES="$SYNC_FILES\n   $file"
     fi
 done <<< "$FILES"
 
@@ -105,7 +90,7 @@ else
 fi
 
 echo ""
-echo "⏭️  Will skip (not in include patterns):"
+echo "⏭️  Will skip (exclude patterns):"
 if [ -n "$SKIP_FILES" ]; then
     echo -e "$SKIP_FILES"
 else
