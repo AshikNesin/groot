@@ -30,4 +30,9 @@ const result = spawnSync("varlock", ["run", "--", ...command], {
   env: process.env,
 });
 
-process.exit(result.status || 0);
+if (result.error) {
+  console.error("Failed to run varlock:", result.error.message);
+  process.exit(1);
+}
+
+process.exit(result.status ?? 1);

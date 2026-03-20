@@ -40,7 +40,7 @@ export default defineConfig({
   },
   server: {
     middlewareMode: true,
-    allowedHosts: process.env.VITE_HMR_URL ? [process.env.VITE_HMR_URL] : true,
+    allowedHosts: process.env.VITE_HMR_URL ? [process.env.VITE_HMR_URL] : undefined,
     hmr: process.env.VITE_HMR_URL
       ? {
           protocol: "wss",
