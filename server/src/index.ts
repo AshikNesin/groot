@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
@@ -23,6 +24,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1);
 const port = env.PORT;
 const isProd = env.NODE_ENV === "production";
 const clientRoot = path.resolve(process.cwd(), "client");
@@ -41,21 +43,39 @@ app.use(compression());
 app.use(express.json());
 app.use(cookieParser());
 
+const httpServer = http.createServer(app);
+
 if (!isProd) {
   const { createServer } = await import("vite-plus");
+
+  const hmrConfig = process.env.VITE_HMR_URL
+    ? {
+        server: httpServer,
+        protocol: "wss" as const,
+        host: process.env.VITE_HMR_URL,
+        clientPort: 443,
+      }
+    : {
+        port: port + 1,
+      };
 
   viteServer = await createServer({
     root: clientRoot,
     configFile: path.resolve(process.cwd(), "vite.config.ts"),
     server: {
-      middlewareMode: true,
-      hmr: { port: port + 1 },
+      middlewareMode: {
+        server: httpServer,
+      },
+      hmr: hmrConfig,
     },
     appType: "custom",
   });
 
   app.use(viteServer.middlewares);
   logger.info("Vite dev middleware enabled");
+  if (process.env.VITE_HMR_URL) {
+    logger.info(`HMR configured for tunnel: wss://${process.env.VITE_HMR_URL}:443`);
+  }
 } else {
   app.use(
     express.static(distPath, {
@@ -117,7 +137,7 @@ Sentry.setupExpressErrorHandler(app);
 app.use(notFoundHandler);
 app.use(errorHandlerMiddleware);
 
-const server = app.listen(port, async () => {
+httpServer.listen(port, async () => {
   logger.info(`Server is running on http://localhost:${port}`);
 
   // Initialize job queue
@@ -174,5 +194,5 @@ closeWithGrace({ delay: 10000 }, async ({ signal, err }) => {
     }
   }
 
-  await new Promise<void>((resolve) => server.close(() => resolve()));
+  await new Promise<void>((resolve) => httpServer.close(() => resolve()));
 });
