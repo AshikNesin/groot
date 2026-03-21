@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "@/hooks/api/useTodos";
+import { PageLayout } from "@/components/layout/PageLayout";
 
 const todoSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -77,36 +78,32 @@ export function Todos() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">Todos</h1>
-          <p className="text-muted-foreground">Track your tasks</p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Create Todo</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Todo</DialogTitle>
-            </DialogHeader>
-            <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="space-y-2">
-                <Input id="title" placeholder="Todo title" {...form.register("title")} />
-                {form.formState.errors.title && (
-                  <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
-                )}
-              </div>
-              <Button className="w-full" type="submit" disabled={createTodo.isPending}>
-                {createTodo.isPending ? "Creating..." : "Create"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+  const actions = (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Create Todo</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Todo</DialogTitle>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="space-y-2">
+            <Input id="title" placeholder="Todo title" {...form.register("title")} />
+            {form.formState.errors.title && (
+              <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+            )}
+          </div>
+          <Button className="w-full" type="submit" disabled={createTodo.isPending}>
+            {createTodo.isPending ? "Creating..." : "Create"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 
+  return (
+    <PageLayout title="Todos" description="Track your tasks" actions={actions}>
       <div className="grid gap-4 md:grid-cols-2">
         {isLoading && <p>Loading todos...</p>}
         {!isLoading && todos?.length === 0 && <p>No todos yet.</p>}
@@ -145,6 +142,6 @@ export function Todos() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }
