@@ -10,7 +10,7 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { ensurePostgresContainer } from "./lib/docker-db.js";
 
@@ -64,12 +64,8 @@ async function main() {
     console.log(`\n🔌 Using external database: ${host}\n`);
   }
 
-  // Write connection string so `pnpm dev:studio` can pick it up
-  writeFileSync(resolve(process.cwd(), ".dev-db-url"), connectionString);
-
-  console.log("✅ Local DB ready!\n");
+  console.log("✅ Database ready!\n");
   console.log(`   Connection: ${connectionString}`);
-  console.log("   Studio:     pnpm dev:studio (in another terminal)");
   console.log();
 
   // Push schema to the local DB
@@ -132,11 +128,6 @@ async function shutdown() {
     devServer.kill("SIGTERM");
     devServer = null;
   }
-
-  // Clean up the connection string file
-  try {
-    unlinkSync(resolve(process.cwd(), ".dev-db-url"));
-  } catch {}
 
   process.exit(0);
 }

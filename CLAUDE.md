@@ -71,7 +71,6 @@ pnpm dev:docker       # Start with Docker PostgreSQL
 # Database
 pnpm prisma generate  # Generate Prisma client
 pnpm prisma:push      # Push schema to database
-pnpm dev:studio       # Open Prisma Studio (if dev server running)
 
 # Build & Production
 pnpm build            # Build client (Vite) + server (esbuild)

@@ -23,7 +23,6 @@
     "dev:db:docker:stop": "varlock run -- tsx scripts/docker-db-cleanup.ts --stop",
     "dev:db:docker:reset": "varlock run -- tsx scripts/docker-db-cleanup.ts --reset",
     "dev:db:docker:status": "varlock run -- tsx scripts/docker-db-cleanup.ts --status",
-    "dev:studio": "test -f .dev-db-url && DATABASE_URL=$(cat .dev-db-url) varlock run -- prisma studio || echo 'Start the dev server first: pnpm dev'",
     "build": "node scripts/varlock.js -- prisma generate && node scripts/varlock.js -- vp build && node scripts/varlock.js -- node scripts/build.mjs",
     "start": "NODE_ENV=production varlock run -- node dist/bundle.js",
     "lint": "vp lint",

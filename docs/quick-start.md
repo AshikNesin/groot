@@ -412,7 +412,6 @@ pnpm build            # Build for production
 pnpm start            # Run production build
 
 # Database
-pnpm prisma studio    # Open Prisma Studio
 pnpm prisma generate  # Generate Prisma client
 pnpm prisma db push   # Push schema to database
 
