@@ -91,7 +91,7 @@ const SYNC_PATTERNS: readonly string[] = [
   "docs/**",
 
   // Environment template (not actual secrets)
-  ".env.example",
+  ".env.schema",
 ] as const;
 
 // ============================================================

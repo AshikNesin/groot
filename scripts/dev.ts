@@ -1,14 +1,16 @@
 /**
  * Dev orchestrator script
  *
- * Automatically starts a Docker PostgreSQL container and launches the dev server.
+ * Intelligently manages database connections for local development:
+ * - If DATABASE_URL is not set or contains "localhost": uses Docker PostgreSQL
+ * - If DATABASE_URL points to an external database: uses it directly
  *
  * This is ONLY used for local development (`pnpm dev`).
  * Production uses `pnpm start` with an externally-provided DATABASE_URL.
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { ensurePostgresContainer } from "./lib/docker-db.js";
 
@@ -17,24 +19,53 @@ const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf
 let devServer: ChildProcess | null = null;
 let isShuttingDown = false;
 
+/**
+ * Determine if we should use Docker-based database.
+ * Returns true if DATABASE_URL is not set or contains "localhost".
+ * Returns false if DATABASE_URL points to an external database.
+ */
+function shouldUseDocker(): boolean {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return true;
+  return dbUrl.includes("localhost");
+}
+
+/**
+ * Extract host from a database URL for display purposes
+ */
+function extractHost(dbUrl: string): string {
+  try {
+    const url = new URL(dbUrl);
+    return url.host;
+  } catch {
+    return dbUrl;
+  }
+}
+
 async function main() {
-  console.log("\n🗄️  Starting local development database...\n");
+  let connectionString: string;
+  const useDocker = shouldUseDocker();
 
-  const docker = await ensurePostgresContainer({
-    projectName: pkg.name,
-    port: process.env.LOCAL_DB_DOCKER_PORT
-      ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
-      : undefined,
-  });
-  const connectionString = docker.connectionString;
-  console.log("🐳 Using Docker PostgreSQL\n");
+  if (useDocker) {
+    console.log("\n🗄️  Starting local development database...\n");
 
-  // Write connection string so `pnpm dev:studio` can pick it up
-  writeFileSync(resolve(process.cwd(), ".dev-db-url"), connectionString);
+    const docker = await ensurePostgresContainer({
+      projectName: pkg.name,
+      port: process.env.LOCAL_DB_DOCKER_PORT
+        ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
+        : undefined,
+    });
+    connectionString = docker.connectionString;
+    console.log("🐳 Using Docker PostgreSQL\n");
 
-  console.log("✅ Local DB ready!\n");
+  } else {
+    connectionString = process.env.DATABASE_URL!;
+    const host = extractHost(connectionString);
+    console.log(`\n🔌 Using external database: ${host}\n`);
+  }
+
+  console.log("✅ Database ready!\n");
   console.log(`   Connection: ${connectionString}`);
-  console.log("   Studio:     pnpm dev:studio (in another terminal)");
   console.log();
 
   // Push schema to the local DB
@@ -97,11 +128,6 @@ async function shutdown() {
     devServer.kill("SIGTERM");
     devServer = null;
   }
-
-  // Clean up the connection string file
-  try {
-    unlinkSync(resolve(process.cwd(), ".dev-db-url"));
-  } catch {}
 
   process.exit(0);
 }

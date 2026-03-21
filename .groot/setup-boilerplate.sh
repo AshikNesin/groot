@@ -2,11 +2,12 @@
 
 # Boilerplate Setup Script
 # This script sets up your new project by:
-# 1. Copying .env.example to .env
-# 2. Generating secure secrets for JWT_SECRET and ADMIN_AUTH_KEY
-# 3. Installing pre-commit hooks (gitleaks + biome format)
-# 4. Asking for app name and updating it across the project
-# 5. Updating package.json, DATABASE_URL, and code references with the new app name
+# 1. Verifying .env.schema exists (for varlock)
+# 2. Installing pre-commit hooks (gitleaks + vite-plus)
+# 3. Asking for app name and updating it across the project
+# 4. Updating package.json, DATABASE_URL, and code references with the new app name
+#
+# Note: Secrets are managed via Varlock + Infisical, not local .env files
 
 set -e
 
@@ -34,61 +35,23 @@ print_error() {
     echo -e "${RED}✗${NC} $1"
 }
 
-# Generate a secure random string
-generate_secret() {
-    local length=${1:-64}
-    # Use openssl to generate cryptographically secure random bytes
-    # Base64 encode and remove special chars, then truncate to desired length
-    openssl rand -base64 48 | tr -d '/+=' | cut -c1-"$length"
-}
-
-# Check if .env already exists
-check_env_exists() {
-    if [ -f ".env" ]; then
-        print_warning ".env file already exists!"
-        read -p "Do you want to overwrite it? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_info "Keeping existing .env file"
-            return 1
-        fi
-        # Backup existing .env
-        cp .env ".env.backup.$(date +%Y%m%d%H%M%S)"
-        print_info "Backed up existing .env file"
-    fi
-    return 0
-}
-
-# Setup environment file
+# Setup environment - verify .env.schema exists for varlock
 setup_env() {
-    print_info "Setting up environment file..."
-    
-    if check_env_exists; then
-        cp .env.example .env
-        print_success "Created .env from .env.example"
+    print_info "Checking environment configuration..."
+
+    if [ ! -f ".env.schema" ]; then
+        print_error ".env.schema not found!"
+        print_info "This file is required for varlock to manage secrets."
+        exit 1
     fi
-    
-    # Generate JWT_SECRET (minimum 32 characters for security)
-    local jwt_secret
-    jwt_secret=$(generate_secret 64)
-    
-    # Generate ADMIN_AUTH_KEY
-    local admin_auth_key
-    admin_auth_key=$(generate_secret 48)
-    
-    # Update .env file with secure secrets
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        sed -i '' "s|^JWT_SECRET=.*|JWT_SECRET=$jwt_secret|" .env
-        sed -i '' "s|^ADMIN_AUTH_KEY=.*|ADMIN_AUTH_KEY=$admin_auth_key|" .env
-    else
-        # Linux
-        sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$jwt_secret|" .env
-        sed -i "s|^ADMIN_AUTH_KEY=.*|ADMIN_AUTH_KEY=$admin_auth_key|" .env
-    fi
-    
-    print_success "Generated secure JWT_SECRET (64 chars)"
-    print_success "Generated secure ADMIN_AUTH_KEY (48 chars)"
+
+    print_success "Found .env.schema (varlock will handle secrets via Infisical)"
+    print_info "Make sure to configure your Infisical credentials:"
+    print_info "  - INFISICAL_PROJECT_ID"
+    print_info "  - INFISICAL_CLIENT_ID"
+    print_info "  - INFISICAL_CLIENT_SECRET"
+    print_info ""
+    print_info "Secrets like JWT_SECRET and ADMIN_AUTH_KEY are managed in Infisical."
 }
 
 # Setup pre-commit hooks (includes gitleaks)
@@ -121,26 +84,26 @@ to_slug() {
 # Ask for app name and update RP_NAME
 update_app_name() {
     print_info "Configure your application name..."
-    
+
     local current_name
-    current_name=$(grep -E "^RP_NAME=" .env | cut -d'=' -f2-)
+    current_name=$(grep -E "^RP_NAME=" .env.schema | cut -d'=' -f2-)
     print_info "Current app name: $current_name"
-    
+
     read -p "Enter your app name (e.g., 'My Cool App'): " app_name
-    
+
     if [ -z "$app_name" ]; then
         print_warning "No app name provided, keeping current name"
         return
     fi
-    
-    # Update RP_NAME in .env with the human-readable name (e.g., "Gandalf App")
+
+    # Update RP_NAME in .env.schema with the human-readable name (e.g., "Gandalf App")
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|^RP_NAME=.*|RP_NAME=$app_name|" .env
+        sed -i '' "s|^RP_NAME=.*|RP_NAME=$app_name|" .env.schema
     else
-        sed -i "s|^RP_NAME=.*|RP_NAME=$app_name|" .env
+        sed -i "s|^RP_NAME=.*|RP_NAME=$app_name|" .env.schema
     fi
-    print_success "Updated RP_NAME in .env to: $app_name"
-    
+    print_success "Updated RP_NAME in .env.schema to: $app_name"
+
     # Generate slug for code references (e.g., "gandalf-app")
     local slug_name
     slug_name=$(to_slug "$app_name")
@@ -214,12 +177,12 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
         print_success "Updated sentry.config.js to: $slug_name"
     fi
 
-    # Update DATABASE_URL in .env with the slug name
-    if [ -f ".env" ]; then
+    # Update DATABASE_URL in .env.schema with the slug name
+    if [ -f ".env.schema" ]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|/dbname$|/$slug_name|" .env
+            sed -i '' "s|/dbname$|/$slug_name|" .env.schema
         else
-            sed -i "s|/dbname$|/$slug_name|" .env
+            sed -i "s|/dbname$|/$slug_name|" .env.schema
         fi
         print_success "Updated DATABASE_URL database name to: $slug_name"
     fi
@@ -229,7 +192,7 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 final_steps() {
     echo ""
     print_info "Installing dependencies..."
-    
+
     if command -v pnpm &> /dev/null; then
         pnpm install
         print_success "Dependencies installed"
@@ -237,18 +200,17 @@ final_steps() {
         print_error "pnpm not found. Please install pnpm first: npm install -g pnpm"
         exit 1
     fi
-    
+
     print_info "Generating Prisma client..."
     pnpm run generate
     print_success "Prisma client generated"
-    
+
     echo ""
     print_info "Next steps:"
-    echo "  1. Run: pnpm dev (auto-starts local database)"
-    echo "  2. For production: set DATABASE_URL in .env with your database credentials"
+    echo "  1. Configure Infisical credentials in your environment"
+    echo "  2. Run: pnpm dev (varlock will fetch secrets from Infisical)"
     echo ""
     print_success "Setup complete! Your environment is ready."
-    print_warning "IMPORTANT: Keep your .env file secure and never commit it to git!"
 }
 
 # Main execution

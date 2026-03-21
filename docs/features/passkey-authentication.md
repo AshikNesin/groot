@@ -62,7 +62,7 @@ RP_ID="localhost"
 ORIGIN="http://localhost:3000"
 ```
 
-**Note**: These are already defined in `.env.example` with defaults suitable for development.
+**Note**: These are already defined in `.env.schema` with defaults suitable for development.
 
 ### Database Migration
 

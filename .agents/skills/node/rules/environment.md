@@ -7,7 +7,89 @@ metadata:
 
 # Environment Configuration in Node.js
 
-## Loading Environment Files
+## Project Approach: Varlock + Infisical
+
+This project uses [Varlock](https://varlock.dev) with the [Infisical](https://infisical.com) plugin for secrets management:
+
+### .env.schema File
+
+The `.env.schema` file is the single source of truth for environment variables. It uses `@env-spec` annotations:
+
+```bash
+# @env-spec - see https://varlock.dev/env-spec
+
+# @defaultRequired=infer @defaultSensitive=true
+# @generateTypes(lang=ts, path=env.d.ts)
+# @plugin(@varlock/infisical-plugin)
+# @initInfisical(projectId=$INFISICAL_PROJECT_ID, environment=$INFISICAL_ENVIRONMENT, ...)
+
+# @type=enum(development, production, test)
+# @required @public
+NODE_ENV=development
+
+# @type=url
+# @required
+DATABASE_URL=postgresql://user:pass@localhost:5432/db
+
+# @required
+# @type=string(minLength=32)
+JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
+```
+
+Key annotations:
+- `@required` - Variable must be set
+- `@public` - Safe to expose to client (not a secret)
+- `@type=enum(a, b, c)` - Enum validation
+- `@type=url`, `@type=number`, `@type=boolean` - Type coercion
+- `@type=string(minLength=N)` - String validation
+- `@generateTypes(lang=ts, path=env.d.ts)` - Auto-generate TypeScript types
+
+### Running Commands
+
+All commands that need environment variables must run through varlock:
+
+```bash
+# In package.json scripts
+"dev": "varlock run -- tsx scripts/dev.ts"
+"start": "varlock run -- node dist/bundle.js"
+"test": "varlock run -- vitest run"
+```
+
+### Accessing Environment Variables
+
+Import the validated ENV object:
+
+```typescript
+import { ENV } from "varlock/env";
+
+export const env = ENV;
+
+// Usage
+const dbUrl = env.DATABASE_URL;
+const port = env.PORT;
+```
+
+For auto-loading in any file:
+
+```typescript
+import "varlock/auto-load";
+```
+
+### Local Development
+
+1. Install Varlock CLI
+2. Run `pnpm dev` - varlock loads `.env.schema` and injects secrets from Infisical
+3. Secrets are synced with Infisical cloud (or self-hosted)
+
+### Production
+
+1. Set `INFISICAL_PROJECT_ID`, `INFISICAL_ENVIRONMENT`, `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`
+2. Varlock fetches secrets from Infisical at runtime
+3. No `.env` files needed in production
+
+---
+
+## Alternative: Loading Environment Files
 
 Use Node.js built-in `--env-file` flag to load environment variables:
 
@@ -191,28 +273,28 @@ function requireEnv(name: string): string {
 export const config = createConfig();
 ```
 
-## .env File Structure
+## .env File Structure (Without Varlock)
 
-Organize .env files properly:
+For projects not using Varlock, organize .env files properly:
 
 ```bash
-# .env.example - committed to git, documents all variables
+# .env.schema - committed to git, documents all variables with defaults
 PORT=3000
 DATABASE_URL=postgresql://user:pass@localhost:5432/db
 API_KEY=your-api-key-here
 
-# .env - local development, NOT committed
+# .env - local development, NOT committed (in .gitignore)
 PORT=3000
 DATABASE_URL=postgresql://dev:dev@localhost:5432/myapp
 API_KEY=sk-dev-key-123
 
-# .env.test - test environment
+# .env.test - test environment overrides
 DATABASE_URL=postgresql://test:test@localhost:5432/myapp_test
 ```
 
 ## Secrets in Production
 
-Never commit secrets to version control. Use a secrets management service appropriate for your infrastructure:
+Never commit secrets to version control. Use a secrets management service:
 
 **Cloud Provider Services:**
 

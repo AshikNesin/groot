@@ -107,13 +107,13 @@ secrets/                 # Secrets directory
 credentials.json         # Credential files
 service-account.json     # Service account keys
 .env                     # Environment files
-.env.*                   # All env variants (except .env.example)
+.env.*                   # All env variants (except .env.schema)
 ```
 
 ## Best Practices
 
 1. **Never commit secrets** - Use environment variables instead
-2. **Use `.env.example`** - Document required env vars without actual values
+2. **Use `.env.schema`** - Document required env vars without actual values
 3. **Rotate compromised keys immediately** - If a secret was committed, rotate it
 4. **Review hook output** - Don't blindly skip hooks
 
