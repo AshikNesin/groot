@@ -25,7 +25,9 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   await import("@/jobs");
 
   if (jobHandlers.size === 0) {
-    throw new Error("No job handlers registered. Ensure '@/jobs' exports handlers.");
+    logger.warn("No job handlers registered. Job queue running without workers.");
+    workersStarted = true;
+    return;
   }
 
   for (const [name, handler] of jobHandlers.entries()) {

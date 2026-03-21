@@ -7,6 +7,10 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.schema
+
+# Auto-generated env types
+env.d.ts
 /.DS_Store
 pnpm-debug.log*
 
