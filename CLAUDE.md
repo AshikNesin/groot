@@ -138,7 +138,7 @@ Route (validation middleware)
 
 ## Environment Variables
 
-Key variables (see `.env.example` for full list):
+Key variables (see `.env.schema` for full list):
 
 ```bash
 # Core

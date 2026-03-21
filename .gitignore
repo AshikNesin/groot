@@ -6,7 +6,6 @@ dist/
 # Environment variables
 .env
 .env.*
-!.env.example
 !.env.schema
 
 # Auto-generated env types

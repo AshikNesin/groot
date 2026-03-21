@@ -196,7 +196,7 @@ export const config = createConfig();
 Organize .env files properly:
 
 ```bash
-# .env.example - committed to git, documents all variables
+# .env.schema - committed to git, documents all variables
 PORT=3000
 DATABASE_URL=postgresql://user:pass@localhost:5432/db
 API_KEY=your-api-key-here

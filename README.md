@@ -47,7 +47,7 @@ Run the setup script to automatically configure your environment with secure sec
 
 This script will:
 
-- Copy `.env.example` to `.env`
+- Copy `.env.schema` to `.env`
 - Generate secure `JWT_SECRET` and `ADMIN_AUTH_KEY`
 - Prompt for your app name and update `RP_NAME`
 - Optionally update package.json and code references
@@ -66,7 +66,7 @@ pnpm dev
 1. **Setup environment:**
 
    ```bash
-   cp .env.example .env
+   cp .env.schema .env
    # Edit .env and set JWT_SECRET, ADMIN_AUTH_KEY, DATABASE_URL
    ```
 

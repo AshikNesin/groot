@@ -2,7 +2,7 @@
 
 # Boilerplate Setup Script
 # This script sets up your new project by:
-# 1. Copying .env.example to .env
+# 1. Copying .env.schema to .env
 # 2. Generating secure secrets for JWT_SECRET and ADMIN_AUTH_KEY
 # 3. Installing pre-commit hooks (gitleaks + biome format)
 # 4. Asking for app name and updating it across the project
@@ -64,8 +64,8 @@ setup_env() {
     print_info "Setting up environment file..."
     
     if check_env_exists; then
-        cp .env.example .env
-        print_success "Created .env from .env.example"
+        cp .env.schema .env
+        print_success "Created .env from .env.schema"
     fi
     
     # Generate JWT_SECRET (minimum 32 characters for security)

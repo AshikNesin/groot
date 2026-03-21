@@ -45,7 +45,7 @@ The sync tool is now fully deterministic - no AI interpretation needed:
 | Server Utils      | `server/src/utils/**`                                            |
 | Infrastructure    | `*.config.*`, `tsconfig.json`, `.github/workflows/**`            |
 | Documentation     | `docs/**`                                                        |
-| Env Template      | `.env.example`                                                   |
+| Env Template      | `.env.schema`                                                    |
 
 ### Never Sync (App-Specific)
 
