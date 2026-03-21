@@ -21,7 +21,7 @@ Run the setup script to automatically configure your environment:
 
 This script will:
 
-- Copy `.env.example` to `.env`
+- Copy `.env.schema` to `.env`
 - Generate secure `JWT_SECRET` (64 characters)
 - Generate secure `ADMIN_AUTH_KEY` (48 characters)
 - Prompt for your app name and update `RP_NAME`
@@ -29,7 +29,7 @@ This script will:
 
 ### Manual Setup
 
-Copy `.env.example` to `.env` and populate these keys (validated in `server/src/env.ts`):
+Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/env.ts`):
 
 | Variable                                      | Description                                                            |
 | --------------------------------------------- | ---------------------------------------------------------------------- |

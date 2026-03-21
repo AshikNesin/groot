@@ -197,7 +197,7 @@ const SYNC_PATTERNS = [
   "docs/**",
 
   // Environment template (not actual secrets)
-  ".env.example",
+  ".env.schema",
 ];
 
 // ============================================================

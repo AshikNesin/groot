@@ -58,7 +58,6 @@ This project uses Prisma Migrate for database schema management. This approach:
 | Apply migrations locally       | `pnpm prisma migrate dev`              |
 | View migration status          | `pnpm prisma migrate status`           |
 | Reset database                 | `pnpm prisma migrate reset`            |
-| Open Prisma Studio             | `pnpm dev:studio`                      |
 
 ## Production Deployment
 

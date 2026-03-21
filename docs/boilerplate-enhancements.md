@@ -190,7 +190,7 @@ This document outlines all the generic, reusable components extracted from `nesi
   - LOG_LEVEL (debug, info, warn, error)
   - Type-safe validation with @t3-oss/env-core
 
-- ✅ **Example config** (`.env.example`)
+- ✅ **Example config** (`.env.schema`)
   - All variables documented with examples
   - Security reminders for production
 
@@ -444,7 +444,7 @@ groot/
 │           ├── badge.tsx ✨ NEW
 │           └── form.tsx ✨ NEW
 │
-├── .env.example ✅ UPDATED
+├── .env.schema ✅ UPDATED
 └── package.json ✅ UPDATED
 ```
 

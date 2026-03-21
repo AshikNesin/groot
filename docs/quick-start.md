@@ -34,7 +34,7 @@ Run the setup script to automatically configure your environment:
 
 This will:
 
-- Copy `.env.example` to `.env`
+- Copy `.env.schema` to `.env`
 - Generate secure `JWT_SECRET` (64 characters)
 - Generate secure `ADMIN_AUTH_KEY` (48 characters)
 - Prompt for your app name and update `RP_NAME`
@@ -44,7 +44,7 @@ This will:
 
 ```bash
 # Copy environment file
-cp .env.example .env
+cp .env.schema .env
 
 # Edit .env and set these (IMPORTANT):
 # JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
@@ -412,7 +412,6 @@ pnpm build            # Build for production
 pnpm start            # Run production build
 
 # Database
-pnpm prisma studio    # Open Prisma Studio
 pnpm prisma generate  # Generate Prisma client
 pnpm prisma db push   # Push schema to database
 
