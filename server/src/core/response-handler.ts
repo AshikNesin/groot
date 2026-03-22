@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { ErrorCode, type ErrorCodeKey } from "./errors";
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -47,8 +48,36 @@ export const ResponseHandler = {
     });
   },
 
+  /**
+   * Convenience method using ErrorCode registry
+   * @param errorCodeKey - Key from ErrorCode registry
+   * @param messageOverride - Optional custom message (defaults to registry message)
+   * @param details - Optional additional error details
+   */
+  errorFromCode(
+    res: Response,
+    errorCodeKey: ErrorCodeKey,
+    messageOverride?: string,
+    details?: unknown,
+  ): Response<ApiResponse> {
+    const entry = ErrorCode[errorCodeKey];
+    return res.status(entry.status).json({
+      success: false,
+      error: {
+        code: entry.code,
+        message: messageOverride ?? entry.message,
+        details,
+      },
+    });
+  },
+
   notFound(res: Response, message = "Resource not found"): Response<ApiResponse> {
-    return ResponseHandler.error(res, message, "NOT_FOUND", 404);
+    return ResponseHandler.error(
+      res,
+      message,
+      ErrorCode.NOT_FOUND.code,
+      ErrorCode.NOT_FOUND.status,
+    );
   },
 
   noContent(res: Response): Response {

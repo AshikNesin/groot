@@ -1,3 +1,5 @@
+import { ErrorCode } from "./error-codes";
+
 /**
  * Base error class for all custom application errors
  */
@@ -29,7 +31,7 @@ export abstract class AppError extends Error {
  */
 export class BadRequestError extends AppError {
   constructor(message: string) {
-    super(message, 400, "BAD_REQUEST");
+    super(message, ErrorCode.BAD_REQUEST.status, ErrorCode.BAD_REQUEST.code);
     Object.setPrototypeOf(this, BadRequestError.prototype);
   }
 }
@@ -42,7 +44,7 @@ export class NotFoundError extends AppError {
     const message = identifier
       ? `${resource} with identifier '${identifier}' not found`
       : `${resource} not found`;
-    super(message, 404, "NOT_FOUND");
+    super(message, ErrorCode.NOT_FOUND.status, ErrorCode.NOT_FOUND.code);
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
@@ -52,7 +54,7 @@ export class NotFoundError extends AppError {
  */
 export class UnauthorizedError extends AppError {
   constructor(message = "Unauthorized") {
-    super(message, 401, "UNAUTHORIZED");
+    super(message, ErrorCode.UNAUTHORIZED.status, ErrorCode.UNAUTHORIZED.code);
     Object.setPrototypeOf(this, UnauthorizedError.prototype);
   }
 }
@@ -62,7 +64,7 @@ export class UnauthorizedError extends AppError {
  */
 export class ForbiddenError extends AppError {
   constructor(message = "Forbidden") {
-    super(message, 403, "FORBIDDEN");
+    super(message, ErrorCode.FORBIDDEN.status, ErrorCode.FORBIDDEN.code);
     Object.setPrototypeOf(this, ForbiddenError.prototype);
   }
 }
@@ -74,7 +76,7 @@ export class ValidationError extends AppError {
   public readonly errors: Record<string, string[]>;
 
   constructor(message: string, errors: Record<string, string[]> = {}) {
-    super(message, 400, "VALIDATION_ERROR");
+    super(message, ErrorCode.VALIDATION_ERROR.status, ErrorCode.VALIDATION_ERROR.code);
     Object.setPrototypeOf(this, ValidationError.prototype);
     this.errors = errors;
   }
@@ -85,7 +87,7 @@ export class ValidationError extends AppError {
  */
 export class ConflictError extends AppError {
   constructor(message: string) {
-    super(message, 409, "CONFLICT");
+    super(message, ErrorCode.CONFLICT.status, ErrorCode.CONFLICT.code);
     Object.setPrototypeOf(this, ConflictError.prototype);
   }
 }
@@ -95,7 +97,7 @@ export class ConflictError extends AppError {
  */
 export class InternalError extends AppError {
   constructor(message = "Internal server error") {
-    super(message, 500, "INTERNAL_ERROR", false);
+    super(message, ErrorCode.INTERNAL_ERROR.status, ErrorCode.INTERNAL_ERROR.code, false);
     Object.setPrototypeOf(this, InternalError.prototype);
   }
 }

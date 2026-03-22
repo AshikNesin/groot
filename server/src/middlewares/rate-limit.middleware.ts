@@ -1,5 +1,6 @@
 import rateLimit from "express-rate-limit";
 import type { Request, Response } from "express";
+import { ErrorCode } from "@/core/errors";
 
 export const storageRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -7,10 +8,10 @@ export const storageRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
+    res.status(ErrorCode.RATE_LIMIT_EXCEEDED.status).json({
       success: false,
       error: {
-        code: "RATE_LIMIT_EXCEEDED",
+        code: ErrorCode.RATE_LIMIT_EXCEEDED.code,
         message: "Too many storage operations from this IP, please try again later.",
       },
     });
@@ -23,10 +24,10 @@ export const uploadRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
+    res.status(ErrorCode.UPLOAD_RATE_LIMIT_EXCEEDED.status).json({
       success: false,
       error: {
-        code: "UPLOAD_RATE_LIMIT_EXCEEDED",
+        code: ErrorCode.UPLOAD_RATE_LIMIT_EXCEEDED.code,
         message: "Too many file uploads from this IP, please try again later.",
       },
     });
@@ -39,10 +40,10 @@ export const publicFileRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
+    res.status(ErrorCode.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED.status).json({
       success: false,
       error: {
-        code: "PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED",
+        code: ErrorCode.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED.code,
         message: "Too many download requests, please try again later.",
       },
     });
@@ -55,10 +56,10 @@ export const aiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
+    res.status(ErrorCode.AI_RATE_LIMIT_EXCEEDED.status).json({
       success: false,
       error: {
-        code: "AI_RATE_LIMIT_EXCEEDED",
+        code: ErrorCode.AI_RATE_LIMIT_EXCEEDED.code,
         message: "Too many AI requests. Please try again later.",
       },
     });
@@ -71,10 +72,10 @@ export const aiStreamRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
+    res.status(ErrorCode.AI_STREAM_RATE_LIMIT_EXCEEDED.status).json({
       success: false,
       error: {
-        code: "AI_STREAM_RATE_LIMIT_EXCEEDED",
+        code: ErrorCode.AI_STREAM_RATE_LIMIT_EXCEEDED.code,
         message: "Too many streaming AI requests. Please try again later.",
       },
     });

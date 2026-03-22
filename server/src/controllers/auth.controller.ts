@@ -3,6 +3,7 @@ import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { asyncHandler } from "@/core/async-handler";
 import { authService } from "@/services/auth.service";
+import { ErrorCode } from "@/core/errors";
 
 class AuthController extends BaseController {
   /**
@@ -35,7 +36,12 @@ class AuthController extends BaseController {
    */
   getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
-      return ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
+      return ResponseHandler.error(
+        res,
+        "Not authenticated",
+        ErrorCode.UNAUTHORIZED.code,
+        ErrorCode.UNAUTHORIZED.status,
+      );
     }
 
     const user = await authService.getUserById(req.user.userId);

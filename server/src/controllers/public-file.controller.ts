@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { asyncHandler } from "@/core/async-handler";
 import { publicShareService } from "@/services/public-share.service";
-import { BadRequestError } from "@/core/errors/base.errors";
+import { BadRequestError, ErrorCode } from "@/core/errors";
 import type { VerifySharePasswordDTO } from "@/validations/storage.validation";
 
 export class PublicFileController extends BaseController {
@@ -28,11 +28,11 @@ export class PublicFileController extends BaseController {
     const validation = await publicShareService.validateShareAccess(shareId);
 
     if (!validation.isValid) {
-      res.status(403).json({
+      res.status(ErrorCode.SHARE_ACCESS_DENIED.status).json({
         success: false,
         error: {
-          code: "SHARE_ACCESS_DENIED",
-          message: validation.reason ?? "Access denied",
+          code: ErrorCode.SHARE_ACCESS_DENIED.code,
+          message: validation.reason ?? ErrorCode.SHARE_ACCESS_DENIED.message,
         },
       });
       return;
