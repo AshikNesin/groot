@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from "@/core/errors";
 import { logger } from "@/core/logger";
 import type { Passkey, User } from "@/generated/prisma/models";
-import * as passkeyModel from "@/models/passkey.model";
-import * as userModel from "@/models/user.model";
+import { passkeyModel } from "@/models/passkey.model";
+import { userModel } from "@/models/user.model";
 import { generateToken } from "@/utils/jwt.utils";
 import {
   generateDeviceName,
@@ -217,7 +217,7 @@ export class PasskeyService {
 
     // Remove sensitive data (public key and credential ID)
     // Convert BigInt counter to Number for JSON serialization
-    return passkeys.map(({ publicKey, credentialId, counter, ...safePasskey }) => ({
+    return passkeys.map(({ publicKey: _, credentialId: __, counter, ...safePasskey }) => ({
       ...safePasskey,
       counter: Number(counter),
     }));
