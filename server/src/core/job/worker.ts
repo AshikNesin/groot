@@ -1,12 +1,11 @@
-import type { PgBoss, Job, Queue, WorkOptions } from "pg-boss";
+import type { PgBoss, WorkOptions } from "pg-boss";
 import { logger, createJobLogger } from "@/core/logger";
-import { jobConfig, defaultJobOptions, jobOptions } from "@/core/job/config";
+import { jobConfig } from "@/core/job/config";
 import type { JobName } from "@/core/job/queue";
 import { withSentryErrorCapture, type JobHandler } from "@/core/job/error-handler";
 
-let workersStarted = false;
 const jobHandlers = new Map<JobName, JobHandler<unknown>>();
-const workerIds = new Map<JobName, string[]>();
+let workersStarted = false;
 
 export const registerJobHandler = <T>(name: JobName, handler: JobHandler<T>): void => {
   const wrappedHandler = withSentryErrorCapture(handler as JobHandler, name);
@@ -22,6 +21,7 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
 
   const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
 
+  // Import job definitions
   await import("@/jobs");
 
   if (jobHandlers.size === 0) {
@@ -30,56 +30,36 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     return;
   }
 
+  const workOptions: WorkOptions = {
+    pollingIntervalSeconds: jobConfig.pollIntervalSeconds,
+    teamSize: jobConfig.concurrency,
+  };
+
   for (const [name, handler] of jobHandlers.entries()) {
-    const options = jobOptions[name] ?? defaultJobOptions;
-    const queueOptions: Omit<Queue, "name"> = {
-      retryLimit: options.retryLimit,
-      retryDelay: options.retryDelay,
-      retryBackoff: options.retryBackoff,
-      expireInSeconds: options.expireInSeconds,
-    };
+    await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
+      for (const job of jobs) {
+        const jobLogger = createJobLogger(job.id, name);
+        const startTime = Date.now();
 
-    try {
-      await activeBoss.createQueue(name, queueOptions);
-      logger.debug({ queue: name }, "Queue ensured");
-    } catch (error) {
-      logger.debug({ queue: name, error }, "Queue creation skipped");
-    }
+        jobLogger.info({ data: job.data }, `Starting job ${name}`);
 
-    const workOptions: WorkOptions = {
-      pollingIntervalSeconds: jobConfig.pollIntervalSeconds,
-    };
-
-    for (let i = 0; i < jobConfig.concurrency; i++) {
-      const workerId = await activeBoss.work(name, workOptions, async (jobs: Job<unknown>[]) => {
-        for (const job of jobs) {
-          const jobLogger = createJobLogger(job.id, name);
-          const startTime = Date.now();
-
-          jobLogger.info({ data: job.data }, `Starting job ${name}`);
-
-          try {
-            await handler(job);
-            const duration = Date.now() - startTime;
-            jobLogger.info({ duration: `${duration}ms` }, `Job ${name} completed successfully`);
-          } catch (error) {
-            const duration = Date.now() - startTime;
-            jobLogger.error(
-              {
-                duration: `${duration}ms`,
-                error: error instanceof Error ? error.message : String(error),
-              },
-              `Job ${name} failed`,
-            );
-            throw error;
-          }
+        try {
+          await handler(job);
+          const duration = Date.now() - startTime;
+          jobLogger.info({ duration: `${duration}ms` }, `Job ${name} completed`);
+        } catch (error) {
+          const duration = Date.now() - startTime;
+          jobLogger.error(
+            {
+              duration: `${duration}ms`,
+              error: error instanceof Error ? error.message : String(error),
+            },
+            `Job ${name} failed`,
+          );
+          throw error;
         }
-      });
-
-      const ids = workerIds.get(name) ?? [];
-      ids.push(workerId);
-      workerIds.set(name, ids);
-    }
+      }
+    });
   }
 
   workersStarted = true;
@@ -93,18 +73,15 @@ export const stopWorkers = async (): Promise<void> => {
 
   const boss = (await import("@/core/job/index")).getBoss();
 
-  for (const [name, ids] of workerIds.entries()) {
-    for (const id of ids) {
-      try {
-        await boss.offWork(name, { id, wait: true });
-        logger.debug({ jobName: name, workerId: id }, "Worker stopped");
-      } catch (error) {
-        logger.error({ jobName: name, workerId: id, error }, "Failed to stop worker");
-      }
+  for (const name of jobHandlers.keys()) {
+    try {
+      await boss.offWork(name);
+      logger.debug({ jobName: name }, "Workers stopped");
+    } catch (error) {
+      logger.error({ jobName: name, error }, "Failed to stop workers");
     }
   }
 
-  workerIds.clear();
   workersStarted = false;
 };
 

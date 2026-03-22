@@ -1,11 +1,12 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
+import { asyncHandler } from "@/core/async-handler";
 import { publicShareService } from "@/services/public-share.service";
 import { BadRequestError } from "@/core/errors/base.errors";
 import type { VerifySharePasswordDTO } from "@/validations/storage.validation";
 
 export class PublicFileController extends BaseController {
-  servePublicFile = async (req: Request, res: Response): Promise<void> => {
+  servePublicFile = asyncHandler(async (req: Request, res: Response) => {
     const { shareId } = req.params;
     if (!shareId) {
       throw new BadRequestError("Share ID is required");
@@ -16,9 +17,9 @@ export class PublicFileController extends BaseController {
     res.setHeader("Content-Disposition", `inline; filename="${file.fileName}"`);
     res.setHeader("Cache-Control", "private, max-age=3600");
     res.send(file.buffer);
-  };
+  });
 
-  getPublicShareInfo = async (req: Request, res: Response): Promise<void> => {
+  getPublicShareInfo = asyncHandler(async (req: Request, res: Response) => {
     const { shareId } = req.params;
     if (!shareId) {
       throw new BadRequestError("Share ID is required");
@@ -48,9 +49,9 @@ export class PublicFileController extends BaseController {
         isPasswordProtected: validation.share?.isPasswordProtected,
       },
     });
-  };
+  });
 
-  verifySharePassword = async (req: Request, res: Response): Promise<void> => {
+  verifySharePassword = asyncHandler(async (req: Request, res: Response) => {
     const { shareId } = req.params;
     const body: VerifySharePasswordDTO = req.validated?.body ?? req.body;
 
@@ -64,7 +65,7 @@ export class PublicFileController extends BaseController {
       success: true,
       data: { isValid },
     });
-  };
+  });
 }
 
 export const publicFileController = new PublicFileController();

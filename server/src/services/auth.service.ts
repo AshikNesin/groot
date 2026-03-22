@@ -4,13 +4,7 @@ import { UnauthorizedError, ConflictError, NotFoundError } from "@/core/errors";
 import { generateToken } from "@/utils/jwt.utils";
 import type { CreateUserDTO, LoginDTO } from "@/validations/auth.validation";
 
-/**
- * Auth service for user authentication and management
- */
-export const authService = {
-  /**
-   * Login user with email and password
-   */
+class AuthService {
   async login(data: LoginDTO) {
     const user = await prisma.user.findUnique({
       where: { email: data.email },
@@ -39,13 +33,9 @@ export const authService = {
         name: user.name,
       },
     };
-  },
+  }
 
-  /**
-   * Create a new user (admin only)
-   */
   async createUser(data: CreateUserDTO) {
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -54,10 +44,8 @@ export const authService = {
       throw new ConflictError("User with this email already exists");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email: data.email,
@@ -72,11 +60,8 @@ export const authService = {
       name: user.name,
       createdAt: user.createdAt,
     };
-  },
+  }
 
-  /**
-   * Get user by ID
-   */
   async getUserById(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -92,11 +77,8 @@ export const authService = {
       name: user.name,
       createdAt: user.createdAt,
     };
-  },
+  }
 
-  /**
-   * Get all users (admin only)
-   */
   async getAllUsers() {
     const users = await prisma.user.findMany({
       select: {
@@ -108,11 +90,8 @@ export const authService = {
     });
 
     return users;
-  },
+  }
 
-  /**
-   * Delete user (admin only)
-   */
   async deleteUser(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -125,5 +104,7 @@ export const authService = {
     await prisma.user.delete({
       where: { id: userId },
     });
-  },
-};
+  }
+}
+
+export const authService = new AuthService();
