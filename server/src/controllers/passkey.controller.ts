@@ -11,7 +11,7 @@ export class PasskeyController extends BaseController {
    */
   generateRegistrationOptions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
+      ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
       return;
     }
 
@@ -26,7 +26,7 @@ export class PasskeyController extends BaseController {
    */
   verifyRegistration = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
+      ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
       return;
     }
 
@@ -89,7 +89,7 @@ export class PasskeyController extends BaseController {
    */
   listPasskeys = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
+      ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
       return;
     }
 
@@ -104,7 +104,7 @@ export class PasskeyController extends BaseController {
    */
   deletePasskey = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
+      ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
       return;
     }
 
@@ -121,7 +121,7 @@ export class PasskeyController extends BaseController {
    */
   updatePasskeyName = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
+      ResponseHandler.error(res, "Not authenticated", "UNAUTHORIZED", 401);
       return;
     }
 

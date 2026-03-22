@@ -47,6 +47,14 @@ export const ResponseHandler = {
     });
   },
 
+  notFound(res: Response, message = "Resource not found"): Response<ApiResponse> {
+    return ResponseHandler.error(res, message, "NOT_FOUND", 404);
+  },
+
+  noContent(res: Response): Response {
+    return res.status(204).send();
+  },
+
   paginated<T>(
     res: Response,
     data: T[],
