@@ -12,3 +12,5 @@ export {
 export { isPrismaError, handlePrismaError } from "@/core/errors/prisma-error-handler";
 
 export { ErrorCode, type ErrorCodeKey, type ErrorCodeValue } from "./error-codes";
+
+export { ERROR_CODE } from "./error-code";

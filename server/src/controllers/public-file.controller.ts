@@ -2,14 +2,14 @@ import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { asyncHandler } from "@/core/async-handler";
 import { publicShareService } from "@/services/public-share.service";
-import { BadRequestError, ErrorCode } from "@/core/errors";
+import { ERROR_CODE } from "@/core/errors";
 import type { VerifySharePasswordDTO } from "@/validations/storage.validation";
 
 export class PublicFileController extends BaseController {
   servePublicFile = asyncHandler(async (req: Request, res: Response) => {
     const { shareId } = req.params;
     if (!shareId) {
-      throw new BadRequestError("Share ID is required");
+      throw ERROR_CODE.BAD_REQUEST({ message: "Share ID is required" });
     }
 
     const file = await publicShareService.getShareFileContent(shareId);
@@ -22,20 +22,13 @@ export class PublicFileController extends BaseController {
   getPublicShareInfo = asyncHandler(async (req: Request, res: Response) => {
     const { shareId } = req.params;
     if (!shareId) {
-      throw new BadRequestError("Share ID is required");
+      throw ERROR_CODE.BAD_REQUEST({ message: "Share ID is required" });
     }
 
     const validation = await publicShareService.validateShareAccess(shareId);
 
     if (!validation.isValid) {
-      res.status(ErrorCode.SHARE_ACCESS_DENIED.status).json({
-        success: false,
-        error: {
-          code: ErrorCode.SHARE_ACCESS_DENIED.code,
-          message: validation.reason ?? ErrorCode.SHARE_ACCESS_DENIED.message,
-        },
-      });
-      return;
+      throw ERROR_CODE.SHARE_ACCESS_DENIED({ message: validation.reason ?? undefined });
     }
 
     res.json({
@@ -56,7 +49,7 @@ export class PublicFileController extends BaseController {
     const body: VerifySharePasswordDTO = req.validated?.body ?? req.body;
 
     if (!shareId) {
-      throw new BadRequestError("Share ID is required");
+      throw ERROR_CODE.BAD_REQUEST({ message: "Share ID is required" });
     }
 
     const isValid = await publicShareService.verifySharePassword(shareId, body.password);

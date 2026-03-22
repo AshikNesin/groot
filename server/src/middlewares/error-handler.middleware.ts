@@ -183,6 +183,7 @@ export function errorHandlerMiddleware(
           handledError.message,
           handledError.code,
           handledError.statusCode,
+          handledError.details,
         );
         return;
       }
@@ -191,8 +192,8 @@ export function errorHandlerMiddleware(
 
   // Handle custom application errors
   if (error instanceof AppError) {
-    // Check if it's a ValidationError with field-level errors
-    const details = error instanceof ValidationError ? error.errors : undefined;
+    // Use ValidationError.errors for validation, otherwise use AppError.details
+    const details = error instanceof ValidationError ? error.errors : error.details;
 
     ResponseHandler.error(res, error.message, error.code, error.statusCode, details);
     return;

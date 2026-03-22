@@ -1,7 +1,7 @@
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { passkeyService } from "@/services/passkey.service";
-import { ErrorCode } from "@/core/errors";
+import { ERROR_CODE } from "@/core/errors";
 import type { Request, Response } from "express";
 import { asyncHandler } from "@/core/async-handler";
 
@@ -12,13 +12,7 @@ export class PasskeyController extends BaseController {
    */
   generateRegistrationOptions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(
-        res,
-        "Not authenticated",
-        ErrorCode.UNAUTHORIZED.code,
-        ErrorCode.UNAUTHORIZED.status,
-      );
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const options = await passkeyService.generateRegistrationOptions(req.user.userId);
@@ -32,13 +26,7 @@ export class PasskeyController extends BaseController {
    */
   verifyRegistration = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(
-        res,
-        "Not authenticated",
-        ErrorCode.UNAUTHORIZED.code,
-        ErrorCode.UNAUTHORIZED.status,
-      );
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const { response, credentialName } = req.body;
@@ -100,13 +88,7 @@ export class PasskeyController extends BaseController {
    */
   listPasskeys = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(
-        res,
-        "Not authenticated",
-        ErrorCode.UNAUTHORIZED.code,
-        ErrorCode.UNAUTHORIZED.status,
-      );
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const passkeys = await passkeyService.listPasskeys(req.user.userId);
@@ -120,13 +102,7 @@ export class PasskeyController extends BaseController {
    */
   deletePasskey = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(
-        res,
-        "Not authenticated",
-        ErrorCode.UNAUTHORIZED.code,
-        ErrorCode.UNAUTHORIZED.status,
-      );
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const passkeyId = this.parseId(req.params.id, "Passkey ID");
@@ -142,13 +118,7 @@ export class PasskeyController extends BaseController {
    */
   updatePasskeyName = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseHandler.error(
-        res,
-        "Not authenticated",
-        ErrorCode.UNAUTHORIZED.code,
-        ErrorCode.UNAUTHORIZED.status,
-      );
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const passkeyId = this.parseId(req.params.id, "Passkey ID");

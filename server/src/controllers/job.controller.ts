@@ -3,7 +3,7 @@ import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { asyncHandler } from "@/core/async-handler";
 import { prisma } from "@/core/database";
-import { ErrorCode } from "@/core/errors";
+import { ERROR_CODE } from "@/core/errors";
 import {
   addJob,
   scheduleJob,
@@ -29,24 +29,13 @@ class JobController extends BaseController {
     const { jobName, data, options } = req.body ?? {};
 
     if (!jobName || !data) {
-      return ResponseHandler.error(
-        res,
-        "Missing required fields: jobName and data",
-        ErrorCode.JOB_VALIDATION_ERROR.code,
-        ErrorCode.JOB_VALIDATION_ERROR.status,
-      );
+      throw ERROR_CODE.JOB_VALIDATION_ERROR({
+        message: "Missing required fields: jobName and data",
+      });
     }
 
     if (!Object.values(JobName).includes(jobName as JobName)) {
-      return ResponseHandler.error(
-        res,
-        "Invalid job name",
-        ErrorCode.JOB_NAME_INVALID.code,
-        ErrorCode.JOB_NAME_INVALID.status,
-        {
-          availableJobs: Object.values(JobName),
-        },
-      );
+      throw ERROR_CODE.JOB_NAME_INVALID({ details: { availableJobs: Object.values(JobName) } });
     }
 
     const jobId = await addJob(jobName as JobName, data, options);
@@ -57,24 +46,13 @@ class JobController extends BaseController {
     const { jobName, data, cron, options } = req.body ?? {};
 
     if (!jobName || !data || !cron) {
-      return ResponseHandler.error(
-        res,
-        "Missing required fields: jobName, data, cron",
-        ErrorCode.JOB_SCHEDULE_VALIDATION_ERROR.code,
-        ErrorCode.JOB_SCHEDULE_VALIDATION_ERROR.status,
-      );
+      throw ERROR_CODE.JOB_SCHEDULE_VALIDATION_ERROR({
+        message: "Missing required fields: jobName, data, cron",
+      });
     }
 
     if (!Object.values(JobName).includes(jobName as JobName)) {
-      return ResponseHandler.error(
-        res,
-        "Invalid job name",
-        ErrorCode.JOB_NAME_INVALID.code,
-        ErrorCode.JOB_NAME_INVALID.status,
-        {
-          availableJobs: Object.values(JobName),
-        },
-      );
+      throw ERROR_CODE.JOB_NAME_INVALID({ details: { availableJobs: Object.values(JobName) } });
     }
 
     await scheduleJob(jobName as JobName, data, cron, options);
@@ -121,12 +99,9 @@ class JobController extends BaseController {
     const { jobs } = req.body ?? {};
 
     if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-      return ResponseHandler.error(
-        res,
-        "Missing required field: jobs (array of {queueName, jobId})",
-        ErrorCode.JOB_BULK_RERUN_VALIDATION_ERROR.code,
-        ErrorCode.JOB_BULK_RERUN_VALIDATION_ERROR.status,
-      );
+      throw ERROR_CODE.JOB_BULK_RERUN_VALIDATION_ERROR({
+        message: "Missing required field: jobs (array of {queueName, jobId})",
+      });
     }
 
     const results = await rerunJobs(jobs);
@@ -185,12 +160,7 @@ class JobController extends BaseController {
   getById = asyncHandler(async (req: Request, res: Response) => {
     const job = await getJobById(req.params.queueName, req.params.jobId);
     if (!job) {
-      return ResponseHandler.error(
-        res,
-        "Job not found",
-        ErrorCode.JOB_NOT_FOUND.code,
-        ErrorCode.JOB_NOT_FOUND.status,
-      );
+      throw ERROR_CODE.JOB_NOT_FOUND();
     }
     return ResponseHandler.success(res, job, "Job details retrieved");
   });
