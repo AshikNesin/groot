@@ -206,6 +206,14 @@ export const getJobs = async (options: {
     throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
+  if (startDate && !dayjs(startDate).isValid()) {
+    throw new Error(`Invalid startDate: ${startDate}. Must be a valid date string.`);
+  }
+
+  if (endDate && !dayjs(endDate).isValid()) {
+    throw new Error(`Invalid endDate: ${endDate}. Must be a valid date string.`);
+  }
+
   const conditions: string[] = [];
   const params: unknown[] = [];
   let paramIndex = 1;
