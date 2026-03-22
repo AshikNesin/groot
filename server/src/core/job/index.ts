@@ -1,12 +1,11 @@
 import { PgBoss } from "pg-boss";
-import type { Job as BossJob } from "pg-boss";
+import type { Job as BossJob, SendOptions, ScheduleOptions } from "pg-boss";
 import dayjs from "dayjs";
 import { logger } from "@/core/logger";
 import { prisma } from "@/core/database";
-import { jobConfig, jobOptions, defaultJobOptions } from "@/core/job/config";
+import { jobConfig, defaultJobOptions, jobOptions } from "@/core/job/config";
 import type { JobName, JobDataMap } from "@/core/job/queue";
-import { startWorkers, stopWorkers } from "@/core/job/worker";
-import { JOB_STATES, VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
+import { VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
 
 let bossInstance: PgBoss | null = null;
 
@@ -48,6 +47,7 @@ export const stopJobQueue = async (): Promise<void> => {
   }
 
   try {
+    const { stopWorkers } = await import("@/core/job/worker");
     await stopWorkers();
     await bossInstance.stop();
     logger.info("Job queue stopped");
@@ -56,57 +56,73 @@ export const stopJobQueue = async (): Promise<void> => {
   }
 };
 
+// Queue a job for immediate execution
 export const addJob = async <T extends JobName>(
   name: T,
   data: JobDataMap[T],
-  options?: PgBoss.SendOptions,
+  options?: SendOptions,
 ): Promise<string | null> => {
   const boss = getBoss();
-  const jobSpecificOptions = jobOptions[name] ?? defaultJobOptions;
-  const merged = { ...jobSpecificOptions, ...options } as PgBoss.SendOptions;
-  const jobId = await boss.send(name, data, merged);
+  const jobOpts = { ...defaultJobOptions, ...jobOptions[name], ...options } as SendOptions;
+  const jobId = await boss.send(name, data, jobOpts);
   logger.info({ jobId, name }, "Job queued");
   return jobId;
 };
 
+// Schedule a recurring job
 export const scheduleJob = async <T extends JobName>(
   name: T,
   data: JobDataMap[T],
   cron: string,
-  options?: PgBoss.ScheduleOptions,
+  options?: ScheduleOptions,
 ): Promise<void> => {
   const boss = getBoss();
   await boss.schedule(name, cron, data, options);
   logger.info({ name, cron }, "Job scheduled");
 };
 
+// Cancel a scheduled job
 export const cancelScheduledJob = async (name: string): Promise<void> => {
   const boss = getBoss();
   await boss.unschedule(name);
 };
 
-export const getScheduledJobs = async (): Promise<
-  Array<{ name: string; cron: string; timezone: string | null; data: unknown }>
-> => {
-  return prisma.$queryRaw<
-    Array<{
-      name: string;
-      cron: string;
-      timezone: string | null;
-      data: unknown;
-    }>
-  >`
-    SELECT name, cron, timezone, data
-    FROM pgboss.schedule
-    ORDER BY name
-  `;
+// Get all scheduled jobs
+export const getScheduledJobs = async (): Promise<Array<{ name: string; cron: string }>> => {
+  const boss = getBoss();
+  const schedules = await boss.getSchedules();
+  return schedules.map((s) => ({ name: s.name, cron: s.cron }));
 };
 
+// Get job by ID
 export const getJobById = async (queueName: string, jobId: string): Promise<BossJob | null> => {
   const boss = getBoss();
   return boss.getJobById(queueName, jobId);
 };
 
+// Get queue statistics
+export const getQueueStats = async (): Promise<Record<string, number>> => {
+  const boss = getBoss();
+  const counts = await boss.getQueueStats();
+  return counts.reduce(
+    (acc, stat) => {
+      acc[stat.queue] = stat.count;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+};
+
+// Fetch jobs with filters (queue-based, for fetching from a specific queue)
+export const fetchJobs = async (
+  queueName: string,
+  options?: { limit?: number },
+): Promise<BossJob[]> => {
+  const boss = getBoss();
+  return boss.fetch(queueName, options?.limit ?? 50);
+};
+
+// Get failed jobs (state-based query)
 export const getFailedJobs = async (limit = 50): Promise<BossJob[]> => {
   return prisma.$queryRaw<BossJob[]>`
     SELECT
@@ -127,90 +143,56 @@ export const getFailedJobs = async (limit = 50): Promise<BossJob[]> => {
       dead_letter as deadletter,
       policy
     FROM pgboss.job
-    WHERE state = 'failed'
+    WHERE state = 'failed'::pgboss.job_state
     ORDER BY created_on DESC
     LIMIT ${limit}
   `;
 };
 
-export const getQueueStats = async (): Promise<Record<string, number>> => {
-  const rows = await prisma.$queryRaw<Array<{ state: string; count: bigint }>>`
-    SELECT state, COUNT(*) as count
-    FROM pgboss.job
-    WHERE state IS NOT NULL
-    GROUP BY state
-  `;
-
-  const stats: Record<string, number> = {
-    active: 0,
-    created: 0,
-    retry: 0,
-    failed: 0,
-    completed: 0,
-    expired: 0,
-    cancelled: 0,
-  };
-
-  for (const row of rows) {
-    stats[row.state] = Number(row.count);
-  }
-
-  return stats;
-};
-
+// Get jobs by state (state-based query with pagination)
 export const getJobsByState = async (
   state: string,
   limit = 50,
   offset = 0,
 ): Promise<{ jobs: BossJob[]; total: number }> => {
   if (!isValidJobState(state)) {
-    throw new Error(
-      `Invalid job state: ${state}. Valid states are: ${VALID_JOB_STATES.join(", ")}`,
-    );
+    throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
-  const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
-    SELECT COUNT(*) as count FROM pgboss.job WHERE state = ${state}::pgboss.job_state
-  `;
+  const [totalResult, jobs] = await Promise.all([
+    prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) as count FROM pgboss.job WHERE state = ${state}::pgboss.job_state
+    `,
+    prisma.$queryRaw<BossJob[]>`
+      SELECT
+        id, name, priority, data, state,
+        retry_limit as retrylimit,
+        retry_count as retrycount,
+        retry_delay as retrydelay,
+        retry_backoff as retrybackoff,
+        start_after as startafter,
+        started_on as startedon,
+        singleton_key as singletonkey,
+        singleton_on as singletonon,
+        expire_seconds as expirein,
+        created_on as createdon,
+        completed_on as completedon,
+        keep_until as keepuntil,
+        output,
+        dead_letter as deadletter,
+        policy
+      FROM pgboss.job
+      WHERE state = ${state}::pgboss.job_state
+      ORDER BY created_on DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `,
+  ]);
 
-  const jobs = await prisma.$queryRaw<BossJob[]>`
-    SELECT
-      id, name, priority, data, state,
-      retry_limit as retrylimit,
-      retry_count as retrycount,
-      retry_delay as retrydelay,
-      retry_backoff as retrybackoff,
-      start_after as startafter,
-      started_on as startedon,
-      singleton_key as singletonkey,
-      singleton_on as singletonon,
-      expire_seconds as expirein,
-      created_on as createdon,
-      completed_on as completedon,
-      keep_until as keepuntil,
-      output,
-      dead_letter as deadletter,
-      policy
-    FROM pgboss.job
-    WHERE state = ${state}::pgboss.job_state
-    ORDER BY created_on DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `;
-
-  return {
-    jobs,
-    total: Number(totalResult[0]?.count ?? 0),
-  };
+  return { jobs, total: Number(totalResult[0]?.count ?? 0) };
 };
 
-export const getJobs = async ({
-  state,
-  name,
-  limit = 50,
-  offset = 0,
-  startDate,
-  endDate,
-}: {
+// Get jobs with filters (supports state, name, date range, pagination)
+export const getJobs = async (options: {
   state?: string;
   name?: string;
   limit?: number;
@@ -218,10 +200,18 @@ export const getJobs = async ({
   startDate?: string;
   endDate?: string;
 }): Promise<{ jobs: BossJob[]; total: number }> => {
+  const { state, name, limit = 50, offset = 0, startDate, endDate } = options;
+
   if (state && !isValidJobState(state)) {
-    throw new Error(
-      `Invalid job state: ${state}. Valid states are: ${VALID_JOB_STATES.join(", ")}`,
-    );
+    throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+  }
+
+  if (startDate && !dayjs(startDate).isValid()) {
+    throw new Error(`Invalid startDate: ${startDate}. Must be a valid date string.`);
+  }
+
+  if (endDate && !dayjs(endDate).isValid()) {
+    throw new Error(`Invalid endDate: ${endDate}. Must be a valid date string.`);
   }
 
   const conditions: string[] = [];
@@ -283,11 +273,10 @@ export const getJobs = async ({
   return { jobs, total: Number(totalResult[0]?.count ?? 0) };
 };
 
+// Purge jobs by state
 export const purgeJobsByState = async (state: string): Promise<number> => {
   if (!isValidJobState(state)) {
-    throw new Error(
-      `Invalid job state: ${state}. Valid states are: ${VALID_JOB_STATES.join(", ")}`,
-    );
+    throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
   const deleted = await prisma.$executeRaw`
@@ -297,78 +286,54 @@ export const purgeJobsByState = async (state: string): Promise<number> => {
   return Number(deleted);
 };
 
+// Delete a job
 export const deleteJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
-  const job = await boss.getJobById(queueName, jobId);
-  if (!job) {
-    throw new Error(`Job not found: ${queueName}/${jobId}`);
-  }
   const deleted = await boss.deleteJob(queueName, jobId);
   if (!deleted) {
     throw new Error(`Failed to delete job: ${queueName}/${jobId}`);
   }
 };
 
+// Retry a failed job
 export const retryJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
-  const job = await boss.getJobById(queueName, jobId);
-  if (!job) {
-    throw new Error(`Job not found: ${queueName}/${jobId}`);
-  }
-  if (job.state !== JOB_STATES.FAILED) {
-    throw new Error(`Cannot retry job in '${job.state}' state`);
-  }
   const retried = await boss.retry(queueName, jobId);
   if (!retried) {
     throw new Error("Retry failed");
   }
 };
 
+// Cancel a pending job
 export const cancelJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
-  const job = await boss.getJobById(queueName, jobId);
-  if (!job) {
-    throw new Error(`Job not found: ${queueName}/${jobId}`);
-  }
-  if (
-    ![JOB_STATES.CREATED, JOB_STATES.RETRY, JOB_STATES.ACTIVE].includes(
-      job.state as (typeof JOB_STATES)[keyof typeof JOB_STATES],
-    )
-  ) {
-    throw new Error(`Cannot cancel job in '${job.state}' state`);
-  }
   const cancelled = await boss.cancel(queueName, jobId);
   if (!cancelled) {
     throw new Error("Cancel failed");
   }
 };
 
+// Resume a cancelled job
 export const resumeJob = async (queueName: string, jobId: string): Promise<void> => {
   const boss = getBoss();
-  const job = await boss.getJobById(queueName, jobId);
-  if (!job) {
-    throw new Error(`Job not found: ${queueName}/${jobId}`);
-  }
-  if (job.state !== JOB_STATES.CANCELLED) {
-    throw new Error(`Cannot resume job in '${job.state}' state`);
-  }
   const resumed = await boss.resume(queueName, jobId);
   if (!resumed) {
     throw new Error("Resume failed");
   }
 };
 
+// Re-run a job (creates a new job with same data)
 export const rerunJob = async (queueName: string, jobId: string): Promise<string | null> => {
   const boss = getBoss();
   const job = await boss.getJobById(queueName, jobId);
   if (!job) {
     throw new Error(`Job not found: ${queueName}/${jobId}`);
   }
-  const jobSpecificOptions = jobOptions[job.name as JobName] ?? defaultJobOptions;
-  const newJobId = await boss.send(job.name, job.data, jobSpecificOptions);
-  return newJobId;
+  const jobOpts = { ...defaultJobOptions, ...jobOptions[job.name as JobName] } as SendOptions;
+  return boss.send(job.name, job.data, jobOpts);
 };
 
+// Bulk re-run jobs
 export const rerunJobs = async (
   jobs: { queueName: string; jobId: string }[],
 ): Promise<
@@ -406,6 +371,7 @@ export const rerunJobs = async (
   });
 };
 
+// Re-export worker functions and types
 export { startWorkers, stopWorkers } from "@/core/job/worker";
 export { JobName, type JobDataMap } from "@/core/job/queue";
 export { JOB_STATES, VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
