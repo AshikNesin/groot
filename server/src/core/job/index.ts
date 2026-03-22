@@ -1,6 +1,8 @@
 import { PgBoss } from "pg-boss";
 import type { Job as BossJob, SendOptions, ScheduleOptions } from "pg-boss";
+import dayjs from "dayjs";
 import { logger } from "@/core/logger";
+import { prisma } from "@/core/database";
 import { jobConfig, defaultJobOptions, jobOptions } from "@/core/job/config";
 import type { JobName, JobDataMap } from "@/core/job/queue";
 import { VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
@@ -111,28 +113,43 @@ export const getQueueStats = async (): Promise<Record<string, number>> => {
   );
 };
 
-// Fetch jobs with filters
+// Fetch jobs with filters (queue-based, for fetching from a specific queue)
 export const fetchJobs = async (
   queueName: string,
-  options?: { limit?: number; state?: string },
+  options?: { limit?: number },
 ): Promise<BossJob[]> => {
-  if (options?.state && !isValidJobState(options.state)) {
-    throw new Error(
-      `Invalid job state: ${options.state}. Valid states: ${VALID_JOB_STATES.join(", ")}`,
-    );
-  }
-
   const boss = getBoss();
-  return boss.fetch(queueName, options?.limit ?? 50, { ...options });
+  return boss.fetch(queueName, options?.limit ?? 50);
 };
 
-// Get failed jobs
+// Get failed jobs (state-based query)
 export const getFailedJobs = async (limit = 50): Promise<BossJob[]> => {
-  const boss = getBoss();
-  return boss.fetch("failed", limit, { state: "failed" });
+  return prisma.$queryRaw<BossJob[]>`
+    SELECT
+      id, name, priority, data, state,
+      retry_limit as retrylimit,
+      retry_count as retrycount,
+      retry_delay as retrydelay,
+      retry_backoff as retrybackoff,
+      start_after as startafter,
+      started_on as startedon,
+      singleton_key as singletonkey,
+      singleton_on as singletonon,
+      expire_seconds as expirein,
+      created_on as createdon,
+      completed_on as completedon,
+      keep_until as keepuntil,
+      output,
+      dead_letter as deadletter,
+      policy
+    FROM pgboss.job
+    WHERE state = 'failed'::pgboss.job_state
+    ORDER BY created_on DESC
+    LIMIT ${limit}
+  `;
 };
 
-// Get jobs by state
+// Get jobs by state (state-based query with pagination)
 export const getJobsByState = async (
   state: string,
   limit = 50,
@@ -142,14 +159,39 @@ export const getJobsByState = async (
     throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
-  const boss = getBoss();
-  const jobs = await boss.fetch(state, limit + offset);
-  const paginatedJobs = jobs.slice(offset, offset + limit);
+  const [totalResult, jobs] = await Promise.all([
+    prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) as count FROM pgboss.job WHERE state = ${state}::pgboss.job_state
+    `,
+    prisma.$queryRaw<BossJob[]>`
+      SELECT
+        id, name, priority, data, state,
+        retry_limit as retrylimit,
+        retry_count as retrycount,
+        retry_delay as retrydelay,
+        retry_backoff as retrybackoff,
+        start_after as startafter,
+        started_on as startedon,
+        singleton_key as singletonkey,
+        singleton_on as singletonon,
+        expire_seconds as expirein,
+        created_on as createdon,
+        completed_on as completedon,
+        keep_until as keepuntil,
+        output,
+        dead_letter as deadletter,
+        policy
+      FROM pgboss.job
+      WHERE state = ${state}::pgboss.job_state
+      ORDER BY created_on DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `,
+  ]);
 
-  return { jobs: paginatedJobs, total: jobs.length };
+  return { jobs, total: Number(totalResult[0]?.count ?? 0) };
 };
 
-// Get jobs with filters
+// Get jobs with filters (supports state, name, date range, pagination)
 export const getJobs = async (options: {
   state?: string;
   name?: string;
@@ -158,17 +200,69 @@ export const getJobs = async (options: {
   startDate?: string;
   endDate?: string;
 }): Promise<{ jobs: BossJob[]; total: number }> => {
-  const { state, name, limit = 50 } = options;
+  const { state, name, limit = 50, offset = 0, startDate, endDate } = options;
 
   if (state && !isValidJobState(state)) {
     throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
-  const boss = getBoss();
-  const queueName = name ?? state ?? "pgboss.job";
-  const jobs = await boss.fetch(queueName, limit, { state });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let paramIndex = 1;
 
-  return { jobs, total: jobs.length };
+  if (state) {
+    conditions.push(`state = $${paramIndex}::pgboss.job_state`);
+    params.push(state);
+    paramIndex++;
+  }
+  if (name) {
+    conditions.push(`name = $${paramIndex}`);
+    params.push(name);
+    paramIndex++;
+  }
+  if (startDate) {
+    conditions.push(`created_on >= $${paramIndex}`);
+    params.push(dayjs(startDate).toDate());
+    paramIndex++;
+  }
+  if (endDate) {
+    conditions.push(`created_on <= $${paramIndex}`);
+    params.push(dayjs(endDate).toDate());
+    paramIndex++;
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countQuery = `SELECT COUNT(*) as count FROM pgboss.job ${whereClause}`;
+  const totalResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(countQuery, ...params);
+
+  const jobsQuery = `
+    SELECT
+      id, name, priority, data, state,
+      retry_limit as retrylimit,
+      retry_count as retrycount,
+      retry_delay as retrydelay,
+      retry_backoff as retrybackoff,
+      start_after as startafter,
+      started_on as startedon,
+      singleton_key as singletonkey,
+      singleton_on as singletonon,
+      expire_seconds as expirein,
+      created_on as createdon,
+      completed_on as completedon,
+      keep_until as keepuntil,
+      output,
+      dead_letter as deadletter,
+      policy
+    FROM pgboss.job
+    ${whereClause}
+    ORDER BY created_on DESC
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+  `;
+
+  const jobs = await prisma.$queryRawUnsafe<BossJob[]>(jobsQuery, ...params, limit, offset);
+
+  return { jobs, total: Number(totalResult[0]?.count ?? 0) };
 };
 
 // Purge jobs by state
@@ -177,8 +271,11 @@ export const purgeJobsByState = async (state: string): Promise<number> => {
     throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
-  const boss = getBoss();
-  return boss.purgeQueue(state);
+  const deleted = await prisma.$executeRaw`
+    DELETE FROM pgboss.job WHERE state = ${state}::pgboss.job_state
+  `;
+
+  return Number(deleted);
 };
 
 // Delete a job
