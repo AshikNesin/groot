@@ -25,17 +25,23 @@ import {
 } from "@/core/job";
 
 function parsePagination(limit?: string, offset?: string) {
-  const parsedLimit = limit ? Number.parseInt(limit, 10) : 50;
-  const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
+  const parsedLimit = limit ? parseStrictInt(limit) : 50;
+  const parsedOffset = offset ? parseStrictInt(offset) : 0;
 
-  if (Number.isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 1000) {
-    throw ERROR_CODE.VALIDATION_ERROR({ message: "limit must be between 1 and 1000" });
+  if (parsedLimit === null || parsedLimit < 1 || parsedLimit > 1000) {
+    throw ERROR_CODE.VALIDATION_ERROR({ message: "limit must be an integer between 1 and 1000" });
   }
-  if (Number.isNaN(parsedOffset) || parsedOffset < 0) {
+  if (parsedOffset === null || parsedOffset < 0) {
     throw ERROR_CODE.VALIDATION_ERROR({ message: "offset must be a non-negative integer" });
   }
 
   return { limit: parsedLimit, offset: parsedOffset };
+}
+
+function parseStrictInt(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null;
+  const num = Number.parseInt(value, 10);
+  return Number.isSafeInteger(num) ? num : null;
 }
 
 class JobController extends BaseController {
