@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { asyncHandler } from "@/core/async-handler";
 import { prisma } from "@/core/database";
 import { ERROR_CODE } from "@/core/errors";
 import {
@@ -45,7 +44,7 @@ function parseStrictInt(value: string): number | null {
 }
 
 class JobController extends BaseController {
-  create = asyncHandler(async (req: Request, res: Response) => {
+  async create(req: Request, res: Response) {
     const { jobName, data, options } = req.body ?? {};
 
     if (!jobName || !data) {
@@ -60,9 +59,9 @@ class JobController extends BaseController {
 
     const jobId = await addJob(jobName as JobName, data, options);
     return ResponseHandler.created(res, { jobId, jobName, data }, "Job queued successfully");
-  });
+  }
 
-  schedule = asyncHandler(async (req: Request, res: Response) => {
+  async schedule(req: Request, res: Response) {
     const { jobName, data, cron, options } = req.body ?? {};
 
     if (!jobName || !data || !cron) {
@@ -77,9 +76,9 @@ class JobController extends BaseController {
 
     await scheduleJob(jobName as JobName, data, cron, options);
     return ResponseHandler.created(res, { jobName, cron, data }, "Job scheduled successfully");
-  });
+  }
 
-  retry = asyncHandler(async (req: Request, res: Response) => {
+  async retry(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
     await retryJob(queueName, jobId);
     return ResponseHandler.success(
@@ -87,9 +86,9 @@ class JobController extends BaseController {
       { queueName, jobId },
       `Job ${queueName}/${jobId} queued for retry`,
     );
-  });
+  }
 
-  cancel = asyncHandler(async (req: Request, res: Response) => {
+  async cancel(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
     await cancelJob(queueName, jobId);
     return ResponseHandler.success(
@@ -97,15 +96,15 @@ class JobController extends BaseController {
       { queueName, jobId },
       `Job ${queueName}/${jobId} cancelled`,
     );
-  });
+  }
 
-  resume = asyncHandler(async (req: Request, res: Response) => {
+  async resume(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
     await resumeJob(queueName, jobId);
     return ResponseHandler.success(res, { queueName, jobId }, `Job ${queueName}/${jobId} resumed`);
-  });
+  }
 
-  rerun = asyncHandler(async (req: Request, res: Response) => {
+  async rerun(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
     const newJobId = await rerunJob(queueName, jobId);
     return ResponseHandler.success(
@@ -113,9 +112,9 @@ class JobController extends BaseController {
       { originalJobId: jobId, newJobId, queueName },
       `Job ${queueName}/${jobId} re-run`,
     );
-  });
+  }
 
-  bulkRerun = asyncHandler(async (req: Request, res: Response) => {
+  async bulkRerun(req: Request, res: Response) {
     const { jobs } = req.body ?? {};
 
     if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
@@ -132,62 +131,62 @@ class JobController extends BaseController {
       results,
       `Processed ${jobs.length} re-run requests. Success: ${successCount}`,
     );
-  });
+  }
 
-  getScheduled = asyncHandler(async (_req: Request, res: Response) => {
+  async getScheduled(_req: Request, res: Response) {
     const jobs = await getScheduledJobs();
     return ResponseHandler.success(res, jobs, "Scheduled jobs retrieved");
-  });
+  }
 
-  cancelScheduled = asyncHandler(async (req: Request, res: Response) => {
+  async cancelScheduled(req: Request, res: Response) {
     await cancelScheduledJob(req.params.jobName);
     return ResponseHandler.success(res, { jobName: req.params.jobName }, "Scheduled job cancelled");
-  });
+  }
 
-  purgeByState = asyncHandler(async (req: Request, res: Response) => {
+  async purgeByState(req: Request, res: Response) {
     const deletedCount = await purgeJobsByState(req.params.state);
     return ResponseHandler.success(res, { state: req.params.state, deletedCount }, "Jobs purged");
-  });
+  }
 
-  delete = asyncHandler(async (req: Request, res: Response) => {
+  async delete(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
     await deleteJob(queueName, jobId);
     return ResponseHandler.success(res, { queueName, jobId }, "Job deleted");
-  });
+  }
 
-  getStats = asyncHandler(async (_req: Request, res: Response) => {
+  async getStats(_req: Request, res: Response) {
     const stats = await getQueueStats();
     return ResponseHandler.success(res, stats, "Queue stats retrieved");
-  });
+  }
 
-  getAvailable = asyncHandler(async (_req: Request, res: Response) => {
+  async getAvailable(_req: Request, res: Response) {
     return ResponseHandler.success(res, Object.values(JobName), "Available jobs retrieved");
-  });
+  }
 
-  getFailed = asyncHandler(async (req: Request, res: Response) => {
+  async getFailed(req: Request, res: Response) {
     const { limit } = parsePagination(req.query.limit as string | undefined);
     const jobs = await getFailedJobs(limit);
     return ResponseHandler.success(res, jobs, "Failed jobs retrieved");
-  });
+  }
 
-  getByState = asyncHandler(async (req: Request, res: Response) => {
+  async getByState(req: Request, res: Response) {
     const { limit, offset } = parsePagination(
       req.query.limit as string | undefined,
       req.query.offset as string | undefined,
     );
     const result = await getJobsByState(req.params.state, limit, offset);
     return ResponseHandler.success(res, result, "Jobs by state retrieved");
-  });
+  }
 
-  getById = asyncHandler(async (req: Request, res: Response) => {
+  async getById(req: Request, res: Response) {
     const job = await getJobById(req.params.queueName, req.params.jobId);
     if (!job) {
       throw ERROR_CODE.JOB_NOT_FOUND();
     }
     return ResponseHandler.success(res, job, "Job details retrieved");
-  });
+  }
 
-  getLogs = asyncHandler(async (req: Request, res: Response) => {
+  async getLogs(req: Request, res: Response) {
     const { jobId } = req.params;
     const afterId = req.query.afterId ? Number.parseInt(req.query.afterId as string, 10) : 0;
 
@@ -204,9 +203,9 @@ class JobController extends BaseController {
     });
 
     return ResponseHandler.success(res, logs, "Job logs retrieved");
-  });
+  }
 
-  getAll = asyncHandler(async (req: Request, res: Response) => {
+  async getAll(req: Request, res: Response) {
     const state = req.query.state as string | undefined;
     const name = req.query.name as string | undefined;
     const startDate = req.query.startDate as string | undefined;
@@ -224,7 +223,7 @@ class JobController extends BaseController {
       endDate,
     });
     return ResponseHandler.success(res, jobs, "Jobs retrieved");
-  });
+  }
 }
 
 export const jobController = new JobController();
