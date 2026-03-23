@@ -24,6 +24,20 @@ import {
   JobName,
 } from "@/core/job";
 
+function parsePagination(limit?: string, offset?: string) {
+  const parsedLimit = limit ? Number.parseInt(limit, 10) : 50;
+  const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
+
+  if (Number.isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 1000) {
+    throw ERROR_CODE.VALIDATION_ERROR({ message: "limit must be between 1 and 1000" });
+  }
+  if (Number.isNaN(parsedOffset) || parsedOffset < 0) {
+    throw ERROR_CODE.VALIDATION_ERROR({ message: "offset must be a non-negative integer" });
+  }
+
+  return { limit: parsedLimit, offset: parsedOffset };
+}
+
 class JobController extends BaseController {
   create = asyncHandler(async (req: Request, res: Response) => {
     const { jobName, data, options } = req.body ?? {};
@@ -145,14 +159,16 @@ class JobController extends BaseController {
   });
 
   getFailed = asyncHandler(async (req: Request, res: Response) => {
-    const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : 50;
+    const { limit } = parsePagination(req.query.limit as string | undefined);
     const jobs = await getFailedJobs(limit);
     return ResponseHandler.success(res, jobs, "Failed jobs retrieved");
   });
 
   getByState = asyncHandler(async (req: Request, res: Response) => {
-    const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : 50;
-    const offset = req.query.offset ? Number.parseInt(req.query.offset as string, 10) : 0;
+    const { limit, offset } = parsePagination(
+      req.query.limit as string | undefined,
+      req.query.offset as string | undefined,
+    );
     const result = await getJobsByState(req.params.state, limit, offset);
     return ResponseHandler.success(res, result, "Jobs by state retrieved");
   });
@@ -189,8 +205,10 @@ class JobController extends BaseController {
     const name = req.query.name as string | undefined;
     const startDate = req.query.startDate as string | undefined;
     const endDate = req.query.endDate as string | undefined;
-    const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : 50;
-    const offset = req.query.offset ? Number.parseInt(req.query.offset as string, 10) : 0;
+    const { limit, offset } = parsePagination(
+      req.query.limit as string | undefined,
+      req.query.offset as string | undefined,
+    );
     const jobs = await getJobs({
       state,
       name,

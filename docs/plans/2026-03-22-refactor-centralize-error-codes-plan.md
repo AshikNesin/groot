@@ -9,7 +9,7 @@ date: 2026-03-22
 
 ## Overview
 
-Create a centralized `ErrorCode` registry that defines all error codes (generic HTTP + domain-specific) with their default status codes and messages. Both error classes and `ResponseHandler.error()` will reference this registry, eliminating hardcoded strings scattered across the codebase.
+Create a centralized `ErrorCode` registry that defines all error codes (generic HTTP + domain-specific) with their default status codes and messages. Error classes, the `ERROR_CODE` factory, and `ResponseHandler.errorFromCode()` will reference this registry, eliminating hardcoded strings scattered across the codebase.
 
 ## Problem Statement
 
@@ -173,12 +173,12 @@ export const ResponseHandler = {
 
 | File                                      | Changes                                                       |
 | ----------------------------------------- | ------------------------------------------------------------- |
-| `controllers/job.controller.ts`           | Replace `"JOB_NOT_FOUND"` with `ErrorCode.JOB_NOT_FOUND.code` |
-| `controllers/passkey.controller.ts`       | Replace `"UNAUTHORIZED"` with `ErrorCode.UNAUTHORIZED.code`   |
-| `controllers/auth.controller.ts`          | Replace `"UNAUTHORIZED"` with `ErrorCode.UNAUTHORIZED.code`   |
-| `middlewares/rate-limit.middleware.ts`    | Import and use `ErrorCode.*.code`                             |
-| `middlewares/error-handler.middleware.ts` | Use `ErrorCode.INTERNAL_ERROR.code`                           |
-| `controllers/public-file.controller.ts`   | Use `ErrorCode.SHARE_ACCESS_DENIED.code`                      |
+| `controllers/job.controller.ts`           | Replace inline error strings with `throw ERROR_CODE.*(...)`   |
+| `controllers/passkey.controller.ts`       | Throw `ERROR_CODE.UNAUTHORIZED({ message: "..." })`           |
+| `controllers/auth.controller.ts`          | Throw `ERROR_CODE.UNAUTHORIZED({ message: "..." })`           |
+| `middlewares/rate-limit.middleware.ts`    | Call `next(ERROR_CODE.*({ message }))`                        |
+| `middlewares/error-handler.middleware.ts` | Use `ErrorCode.*` for fallback response payloads              |
+| `controllers/public-file.controller.ts`   | Throw `ERROR_CODE.SHARE_ACCESS_DENIED({ message: "..." })`    |
 
 ## Acceptance Criteria
 
