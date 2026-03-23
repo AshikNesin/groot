@@ -37,6 +37,7 @@ JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
 ```
 
 Key annotations:
+
 - `@required` - Variable must be set
 - `@public` - Safe to expose to client (not a secret)
 - `@type=enum(a, b, c)` - Enum validation

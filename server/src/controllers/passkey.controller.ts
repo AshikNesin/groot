@@ -1,33 +1,31 @@
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { passkeyService } from "@/services/passkey.service";
+import { ERROR_CODE } from "@/core/errors";
 import type { Request, Response } from "express";
-import { asyncHandler } from "@/core/async-handler";
 
 export class PasskeyController extends BaseController {
   /**
    * Generate registration options for a new passkey
    * Requires authentication
    */
-  generateRegistrationOptions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  async generateRegistrationOptions(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const options = await passkeyService.generateRegistrationOptions(req.user.userId);
 
     ResponseHandler.success(res, options, "Registration options generated successfully");
-  });
+  }
 
   /**
    * Verify registration response and create passkey
    * Requires authentication
    */
-  verifyRegistration = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  async verifyRegistration(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const { response, credentialName } = req.body;
@@ -47,27 +45,25 @@ export class PasskeyController extends BaseController {
       },
       "Passkey registered successfully",
     );
-  });
+  }
 
   /**
    * Generate authentication options for passkey login
    * Public endpoint (no authentication required)
    */
-  generateAuthenticationOptions = asyncHandler(
-    async (req: Request, res: Response): Promise<void> => {
-      const { email } = req.body;
+  async generateAuthenticationOptions(req: Request, res: Response): Promise<void> {
+    const { email } = req.body;
 
-      const options = await passkeyService.generateAuthenticationOptions(email);
+    const options = await passkeyService.generateAuthenticationOptions(email);
 
-      ResponseHandler.success(res, options, "Authentication options generated successfully");
-    },
-  );
+    ResponseHandler.success(res, options, "Authentication options generated successfully");
+  }
 
   /**
    * Verify authentication response and login user
    * Public endpoint (no authentication required)
    */
-  verifyAuthentication = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  async verifyAuthentication(req: Request, res: Response): Promise<void> {
     const { response, email } = req.body;
 
     const { token, user } = await passkeyService.verifyAuthentication(response, email);
@@ -81,31 +77,29 @@ export class PasskeyController extends BaseController {
     });
 
     ResponseHandler.success(res, { token, user }, "Authentication successful");
-  });
+  }
 
   /**
    * List all passkeys for the authenticated user
    * Requires authentication
    */
-  listPasskeys = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  async listPasskeys(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const passkeys = await passkeyService.listPasskeys(req.user.userId);
 
     ResponseHandler.success(res, passkeys);
-  });
+  }
 
   /**
    * Delete a passkey
    * Requires authentication
    */
-  deletePasskey = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  async deletePasskey(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const passkeyId = this.parseId(req.params.id, "Passkey ID");
@@ -113,16 +107,15 @@ export class PasskeyController extends BaseController {
     await passkeyService.deletePasskey(passkeyId, req.user.userId);
 
     ResponseHandler.success(res, null, "Passkey deleted successfully");
-  });
+  }
 
   /**
    * Update passkey name
    * Requires authentication
    */
-  updatePasskeyName = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  async updatePasskeyName(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      ResponseHandler.error(res, 401, "Not authenticated");
-      return;
+      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
     }
 
     const passkeyId = this.parseId(req.params.id, "Passkey ID");
@@ -142,7 +135,7 @@ export class PasskeyController extends BaseController {
       },
       "Passkey name updated successfully",
     );
-  });
+  }
 }
 
 // Export singleton instance
