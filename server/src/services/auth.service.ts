@@ -1,14 +1,12 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "@/core/database";
+import { userModel } from "@/models/user.model";
 import { UnauthorizedError, ConflictError, NotFoundError } from "@/core/errors";
 import { generateToken } from "@/utils/jwt.utils";
 import type { CreateUserDTO, LoginDTO } from "@/validations/auth.validation";
 
 class AuthService {
   async login(data: LoginDTO) {
-    const user = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
+    const user = await userModel.findByEmail(data.email);
 
     if (!user) {
       throw new UnauthorizedError("Invalid email or password");
@@ -36,9 +34,7 @@ class AuthService {
   }
 
   async createUser(data: CreateUserDTO) {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
+    const existingUser = await userModel.findByEmail(data.email);
 
     if (existingUser) {
       throw new ConflictError("User with this email already exists");
@@ -46,12 +42,10 @@ class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        email: data.email,
-        password: hashedPassword,
-        name: data.name,
-      },
+    const user = await userModel.create({
+      email: data.email,
+      password: hashedPassword,
+      name: data.name,
     });
 
     return {
@@ -63,9 +57,7 @@ class AuthService {
   }
 
   async getUserById(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await userModel.findById(userId);
 
     if (!user) {
       throw new NotFoundError("User", userId);
@@ -80,30 +72,17 @@ class AuthService {
   }
 
   async getAllUsers() {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-      },
-    });
-
-    return users;
+    return userModel.findAll();
   }
 
   async deleteUser(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await userModel.findById(userId);
 
     if (!user) {
       throw new NotFoundError("User", userId);
     }
 
-    await prisma.user.delete({
-      where: { id: userId },
-    });
+    await userModel.delete(userId);
   }
 }
 

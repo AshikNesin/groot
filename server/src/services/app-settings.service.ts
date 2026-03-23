@@ -1,5 +1,5 @@
 import { NotFoundError } from "@/core/errors/base.errors";
-import * as appSettingsModel from "@/models/app-settings.model";
+import { appSettingsModel } from "@/models/app-settings.model";
 import type { AppSetting } from "@/models/app-settings.model";
 import type { UpsertAppSettingDTO } from "@/validations/app-settings.validation";
 

@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { asyncHandler } from "@/core/async-handler";
 import { storageFileService } from "@/services/storage.service";
 import { publicShareService } from "@/services/public-share.service";
 import type {
@@ -16,21 +15,17 @@ import type {
 } from "@/validations/storage.validation";
 import { BadRequestError } from "@/core/errors/base.errors";
 
-type Empty = Record<string, never>;
-
 export class StorageController extends BaseController {
-  listFiles = asyncHandler(
-    async (req: Request<Empty, unknown, Empty, ListFilesDTO>, res: Response) => {
-      const query = req.validated?.query ?? req.query;
-      const files = await storageFileService.listFiles({
-        prefix: query.prefix,
-        delimiter: query.delimiter,
-      });
-      ResponseHandler.success(res, files);
-    },
-  );
+  async listFiles(req: Request, res: Response) {
+    const query = (req.validated?.query ?? req.query) as ListFilesDTO;
+    const files = await storageFileService.listFiles({
+      prefix: query.prefix,
+      delimiter: query.delimiter,
+    });
+    ResponseHandler.success(res, files);
+  }
 
-  uploadFile = asyncHandler(async (req: Request, res: Response) => {
+  async uploadFile(req: Request, res: Response) {
     const file = req.file;
     const body = req.validated?.body ?? req.body;
 
@@ -46,50 +41,42 @@ export class StorageController extends BaseController {
     });
 
     ResponseHandler.created(res, result, "File uploaded successfully");
-  });
+  }
 
-  downloadFile = asyncHandler(
-    async (req: Request<Empty, unknown, Empty, DownloadFileDTO>, res: Response) => {
-      const query = req.validated?.query ?? req.query;
-      const file = await storageFileService.downloadFile({
-        filePath: query.filePath,
-      });
+  async downloadFile(req: Request, res: Response) {
+    const query = (req.validated?.query ?? req.query) as DownloadFileDTO;
+    const file = await storageFileService.downloadFile({
+      filePath: query.filePath,
+    });
 
-      res.setHeader("Content-Type", file.contentType ?? "application/octet-stream");
-      res.setHeader("Content-Disposition", `inline; filename="${file.fileName}"`);
-      res.send(file.buffer);
-    },
-  );
+    res.setHeader("Content-Type", file.contentType ?? "application/octet-stream");
+    res.setHeader("Content-Disposition", `inline; filename="${file.fileName}"`);
+    res.send(file.buffer);
+  }
 
-  deleteFiles = asyncHandler(
-    async (req: Request<Empty, unknown, DeleteFilesDTO>, res: Response) => {
-      const body = req.validated?.body ?? req.body;
-      const result = await storageFileService.deleteFiles({
-        filePaths: body.filePaths,
-      });
-      ResponseHandler.success(res, result, "Files deleted successfully");
-    },
-  );
+  async deleteFiles(req: Request, res: Response) {
+    const body = (req.validated?.body ?? req.body) as DeleteFilesDTO;
+    const result = await storageFileService.deleteFiles({
+      filePaths: body.filePaths,
+    });
+    ResponseHandler.success(res, result, "Files deleted successfully");
+  }
 
-  getFileMetadata = asyncHandler(
-    async (req: Request<Empty, unknown, Empty, GetFileMetadataDTO>, res: Response) => {
-      const query = req.validated?.query ?? req.query;
-      const metadata = await storageFileService.getFileMetadata({
-        filePath: query.filePath,
-      });
-      ResponseHandler.success(res, metadata);
-    },
-  );
+  async getFileMetadata(req: Request, res: Response) {
+    const query = (req.validated?.query ?? req.query) as GetFileMetadataDTO;
+    const metadata = await storageFileService.getFileMetadata({
+      filePath: query.filePath,
+    });
+    ResponseHandler.success(res, metadata);
+  }
 
-  createFolder = asyncHandler(
-    async (req: Request<Empty, unknown, CreateFolderDTO>, res: Response) => {
-      const body = req.validated?.body ?? req.body;
-      const result = await storageFileService.createFolder(body.folderPath);
-      ResponseHandler.created(res, result, "Folder created successfully");
-    },
-  );
+  async createFolder(req: Request, res: Response) {
+    const body = (req.validated?.body ?? req.body) as CreateFolderDTO;
+    const result = await storageFileService.createFolder(body.folderPath);
+    ResponseHandler.created(res, result, "Folder created successfully");
+  }
 
-  deleteFolder = asyncHandler(async (req: Request<{ folderPath?: string }>, res: Response) => {
+  async deleteFolder(req: Request<{ folderPath?: string }>, res: Response) {
     const { folderPath } = req.params;
     if (!folderPath) {
       throw new BadRequestError("Folder path is required");
@@ -97,18 +84,18 @@ export class StorageController extends BaseController {
     const normalized = folderPath.endsWith("/") ? folderPath : `${folderPath}/`;
     const result = await storageFileService.deleteFolder(normalized);
     ResponseHandler.success(res, result, "Folder deleted successfully");
-  });
+  }
 
-  renameFile = asyncHandler(async (req: Request<Empty, unknown, RenameFileDTO>, res: Response) => {
-    const body = req.validated?.body ?? req.body;
+  async renameFile(req: Request, res: Response) {
+    const body = (req.validated?.body ?? req.body) as RenameFileDTO;
     const result = await storageFileService.renameFile({
       oldPath: body.oldPath,
       newPath: body.newPath,
     });
     ResponseHandler.success(res, result, "File renamed successfully");
-  });
+  }
 
-  bulkUpload = asyncHandler(async (req: Request, res: Response) => {
+  async bulkUpload(req: Request, res: Response) {
     const files = req.files as Express.Multer.File[];
 
     if (!files || !files.length) {
@@ -127,29 +114,25 @@ export class StorageController extends BaseController {
 
     const result = await storageFileService.bulkUpload({ files: payload });
     ResponseHandler.created(res, result, "Files uploaded successfully");
-  });
+  }
 
-  createPublicShare = asyncHandler(
-    async (req: Request<Empty, unknown, CreatePublicShareDTO>, res: Response) => {
-      const body = req.validated?.body ?? req.body;
-      const share = await publicShareService.createShare(body);
-      ResponseHandler.created(res, share, "Public share link created successfully");
-    },
-  );
+  async createPublicShare(req: Request, res: Response) {
+    const body = (req.validated?.body ?? req.body) as CreatePublicShareDTO;
+    const share = await publicShareService.createShare(body);
+    ResponseHandler.created(res, share, "Public share link created successfully");
+  }
 
-  listSharesForFile = asyncHandler(
-    async (req: Request<Empty, unknown, Empty, ListSharesForFileDTO>, res: Response) => {
-      const query = req.validated?.query ?? req.query;
-      const shares = await publicShareService.listSharesForFile(query.filePath);
-      ResponseHandler.success(res, shares);
-    },
-  );
+  async listSharesForFile(req: Request, res: Response) {
+    const query = (req.validated?.query ?? req.query) as ListSharesForFileDTO;
+    const shares = await publicShareService.listSharesForFile(query.filePath);
+    ResponseHandler.success(res, shares);
+  }
 
-  revokeShare = asyncHandler(async (req: Request<{ shareId: string }>, res: Response) => {
+  async revokeShare(req: Request<{ shareId: string }>, res: Response) {
     const { shareId } = req.params;
     await publicShareService.revokeShare(shareId);
     ResponseHandler.success(res, null, "Share revoked successfully");
-  });
+  }
 }
 
 export const storageController = new StorageController();

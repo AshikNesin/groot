@@ -57,7 +57,6 @@ async function main() {
     });
     connectionString = docker.connectionString;
     console.log("🐳 Using Docker PostgreSQL\n");
-
   } else {
     connectionString = process.env.DATABASE_URL!;
     const host = extractHost(connectionString);

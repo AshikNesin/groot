@@ -40,8 +40,8 @@ export interface UpdateConversationData {
 
 // ── AI Usage Model ───────────────────────────────────────────────────────────
 
-export const aiUsageModel = {
-  create: async (data: CreateUsageData): Promise<AIUsage> => {
+class AIUsageModel {
+  async create(data: CreateUsageData): Promise<AIUsage> {
     return prisma.aIUsage.create({
       data: {
         userId: data.userId,
@@ -54,9 +54,9 @@ export const aiUsageModel = {
         requestId: data.requestId,
       },
     });
-  },
+  }
 
-  findByUser: async (params: UsageQueryParams): Promise<AIUsage[]> => {
+  async findByUser(params: UsageQueryParams): Promise<AIUsage[]> {
     const where: Prisma.AIUsageWhereInput = {};
 
     if (params.userId !== undefined) {
@@ -80,9 +80,9 @@ export const aiUsageModel = {
       take: params.limit ?? 50,
       skip: params.offset ?? 0,
     });
-  },
+  }
 
-  getAggregatedStats: async (userId: number | undefined, startDate: Date, endDate: Date) => {
+  async getAggregatedStats(userId: number | undefined, startDate: Date, endDate: Date) {
     const where: Prisma.AIUsageWhereInput = {
       createdAt: {
         gte: startDate,
@@ -103,9 +103,9 @@ export const aiUsageModel = {
       },
       _count: true,
     });
-  },
+  }
 
-  getTotalStats: async (userId: number | undefined, startDate: Date, endDate: Date) => {
+  async getTotalStats(userId: number | undefined, startDate: Date, endDate: Date) {
     const where: Prisma.AIUsageWhereInput = {
       createdAt: {
         gte: startDate,
@@ -125,13 +125,13 @@ export const aiUsageModel = {
       },
       _count: true,
     });
-  },
-};
+  }
+}
 
 // ── AI Conversation Model ────────────────────────────────────────────────────
 
-export const aiConversationModel = {
-  create: async (data: CreateConversationData): Promise<AIConversation> => {
+class AIConversationModel {
+  async create(data: CreateConversationData): Promise<AIConversation> {
     return prisma.aIConversation.create({
       data: {
         userId: data.userId,
@@ -141,21 +141,17 @@ export const aiConversationModel = {
         messageCount: 1,
       },
     });
-  },
+  }
 
-  findById: async (id: number, userId?: number): Promise<AIConversation | null> => {
+  async findById(id: number, userId?: number): Promise<AIConversation | null> {
     const where: Prisma.AIConversationWhereInput = { id };
     if (userId !== undefined) {
       where.userId = userId;
     }
     return prisma.aIConversation.findFirst({ where });
-  },
+  }
 
-  findByUser: async (
-    userId: number | undefined,
-    limit = 20,
-    offset = 0,
-  ): Promise<AIConversation[]> => {
+  async findByUser(userId: number | undefined, limit = 20, offset = 0): Promise<AIConversation[]> {
     const where: Prisma.AIConversationWhereInput = {};
     if (userId !== undefined) {
       where.userId = userId;
@@ -167,18 +163,21 @@ export const aiConversationModel = {
       take: limit,
       skip: offset,
     });
-  },
+  }
 
-  update: async (id: number, data: UpdateConversationData): Promise<AIConversation> => {
+  async update(id: number, data: UpdateConversationData): Promise<AIConversation> {
     return prisma.aIConversation.update({
       where: { id },
       data,
     });
-  },
+  }
 
-  delete: async (id: number): Promise<AIConversation> => {
+  async delete(id: number): Promise<AIConversation> {
     return prisma.aIConversation.delete({
       where: { id },
     });
-  },
-};
+  }
+}
+
+export const aiUsageModel = new AIUsageModel();
+export const aiConversationModel = new AIConversationModel();

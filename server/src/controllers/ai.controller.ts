@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { asyncHandler } from "@/core/async-handler";
 import { aiService } from "@/services/ai.service";
 import type {
   ChatDTO,
@@ -12,14 +11,14 @@ import type {
 } from "@/validations/ai.validation";
 
 class AIController extends BaseController {
-  chat = asyncHandler(async (req: Request, res: Response) => {
+  async chat(req: Request, res: Response) {
     const payload = (req.validated?.body || req.body) as ChatDTO;
     const userId = req.user?.userId;
     const result = await aiService.chat(payload, userId);
     ResponseHandler.success(res, result);
-  });
+  }
 
-  chatStream = async (req: Request, res: Response) => {
+  async chatStream(req: Request, res: Response) {
     const payload = (req.validated?.body || req.body) as ChatDTO;
     const userId = req.user?.userId;
 
@@ -38,35 +37,35 @@ class AIController extends BaseController {
       res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
       res.end();
     }
-  };
+  }
 
-  getModels = asyncHandler(async (_req: Request, res: Response) => {
+  async getModels(_req: Request, res: Response) {
     const models = await aiService.getModels();
     ResponseHandler.success(res, models);
-  });
+  }
 
-  getUsage = asyncHandler(async (req: Request, res: Response) => {
+  async getUsage(req: Request, res: Response) {
     const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as UsageQueryDTO;
     const stats = await aiService.getUsage(userId, query);
     ResponseHandler.success(res, stats);
-  });
+  }
 
-  getUsageRecords = asyncHandler(async (req: Request, res: Response) => {
+  async getUsageRecords(req: Request, res: Response) {
     const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as UsageQueryDTO;
     const records = await aiService.getUsageRecords(userId, query);
     ResponseHandler.success(res, records);
-  });
+  }
 
-  listConversations = asyncHandler(async (req: Request, res: Response) => {
+  async listConversations(req: Request, res: Response) {
     const userId = req.user?.userId;
     const query = (req.validated?.query || req.query) as ListConversationsQueryDTO;
     const conversations = await aiService.listConversations(userId, query.limit, query.offset);
     ResponseHandler.success(res, conversations);
-  });
+  }
 
-  getConversation = asyncHandler(async (req: Request, res: Response) => {
+  async getConversation(req: Request, res: Response) {
     const userId = req.user?.userId;
     const id = this.parseId(req.params.id);
     const conversation = await aiService.getConversation(id, userId);
@@ -76,16 +75,16 @@ class AIController extends BaseController {
     }
 
     ResponseHandler.success(res, conversation);
-  });
+  }
 
-  createConversation = asyncHandler(async (req: Request, res: Response) => {
+  async createConversation(req: Request, res: Response) {
     const userId = req.user?.userId;
     const payload = (req.validated?.body || req.body) as CreateConversationDTO;
     const conversation = await aiService.createConversation(payload, userId);
     ResponseHandler.created(res, conversation);
-  });
+  }
 
-  updateConversation = asyncHandler(async (req: Request, res: Response) => {
+  async updateConversation(req: Request, res: Response) {
     const userId = req.user?.userId;
     const id = this.parseId(req.params.id);
     const payload = (req.validated?.body || req.body) as UpdateConversationDTO;
@@ -96,9 +95,9 @@ class AIController extends BaseController {
     }
 
     ResponseHandler.success(res, conversation);
-  });
+  }
 
-  deleteConversation = asyncHandler(async (req: Request, res: Response) => {
+  async deleteConversation(req: Request, res: Response) {
     const userId = req.user?.userId;
     const id = this.parseId(req.params.id);
     const deleted = await aiService.deleteConversation(id, userId);
@@ -108,7 +107,7 @@ class AIController extends BaseController {
     }
 
     ResponseHandler.noContent(res);
-  });
+  }
 }
 
 export const aiController = new AIController();

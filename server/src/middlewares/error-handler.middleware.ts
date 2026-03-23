@@ -1,5 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
-import { AppError, ValidationError, handlePrismaError, isPrismaError } from "@/core/errors";
+import {
+  AppError,
+  ValidationError,
+  handlePrismaError,
+  isPrismaError,
+  ErrorCode,
+} from "@/core/errors";
 import { Sentry } from "@/core/instrument";
 import { logBusinessEvent } from "@/core/logger";
 import { getBreadcrumbs } from "@/core/logger/breadcrumbs";
@@ -156,7 +162,13 @@ export function errorHandlerMiddleware(
       "warn",
     );
 
-    ResponseHandler.error(res, "Validation failed", "VALIDATION_ERROR", 400, errors);
+    ResponseHandler.error(
+      res,
+      "Validation failed",
+      ErrorCode.VALIDATION_ERROR.code,
+      ErrorCode.VALIDATION_ERROR.status,
+      errors,
+    );
     return;
   }
 
@@ -171,6 +183,7 @@ export function errorHandlerMiddleware(
           handledError.message,
           handledError.code,
           handledError.statusCode,
+          handledError.details,
         );
         return;
       }
@@ -179,8 +192,8 @@ export function errorHandlerMiddleware(
 
   // Handle custom application errors
   if (error instanceof AppError) {
-    // Check if it's a ValidationError with field-level errors
-    const details = error instanceof ValidationError ? error.errors : undefined;
+    // Use ValidationError.errors for validation, otherwise use AppError.details
+    const details = error instanceof ValidationError ? error.errors : error.details;
 
     ResponseHandler.error(res, error.message, error.code, error.statusCode, details);
     return;
@@ -192,8 +205,8 @@ export function errorHandlerMiddleware(
   ResponseHandler.error(
     res,
     isDevelopment ? error.message : "An unexpected error occurred",
-    "INTERNAL_SERVER_ERROR",
-    500,
+    ErrorCode.INTERNAL_ERROR.code,
+    ErrorCode.INTERNAL_ERROR.status,
     isDevelopment ? { stack: error.stack } : undefined,
   );
 }
@@ -216,5 +229,10 @@ export function notFoundHandler(req: Request, res: Response): void {
     `Route not found: ${req.method} ${req.path}`,
   );
 
-  ResponseHandler.error(res, `Cannot ${req.method} ${req.path}`, "NOT_FOUND", 404);
+  ResponseHandler.error(
+    res,
+    `Cannot ${req.method} ${req.path}`,
+    ErrorCode.NOT_FOUND.code,
+    ErrorCode.NOT_FOUND.status,
+  );
 }
