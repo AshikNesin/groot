@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import { BadRequestError } from "@/core/errors";
+import { Boom } from "@/core/errors";
 
 /**
  * Base controller with common utilities
@@ -10,18 +10,18 @@ export abstract class BaseController {
    */
   protected parseId(value: string | undefined, paramName = "id"): number {
     if (value === undefined || value === null) {
-      throw new BadRequestError(`Missing ${paramName} parameter`);
+      throw Boom.badRequest(`Missing ${paramName} parameter`);
     }
 
     // Validate that the entire string is numeric before parsing
     // This prevents parseInt from accepting partial numbers like '123abc' → 123
     if (!/^\d+$/.test(value)) {
-      throw new BadRequestError(`Invalid ${paramName} format`);
+      throw Boom.badRequest(`Invalid ${paramName} format`);
     }
 
     const id = Number.parseInt(value, 10);
     if (Number.isNaN(id) || id < 1) {
-      throw new BadRequestError(`Invalid ${paramName} format`);
+      throw Boom.badRequest(`Invalid ${paramName} format`);
     }
 
     return id;
@@ -62,11 +62,11 @@ export abstract class BaseController {
     const sortOrder = ((req.query.sortOrder as string) || defaultOrder) as "asc" | "desc";
 
     if (!allowedFields.includes(sortBy)) {
-      throw new BadRequestError(`Invalid sort field: ${sortBy}`);
+      throw Boom.badRequest(`Invalid sort field: ${sortBy}`);
     }
 
     if (!["asc", "desc"].includes(sortOrder)) {
-      throw new BadRequestError(`Invalid sort order: ${sortOrder}`);
+      throw Boom.badRequest(`Invalid sort order: ${sortOrder}`);
     }
 
     return { sortBy, sortOrder };

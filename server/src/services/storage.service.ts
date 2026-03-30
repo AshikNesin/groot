@@ -1,7 +1,7 @@
 import type { Readable } from "node:stream";
 import pLimit from "p-limit";
 import { StorageService } from "@/core/storage";
-import { BadRequestError, NotFoundError } from "@/core/errors/base.errors";
+import { Boom } from "@/core/errors";
 
 export interface FileInfo {
   key: string;
@@ -83,7 +83,7 @@ export class StorageFileService {
     metadata?: Record<string, string>;
   }): Promise<{ filePath: string }> {
     if (!params.filePath) {
-      throw new BadRequestError("File path is required");
+      throw Boom.badRequest("File path is required");
     }
 
     const result = await this.storage.upload(params.filePath, params.fileData, {
@@ -148,7 +148,7 @@ export class StorageFileService {
     }
 
     if (!exists.data?.exists) {
-      throw new NotFoundError(`File not found: ${params.filePath}`);
+      throw Boom.notFound(`File not found: ${params.filePath}`);
     }
 
     const file = await this.storage.getBuffer(params.filePath);
@@ -168,7 +168,7 @@ export class StorageFileService {
     deletedCount: number;
   }> {
     if (!params.filePaths.length) {
-      throw new BadRequestError("No files specified for deletion");
+      throw Boom.badRequest("No files specified for deletion");
     }
     const result = await this.storage.remove(params.filePaths);
     if (result.error) {
@@ -197,7 +197,7 @@ export class StorageFileService {
 
   async createFolder(folderPath: string): Promise<{ folderPath: string }> {
     if (!folderPath.endsWith("/")) {
-      throw new BadRequestError("Folder path must end with /");
+      throw Boom.badRequest("Folder path must end with /");
     }
     const result = await this.storage.upload(`${folderPath}.keep`, "", {
       contentType: "text/plain",
@@ -211,7 +211,7 @@ export class StorageFileService {
 
   async deleteFolder(folderPath: string): Promise<{ deletedCount: number }> {
     if (!folderPath.endsWith("/")) {
-      throw new BadRequestError("Folder path must end with /");
+      throw Boom.badRequest("Folder path must end with /");
     }
     const listResult = await this.storage.list(folderPath, 1000);
     if (listResult.error) {
@@ -233,7 +233,7 @@ export class StorageFileService {
   }> {
     const exists = await this.storage.fileExists(params.oldPath);
     if (exists.error || !exists.data?.exists) {
-      throw new NotFoundError(`Source file not found: ${params.oldPath}`);
+      throw Boom.notFound(`Source file not found: ${params.oldPath}`);
     }
 
     const copyResult = await this.storage.copy(params.oldPath, params.newPath);

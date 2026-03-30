@@ -1,16 +1,5 @@
-export {
-  AppError,
-  BadRequestError,
-  NotFoundError,
-  UnauthorizedError,
-  ForbiddenError,
-  ValidationError,
-  ConflictError,
-  InternalError,
-} from "@/core/errors/base.errors";
-
-export { isPrismaError, handlePrismaError } from "@/core/errors/prisma-error-handler";
-
-export { ErrorCode, type ErrorCodeKey, type ErrorCodeValue } from "./error-codes";
-
-export { ERROR_CODE } from "./error-code";
+export { HttpError } from "./http-error";
+export type { HttpErrorOutput } from "./http-error";
+export { Boom } from "./boom";
+export { ErrorCode, ErrorCodeEnum, type ErrorCodeKey, type ErrorCodeValue } from "./error-codes";
+export { isPrismaError, handlePrismaError } from "./prisma-error-handler";

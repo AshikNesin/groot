@@ -65,7 +65,7 @@ export const ResponseHandler = {
       success: false,
       error: {
         code: entry.code,
-        message: messageOverride ?? entry.message,
+        message: messageOverride ?? entry.code,
         details,
       },
     });

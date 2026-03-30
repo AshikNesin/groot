@@ -1,5 +1,5 @@
 import { todoModel } from "@/models/todo.model";
-import { NotFoundError } from "@/core/errors/base.errors";
+import { Boom } from "@/core/errors";
 import type { CreateTodoDTO, UpdateTodoDTO } from "@/validations/todo.validation";
 
 class TodoService {
@@ -14,7 +14,7 @@ class TodoService {
   async findById(id: number) {
     const todo = await todoModel.findById(id);
     if (!todo) {
-      throw new NotFoundError("Todo not found");
+      throw Boom.notFound("Todo not found");
     }
     return todo;
   }

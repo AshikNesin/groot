@@ -1,7 +1,7 @@
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { passkeyService } from "@/services/passkey.service";
-import { ERROR_CODE } from "@/core/errors";
+import { Boom } from "@/core/errors";
 import type { Request, Response } from "express";
 
 export class PasskeyController extends BaseController {
@@ -11,7 +11,7 @@ export class PasskeyController extends BaseController {
    */
   async generateRegistrationOptions(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
+      throw Boom.unauthorized("Not authenticated");
     }
 
     const options = await passkeyService.generateRegistrationOptions(req.user.userId);
@@ -25,7 +25,7 @@ export class PasskeyController extends BaseController {
    */
   async verifyRegistration(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
+      throw Boom.unauthorized("Not authenticated");
     }
 
     const { response, credentialName } = req.body;
@@ -85,7 +85,7 @@ export class PasskeyController extends BaseController {
    */
   async listPasskeys(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
+      throw Boom.unauthorized("Not authenticated");
     }
 
     const passkeys = await passkeyService.listPasskeys(req.user.userId);
@@ -99,7 +99,7 @@ export class PasskeyController extends BaseController {
    */
   async deletePasskey(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
+      throw Boom.unauthorized("Not authenticated");
     }
 
     const passkeyId = this.parseId(req.params.id, "Passkey ID");
@@ -115,7 +115,7 @@ export class PasskeyController extends BaseController {
    */
   async updatePasskeyName(req: Request, res: Response): Promise<void> {
     if (!req.user) {
-      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
+      throw Boom.unauthorized("Not authenticated");
     }
 
     const passkeyId = this.parseId(req.params.id, "Passkey ID");

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { authService } from "@/services/auth.service";
-import { ERROR_CODE } from "@/core/errors";
+import { Boom } from "@/core/errors";
 
 class AuthController extends BaseController {
   /**
@@ -35,7 +35,7 @@ class AuthController extends BaseController {
    */
   async getCurrentUser(req: Request, res: Response) {
     if (!req.user) {
-      throw ERROR_CODE.UNAUTHORIZED({ message: "Not authenticated" });
+      throw Boom.unauthorized("Not authenticated");
     }
 
     const user = await authService.getUserById(req.user.userId);
