@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import dayjs from "dayjs";
 import { prisma } from "@/core/database";
 import { storageFileService } from "@/services/storage.service";
-import { BadRequestError, NotFoundError } from "@/core/errors/base.errors";
+import { Boom, HttpError } from "@/core/errors";
 import { env } from "@/env";
 
 export interface CreatePublicShareParams {
@@ -36,7 +36,7 @@ export class PublicShareService {
     const metadata = await storageFileService.getFileMetadata({ filePath });
 
     if (!metadata.exists) {
-      throw new NotFoundError(`File not found: ${filePath}`);
+      throw Boom.notFound(`File not found: ${filePath}`);
     }
 
     const expiresAt = dayjs().add(expiresInHours, "hour").toDate();
@@ -79,7 +79,7 @@ export class PublicShareService {
     });
 
     if (!share) {
-      throw new NotFoundError("Share not found");
+      throw Boom.notFound("Share not found");
     }
 
     await prisma.publicFileShare.update({
@@ -94,7 +94,7 @@ export class PublicShareService {
     });
 
     if (!share) {
-      throw new NotFoundError("Share not found or has been deleted");
+      throw Boom.notFound("Share not found or has been deleted");
     }
 
     if (!share.passwordHash) {
@@ -109,7 +109,7 @@ export class PublicShareService {
   ): Promise<{ buffer: Buffer; contentType: string; fileName: string }> {
     const validation = await this.validateShareAccess(shareId);
     if (!validation.isValid || !validation.share) {
-      throw new BadRequestError(validation.reason ?? "Share is not accessible");
+      throw Boom.badRequest(validation.reason ?? "Share is not accessible");
     }
 
     const file = await storageFileService.downloadFile({
@@ -130,7 +130,7 @@ export class PublicShareService {
     });
 
     if (!share) {
-      throw new NotFoundError("Share not found");
+      throw Boom.notFound("Share not found");
     }
 
     return this.formatShare(share);
@@ -155,7 +155,7 @@ export class PublicShareService {
 
       return { isValid: true, share };
     } catch (error) {
-      if (error instanceof NotFoundError) {
+      if (error instanceof HttpError) {
         return {
           isValid: false,
           reason: "Share not found or has been deleted",

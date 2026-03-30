@@ -13,7 +13,7 @@ import type {
   CreatePublicShareDTO,
   ListSharesForFileDTO,
 } from "@/validations/storage.validation";
-import { BadRequestError } from "@/core/errors/base.errors";
+import { Boom } from "@/core/errors";
 
 export class StorageController extends BaseController {
   async listFiles(req: Request, res: Response) {
@@ -30,7 +30,7 @@ export class StorageController extends BaseController {
     const body = req.validated?.body ?? req.body;
 
     if (!file) {
-      throw new BadRequestError("No file uploaded");
+      throw Boom.badRequest("No file uploaded");
     }
 
     const path = body?.filePath ?? file.originalname;
@@ -79,7 +79,7 @@ export class StorageController extends BaseController {
   async deleteFolder(req: Request<{ folderPath?: string }>, res: Response) {
     const { folderPath } = req.params;
     if (!folderPath) {
-      throw new BadRequestError("Folder path is required");
+      throw Boom.badRequest("Folder path is required");
     }
     const normalized = folderPath.endsWith("/") ? folderPath : `${folderPath}/`;
     const result = await storageFileService.deleteFolder(normalized);
@@ -99,11 +99,11 @@ export class StorageController extends BaseController {
     const files = req.files as Express.Multer.File[];
 
     if (!files || !files.length) {
-      throw new BadRequestError("No files uploaded");
+      throw Boom.badRequest("No files uploaded");
     }
 
     if (files.length > 50) {
-      throw new BadRequestError("Maximum 50 files per upload");
+      throw Boom.badRequest("Maximum 50 files per upload");
     }
 
     const payload = files.map((file) => ({

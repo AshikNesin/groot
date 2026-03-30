@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { publicShareService } from "@/services/public-share.service";
-import { ERROR_CODE } from "@/core/errors";
+import { Boom, ErrorCodeEnum } from "@/core/errors";
 import type { VerifySharePasswordDTO } from "@/validations/storage.validation";
 
 export class PublicFileController extends BaseController {
   async servePublicFile(req: Request, res: Response) {
     const { shareId } = req.params;
     if (!shareId) {
-      throw ERROR_CODE.BAD_REQUEST({ message: "Share ID is required" });
+      throw Boom.badRequest("Share ID is required");
     }
 
     const file = await publicShareService.getShareFileContent(shareId);
@@ -21,13 +21,13 @@ export class PublicFileController extends BaseController {
   async getPublicShareInfo(req: Request, res: Response) {
     const { shareId } = req.params;
     if (!shareId) {
-      throw ERROR_CODE.BAD_REQUEST({ message: "Share ID is required" });
+      throw Boom.badRequest("Share ID is required");
     }
 
     const validation = await publicShareService.validateShareAccess(shareId);
 
     if (!validation.isValid) {
-      throw ERROR_CODE.SHARE_ACCESS_DENIED({ message: validation.reason ?? undefined });
+      throw Boom.forbidden(validation.reason ?? undefined, null, ErrorCodeEnum.SHARE_ACCESS_DENIED);
     }
 
     res.json({
@@ -48,7 +48,7 @@ export class PublicFileController extends BaseController {
     const body: VerifySharePasswordDTO = req.validated?.body ?? req.body;
 
     if (!shareId) {
-      throw ERROR_CODE.BAD_REQUEST({ message: "Share ID is required" });
+      throw Boom.badRequest("Share ID is required");
     }
 
     const isValid = await publicShareService.verifySharePassword(shareId, body.password);

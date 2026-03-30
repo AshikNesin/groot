@@ -1,11 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import {
-  AppError,
-  ValidationError,
-  handlePrismaError,
-  isPrismaError,
-  ErrorCode,
-} from "@/core/errors";
+import { HttpError, Boom, ErrorCode } from "@/core/errors";
 import { Sentry } from "@/core/instrument";
 import { logBusinessEvent } from "@/core/logger";
 import { getBreadcrumbs } from "@/core/logger/breadcrumbs";
@@ -51,7 +45,7 @@ export function errorHandlerMiddleware(
       name: error.name,
       message: error.message,
       stack: error.stack,
-      isOperational: error instanceof AppError ? error.isOperational : false,
+      isOperational: Boom.isHttpError(error) ? error.isOperational : false,
     },
     request: {
       method: req.method,
@@ -81,7 +75,7 @@ export function errorHandlerMiddleware(
   };
 
   // Log with appropriate level based on error type
-  if (error instanceof AppError && error.isOperational) {
+  if (Boom.isHttpError(error) && error.isOperational) {
     // Operational errors (expected business logic errors)
     requestLogger.warn(errorContext, `Operational error: ${error.message}`);
 
@@ -177,25 +171,18 @@ export function errorHandlerMiddleware(
     try {
       handlePrismaError(error);
     } catch (handledError) {
-      if (handledError instanceof AppError) {
-        ResponseHandler.error(
-          res,
-          handledError.message,
-          handledError.code,
-          handledError.statusCode,
-          handledError.details,
-        );
+      if (Boom.isHttpError(handledError)) {
+        const { statusCode, message, code, data } = handledError.output;
+        ResponseHandler.error(res, message, code, statusCode, data);
         return;
       }
     }
   }
 
-  // Handle custom application errors
-  if (error instanceof AppError) {
-    // Use ValidationError.errors for validation, otherwise use AppError.details
-    const details = error instanceof ValidationError ? error.errors : error.details;
-
-    ResponseHandler.error(res, error.message, error.code, error.statusCode, details);
+  // Handle HttpError (all Boom-created errors)
+  if (Boom.isHttpError(error)) {
+    const { statusCode, message, code, data } = error.output;
+    ResponseHandler.error(res, message, code, statusCode, data);
     return;
   }
 
@@ -236,3 +223,6 @@ export function notFoundHandler(req: Request, res: Response): void {
     ErrorCode.NOT_FOUND.status,
   );
 }
+
+// Re-import for use in this file
+import { isPrismaError, handlePrismaError } from "@/core/errors";

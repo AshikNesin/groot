@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { userModel } from "@/models/user.model";
-import { UnauthorizedError, ConflictError, NotFoundError } from "@/core/errors";
+import { Boom } from "@/core/errors";
 import { generateToken } from "@/utils/jwt.utils";
 import type { CreateUserDTO, LoginDTO } from "@/validations/auth.validation";
 
@@ -9,13 +9,13 @@ class AuthService {
     const user = await userModel.findByEmail(data.email);
 
     if (!user) {
-      throw new UnauthorizedError("Invalid email or password");
+      throw Boom.unauthorized("Invalid email or password");
     }
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedError("Invalid email or password");
+      throw Boom.unauthorized("Invalid email or password");
     }
 
     const token = generateToken({
@@ -37,7 +37,7 @@ class AuthService {
     const existingUser = await userModel.findByEmail(data.email);
 
     if (existingUser) {
-      throw new ConflictError("User with this email already exists");
+      throw Boom.conflict("User with this email already exists");
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -60,7 +60,7 @@ class AuthService {
     const user = await userModel.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("User", userId);
+      throw Boom.notFound(`User with identifier '${userId}' not found`);
     }
 
     return {
@@ -79,7 +79,7 @@ class AuthService {
     const user = await userModel.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("User", userId);
+      throw Boom.notFound(`User with identifier '${userId}' not found`);
     }
 
     await userModel.delete(userId);

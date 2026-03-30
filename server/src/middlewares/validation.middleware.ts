@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { type ZodSchema, z } from "zod";
-import { ValidationError } from "@/core/errors/base.errors";
+import { Boom, ErrorCodeEnum } from "@/core/errors";
 
 export type ValidationTarget = "body" | "query" | "params";
 
@@ -21,7 +21,7 @@ export function validate(schema: ZodSchema, target: ValidationTarget = "body") {
           const field = issue.path.join(".") || "global";
           details[field] = [...(details[field] ?? []), issue.message];
         }
-        throw new ValidationError("Validation failed", details);
+        throw Boom.badRequest("Validation failed", details, ErrorCodeEnum.VALIDATION_ERROR);
       }
       next(error);
     }

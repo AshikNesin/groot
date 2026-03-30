@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { prisma } from "@/core/database";
-import { ERROR_CODE } from "@/core/errors";
+import { Boom, ErrorCodeEnum } from "@/core/errors";
 import {
   addJob,
   scheduleJob,
@@ -28,10 +28,10 @@ function parsePagination(limit?: string, offset?: string) {
   const parsedOffset = offset ? parseStrictInt(offset) : 0;
 
   if (parsedLimit === null || parsedLimit < 1 || parsedLimit > 1000) {
-    throw ERROR_CODE.VALIDATION_ERROR({ message: "limit must be an integer between 1 and 1000" });
+    throw Boom.badRequest("limit must be an integer between 1 and 1000", null, ErrorCodeEnum.VALIDATION_ERROR);
   }
   if (parsedOffset === null || parsedOffset < 0) {
-    throw ERROR_CODE.VALIDATION_ERROR({ message: "offset must be a non-negative integer" });
+    throw Boom.badRequest("offset must be a non-negative integer", null, ErrorCodeEnum.VALIDATION_ERROR);
   }
 
   return { limit: parsedLimit, offset: parsedOffset };
@@ -48,13 +48,11 @@ class JobController extends BaseController {
     const { jobName, data, options } = req.body ?? {};
 
     if (!jobName || !data) {
-      throw ERROR_CODE.JOB_VALIDATION_ERROR({
-        message: "Missing required fields: jobName and data",
-      });
+      throw Boom.badRequest("Missing required fields: jobName and data", null, ErrorCodeEnum.JOB_VALIDATION_ERROR);
     }
 
     if (!Object.values(JobName).includes(jobName as JobName)) {
-      throw ERROR_CODE.JOB_NAME_INVALID({ details: { availableJobs: Object.values(JobName) } });
+      throw Boom.badRequest("Invalid job name", { availableJobs: Object.values(JobName) }, ErrorCodeEnum.JOB_NAME_INVALID);
     }
 
     const jobId = await addJob(jobName as JobName, data, options);
@@ -65,13 +63,11 @@ class JobController extends BaseController {
     const { jobName, data, cron, options } = req.body ?? {};
 
     if (!jobName || !data || !cron) {
-      throw ERROR_CODE.JOB_SCHEDULE_VALIDATION_ERROR({
-        message: "Missing required fields: jobName, data, cron",
-      });
+      throw Boom.badRequest("Missing required fields: jobName, data, cron", null, ErrorCodeEnum.JOB_SCHEDULE_VALIDATION_ERROR);
     }
 
     if (!Object.values(JobName).includes(jobName as JobName)) {
-      throw ERROR_CODE.JOB_NAME_INVALID({ details: { availableJobs: Object.values(JobName) } });
+      throw Boom.badRequest("Invalid job name", { availableJobs: Object.values(JobName) }, ErrorCodeEnum.JOB_NAME_INVALID);
     }
 
     await scheduleJob(jobName as JobName, data, cron, options);
@@ -118,9 +114,7 @@ class JobController extends BaseController {
     const { jobs } = req.body ?? {};
 
     if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-      throw ERROR_CODE.JOB_BULK_RERUN_VALIDATION_ERROR({
-        message: "Missing required field: jobs (array of {queueName, jobId})",
-      });
+      throw Boom.badRequest("Missing required field: jobs (array of {queueName, jobId})", null, ErrorCodeEnum.JOB_BULK_RERUN_VALIDATION_ERROR);
     }
 
     const results = await rerunJobs(jobs);
@@ -181,7 +175,7 @@ class JobController extends BaseController {
   async getById(req: Request, res: Response) {
     const job = await getJobById(req.params.queueName, req.params.jobId);
     if (!job) {
-      throw ERROR_CODE.JOB_NOT_FOUND();
+      throw Boom.notFound("Job not found", null, ErrorCodeEnum.JOB_NOT_FOUND);
     }
     return ResponseHandler.success(res, job, "Job details retrieved");
   }

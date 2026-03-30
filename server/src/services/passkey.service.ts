@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from "@/core/errors";
+import { Boom } from "@/core/errors";
 import { logger } from "@/core/logger";
 import type { Passkey, User } from "@/generated/prisma/models";
 import { passkeyModel } from "@/models/passkey.model";
@@ -34,7 +34,7 @@ export class PasskeyService {
     // Get user
     const user = await userModel.findById(userId);
     if (!user) {
-      throw new NotFoundError("User not found");
+      throw Boom.notFound("User not found");
     }
 
     // Get existing passkeys
@@ -62,31 +62,31 @@ export class PasskeyService {
     // Get stored challenge
     const expectedChallenge = challengeStore.get(`reg:${userId}`);
     if (!expectedChallenge) {
-      throw new BadRequestError("Challenge not found or expired");
+      throw Boom.badRequest("Challenge not found or expired");
     }
 
     // Verify the registration response
     const verification = await verifyPasskeyRegistration(response, expectedChallenge);
 
     if (!verification.verified || !verification.registrationInfo) {
-      throw new BadRequestError("Passkey registration verification failed");
+      throw Boom.badRequest("Passkey registration verification failed");
     }
 
     const { registrationInfo } = verification;
     const { credential, credentialDeviceType, credentialBackedUp } = registrationInfo;
 
     if (!credential?.id) {
-      throw new BadRequestError("Missing credential ID in registration info");
+      throw Boom.badRequest("Missing credential ID in registration info");
     }
     if (!credential?.publicKey) {
-      throw new BadRequestError("Missing public key in registration info");
+      throw Boom.badRequest("Missing public key in registration info");
     }
 
     // credential.id is already a base64url string in v13
     const credentialIdBase64 = credential.id;
     const existingPasskey = await passkeyModel.findByCredentialId(credentialIdBase64);
     if (existingPasskey) {
-      throw new ConflictError("This passkey is already registered");
+      throw Boom.conflict("This passkey is already registered");
     }
 
     // Generate default name if not provided
@@ -158,27 +158,27 @@ export class PasskeyService {
     const challengeKey = email ? `auth:${email}` : "auth:discoverable";
     const expectedChallenge = challengeStore.get(challengeKey);
     if (!expectedChallenge) {
-      throw new BadRequestError("Challenge not found or expired");
+      throw Boom.badRequest("Challenge not found or expired");
     }
 
     // Find passkey by credential ID
     const credentialIdBase64 = Buffer.from(response.rawId, "base64url").toString("base64url");
     const passkey = await passkeyModel.findByCredentialId(credentialIdBase64);
     if (!passkey) {
-      throw new UnauthorizedError("Passkey not found");
+      throw Boom.unauthorized("Passkey not found");
     }
 
     // Verify the authentication response
     const verification = await verifyPasskeyAuthentication(response, expectedChallenge, passkey);
 
     if (!verification.verified) {
-      throw new UnauthorizedError("Passkey authentication verification failed");
+      throw Boom.unauthorized("Passkey authentication verification failed");
     }
 
     // Get user
     const user = await userModel.findById(passkey.userId);
     if (!user) {
-      throw new UnauthorizedError("User not found");
+      throw Boom.unauthorized("User not found");
     }
 
     // Update passkey counter and last used date
@@ -230,13 +230,13 @@ export class PasskeyService {
     // Verify ownership
     const passkey = await passkeyModel.findByIdAndUserId(passkeyId, userId);
     if (!passkey) {
-      throw new NotFoundError("Passkey not found");
+      throw Boom.notFound("Passkey not found");
     }
 
     // Check if this is the last passkey
     const passkeyCount = await passkeyModel.countByUserId(userId);
     if (passkeyCount === 1) {
-      throw new BadRequestError(
+      throw Boom.badRequest(
         "Cannot delete the last passkey. Please add another passkey first.",
       );
     }
@@ -257,7 +257,7 @@ export class PasskeyService {
     // Verify ownership
     const passkey = await passkeyModel.findByIdAndUserId(passkeyId, userId);
     if (!passkey) {
-      throw new NotFoundError("Passkey not found");
+      throw Boom.notFound("Passkey not found");
     }
 
     const updatedPasskey = await passkeyModel.update(passkeyId, {

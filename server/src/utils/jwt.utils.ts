@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { UnauthorizedError } from "@/core/errors";
+import { Boom } from "@/core/errors";
 
 interface JWTPayload {
   userId: number;
@@ -27,12 +27,12 @@ export function verifyToken(token: string): JWTPayload {
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new UnauthorizedError("Token expired");
+      throw Boom.unauthorized("Token expired");
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError("Invalid token");
+      throw Boom.unauthorized("Invalid token");
     }
-    throw new UnauthorizedError("Token verification failed");
+    throw Boom.unauthorized("Token verification failed");
   }
 }
 

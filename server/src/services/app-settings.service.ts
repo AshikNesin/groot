@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/core/errors/base.errors";
+import { Boom } from "@/core/errors";
 import { appSettingsModel } from "@/models/app-settings.model";
 import type { AppSetting } from "@/models/app-settings.model";
 import type { UpsertAppSettingDTO } from "@/validations/app-settings.validation";
@@ -7,7 +7,7 @@ class AppSettingsService {
   async get<T = unknown>(key: string): Promise<AppSetting<T>> {
     const setting = await appSettingsModel.get<T>(key);
     if (!setting) {
-      throw new NotFoundError("App Setting", key);
+      throw Boom.notFound(`App Setting '${key}' not found`);
     }
     return setting;
   }
@@ -23,7 +23,7 @@ class AppSettingsService {
   async delete(key: string): Promise<void> {
     const exists = await appSettingsModel.exists(key);
     if (!exists) {
-      throw new NotFoundError("App Setting", key);
+      throw Boom.notFound(`App Setting '${key}' not found`);
     }
     await appSettingsModel.remove(key);
   }
