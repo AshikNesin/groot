@@ -214,7 +214,7 @@ Install hooks: `pnpm prepare` (runs `vp config`)
 
 ## Quick Start for AI Assistants
 
-1. Read this file and `docs/SETUP_GUIDE.md` for context
+1. Read this file and `docs/setup-guide.md` for context
 2. Check `prisma/schema.prisma` for data models
 3. Review existing patterns in similar files before creating new ones
 4. Run `pnpm check` and `pnpm test` before suggesting changes
