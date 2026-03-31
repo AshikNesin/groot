@@ -82,7 +82,7 @@ pnpm dev
 3. **Start development:**
    ```bash
    pnpm dev
-   # Server runs on http://<appname>.localhost:1355 (via portless)
+   # Server runs on http://<appname>.localhost:1355 (or https://<appname>.localhost if HTTPS is enabled via portless)
    ```
 
 See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
