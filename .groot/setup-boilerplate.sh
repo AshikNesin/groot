@@ -60,7 +60,7 @@ setup_portless() {
 
     if ! command -v portless &> /dev/null; then
         print_info "portless is not installed. We recommend installing it for local development."
-        read -p "Install portless globally via npm? (y/N): " -n 1 -r
+        read -p "Install portless globally via npm? (y/N): " -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             npm install -g portless
