@@ -39,14 +39,23 @@ pnpm dev                    # https://<appname>.localhost via portless
 ## Project Structure
 
 ```
-server/src/
-  controllers/  routes/  services/  middlewares/
-  core/         models/  validations/  utils/
-
-client/src/
-  components/   pages/   lib/   store/   hooks/
-
-docs/           prisma/
+├── server/src/
+│   ├── controllers/
+│   ├── routes/
+│   ├── services/
+│   ├── middlewares/
+│   ├── core/
+│   ├── models/
+│   ├── validations/
+│   └── utils/
+├── client/src/
+│   ├── components/
+│   ├── pages/
+│   ├── lib/
+│   ├── store/
+│   └── hooks/
+├── docs/
+└── prisma/
 ```
 
 ## Scripts
