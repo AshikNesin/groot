@@ -68,13 +68,22 @@ pnpm prisma generate
 pnpm prisma db push
 ```
 
-### 3. Start Development
+### 3. Install Portless (One-Time)
+
+```bash
+# Install portless globally for local HTTPS
+npm install -g portless
+```
+
+On first run, portless will prompt you to trust a local CA certificate (requires sudo). This enables `https://*.localhost` with no browser warnings. See [Portless & HTTPS Guide](./guides/portless-https.md) for details and troubleshooting.
+
+### 4. Start Development
 
 ```bash
 # Start dev server
 pnpm dev
 
-# Server runs on http://localhost:3000
+# Server runs on https://groot.localhost
 ```
 
 ---

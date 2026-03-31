@@ -48,16 +48,30 @@ const httpServer = http.createServer(app);
 if (!isProd) {
   const { createServer } = await import("vite-plus");
 
-  const hmrConfig = process.env.VITE_HMR_URL
-    ? {
+  let hmrConfig: any = {
+    port: port + 1,
+  };
+
+  if (process.env.VITE_HMR_URL) {
+    hmrConfig = {
+      server: httpServer,
+      protocol: "wss" as const,
+      host: process.env.VITE_HMR_URL,
+      clientPort: 443,
+    };
+  } else if (process.env.PORTLESS_URL) {
+    try {
+      const url = new URL(process.env.PORTLESS_URL);
+      hmrConfig = {
         server: httpServer,
-        protocol: "wss" as const,
-        host: process.env.VITE_HMR_URL,
-        clientPort: 443,
-      }
-    : {
-        port: port + 1,
+        protocol: url.protocol === "https:" ? "wss" : "ws",
+        host: url.hostname,
+        clientPort: url.port ? parseInt(url.port, 10) : (url.protocol === "https:" ? 443 : 80),
       };
+    } catch (e) {
+      logger.warn("Failed to parse PORTLESS_URL for HMR config", e);
+    }
+  }
 
   viteServer = await createServer({
     root: clientRoot,

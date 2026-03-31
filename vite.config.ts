@@ -40,14 +40,31 @@ export default defineConfig({
   },
   server: {
     middlewareMode: true,
-    allowedHosts: process.env.VITE_HMR_URL ? [process.env.VITE_HMR_URL] : undefined,
+    allowedHosts: process.env.PORTLESS_URL
+      ? true
+      : process.env.VITE_HMR_URL
+        ? [process.env.VITE_HMR_URL]
+        : undefined,
     hmr: process.env.VITE_HMR_URL
       ? {
           protocol: "wss",
           host: process.env.VITE_HMR_URL,
           clientPort: 443,
         }
-      : undefined,
+      : process.env.PORTLESS_URL
+        ? (() => {
+            try {
+              const url = new URL(process.env.PORTLESS_URL);
+              return {
+                protocol: url.protocol === "https:" ? "wss" : "ws",
+                host: url.hostname,
+                clientPort: url.port ? parseInt(url.port, 10) : (url.protocol === "https:" ? 443 : 80),
+              };
+            } catch (e) {
+              return undefined;
+            }
+          })()
+        : undefined,
   },
   publicDir: "./public",
 
@@ -69,5 +86,8 @@ export default defineConfig({
     exclude: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["../tests/client/setup.ts"],
+    alias: {
+      "@": clientSrc,
+    },
   },
 });

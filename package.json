@@ -17,7 +17,8 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "dev": "NODE_ENV=development varlock run -- tsx scripts/dev.ts",
+    "dev": "NODE_ENV=development portless run --name $npm_package_name varlock run -- tsx scripts/dev.ts",
+    "dev:localhost": "NODE_ENV=development PORTLESS=0 varlock run -- tsx scripts/dev.ts",
     "dev:server": "NODE_ENV=development varlock run -- tsx watch server/src/index.ts",
     "dev:db:stop": "varlock run -- prisma dev stop",
     "dev:db:docker:stop": "varlock run -- tsx scripts/docker-db-cleanup.ts --stop",

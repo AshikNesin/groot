@@ -6,6 +6,7 @@ Follow these steps to boot the Express API, job queue, and React client locally 
 
 - Node.js 18+
 - pnpm (the repo is configured for pnpm scripts)
+- portless (Install globally: `npm install -g portless`) — see [Portless & HTTPS Guide](./guides/portless-https.md)
 - PostgreSQL instance reachable via `DATABASE_URL`
 - OpenSSL or another tool for generating basic auth credentials
 
@@ -89,9 +90,12 @@ pnpm prisma:push          # sync schema to your database
 pnpm dev                  # runs server + Vite dev middleware
 ```
 
-- Visit `http://localhost:3000` for the client. The backend mounts Vite middleware automatically while `NODE_ENV=development`.
-- Hit `http://localhost:3000/health` without auth to confirm the API is live.
+> **First time?** On first `pnpm dev`, portless will prompt you to trust a local CA certificate (requires sudo). See [Portless & HTTPS Guide](./guides/portless-https.md) for details.
+
+- Visit `https://groot.localhost` for the client (portless provides HTTPS automatically).
+- Hit `https://groot.localhost/health` without auth to confirm the API is live.
 - Interact with `/api/v1/todos` or `/api/v1/jobs` using basic auth headers (`Authorization: Basic base64(username:password)`).
+- To bypass portless and use plain `http://localhost:3000`, run: `PORTLESS=0 pnpm dev`
 
 ## Production Build
 
