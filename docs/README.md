@@ -12,6 +12,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 
 ### 🧱 Guides
 
+- **[Portless & HTTPS](./guides/portless-https.md)** – Local HTTPS setup, certificate trust, and troubleshooting
 - **[Architecture](./guides/architecture.md)** – Server layers, job system, and client structure
 - **[Testing](./guides/testing.md)** – Vitest + Supertest guidance and patterns
 - **[Pre-commit Hooks](./precommit-hooks.md)** – Gitleaks secret detection and linting automation

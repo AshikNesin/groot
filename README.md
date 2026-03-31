@@ -34,6 +34,7 @@ A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a co
 - Node.js (v18 or later recommended)
 - PostgreSQL database
 - pnpm (Install globally: `npm install -g pnpm`)
+- portless (Install globally: `npm install -g portless`)
 
 ## Quick Start
 
@@ -81,7 +82,7 @@ pnpm dev
 3. **Start development:**
    ```bash
    pnpm dev
-   # Server runs on http://localhost:3000
+   # Server runs on http://<appname>.localhost:1355 (or https://<appname>.localhost if HTTPS is enabled via portless)
    ```
 
 See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.

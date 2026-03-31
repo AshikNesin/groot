@@ -54,6 +54,27 @@ setup_env() {
     print_info "Secrets like JWT_SECRET and ADMIN_AUTH_KEY are managed in Infisical."
 }
 
+# Setup portless
+setup_portless() {
+    print_info "Checking portless installation..."
+
+    if ! command -v portless &> /dev/null; then
+        print_info "portless is not installed. We recommend installing it for local development."
+        read -p "Install portless globally via npm? (y/N): " -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            npm install -g portless || { print_warning "Failed to install portless. You may need to run 'npm install -g portless' manually."; true; }
+            if command -v portless &> /dev/null; then
+                print_success "portless installed successfully"
+            fi
+        else
+            print_warning "Skipped portless installation. You may need to run 'npm install -g portless' manually."
+        fi
+    else
+        print_success "portless is already installed"
+    fi
+}
+
 # Setup pre-commit hooks (includes gitleaks)
 setup_pre_commit() {
     print_info "Setting up pre-commit hooks..."
@@ -229,6 +250,7 @@ main() {
     
     # Run setup steps
     setup_env
+    setup_portless
     setup_pre_commit
     update_app_name
     final_steps
