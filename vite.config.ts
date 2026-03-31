@@ -87,7 +87,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["../tests/client/setup.ts"],
     alias: {
-      "@": path.resolve(__dirname, "client/src"),
+      "@": clientSrc,
     },
   },
 });
