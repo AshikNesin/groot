@@ -1,235 +1,82 @@
 # Groot
 
-A production-ready SaaS boilerplate with Express.js, React, TypeScript, and a complete UI component library.
+Starter kit for building web apps with a reliable, minimal tech stack.
 
-## ✨ Features
+No framework churn. No over-abstraction. Just Express + React + Postgres — wired together so you can ship.
 
-### Backend
+## Tech Stack
 
-- ✅ **JWT Authentication** - Complete auth system with login, logout, and protected routes
-- ✅ **Production Error Handling** - Sentry integration, breadcrumbs, and request tracing
-- ✅ **Enhanced Logging** - Request correlation, performance tracking, and business events
-- ✅ **Base Controller** - Pagination, sorting, ID parsing utilities
-- ✅ **Background Jobs** - pg-boss queue system for async processing
-- ✅ **Key-Value Storage** - Keyv with PostgreSQL adapter
-- ✅ **File Storage** - S3-backed storage with public sharing
+| Layer   | What                                                            |
+| ------- | --------------------------------------------------------------- |
+| Server  | Express 5, TypeScript, Prisma, pg-boss, Pino                    |
+| Client  | React 19, Vite 7, React Router 7, React Query, Zustand          |
+| Auth    | JWT + Passkeys (WebAuthn)                                        |
+| Tooling | Vite+ (Oxlint, Oxfmt, Vitest), Playwright, pnpm                 |
 
-### Frontend
-
-- ✅ **26 UI Components** - Complete component library with Radix UI
-- ✅ **Design System** - Stripe-inspired, data-first design tokens
-- ✅ **Type-Safe API Client** - Automatic 401 handling and error management
-- ✅ **Layout Components** - PageLayout, PageHeader, PageContainer, Section
-- ✅ **Auth Store** - JWT authentication with loading and error states
-- ✅ **30+ Utility Functions** - Date, currency, validation, and more
-
-## 📚 Documentation
-
-- **[Quick Start Guide](./docs/quick-start.md)** - Get up and running in 3 steps
-- **[Complete Reference](./docs/boilerplate-enhancements.md)** - Full documentation of all features
-- **[Documentation Hub](./docs/README.md)** - Browse all available guides
-
-## Prerequisites
-
-- Node.js (v18 or later recommended)
-- PostgreSQL database
-- pnpm (Install globally: `npm install -g pnpm`)
-- portless (Install globally: `npm install -g portless`)
-
-## Quick Start
-
-### Option 1: Automated Setup (Recommended)
-
-Run the setup script to automatically configure your environment with secure secrets:
+## Get Started
 
 ```bash
-./setup-boilerplate.sh
-```
-
-This script will:
-
-- Copy `.env.schema` to `.env`
-- Generate secure `JWT_SECRET` and `ADMIN_AUTH_KEY`
-- Prompt for your app name and update `RP_NAME`
-- Optionally update package.json and code references
-
-After running the script:
-
-```bash
+cp .env.schema .env         # configure secrets
 pnpm install
 pnpm prisma generate
 pnpm prisma db push
-pnpm dev
+pnpm dev                    # https://<appname>.localhost via portless
 ```
 
-### Option 2: Manual Setup
+→ **[Full setup guide](./docs/setup-guide.md)** • **[Quick start](./docs/quick-start.md)**
 
-1. **Setup environment:**
+## What's Included
 
-   ```bash
-   cp .env.schema .env
-   # Edit .env and set JWT_SECRET, ADMIN_AUTH_KEY, DATABASE_URL
-   ```
-
-2. **Install and generate:**
-
-   ```bash
-   pnpm install
-   pnpm prisma generate
-   pnpm prisma db push
-   ```
-
-3. **Start development:**
-   ```bash
-   pnpm dev
-   # Server runs on http://<appname>.localhost:1355 (or https://<appname>.localhost if HTTPS is enabled via portless)
-   ```
-
-See [Quick Start Guide](./docs/quick-start.md) for detailed instructions.
-
-## Available Scripts
-
-- **`pnpm build`**: Compiles TypeScript code to JavaScript in the `dist` directory.
-- **`pnpm start`**: Starts the application from the compiled code in `dist`.
-- **`pnpm dev`**: Starts the application in development mode using `tsx`. It watches for changes in `src/index.ts` and automatically restarts the server.
-- **`pnpm lint`**: Lints the TypeScript code in the `src` directory using Vite+ (Oxlint).
-- **`pnpm format`**: Formats the TypeScript code in the `src` directory using Vite+ (Oxfmt).
+- JWT + Passkey auth with protected routes
+- Background jobs via pg-boss
+- S3 file storage with secure sharing
+- AI inference with Zod structured output
+- Key-value store (Keyv + Postgres)
+- UI component library (Radix + Tailwind)
+- Request logging, error tracking (Sentry), rate limiting
+- Pre-commit hooks with secret detection
 
 ## Project Structure
 
 ```
-├── server/
-│   ├── src/
-│   │   ├── controllers/    # Request handlers
-│   │   ├── services/       # Business logic
-│   │   ├── routes/         # API routes
-│   │   ├── middlewares/    # Express middlewares
-│   │   ├── core/           # Core utilities (errors, logger, jobs)
-│   │   ├── models/         # Data models
-│   │   ├── validations/    # Zod schemas
-│   │   └── utils/          # Helper functions
-│   └── ...
-├── client/
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   │   ├── ui/         # 26 UI components
-│   │   │   └── layout/     # Layout components
-│   │   ├── pages/          # Page components
-│   │   ├── lib/            # Utils & API client
-│   │   ├── store/          # Zustand stores
-│   │   └── hooks/          # Custom hooks
-│   └── ...
-├── docs/               # Documentation
-├── prisma/             # Database schema
-└── ...
+server/src/
+  controllers/  routes/  services/  middlewares/
+  core/         models/  validations/  utils/
+
+client/src/
+  components/   pages/   lib/   store/   hooks/
+
+docs/           prisma/
 ```
 
-## Tech Stack
-
-| Area                | Technologies                                                     |
-| ------------------- | ---------------------------------------------------------------- |
-| **Backend**         | Node.js, Express 5, TypeScript, Prisma, PostgreSQL               |
-| **Auth**            | JWT (bcryptjs), Passkeys (@simplewebauthn/server), cookie-parser |
-| **File Storage**    | AWS S3 SDK (@aws-sdk/client-s3), Multer                          |
-| **Jobs**            | pg-boss (PostgreSQL-backed queue)                                |
-| **Key-Value Store** | Keyv with PostgreSQL adapter                                     |
-| **Logging**         | Pino, Sentry                                                     |
-| **Frontend**        | React 19, TypeScript, Vite 7                                     |
-| **UI**              | Radix UI primitives, Tailwind CSS, shadcn/ui patterns            |
-| **State**           | Zustand, React Query                                             |
-| **Routing**         | React Router 7                                                   |
-| **Tooling**         | Vite+ (Oxlint, Oxfmt), Vitest, Playwright, pnpm                  |
-
-## Authentication
-
-### Create First User
+## Scripts
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/auth/users \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Auth: your-admin-key" \
-  -d '{"email":"user@example.com","password":"password123"}'
+pnpm dev              # dev server (HTTPS via portless)
+pnpm dev:localhost     # dev server (plain HTTP, no proxy)
+pnpm build            # production build
+pnpm start            # run production build
+pnpm check            # lint + format + typecheck
+pnpm test             # run tests
+pnpm test:e2e         # playwright e2e tests
 ```
 
-### Login
+## Docs
 
-```bash
-curl -X POST http://localhost:3000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
-```
-
-See [Quick Start Guide](./docs/quick-start.md) for more examples.
-
-## Common Commands
-
-```bash
-# Development
-pnpm dev              # Start dev server
-pnpm build            # Build for production
-pnpm start            # Run production build
-
-# Database
-pnpm prisma generate  # Generate Prisma client
-pnpm prisma db push   # Push schema to database
-
-# Code Quality
-pnpm lint             # Lint code
-pnpm format           # Format code
-pnpm test             # Run tests
-pnpm test:watch       # Run tests in watch mode
-```
-
-## What's Included
-
-### Backend (35+ files)
-
-- Complete JWT authentication system
-- Enhanced error handling with Sentry
-- Request logging with breadcrumbs and tracing
-- Base controller with utilities
-- 30+ utility functions (date, validation, array)
-- Async handler wrapper
-- Admin auth middleware
-
-### Frontend (30+ files)
-
-- 26 production-ready UI components
-- Design system with 275 lines of tokens
-- Type-safe API client (207 lines)
-- Enhanced auth store with JWT support
-- Layout components (PageLayout, PageHeader, etc.)
-- 25+ date utility functions
-- Loading states (spinner, skeleton, empty state)
-
-### Total Stats
-
-- **60+ files added/modified**
-- **8,000+ lines of code**
-- **26 UI components**
-- **Build size**: 438 kB frontend, 373 kB backend
-
-## Documentation
-
-- **[Quick Start Guide](./docs/quick-start.md)** - Setup and first steps
-- **[Boilerplate Enhancements](./docs/boilerplate-enhancements.md)** - Complete feature reference
-- **[Setup Guide](./docs/SETUP_GUIDE.md)** - Detailed setup instructions
-- **[Documentation Hub](./docs/README.md)** - All available guides
-
-## Production Checklist
-
-Before deploying:
-
-- [ ] Run `./setup-boilerplate.sh` to generate secure secrets (or manually set):
-  - [ ] Strong `JWT_SECRET` (min 32 characters)
-  - [ ] Strong `ADMIN_AUTH_KEY`
-- [ ] Configure production `DATABASE_URL`
-- [ ] Set `SENTRY_DSN` for error tracking (optional)
-- [ ] Update `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD`
-- [ ] Set `NODE_ENV=production`
-- [ ] Test auth endpoints
-- [ ] Run `pnpm build` to verify
-- [ ] Run `pnpm test` to verify tests pass
+| Topic | Link |
+|---|---|
+| Quick start | [docs/quick-start.md](./docs/quick-start.md) |
+| Setup guide | [docs/setup-guide.md](./docs/setup-guide.md) |
+| Architecture | [docs/guides/architecture.md](./docs/guides/architecture.md) |
+| Development workflow | [docs/guides/development.md](./docs/guides/development.md) |
+| Portless & HTTPS | [docs/guides/portless-https.md](./docs/guides/portless-https.md) |
+| Database migrations | [docs/guides/database-migrations.md](./docs/guides/database-migrations.md) |
+| Testing | [docs/guides/testing.md](./docs/guides/testing.md) |
+| Background jobs | [docs/features/jobs.md](./docs/features/jobs.md) |
+| File storage (S3) | [docs/features/storage.md](./docs/features/storage.md) |
+| Passkey auth | [docs/features/passkey-authentication.md](./docs/features/passkey-authentication.md) |
+| AI inference | [docs/features/ai-inference.md](./docs/features/ai-inference.md) |
+| All docs | [docs/README.md](./docs/README.md) |
 
 ## License
 

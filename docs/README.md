@@ -7,7 +7,7 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 ### 🚀 Getting Started
 
 - **[Quick Start](./quick-start.md)** – Get started in 3 steps with authentication, components, and examples
-- **[Setup Guide](./SETUP_GUIDE.md)** – Environment variables, database, and local workflow
+- **[Setup Guide](./setup-guide.md)** – Environment variables, database, and local workflow
 - **[Development Workflow](./guides/development.md)** – Day-to-day commands, conventions, and scripts
 
 ### 🧱 Guides
