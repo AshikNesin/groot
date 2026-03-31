@@ -161,13 +161,18 @@ portless hosts clean
 
 ### Disable portless temporarily
 
-If you need to bypass portless and use a plain port:
+Use the dedicated script that bypasses portless entirely:
+
+```bash
+pnpm dev:localhost
+# → http://localhost:3000 (plain HTTP, no portless needed)
+```
+
+Or inline:
 
 ```bash
 PORTLESS=0 pnpm dev
 ```
-
-This runs the dev server directly without the proxy (defaults to `http://localhost:3000`).
 
 ### Check active routes
 
