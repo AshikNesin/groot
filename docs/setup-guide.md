@@ -52,7 +52,7 @@ Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/e
 | ----------- | ------------------------------------------------------------------ |
 | `RP_ID`     | Relying Party ID (e.g., `localhost` for dev, your domain for prod) |
 | `RP_NAME`   | Display name for passkey prompts                                   |
-| `RP_ORIGIN` | Full origin URL (e.g., `http://localhost:3000`)                    |
+| `RP_ORIGIN` | Full origin URL (e.g., `https://groot.localhost`)                    |
 
 ### File Storage (S3) Variables
 
@@ -95,7 +95,7 @@ pnpm dev                  # runs server + Vite dev middleware
 - Visit `https://groot.localhost` for the client (portless provides HTTPS automatically).
 - Hit `https://groot.localhost/health` without auth to confirm the API is live.
 - Interact with `/api/v1/todos` or `/api/v1/jobs` using basic auth headers (`Authorization: Basic base64(username:password)`).
-- To bypass portless and use plain `http://localhost:3000`, run: `PORTLESS=0 pnpm dev`
+- To bypass portless and use plain `https://groot.localhost`, run: `PORTLESS=0 pnpm dev`
 
 ## Production Build
 
@@ -124,8 +124,8 @@ In production mode the server:
 
 ## Verifying the Stack
 
-1. `curl http://localhost:3000/health`
-2. `curl -u username:password http://localhost:3000/api/v1/todos`
-3. `curl -u username:password -X POST http://localhost:3000/api/v1/jobs -H 'Content-Type: application/json' -d '{"jobName":"todo-summary","data":{}}'`
+1. `curl https://groot.localhost/health`
+2. `curl -u username:password https://groot.localhost/api/v1/todos`
+3. `curl -u username:password -X POST https://groot.localhost/api/v1/jobs -H 'Content-Type: application/json' -d '{"jobName":"todo-summary","data":{}}'`
 
 Successful responses confirm Express, Prisma, pg-boss, and the auth guard are functioning.

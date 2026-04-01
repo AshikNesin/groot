@@ -482,18 +482,18 @@ groot/
 
 ```bash
 # Create user (admin)
-curl -X POST http://localhost:3000/api/v1/auth/users \
+curl -X POST https://groot.localhost/api/v1/auth/users \
   -H "Content-Type: application/json" \
   -H "X-Admin-Auth: your-admin-key" \
   -d '{"email":"user@example.com","password":"password123"}'
 
 # Login
-curl -X POST http://localhost:3000/api/v1/auth/login \
+curl -X POST https://groot.localhost/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
 # Get current user
-curl http://localhost:3000/api/v1/auth/me \
+curl https://groot.localhost/api/v1/auth/me \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 

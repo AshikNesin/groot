@@ -17,7 +17,7 @@ import type {
 // Configuration for WebAuthn
 export const RP_NAME = process.env.RP_NAME || "Groot";
 export const RP_ID = process.env.RP_ID || "localhost";
-export const ORIGIN = process.env.ORIGIN || "http://localhost:3000";
+export const ORIGIN = process.env.ORIGIN || "https://groot.localhost";
 
 /**
  * Interface for passkey data stored in database
@@ -86,7 +86,9 @@ export async function verifyPasskeyRegistration(
 /**
  * Generate authentication options for passkey login
  */
-export async function generatePasskeyAuthenticationOptions(userPasskeys: PasskeyData[] = []) {
+export async function generatePasskeyAuthenticationOptions(
+  userPasskeys: PasskeyData[] = [],
+) {
   const opts: GenerateAuthenticationOptionsOpts = {
     rpID: RP_ID,
     // Allow credentials from all user's passkeys
@@ -127,7 +129,9 @@ export async function verifyPasskeyAuthentication(
 /**
  * Convert authenticator transports to database format
  */
-export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string[] {
+export function serializeTransports(
+  transports?: AuthenticatorTransportFuture[],
+): string[] {
   return transports || [];
 }
 

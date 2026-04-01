@@ -33,17 +33,17 @@ Responses use `ResponseHandler`, so success payloads follow `{ success: true, da
 
 ```bash
 # Create
-curl -u user:pass -X POST http://localhost:3000/api/v1/todos \
+curl -u user:pass -X POST https://groot.localhost/api/v1/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Ship docs"}'
 
 # Toggle completion
-curl -u user:pass -X PUT http://localhost:3000/api/v1/todos/1 \
+curl -u user:pass -X PUT https://groot.localhost/api/v1/todos/1 \
   -H "Content-Type: application/json" \
   -d '{"completed":true}'
 
 # Delete
-curl -u user:pass -X DELETE http://localhost:3000/api/v1/todos/1
+curl -u user:pass -X DELETE https://groot.localhost/api/v1/todos/1
 ```
 
 Expect validation errors like:
