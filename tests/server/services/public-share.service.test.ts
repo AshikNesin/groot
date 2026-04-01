@@ -23,11 +23,11 @@ vi.mock("@/core/database", () => ({
   prisma: mockPrisma,
 }));
 
-vi.mock("@/services/storage.service", () => ({
+vi.mock("@/features/storage/storage.service", () => ({
   storageFileService: mockStorageService,
 }));
 
-import { publicShareService } from "@/services/public-share.service";
+import { publicShareService } from "@/features/storage/public-share.service";
 
 const baseShare = {
   id: 1,

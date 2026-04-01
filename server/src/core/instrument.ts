@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import { env } from "@/env";
+import { env } from "@/core/env";
 
 // Generate release version using SOURCE_VERSION (Heroku) or SENTRY_RELEASE env var
 const getSentryRelease = () => {

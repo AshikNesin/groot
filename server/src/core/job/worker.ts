@@ -21,8 +21,7 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
 
   const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
 
-  // Import job definitions
-  await import("@/jobs");
+  // Job definitions are now imported via routes.ts
 
   if (jobHandlers.size === 0) {
     logger.warn("No job handlers registered. Job queue running without workers.");

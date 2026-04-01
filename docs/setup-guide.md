@@ -52,7 +52,7 @@ Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/e
 | ----------- | ------------------------------------------------------------------ |
 | `RP_ID`     | Relying Party ID (e.g., `localhost` for dev, your domain for prod) |
 | `RP_NAME`   | Display name for passkey prompts                                   |
-| `RP_ORIGIN` | Full origin URL (e.g., `https://groot.localhost`)                    |
+| `RP_ORIGIN` | Full origin URL (e.g., `https://groot.localhost`)                  |
 
 ### File Storage (S3) Variables
 
