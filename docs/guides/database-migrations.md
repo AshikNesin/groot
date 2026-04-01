@@ -144,7 +144,7 @@ Reset the local database:
 
 ```bash
 # With Docker PostgreSQL
-pnpm dev:db:docker:reset
+pnpm docker:db -- --reset
 
 # Or manually
 pnpm prisma migrate reset
