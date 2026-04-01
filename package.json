@@ -25,7 +25,7 @@
     "check": "vp check",
     "test": "varlock run -- vp test run",
     "test:watch": "varlock run -- vp test",
-    "test:e2e": "varlock run -- playwright test",
+    "test:e2e": "PORTLESS=0 varlock run -- playwright test",
     "test:e2e:ui": "varlock run -- playwright test --ui",
     "prisma:push": "varlock run -- prisma db push",
     "prisma:generate": "varlock run -- prisma generate",
