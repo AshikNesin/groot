@@ -1,19 +1,35 @@
 import { prisma } from "../server/src/core/database.js";
 import bcrypt from "bcryptjs";
 
-async function main() {
-  console.log("Seeding database...");
+export const SEED_USER = {
+  email: "demo@example.com",
+  password: "password123",
+  name: "Demo User",
+};
 
-  const hashedPassword = await bcrypt.hash("password123", 10);
-  const user = await prisma.user.upsert({
-    where: { email: "demo@example.com" },
-    update: {},
-    create: {
-      email: "demo@example.com",
-      name: "Demo User",
-      password: hashedPassword,
-    },
+async function main() {
+  const existingUser = await prisma.user.findUnique({
+    where: { email: SEED_USER.email },
   });
+
+  if (existingUser) {
+    console.log("   Seed user already exists");
+  } else {
+    const hashedPassword = await bcrypt.hash(SEED_USER.password, 10);
+    await prisma.user.upsert({
+      where: { email: SEED_USER.email },
+      update: {},
+      create: {
+        email: SEED_USER.email,
+        name: SEED_USER.name,
+        password: hashedPassword,
+      },
+    });
+    console.log("   ✅ Seed user created");
+  }
+
+  console.log(`   📧 Email:    ${SEED_USER.email}`);
+  console.log(`   🔑 Password: ${SEED_USER.password}`);
 
   const todos = [
     { id: 1, title: "Learn Prisma", completed: true },
@@ -29,8 +45,7 @@ async function main() {
     });
   }
 
-  console.log("Seeded user:", user.email);
-  console.log("Seeded todos:", todos.length);
+  console.log(`   📝 Seeded ${todos.length} todos`);
 }
 
 main()
