@@ -4,7 +4,7 @@
  * Creates a default test user when the database is first created.
  * This is ONLY used for local development (`pnpm dev`).
  *
- * Credentials: test@test.com / password
+ * Credentials: demo@example.com / password123
  */
 
 import { PrismaClient } from "../server/src/generated/prisma/client.js";
@@ -23,9 +23,9 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 export const SEED_USER = {
-  email: "test@test.com",
-  password: "password",
-  name: "Test User",
+  email: "demo@example.com",
+  password: "password123",
+  name: "Demo User",
 };
 
 async function seedUser() {
@@ -50,8 +50,8 @@ async function seedUser() {
 
   console.log("   ✅ Seed user created");
   console.log();
-  console.log("   📧 Email:    test@test.com");
-  console.log("   🔑 Password: password");
+  console.log(`   📧 Email:    ${SEED_USER.email}`);
+  console.log(`   🔑 Password: ${SEED_USER.password}`);
   console.log();
 }
 
