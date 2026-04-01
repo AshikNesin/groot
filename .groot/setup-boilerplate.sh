@@ -39,6 +39,14 @@ print_error() {
 setup_env() {
     print_info "Checking environment configuration..."
 
+    if ! command -v varlock &> /dev/null; then
+        print_info "varlock is not installed. Installing it now..."
+        curl -sSfL https://varlock.dev/install.sh | sh -s
+        print_success "varlock installed successfully"
+    else
+        print_success "varlock is already installed"
+    fi
+
     if [ ! -f ".env.schema" ]; then
         print_error ".env.schema not found!"
         print_info "This file is required for varlock to manage secrets."
