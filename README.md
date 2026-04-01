@@ -62,12 +62,12 @@ pnpm dev                    # https://<appname>.localhost via portless
 
 ```bash
 pnpm dev              # dev server (HTTPS via portless)
-pnpm dev:localhost     # dev server (plain HTTP, no proxy)
 pnpm build            # production build
 pnpm start            # run production build
 pnpm check            # lint + format + typecheck
 pnpm test             # run tests
 pnpm test:e2e         # playwright e2e tests
+pnpm docker:db        # manage Docker PostgreSQL (--stop/--reset/--status)
 ```
 
 ## Docs
