@@ -85,8 +85,8 @@ async function main() {
 
   // Seed default user for local development
   console.log("\n👤 Seeding default user...");
-  console.log("   📧 Email:    test@test.com");
-  console.log("   🔑 Password: password\n");
+  console.log("   📧 Email:    demo@example.com");
+  console.log("   🔑 Password: password123\n");
   await new Promise<void>((resolvePromise, reject) => {
     const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "scripts/seed-user.ts"], {
       stdio: "inherit",

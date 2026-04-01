@@ -39,6 +39,7 @@
     "db:migrate": "varlock run -- prisma migrate deploy",
     "db:migrate:create": "varlock run -- prisma migrate dev --create-only",
     "db:migrate:reset": "varlock run -- prisma migrate reset",
+    "db:seed": "varlock run -- prisma db seed",
     "prestart": "varlock run -- prisma migrate deploy",
     "postinstall": "node scripts/varlock.js -- prisma generate",
     "prepare": "vp config",
