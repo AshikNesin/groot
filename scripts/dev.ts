@@ -68,10 +68,14 @@ async function main() {
   // Push schema to the local DB
   console.log("📦 Pushing Prisma schema...\n");
   await new Promise<void>((resolvePromise, reject) => {
-    const push = spawn("pnpm", ["exec", "prisma", "db", "push", "--accept-data-loss"], {
-      stdio: "inherit",
-      env: { ...process.env, DATABASE_URL: connectionString },
-    });
+    const push = spawn(
+      "pnpm",
+      ["exec", "varlock", "run", "--", "prisma", "db", "push", "--accept-data-loss"],
+      {
+        stdio: "inherit",
+        env: { ...process.env, DATABASE_URL: connectionString },
+      },
+    );
     push.on("close", (code) => {
       if (code === 0) resolvePromise();
       else reject(new Error(`prisma db push exited with code ${code}`));
@@ -84,7 +88,7 @@ async function main() {
   console.log("   📧 Email:    test@test.com");
   console.log("   🔑 Password: password\n");
   await new Promise<void>((resolvePromise, reject) => {
-    const seed = spawn("tsx", ["scripts/seed-user.ts"], {
+    const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "scripts/seed-user.ts"], {
       stdio: "inherit",
       env: { ...process.env, DATABASE_URL: connectionString },
     });

@@ -35,6 +35,11 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     teamSize: jobConfig.concurrency,
   };
 
+  // Create queues before starting workers (required in pg-boss v12+)
+  for (const name of jobHandlers.keys()) {
+    await activeBoss.createQueue(name);
+  }
+
   for (const [name, handler] of jobHandlers.entries()) {
     await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
       for (const job of jobs) {
