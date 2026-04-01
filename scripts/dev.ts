@@ -85,16 +85,14 @@ async function main() {
 
   // Seed default user for local development
   console.log("\n👤 Seeding default user...");
-  console.log("   📧 Email:    demo@example.com");
-  console.log("   🔑 Password: password123\n");
   await new Promise<void>((resolvePromise, reject) => {
-    const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "scripts/seed-user.ts"], {
+    const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "prisma/seed.ts"], {
       stdio: "inherit",
       env: { ...process.env, DATABASE_URL: connectionString },
     });
     seed.on("close", (code) => {
       if (code === 0) resolvePromise();
-      else reject(new Error(`seed-user exited with code ${code}`));
+      else reject(new Error(`prisma seed exited with code ${code}`));
     });
     seed.on("error", reject);
   });
