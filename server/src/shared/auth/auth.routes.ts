@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { authController } from "@/modules/auth/auth.controller";
+import { authController } from "@/shared/auth/auth.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { adminAuthMiddleware } from "@/core/middlewares/admin-auth.middleware";
-import { loginSchema, createUserSchema } from "@/modules/auth/auth.validation";
+import { loginSchema, createUserSchema } from "@/shared/auth/auth.validation";
 
 const router = Router();
 

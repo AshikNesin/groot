@@ -4,7 +4,7 @@ import { createServer, setupSpaFallback, setupErrorHandling, startServer } from 
 import { env } from "@/core/env";
 import { logger } from "@/core/logger";
 import { registerRoutes } from "@/routes";
-import { notificationService } from "@/modules/notification/notification.service";
+import { notificationService } from "@/shared/notification/notification.service";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

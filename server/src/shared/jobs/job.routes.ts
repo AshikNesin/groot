@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { jobController } from "@/modules/jobs/job.controller";
+import { jobController } from "@/shared/jobs/job.controller";
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { passkeyController } from "@/modules/passkey/passkey.controller";
+import { passkeyController } from "@/shared/passkey/passkey.controller";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { validate } from "@/core/middlewares/validation.middleware";
 import {
@@ -7,7 +7,7 @@ import {
   verifyAuthenticationSchema,
   generateAuthenticationOptionsSchema,
   updatePasskeyNameSchema,
-} from "@/modules/passkey/passkey.validation";
+} from "@/shared/passkey/passkey.validation";
 
 const router = Router();
 

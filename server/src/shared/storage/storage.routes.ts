@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { storageController } from "@/modules/storage/storage.controller";
+import { storageController } from "@/shared/storage/storage.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import {
   listFilesSchema,
@@ -11,7 +11,7 @@ import {
   renameFileSchema,
   createPublicShareSchema,
   listSharesForFileSchema,
-} from "@/modules/storage/storage.validation";
+} from "@/shared/storage/storage.validation";
 import { storageRateLimiter, uploadRateLimiter } from "@/core/middlewares/rate-limit.middleware";
 
 const router = Router();

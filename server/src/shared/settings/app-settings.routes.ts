@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { appSettingsController } from "@/modules/settings/app-settings.controller";
+import { appSettingsController } from "@/shared/settings/app-settings.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { upsertAppSettingSchema } from "@/modules/settings/app-settings.validation";
+import { upsertAppSettingSchema } from "@/shared/settings/app-settings.validation";
 
 const router = Router();
 

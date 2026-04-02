@@ -1,7 +1,7 @@
 import { Boom } from "@/core/errors";
-import { appSettingsModel } from "@/modules/settings/app-settings.model";
-import type { AppSetting } from "@/modules/settings/app-settings.model";
-import type { UpsertAppSettingDTO } from "@/modules/settings/app-settings.validation";
+import { appSettingsModel } from "@/shared/settings/app-settings.model";
+import type { AppSetting } from "@/shared/settings/app-settings.model";
+import type { UpsertAppSettingDTO } from "@/shared/settings/app-settings.validation";
 
 class AppSettingsService {
   async get<T = unknown>(key: string): Promise<AppSetting<T>> {
