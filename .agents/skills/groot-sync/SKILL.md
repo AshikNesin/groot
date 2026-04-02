@@ -34,31 +34,29 @@ The sync tool is now fully deterministic - no AI interpretation needed:
 
 ### Always Sync (Reusable Core)
 
-| Category          | Paths                                                            |
-| ----------------- | ---------------------------------------------------------------- |
-| UI Components     | `client/src/components/ui/**`, `client/src/components/layout/**` |
-| Client Lib        | `client/src/lib/utils.ts`, `client/src/lib/design-tokens.ts`     |
-| Client Hooks      | `client/src/hooks/use-toast.ts`                                  |
-| Client Styles     | `client/src/index.css`                                           |
-| Server Core       | `server/src/core/**`                                             |
-| Server Middleware | `server/src/middlewares/**`                                      |
-| Server Utils      | `server/src/utils/**`                                            |
-| Infrastructure    | `*.config.*`, `tsconfig.json`, `.github/workflows/**`            |
-| Documentation     | `docs/**`                                                        |
-| Env Template      | `.env.schema`                                                    |
+| Category            | Paths                                                                                                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------- |
+| UI Components       | `client/src/components/ui/**`, `client/src/components/layout/**`                                      |
+| Client Lib          | `client/src/lib/utils.ts`, `client/src/lib/design-tokens.ts`                                          |
+| Client Hooks        | `client/src/hooks/use-toast.ts`                                                                       |
+| Client Styles       | `client/src/index.css`                                                                                |
+| Server Core         | `server/src/core/**` (drop-in infra: errors, middlewares, utils, logger, job, kv, storage, ai, types) |
+| Server Modules      | `server/src/modules/**` (reusable features: auth, passkey, storage, ai, jobs, settings, notification) |
+| Server Test Helpers | `server/src/test-helpers.ts`                                                                          |
+| Infrastructure      | `*.config.*`, `tsconfig.json`, `.github/workflows/**`                                                 |
+| Documentation       | `docs/**`                                                                                             |
+| Env Template        | `.env.schema`                                                                                         |
 
 ### Never Sync (App-Specific)
 
-| Category        | Paths                                                 |
-| --------------- | ----------------------------------------------------- |
-| Business Logic  | `server/src/services/**`, `server/src/controllers/**` |
-| Routes          | `server/src/routes/**`                                |
-| Validations     | `server/src/validations/**`                           |
-| Jobs            | `server/src/jobs/**`                                  |
-| Models          | `server/src/models/**`                                |
-| Pages           | `client/src/pages/**`                                 |
-| State           | `client/src/store/**`                                 |
-| Client Services | `client/src/services/**`                              |
+| Category           | Paths                                              |
+| ------------------ | -------------------------------------------------- |
+| App Features       | `server/src/app/**` (project-specific: todo, etc.) |
+| Route Registration | `server/src/routes.ts`                             |
+| App Entry          | `server/src/index.ts`                              |
+| Pages              | `client/src/pages/**`                              |
+| State              | `client/src/store/**`                              |
+| Client Services    | `client/src/services/**`                           |
 
 ### Immutable Exclusions (Security - Cannot Override)
 

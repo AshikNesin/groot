@@ -73,11 +73,12 @@ const SYNC_PATTERNS: readonly string[] = [
   "client/src/hooks/use-toast.ts",
   "client/src/index.css",
 
-  // Server Core
+  // Server Core (drop-in infrastructure)
   "server/src/core/**",
-  "server/src/middlewares/**",
-  "server/src/utils/**",
   "server/src/test-helpers.ts",
+
+  // Server Modules (reusable features: auth, storage, etc.)
+  "server/src/modules/**",
 
   // Infrastructure
   "*.config.*",
@@ -99,16 +100,18 @@ const SYNC_PATTERNS: readonly string[] = [
 // ============================================================
 
 const SKIP_PATTERNS: readonly string[] = [
-  "server/src/services/**",
-  "server/src/controllers/**",
-  "server/src/routes/**",
-  "server/src/validations/**",
-  "server/src/jobs/**",
-  "server/src/models/**",
+  // App-specific server code (never sync)
+  "server/src/app/**",
+  "server/src/routes.ts",
+  "server/src/index.ts",
+
+  // App-specific client code (never sync)
   "client/src/pages/**",
   "client/src/store/**",
   "client/src/services/**",
   "client/src/components/*.tsx",
+
+  // Other
   "README.md",
   "pnpm-lock.yaml",
 ] as const;
