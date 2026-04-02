@@ -13,11 +13,12 @@ import type {
   AuthenticatorTransportFuture,
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
+import { env } from "@/core/env";
 
 // Configuration for WebAuthn
-export const RP_NAME = process.env.RP_NAME || "Groot";
-export const RP_ID = process.env.RP_ID || "localhost";
-export const ORIGIN = process.env.ORIGIN || "https://groot.localhost";
+export const RP_NAME = env.RP_NAME;
+export const RP_ID = env.RP_ID;
+export const ORIGIN = env.ORIGIN;
 
 /**
  * Interface for passkey data stored in database

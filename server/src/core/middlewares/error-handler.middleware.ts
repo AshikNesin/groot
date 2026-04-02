@@ -8,6 +8,7 @@ import { sanitizeRequestBody } from "@/core/logger/utils";
 import { ResponseHandler } from "@/core/response-handler";
 import { ZodError } from "zod";
 import { getRequestLogger } from "@/core/middlewares/requestLogger.middleware";
+import { env } from "@/core/env";
 
 /**
  * Global error handling middleware
@@ -187,7 +188,7 @@ export function errorHandlerMiddleware(
   }
 
   // Handle unknown errors
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const isDevelopment = env.NODE_ENV === "development";
 
   ResponseHandler.error(
     res,

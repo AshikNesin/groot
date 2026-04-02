@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { logger } from "@/core/logger";
 import { sendPushOverNotification } from "send-push-notification";
+import { env } from "@/core/env";
 
 export interface NotificationOptions {
   title: string;
@@ -18,7 +19,7 @@ export class NotificationService {
 
   constructor() {
     // Check if required environment variables are set
-    this.isEnabled = !!(process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_API_TOKEN);
+    this.isEnabled = !!(env.PUSHOVER_USER_KEY && env.PUSHOVER_API_TOKEN);
 
     if (!this.isEnabled) {
       logger.warn("Push notification credentials not found, notifications will be disabled");

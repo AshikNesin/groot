@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import { Boom } from "@/core/errors";
+import { env } from "@/core/env";
 
 interface JWTPayload {
   userId: number;
   email: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_SECRET = env.JWT_SECRET;
+const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
 
 /**
  * Generate a JWT token

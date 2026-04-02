@@ -3,6 +3,7 @@ import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { authService } from "@/modules/auth/auth.service";
 import { Boom } from "@/core/errors";
+import { env } from "@/core/env";
 
 class AuthController extends BaseController {
   /**
@@ -14,7 +15,7 @@ class AuthController extends BaseController {
     // Set HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });

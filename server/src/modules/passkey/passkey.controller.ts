@@ -3,6 +3,7 @@ import { ResponseHandler } from "@/core/response-handler";
 import { passkeyService } from "@/modules/passkey/passkey.service";
 import { Boom } from "@/core/errors";
 import type { Request, Response } from "express";
+import { env } from "@/core/env";
 
 export class PasskeyController extends BaseController {
   /**
@@ -71,7 +72,7 @@ export class PasskeyController extends BaseController {
     // Set cookie with JWT token (expires in 30 days)
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { Boom } from "@/core/errors";
+import { env } from "@/core/env";
 
 /**
  * Admin authentication middleware
@@ -12,9 +13,7 @@ export function adminAuthMiddleware(req: Request, _res: Response, next: NextFunc
     throw Boom.unauthorized("Admin authentication required");
   }
 
-  const expectedKey = process.env.ADMIN_AUTH_KEY || "change-this-in-production";
-
-  if (adminAuthKey !== expectedKey) {
+  if (adminAuthKey !== env.ADMIN_AUTH_KEY) {
     throw Boom.forbidden("Invalid admin auth key");
   }
 
