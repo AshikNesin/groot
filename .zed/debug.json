@@ -1,32 +1,15 @@
 [
   {
     "adapter": "JavaScript",
-    "label": "Debug Server (with Portless)",
+    "label": "Debug Server",
     "type": "node",
     "request": "launch",
     "program": "$ZED_WORKTREE_ROOT/server/src/index.ts",
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/debug-server.sh",
     "runtimeArgs": ["--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
     "env": {
       "NODE_ENV": "development"
     },
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
-  },
-  {
-    "adapter": "JavaScript",
-    "label": "Debug Server (no Portless)",
-    "type": "node",
-    "request": "launch",
-    "program": "$ZED_WORKTREE_ROOT/server/src/index.ts",
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/debug-server.sh",
-    "runtimeArgs": ["--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
-    "env": {
-      "NODE_ENV": "development",
-      "PORTLESS": "0"
-    },
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    "skipFiles": ["<node_internals>/**"]
   },
   {
     "adapter": "JavaScript",
@@ -34,7 +17,6 @@
     "type": "node",
     "request": "attach",
     "port": 9229,
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    "skipFiles": ["<node_internals>/**"]
   }
 ]
