@@ -177,7 +177,11 @@ export async function startServer(
 
     // Run custom startup callback
     if (onStart) {
-      await onStart();
+      try {
+        await onStart();
+      } catch (err) {
+        logger.error({ err }, "Error during server startup callback");
+      }
     }
   });
 

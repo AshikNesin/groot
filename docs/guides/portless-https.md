@@ -167,7 +167,7 @@ Bypass portless using the `PORTLESS=0` environment variable:
 
 ```bash
 PORTLESS=0 pnpm dev
-# → https://groot.localhost (plain HTTP, no portless needed)
+# → http://localhost:3000 (plain HTTP, no portless needed)
 ```
 
 ### Check active routes

@@ -95,7 +95,7 @@ pnpm dev                  # runs server + Vite dev middleware
 - Visit `https://groot.localhost` for the client (portless provides HTTPS automatically).
 - Hit `https://groot.localhost/health` without auth to confirm the API is live.
 - Interact with `/api/v1/todos` or `/api/v1/jobs` using basic auth headers (`Authorization: Basic base64(username:password)`).
-- To bypass portless and use plain `https://groot.localhost`, run: `PORTLESS=0 pnpm dev`
+- To bypass portless and use plain HTTP, run: `PORTLESS=0 pnpm dev` (server will be available at `http://localhost:3000`)
 
 ## Production Build
 
