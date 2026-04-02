@@ -25,7 +25,7 @@ const jobModuleMock = vi.hoisted(() => {
 
 vi.mock("@/core/job", () => jobModuleMock);
 
-import jobRouter from "@/features/jobs/job.routes";
+import jobRouter from "@/modules/jobs/job.routes";
 import * as jobModule from "@/core/job";
 
 const buildApp = () => {

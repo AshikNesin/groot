@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { todoController } from "@/features/todo/todo.controller";
+import { todoController } from "@/app/todo/todo.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { createTodoSchema, updateTodoSchema } from "@/features/todo/todo.validation";
+import { createTodoSchema, updateTodoSchema } from "@/app/todo/todo.validation";
 
 const router = Router();
 

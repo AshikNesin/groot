@@ -2,18 +2,18 @@ import { Router, type Express } from "express";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 
 // Feature routes
-import authRoutes from "@/features/auth/auth.routes";
-import passkeyRoutes from "@/features/passkey/passkey.routes";
-import todoRoutes from "@/features/todo/todo.routes";
-import jobRoutes from "@/features/jobs/job.routes";
-import storageRoutes from "@/features/storage/storage.routes";
-import publicFileRoutes from "@/features/storage/public-file.routes";
-import appSettingsRoutes from "@/features/settings/app-settings.routes";
-import aiRoutes from "@/features/ai/ai.routes";
+import authRoutes from "@/modules/auth/auth.routes";
+import passkeyRoutes from "@/modules/passkey/passkey.routes";
+import todoRoutes from "@/app/todo/todo.routes";
+import jobRoutes from "@/modules/jobs/job.routes";
+import storageRoutes from "@/modules/storage/storage.routes";
+import publicFileRoutes from "@/modules/storage/public-file.routes";
+import appSettingsRoutes from "@/modules/settings/app-settings.routes";
+import aiRoutes from "@/modules/ai/ai.routes";
 
 // Feature jobs (import to register handlers)
-import "@/features/todo/jobs/todo-cleanup";
-import "@/features/todo/jobs/todo-summary";
+import "@/app/todo/jobs/todo-cleanup";
+import "@/app/todo/jobs/todo-summary";
 
 export function registerRoutes(app: Express): void {
   // Public routes (no auth)

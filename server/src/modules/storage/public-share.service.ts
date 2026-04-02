@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import dayjs from "dayjs";
 import { prisma } from "@/core/database";
-import { storageFileService } from "@/features/storage/storage.service";
+import { storageFileService } from "@/modules/storage/storage.service";
 import { Boom, HttpError } from "@/core/errors";
 import { env } from "@/core/env";
 

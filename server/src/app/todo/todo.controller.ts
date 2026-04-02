@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { todoService } from "@/features/todo/todo.service";
-import type { CreateTodoDTO, UpdateTodoDTO } from "@/features/todo/todo.validation";
+import { todoService } from "@/app/todo/todo.service";
+import type { CreateTodoDTO, UpdateTodoDTO } from "@/app/todo/todo.validation";
 
 class TodoController extends BaseController {
   async create(req: Request, res: Response) {

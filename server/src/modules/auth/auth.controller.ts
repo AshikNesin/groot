@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { authService } from "@/features/auth/auth.service";
+import { authService } from "@/modules/auth/auth.service";
 import { Boom } from "@/core/errors";
 
 class AuthController extends BaseController {

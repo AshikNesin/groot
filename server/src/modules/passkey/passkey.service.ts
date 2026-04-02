@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import { Boom } from "@/core/errors";
 import { logger } from "@/core/logger";
 import type { Passkey, User } from "@/generated/prisma/models";
-import { passkeyModel } from "@/features/passkey/passkey.model";
-import { userModel } from "@/features/auth/user.model";
+import { passkeyModel } from "@/modules/passkey/passkey.model";
+import { userModel } from "@/modules/auth/user.model";
 import { generateToken } from "@/core/utils/jwt.utils";
 import {
   generateDeviceName,
@@ -12,7 +12,7 @@ import {
   serializeTransports,
   verifyPasskeyAuthentication,
   verifyPasskeyRegistration,
-} from "@/features/passkey/webauthn.utils";
+} from "@/modules/passkey/webauthn.utils";
 import type {
   AuthenticationResponseJSON,
   PublicKeyCredentialCreationOptionsJSON,

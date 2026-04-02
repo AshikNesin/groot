@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { aiService } from "@/features/ai/ai.service";
+import { aiService } from "@/modules/ai/ai.service";
 import type {
   ChatDTO,
   UsageQueryDTO,
   CreateConversationDTO,
   UpdateConversationDTO,
   ListConversationsQueryDTO,
-} from "@/features/ai/ai.validation";
+} from "@/modules/ai/ai.validation";
 
 class AIController extends BaseController {
   async chat(req: Request, res: Response) {

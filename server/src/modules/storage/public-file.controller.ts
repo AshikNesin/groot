@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
-import { publicShareService } from "@/features/storage/public-share.service";
+import { publicShareService } from "@/modules/storage/public-share.service";
 import { Boom, ErrorCodeEnum } from "@/core/errors";
-import type { VerifySharePasswordDTO } from "@/features/storage/storage.validation";
+import type { VerifySharePasswordDTO } from "@/modules/storage/storage.validation";
 
 export class PublicFileController extends BaseController {
   async servePublicFile(req: Request, res: Response) {

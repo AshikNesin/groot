@@ -1,6 +1,6 @@
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { passkeyService } from "@/features/passkey/passkey.service";
+import { passkeyService } from "@/modules/passkey/passkey.service";
 import { Boom } from "@/core/errors";
 import type { Request, Response } from "express";
 

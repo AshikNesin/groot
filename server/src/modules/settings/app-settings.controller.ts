@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { appSettingsService } from "@/features/settings/app-settings.service";
+import { appSettingsService } from "@/modules/settings/app-settings.service";
 
 class AppSettingsController extends BaseController {
   async getAll(_req: Request, res: Response) {

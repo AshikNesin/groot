@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
-import { storageFileService } from "@/features/storage/storage.service";
-import { publicShareService } from "@/features/storage/public-share.service";
+import { storageFileService } from "@/modules/storage/storage.service";
+import { publicShareService } from "@/modules/storage/public-share.service";
 import type {
   ListFilesDTO,
   DownloadFileDTO,
@@ -12,7 +12,7 @@ import type {
   RenameFileDTO,
   CreatePublicShareDTO,
   ListSharesForFileDTO,
-} from "@/features/storage/storage.validation";
+} from "@/modules/storage/storage.validation";
 import { Boom } from "@/core/errors";
 
 export class StorageController extends BaseController {
