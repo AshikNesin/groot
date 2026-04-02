@@ -17,6 +17,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development portless run --name $npm_package_name varlock run -- tsx scripts/dev.ts",
+    "dev:debug": "NODE_ENV=development portless run --name $npm_package_name varlock run -- node --inspect --import ./node_modules/tsx/dist/loader.mjs server/src/index.ts",
     "docker:db": "varlock run -- tsx scripts/docker-db-cleanup.ts",
     "build": "varlock run -- sh -c 'prisma generate && vp build && node scripts/build.mjs'",
     "start": "NODE_ENV=production varlock run -- node dist/bundle.js",

@@ -1,72 +1,31 @@
 [
   {
     "adapter": "JavaScript",
-    "label": "Debug Current TS File (Node)",
-    "type": "node",
-    "request": "launch",
-    "program": "$ZED_FILE",
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/run-with-varlock.sh",
-    "runtimeArgs": ["node", "--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
-    "console": "integratedTerminal",
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "skipFiles": ["<node_internals>/**"]
-  },
-  {
-    "adapter": "JavaScript",
-    "label": "Debug Dev Server",
-    "type": "node",
-    "request": "launch",
-    "program": "$ZED_WORKTREE_ROOT/scripts/dev.ts",
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/run-with-varlock.sh",
-    "runtimeArgs": ["node", "--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
-    "env": {
-      "NODE_ENV": "development"
-    },
-    "console": "integratedTerminal",
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "skipFiles": ["<node_internals>/**"]
-  },
-  {
-    "adapter": "JavaScript",
-    "label": "Debug Server Only",
+    "label": "Debug Server (with Portless)",
     "type": "node",
     "request": "launch",
     "program": "$ZED_WORKTREE_ROOT/server/src/index.ts",
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/run-with-varlock.sh",
-    "runtimeArgs": ["node", "--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
+    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/debug-server.sh",
+    "runtimeArgs": ["--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
     "env": {
       "NODE_ENV": "development"
     },
-    "console": "integratedTerminal",
     "cwd": "$ZED_WORKTREE_ROOT",
-    "skipFiles": ["<node_internals>/**"]
-  },
-  {
-    "adapter": "JavaScript",
-    "label": "Debug Vitest Current File",
-    "type": "node",
-    "request": "launch",
-    "program": "$ZED_WORKTREE_ROOT/node_modules/vitest/vitest.mjs",
-    "args": ["run", "$ZED_FILE"],
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/run-with-varlock.sh",
-    "runtimeArgs": ["node"],
-    "console": "integratedTerminal",
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "autoAttachChildProcesses": true,
     "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
   },
   {
     "adapter": "JavaScript",
-    "label": "Debug Vitest All Tests",
+    "label": "Debug Server (no Portless)",
     "type": "node",
     "request": "launch",
-    "program": "$ZED_WORKTREE_ROOT/node_modules/vitest/vitest.mjs",
-    "args": ["run"],
-    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/run-with-varlock.sh",
-    "runtimeArgs": ["node"],
-    "console": "integratedTerminal",
+    "program": "$ZED_WORKTREE_ROOT/server/src/index.ts",
+    "runtimeExecutable": "$ZED_WORKTREE_ROOT/.zed/debug-server.sh",
+    "runtimeArgs": ["--import", "$ZED_WORKTREE_ROOT/node_modules/tsx/dist/loader.mjs"],
+    "env": {
+      "NODE_ENV": "development",
+      "PORTLESS": "0"
+    },
     "cwd": "$ZED_WORKTREE_ROOT",
-    "autoAttachChildProcesses": true,
     "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
   },
   {
@@ -75,6 +34,7 @@
     "type": "node",
     "request": "attach",
     "port": 9229,
-    "skipFiles": ["<node_internals>/**"]
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
   }
 ]
