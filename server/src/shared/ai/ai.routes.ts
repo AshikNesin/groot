@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { aiController } from "@/modules/ai/ai.controller";
+import { aiController } from "@/shared/ai/ai.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { aiRateLimiter, aiStreamRateLimiter } from "@/core/middlewares/rate-limit.middleware";
@@ -9,7 +9,7 @@ import {
   createConversationSchema,
   updateConversationSchema,
   listConversationsQuerySchema,
-} from "@/modules/ai/ai.validation";
+} from "@/shared/ai/ai.validation";
 
 const router = Router();
 

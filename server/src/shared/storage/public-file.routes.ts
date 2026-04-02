@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { publicFileController } from "@/modules/storage/public-file.controller";
+import { publicFileController } from "@/shared/storage/public-file.controller";
 import { publicFileRateLimiter } from "@/core/middlewares/rate-limit.middleware";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { verifySharePasswordSchema } from "@/modules/storage/storage.validation";
+import { verifySharePasswordSchema } from "@/shared/storage/storage.validation";
 
 const router = Router();
 

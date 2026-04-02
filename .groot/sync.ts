@@ -77,8 +77,8 @@ const SYNC_PATTERNS: readonly string[] = [
   "server/src/core/**",
   "server/src/test-helpers.ts",
 
-  // Server Modules (reusable features: auth, storage, etc.)
-  "server/src/modules/**",
+  // Server Shared (reusable features: auth, storage, etc.)
+  "server/src/shared/**",
 
   // Infrastructure
   "*.config.*",

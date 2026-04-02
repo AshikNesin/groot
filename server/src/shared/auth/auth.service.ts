@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import { userModel } from "@/modules/auth/user.model";
+import { userModel } from "@/shared/auth/user.model";
 import { Boom } from "@/core/errors";
 import { generateToken } from "@/core/utils/jwt.utils";
-import type { CreateUserDTO, LoginDTO } from "@/modules/auth/auth.validation";
+import type { CreateUserDTO, LoginDTO } from "@/shared/auth/auth.validation";
 
 class AuthService {
   async login(data: LoginDTO) {

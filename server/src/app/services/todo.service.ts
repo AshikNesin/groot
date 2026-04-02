@@ -1,6 +1,6 @@
-import { todoModel } from "@/app/todo/todo.model";
+import { todoModel } from "@/app/models/todo.model";
 import { Boom } from "@/core/errors";
-import type { CreateTodoDTO, UpdateTodoDTO } from "@/app/todo/todo.validation";
+import type { CreateTodoDTO, UpdateTodoDTO } from "@/app/validations/todo.validation";
 
 class TodoService {
   create(data: CreateTodoDTO) {

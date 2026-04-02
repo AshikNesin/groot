@@ -41,7 +41,7 @@ The sync tool is now fully deterministic - no AI interpretation needed:
 | Client Hooks        | `client/src/hooks/use-toast.ts`                                                                       |
 | Client Styles       | `client/src/index.css`                                                                                |
 | Server Core         | `server/src/core/**` (drop-in infra: errors, middlewares, utils, logger, job, kv, storage, ai, types) |
-| Server Modules      | `server/src/modules/**` (reusable features: auth, passkey, storage, ai, jobs, settings, notification) |
+| Server Shared       | `server/src/shared/**` (reusable features: auth, passkey, storage, ai, jobs, settings, notification)  |
 | Server Test Helpers | `server/src/test-helpers.ts`                                                                          |
 | Infrastructure      | `*.config.*`, `tsconfig.json`, `.github/workflows/**`                                                 |
 | Documentation       | `docs/**`                                                                                             |
