@@ -92,13 +92,13 @@ pnpm dev
 
 ```bash
 # Create a user (admin endpoint)
-curl -X POST http://localhost:3000/api/v1/auth/users \
+curl -X POST https://groot.localhost/api/v1/auth/users \
   -H "Content-Type: application/json" \
   -H "X-Admin-Auth: your-admin-key" \
   -d '{"email":"test@example.com","password":"password123"}'
 
 # Login
-curl -X POST http://localhost:3000/api/v1/auth/login \
+curl -X POST https://groot.localhost/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password123"}'
 ```

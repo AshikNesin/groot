@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
-import { todoService } from "@/services/todo.service";
-import { todoModel } from "@/models/todo.model";
+import { todoService } from "@/app/todo/todo.service";
+import { todoModel } from "@/app/todo/todo.model";
 
-vi.mock("@/models/todo.model", () => {
+vi.mock("@/app/todo/todo.model", () => {
   return {
     todoModel: {
       create: vi.fn(),

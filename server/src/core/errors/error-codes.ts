@@ -50,15 +50,33 @@ export const ErrorCode: Record<ErrorCodeEnum, { code: ErrorCodeEnum; status: num
   [ErrorCodeEnum.VALIDATION_ERROR]: { code: ErrorCodeEnum.VALIDATION_ERROR, status: 400 },
   [ErrorCodeEnum.INTERNAL_ERROR]: { code: ErrorCodeEnum.INTERNAL_ERROR, status: 500 },
   [ErrorCodeEnum.RATE_LIMIT_EXCEEDED]: { code: ErrorCodeEnum.RATE_LIMIT_EXCEEDED, status: 429 },
-  [ErrorCodeEnum.UPLOAD_RATE_LIMIT_EXCEEDED]: { code: ErrorCodeEnum.UPLOAD_RATE_LIMIT_EXCEEDED, status: 429 },
-  [ErrorCodeEnum.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED]: { code: ErrorCodeEnum.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED, status: 429 },
-  [ErrorCodeEnum.AI_RATE_LIMIT_EXCEEDED]: { code: ErrorCodeEnum.AI_RATE_LIMIT_EXCEEDED, status: 429 },
-  [ErrorCodeEnum.AI_STREAM_RATE_LIMIT_EXCEEDED]: { code: ErrorCodeEnum.AI_STREAM_RATE_LIMIT_EXCEEDED, status: 429 },
+  [ErrorCodeEnum.UPLOAD_RATE_LIMIT_EXCEEDED]: {
+    code: ErrorCodeEnum.UPLOAD_RATE_LIMIT_EXCEEDED,
+    status: 429,
+  },
+  [ErrorCodeEnum.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED]: {
+    code: ErrorCodeEnum.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED,
+    status: 429,
+  },
+  [ErrorCodeEnum.AI_RATE_LIMIT_EXCEEDED]: {
+    code: ErrorCodeEnum.AI_RATE_LIMIT_EXCEEDED,
+    status: 429,
+  },
+  [ErrorCodeEnum.AI_STREAM_RATE_LIMIT_EXCEEDED]: {
+    code: ErrorCodeEnum.AI_STREAM_RATE_LIMIT_EXCEEDED,
+    status: 429,
+  },
   [ErrorCodeEnum.JOB_NOT_FOUND]: { code: ErrorCodeEnum.JOB_NOT_FOUND, status: 404 },
   [ErrorCodeEnum.JOB_NAME_INVALID]: { code: ErrorCodeEnum.JOB_NAME_INVALID, status: 400 },
   [ErrorCodeEnum.JOB_VALIDATION_ERROR]: { code: ErrorCodeEnum.JOB_VALIDATION_ERROR, status: 400 },
-  [ErrorCodeEnum.JOB_SCHEDULE_VALIDATION_ERROR]: { code: ErrorCodeEnum.JOB_SCHEDULE_VALIDATION_ERROR, status: 400 },
-  [ErrorCodeEnum.JOB_BULK_RERUN_VALIDATION_ERROR]: { code: ErrorCodeEnum.JOB_BULK_RERUN_VALIDATION_ERROR, status: 400 },
+  [ErrorCodeEnum.JOB_SCHEDULE_VALIDATION_ERROR]: {
+    code: ErrorCodeEnum.JOB_SCHEDULE_VALIDATION_ERROR,
+    status: 400,
+  },
+  [ErrorCodeEnum.JOB_BULK_RERUN_VALIDATION_ERROR]: {
+    code: ErrorCodeEnum.JOB_BULK_RERUN_VALIDATION_ERROR,
+    status: 400,
+  },
   [ErrorCodeEnum.SHARE_ACCESS_DENIED]: { code: ErrorCodeEnum.SHARE_ACCESS_DENIED, status: 403 },
 };
 

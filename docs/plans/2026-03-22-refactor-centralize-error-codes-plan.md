@@ -171,14 +171,14 @@ export const ResponseHandler = {
 
 ### Update Files Using Inline Codes
 
-| File                                      | Changes                                                       |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `controllers/job.controller.ts`           | Replace inline error strings with `throw ERROR_CODE.*(...)`   |
-| `controllers/passkey.controller.ts`       | Throw `ERROR_CODE.UNAUTHORIZED({ message: "..." })`           |
-| `controllers/auth.controller.ts`          | Throw `ERROR_CODE.UNAUTHORIZED({ message: "..." })`           |
-| `middlewares/rate-limit.middleware.ts`    | Call `next(ERROR_CODE.*({ message }))`                        |
-| `middlewares/error-handler.middleware.ts` | Use `ErrorCode.*` for fallback response payloads              |
-| `controllers/public-file.controller.ts`   | Throw `ERROR_CODE.SHARE_ACCESS_DENIED({ message: "..." })`    |
+| File                                      | Changes                                                     |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `controllers/job.controller.ts`           | Replace inline error strings with `throw ERROR_CODE.*(...)` |
+| `controllers/passkey.controller.ts`       | Throw `ERROR_CODE.UNAUTHORIZED({ message: "..." })`         |
+| `controllers/auth.controller.ts`          | Throw `ERROR_CODE.UNAUTHORIZED({ message: "..." })`         |
+| `middlewares/rate-limit.middleware.ts`    | Call `next(ERROR_CODE.*({ message }))`                      |
+| `middlewares/error-handler.middleware.ts` | Use `ErrorCode.*` for fallback response payloads            |
+| `controllers/public-file.controller.ts`   | Throw `ERROR_CODE.SHARE_ACCESS_DENIED({ message: "..." })`  |
 
 ## Acceptance Criteria
 

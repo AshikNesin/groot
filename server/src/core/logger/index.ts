@@ -5,15 +5,16 @@ import pinoPretty from "pino-pretty";
 import dayjs from "dayjs";
 import { serializeObject } from "@/core/logger/utils";
 import { createJobLogStream } from "@/core/logger/job-stream";
+import { env } from "@/core/env";
 
 // Enhanced logger configuration
-const isDevelopment = process.env.NODE_ENV !== "production";
-const logLevel = process.env.LOG_LEVEL || (isDevelopment ? "debug" : "info");
+const isDevelopment = env.NODE_ENV !== "production";
+const logLevel = env.LOG_LEVEL;
 
 const loggerConfig = {
   level: logLevel,
   base: {
-    env: process.env.NODE_ENV || "development",
+    env: env.NODE_ENV,
     service: "groot",
     pid: process.pid,
   },
@@ -103,7 +104,7 @@ export function createJobLogger(
   const jobLoggerConfig = {
     level: logLevel,
     base: {
-      env: process.env.NODE_ENV || "development",
+      env: env.NODE_ENV,
       service: "groot",
       pid: process.pid,
     },
