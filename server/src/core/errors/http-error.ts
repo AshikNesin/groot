@@ -74,13 +74,7 @@ export class HttpError extends Error {
   /** Arbitrary structured data attached to the error (like Boom's `data`). */
   readonly data?: unknown;
 
-  constructor(
-    statusCode: number,
-    message?: string,
-    data?: unknown,
-    code?: string,
-    cause?: Error,
-  ) {
+  constructor(statusCode: number, message?: string, data?: unknown, code?: string, cause?: Error) {
     const phrase = STATUS_PHRASES[statusCode] ?? "Unknown Error";
     super(message ?? phrase, { cause });
 

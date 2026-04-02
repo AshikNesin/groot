@@ -40,6 +40,7 @@ On your **first `pnpm dev`**, portless will:
 3. Bind to port 443 for HTTPS (auto-elevates with `sudo`)
 
 **You'll see a sudo prompt** — this is expected. Enter your password to allow portless to:
+
 - Add the CA certificate to your system trust store
 - Bind to port 443
 
@@ -57,13 +58,13 @@ This adds the portless-generated CA to your system trust store.
 
 ### Platform Notes
 
-| Platform               | How trust works                                         |
-| ---------------------- | ------------------------------------------------------- |
-| **macOS**              | Adds CA to the system Keychain via `security` CLI       |
-| **Linux (Debian/Ubuntu)** | Uses `update-ca-certificates`                        |
-| **Linux (Arch)**       | Uses `update-ca-trust`                                  |
-| **Linux (Fedora/RHEL)**| Uses `update-ca-trust`                                  |
-| **Windows**            | Uses `certutil` to add to system trust store            |
+| Platform                  | How trust works                                   |
+| ------------------------- | ------------------------------------------------- |
+| **macOS**                 | Adds CA to the system Keychain via `security` CLI |
+| **Linux (Debian/Ubuntu)** | Uses `update-ca-certificates`                     |
+| **Linux (Arch)**          | Uses `update-ca-trust`                            |
+| **Linux (Fedora/RHEL)**   | Uses `update-ca-trust`                            |
+| **Windows**               | Uses `certutil` to add to system trust store      |
 
 ---
 
@@ -90,6 +91,7 @@ portless run --name groot varlock run -- tsx scripts/dev.ts
 ```
 
 Portless:
+
 1. Auto-starts the HTTPS proxy daemon (port 443)
 2. Assigns a random ephemeral port (4000–4999) to the app via the `PORT` env var
 3. Registers the app name `groot` with the proxy
@@ -207,12 +209,12 @@ PORTLESS_HTTPS=0 pnpm dev
 
 ## Quick Reference
 
-| Command                    | Description                                      |
-| -------------------------- | ------------------------------------------------ |
-| `npm install -g portless`  | Install portless globally                        |
-| `portless trust`           | Add local CA to system trust store               |
-| `portless list`            | Show active routes                               |
-| `portless proxy stop`      | Stop the HTTPS proxy daemon                      |
-| `portless hosts sync`      | Fix Safari DNS resolution                        |
-| `portless hosts clean`     | Remove portless entries from `/etc/hosts`         |
-| `PORTLESS=0 pnpm dev`     | Bypass portless, use plain `localhost:3000`       |
+| Command                   | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `npm install -g portless` | Install portless globally                   |
+| `portless trust`          | Add local CA to system trust store          |
+| `portless list`           | Show active routes                          |
+| `portless proxy stop`     | Stop the HTTPS proxy daemon                 |
+| `portless hosts sync`     | Fix Safari DNS resolution                   |
+| `portless hosts clean`    | Remove portless entries from `/etc/hosts`   |
+| `PORTLESS=0 pnpm dev`     | Bypass portless, use plain `localhost:3000` |

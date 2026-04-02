@@ -36,17 +36,17 @@ Endpoints live under `/api/v1/jobs` (see `server/src/routes/job.routes.ts`). Exa
 
 ```bash
 # Queue immediately
-curl -u user:pass -X POST http://localhost:3000/api/v1/jobs \
+curl -u user:pass -X POST https://groot.localhost/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{"jobName":"todo-summary","data":{}}'
 
 # Schedule with cron
-curl -u user:pass -X POST http://localhost:3000/api/v1/jobs/schedule \
+curl -u user:pass -X POST https://groot.localhost/api/v1/jobs/schedule \
   -H "Content-Type: application/json" \
   -d '{"jobName":"todo-cleanup","data":{"daysToKeep":14},"cron":"0 2 * * *"}'
 
 # Retry a failed job
-curl -u user:pass -X POST http://localhost:3000/api/v1/jobs/todo-cleanup/job-123/retry
+curl -u user:pass -X POST https://groot.localhost/api/v1/jobs/todo-cleanup/job-123/retry
 ```
 
 Other key endpoints:

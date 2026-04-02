@@ -6,12 +6,12 @@ No framework churn. No over-abstraction. Just Express + React + Postgres — wir
 
 ## Tech Stack
 
-| Layer   | What                                                            |
-| ------- | --------------------------------------------------------------- |
-| Server  | Express 5, TypeScript, Prisma, pg-boss, Pino                    |
-| Client  | React 19, Vite 7, React Router 7, React Query, Zustand          |
-| Auth    | JWT + Passkeys (WebAuthn)                                        |
-| Tooling | Vite+ (Oxlint, Oxfmt, Vitest), Playwright, pnpm                 |
+| Layer   | What                                                   |
+| ------- | ------------------------------------------------------ |
+| Server  | Express 5, TypeScript, Prisma, pg-boss, Pino           |
+| Client  | React 19, Vite 7, React Router 7, React Query, Zustand |
+| Auth    | JWT + Passkeys (WebAuthn)                              |
+| Tooling | Vite+ (Oxlint, Oxfmt, Vitest), Playwright, pnpm        |
 
 ## Get Started
 
@@ -72,20 +72,20 @@ pnpm docker:db        # manage Docker PostgreSQL (--stop/--reset/--status)
 
 ## Docs
 
-| Topic | Link |
-|---|---|
-| Quick start | [docs/quick-start.md](./docs/quick-start.md) |
-| Setup guide | [docs/setup-guide.md](./docs/setup-guide.md) |
-| Architecture | [docs/guides/architecture.md](./docs/guides/architecture.md) |
-| Development workflow | [docs/guides/development.md](./docs/guides/development.md) |
-| Portless & HTTPS | [docs/guides/portless-https.md](./docs/guides/portless-https.md) |
-| Database migrations | [docs/guides/database-migrations.md](./docs/guides/database-migrations.md) |
-| Testing | [docs/guides/testing.md](./docs/guides/testing.md) |
-| Background jobs | [docs/features/jobs.md](./docs/features/jobs.md) |
-| File storage (S3) | [docs/features/storage.md](./docs/features/storage.md) |
-| Passkey auth | [docs/features/passkey-authentication.md](./docs/features/passkey-authentication.md) |
-| AI inference | [docs/features/ai-inference.md](./docs/features/ai-inference.md) |
-| All docs | [docs/README.md](./docs/README.md) |
+| Topic                | Link                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Quick start          | [docs/quick-start.md](./docs/quick-start.md)                                         |
+| Setup guide          | [docs/setup-guide.md](./docs/setup-guide.md)                                         |
+| Architecture         | [docs/guides/architecture.md](./docs/guides/architecture.md)                         |
+| Development workflow | [docs/guides/development.md](./docs/guides/development.md)                           |
+| Portless & HTTPS     | [docs/guides/portless-https.md](./docs/guides/portless-https.md)                     |
+| Database migrations  | [docs/guides/database-migrations.md](./docs/guides/database-migrations.md)           |
+| Testing              | [docs/guides/testing.md](./docs/guides/testing.md)                                   |
+| Background jobs      | [docs/features/jobs.md](./docs/features/jobs.md)                                     |
+| File storage (S3)    | [docs/features/storage.md](./docs/features/storage.md)                               |
+| Passkey auth         | [docs/features/passkey-authentication.md](./docs/features/passkey-authentication.md) |
+| AI inference         | [docs/features/ai-inference.md](./docs/features/ai-inference.md)                     |
+| All docs             | [docs/README.md](./docs/README.md)                                                   |
 
 ## License
 

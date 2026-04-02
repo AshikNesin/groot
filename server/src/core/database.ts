@@ -1,16 +1,13 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { logger } from "@/core/logger";
+import { env } from "@/core/env";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createPrismaClient(): PrismaClient {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
-  }
   const adapter = new PrismaPg({
-    connectionString: databaseUrl,
+    connectionString: env.DATABASE_URL,
   });
 
   return new PrismaClient({
@@ -25,11 +22,11 @@ function createPrismaClient(): PrismaClient {
 
 export const prisma = globalForPrisma.prisma || createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") {
+if (env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-if (process.env.NODE_ENV === "development") {
+if (env.NODE_ENV === "development") {
   prisma.$on("query", (event) => {
     logger.debug({ query: event.query, duration: `${event.duration}ms` }, "DB query");
   });

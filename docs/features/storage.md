@@ -68,9 +68,9 @@ Multer caps uploads at 100 MB per file; the upload endpoint has an additional 50
 
 ```bash
 curl -u user:pass -F "file=@statement.pdf" -F "filePath=docs/statement.pdf" \
-  http://localhost:3000/api/v1/storage/files/upload
+  https://groot.localhost/api/v1/storage/files/upload
 
-curl -u user:pass -X POST http://localhost:3000/api/v1/storage/shares \
+curl -u user:pass -X POST https://groot.localhost/api/v1/storage/shares \
   -H "Content-Type: application/json" \
   -d '{"filePath":"docs/statement.pdf","expiresInHours":24,"password":"secure123"}'
 ```

@@ -14,7 +14,7 @@ const CONTAINER_NAME = "local-dev-postgres";
 const POSTGRES_USER = "postgres";
 const POSTGRES_PASSWORD = "postgres";
 const DEFAULT_PORT = 5433;
-const POSTGRES_IMAGE = "postgres:18-alpine";
+const POSTGRES_IMAGE = "pgvector/pgvector:pg18";
 
 export interface DockerDbOptions {
   projectName: string;

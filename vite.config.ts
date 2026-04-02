@@ -58,7 +58,11 @@ export default defineConfig({
               return {
                 protocol: url.protocol === "https:" ? "wss" : "ws",
                 host: url.hostname,
-                clientPort: url.port ? parseInt(url.port, 10) : (url.protocol === "https:" ? 443 : 80),
+                clientPort: url.port
+                  ? parseInt(url.port, 10)
+                  : url.protocol === "https:"
+                    ? 443
+                    : 80,
               };
             } catch (e) {
               return undefined;

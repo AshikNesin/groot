@@ -57,9 +57,9 @@ RP_NAME="Groot"
 RP_ID="localhost"
 
 # Expected origin (full URL of your frontend)
-# For development: "http://localhost:3000"
+# For development: "https://groot.localhost"
 # For production: "https://yourdomain.com"
-ORIGIN="http://localhost:3000"
+ORIGIN="https://groot.localhost"
 ```
 
 **Note**: These are already defined in `.env.schema` with defaults suitable for development.

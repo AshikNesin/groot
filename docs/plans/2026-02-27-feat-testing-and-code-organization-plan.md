@@ -112,7 +112,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "https://groot.localhost",
     trace: "on-first-retry",
   },
   projects: [
@@ -123,7 +123,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "pnpm dev",
-    url: "http://localhost:3000",
+    url: "https://groot.localhost",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

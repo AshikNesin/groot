@@ -13,7 +13,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Readable } from "node:stream";
 import { createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
-import { env } from "@/env";
+import { env } from "@/core/env";
 
 export type StorageResult<T> = {
   data: T | null;
