@@ -3,9 +3,6 @@ import alias from "esbuild-plugin-alias";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-// Clean dist directory before build
-await fs.rm(path.join(process.cwd(), "dist"), { recursive: true, force: true });
-
 async function getExternalDependencies() {
   const packageJsonPath = path.join(process.cwd(), "package.json");
   const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
