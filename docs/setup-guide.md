@@ -17,7 +17,7 @@ Follow these steps to boot the Express API, job queue, and React client locally 
 Run the setup script to automatically configure your environment:
 
 ```bash
-./setup-boilerplate.sh
+./.groot/setup-boilerplate.sh
 ```
 
 This script will:

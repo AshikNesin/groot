@@ -1,6 +1,6 @@
 # Storage Feature
 
-The storage feature brings a lightweight AWS S3 file browser to the boilerplate. It supports folder navigation, uploads (single or bulk), safe deletions, inline downloads, and password-protected public share links—all guarded by Express basic auth and rate limiting.
+The storage feature brings a lightweight AWS S3 file browser to Groot. It supports folder navigation, uploads (single or bulk), safe deletions, inline downloads, and password-protected public share links—all guarded by Express basic auth and rate limiting.
 
 ## Architecture Overview
 
@@ -101,4 +101,4 @@ React Query keys live in `client/src/hooks/api/useStorage.ts` so any component c
 - **Local dev without AWS** – defaults target LocalStack-style credentials. Point `AWS_DEFAULT_S3_BUCKET` at a bucket reachable from the server (or use `localstack` via the AWS SDK endpoint setting inside `core/storage` if you add it).
 - **Download returns binary gibberish in API tools** – it is streaming raw bytes; use the React UI or `curl -o file` to save.
 
-With these pieces in place, the boilerplate now mirrors the full-featured storage system from the finance API while staying framework-agnostic.
+With these pieces in place, Groot now mirrors the full-featured storage system from the finance API while staying framework-agnostic.

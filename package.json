@@ -1,7 +1,7 @@
 {
   "name": "groot",
   "version": "1.0.0",
-  "description": "A minimal boilerplate for building Express.js and React.js applications",
+  "description": "Starter kit for building web apps with a reliable, minimal tech stack",
   "keywords": [],
   "homepage": "https://github.com/AshikNesin/groot#readme",
   "bugs": {

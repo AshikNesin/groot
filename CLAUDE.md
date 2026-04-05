@@ -1,4 +1,4 @@
-# Express + React Boilerplate - AI Development Context
+# Groot - AI Development Context
 
 This file provides context for AI assistants (like Claude) working on this codebase.
 

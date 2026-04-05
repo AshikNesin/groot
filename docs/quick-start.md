@@ -2,7 +2,7 @@
 
 ## What You Got
 
-Your boilerplate now includes everything you need to ship a production-ready SaaS:
+Groot now includes everything you need to ship a production-ready SaaS:
 
 ### Backend ✅
 
@@ -29,7 +29,7 @@ Your boilerplate now includes everything you need to ship a production-ready Saa
 Run the setup script to automatically configure your environment:
 
 ```bash
-./setup-boilerplate.sh
+./.groot/setup-boilerplate.sh
 ```
 
 This will:
@@ -88,19 +88,13 @@ pnpm dev
 
 ---
 
-## Create Your First User
+## Login User
 
 ```bash
-# Create a user (admin endpoint)
-curl -X POST https://groot.localhost/api/v1/auth/users \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Auth: your-admin-key" \
-  -d '{"email":"test@example.com","password":"password123"}'
-
-# Login
+# Login (A default user is created automatically when you run `pnpm dev` for the first time or `pnpm prisma db push`)
 curl -X POST https://groot.localhost/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+  -d '{"email":"demo@example.com","password":"password123"}'
 ```
 
 ---
@@ -398,7 +392,7 @@ import {
 
 Before deploying to production:
 
-- [ ] Run `./setup-boilerplate.sh` to generate secure secrets (or manually set):
+- [ ] Run `./.groot/setup-boilerplate.sh` to generate secure secrets (or manually set):
   - [ ] Change `JWT_SECRET` to a strong random value (min 32 chars)
   - [ ] Change `ADMIN_AUTH_KEY` to a strong random value
 - [ ] Set `DATABASE_URL` to your production database
@@ -435,7 +429,7 @@ pnpm test:watch       # Run tests in watch mode
 
 ## Need Help?
 
-- **Full Documentation**: See `BOILERPLATE_ENHANCEMENTS.md`
+- **Full Documentation**: See `docs/feature-enhancements.md`
 - **Component Examples**: Check existing pages in `client/src/pages/`
 - **API Examples**: Check existing routes in `server/src/routes/`
 
@@ -443,7 +437,7 @@ pnpm test:watch       # Run tests in watch mode
 
 **Ready to ship!** 🚀
 
-Your boilerplate is production-ready with:
+Groot is production-ready with:
 
 - ✅ JWT Authentication
 - ✅ 23 UI Components

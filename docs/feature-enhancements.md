@@ -1,4 +1,4 @@
-# SaaS Boilerplate Enhancements
+# SaaS Feature Enhancements
 
 ## Overview
 
@@ -177,7 +177,7 @@ This document outlines all the generic, reusable components extracted from `nesi
 ### 6. Async Handler Wrapper
 
 - ✅ **Async handler** (`server/src/core/async-handler.ts`)
-  - Eliminates try-catch boilerplate
+  - Eliminates try-catch repetition
   - Automatic error propagation to error middleware
   - Type-safe async handler
 

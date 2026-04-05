@@ -1,6 +1,6 @@
 # AI Inference
 
-The groot boilerplate provides built-in AI inference capabilities powered by [`@mariozechner/pi-ai`](https://github.com/badlogic/pi-mono/tree/main/packages/ai). This provides a unified API to interact with various Large Language Models (LLMs) such as OpenAI, Anthropic, Google (Gemini), and many more.
+Groot provides built-in AI inference capabilities powered by [`@mariozechner/pi-ai`](https://github.com/badlogic/pi-mono/tree/main/packages/ai). This provides a unified API to interact with various Large Language Models (LLMs) such as OpenAI, Anthropic, Google (Gemini), and many more.
 
 The AI adapter simplifies the developer experience for common operations like text completion, streaming, and extracting structured data using Zod schemas.
 

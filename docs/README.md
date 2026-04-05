@@ -1,6 +1,6 @@
-# Express + React Boilerplate Docs
+# Groot Docs
 
-Welcome to the documentation hub for the Express + React boilerplate. Use this space to discover how the API, background jobs, and Vite client fit together.
+Welcome to the documentation hub for Groot. Use this space to discover how the API, background jobs, and Vite client fit together.
 
 ## Quick Navigation
 
@@ -29,12 +29,12 @@ Welcome to the documentation hub for the Express + React boilerplate. Use this s
 ### 📚 Examples & Reference
 
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets
-- **[Boilerplate Enhancements](./boilerplate-enhancements.md)** – Complete reference of all added features (60+ files, 8000+ lines)
+- **[Feature Enhancements](./feature-enhancements.md)** – Complete reference of all added features (60+ files, 8000+ lines)
 - **[Changelog](./CHANGELOG.md)** – Documentation changes over time
 
 ## Project Overview
 
-This boilerplate ships a secure Express 5 + TypeScript server inside `server/src` and a Vite-powered React 19 client inside `client/src`. The API exposes `/api/v1/todos` for CRUD operations and `/api/v1/jobs` for pg-boss queue management, all protected by basic authentication. The SPA consumes the same API via Axios + React Query, rendering dashboards and todo lists for authenticated users.
+Groot ships a secure Express 5 + TypeScript server inside `server/src` and a Vite-powered React 19 client inside `client/src`. The API exposes `/api/v1/todos` for CRUD operations and `/api/v1/jobs` for pg-boss queue management, all protected by basic authentication. The SPA consumes the same API via Axios + React Query, rendering dashboards and todo lists for authenticated users.
 
 Key capabilities:
 
