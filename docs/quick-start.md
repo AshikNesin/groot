@@ -91,7 +91,7 @@ pnpm dev
 ## Login User
 
 ```bash
-# Login (A default user is created automatically when you run `pnpm dev` for the first time or `pnpm prisma db push`)
+# Login (A default user is created automatically when you run `pnpm dev` for the first time or `tsx prisma/seed.ts`)
 curl -X POST https://groot.localhost/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"demo@example.com","password":"password123"}'
