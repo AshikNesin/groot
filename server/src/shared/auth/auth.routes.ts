@@ -1,31 +1,30 @@
-import { Router } from "express";
+import { createRouter } from "@/core/utils/router.utils";
 import * as authController from "@/shared/auth/auth.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { adminAuthMiddleware } from "@/core/middlewares/admin-auth.middleware";
 import { loginSchema, createUserSchema } from "@/shared/auth/auth.validation";
-import { handle } from "@/core/middlewares/route-handler.middleware";
 
-const router = Router();
+const router = createRouter();
 
 // Login endpoint (public)
-router.post("/login", validate(loginSchema, "body"), handle(authController.login));
+router.post("/login", validate(loginSchema, "body"), authController.login);
 
 // Logout endpoint (requires JWT authentication)
-router.post("/logout", jwtAuthMiddleware, handle(authController.logout));
+router.post("/logout", jwtAuthMiddleware, authController.logout);
 
 // Get current user (requires JWT authentication)
-router.get("/me", jwtAuthMiddleware, handle(authController.getCurrentUser));
+router.get("/me", jwtAuthMiddleware, authController.getCurrentUser);
 
 // Create new user (requires admin auth key)
 router.post(
   "/users",
   adminAuthMiddleware,
   validate(createUserSchema, "body"),
-  handle(authController.createUser),
+  authController.createUser,
 );
 
 // Get all users (requires admin auth key)
-router.get("/users", adminAuthMiddleware, handle(authController.getAllUsers));
+router.get("/users", adminAuthMiddleware, authController.getAllUsers);
 
 export default router;

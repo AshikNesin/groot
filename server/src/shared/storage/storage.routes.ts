@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { createRouter } from "@/core/utils/router.utils";
 import multer from "multer";
 import * as storageController from "./storage.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
@@ -13,9 +13,8 @@ import {
   listSharesForFileSchema,
 } from "@/shared/storage/storage.validation";
 import { storageRateLimiter, uploadRateLimiter } from "@/core/middlewares/rate-limit.middleware";
-import { handle } from "@/core/middlewares/route-handler.middleware";
 
-const router = Router();
+const router = createRouter();
 
 router.use(storageRateLimiter);
 
@@ -26,50 +25,50 @@ const upload = multer({
   },
 });
 
-router.get("/files", validate(listFilesSchema, "query"), handle(storageController.listFiles));
+router.get("/files", validate(listFilesSchema, "query"), storageController.listFiles);
 
 router.post(
   "/files/upload",
   uploadRateLimiter,
   upload.single("file"),
-  handle(storageController.uploadFile),
+  storageController.uploadFile,
 );
 
 router.post(
   "/files/bulk-upload",
   uploadRateLimiter,
   upload.array("files", 50),
-  handle(storageController.bulkUpload),
+  storageController.bulkUpload,
 );
 
 router.get(
   "/files/download",
   validate(downloadFileSchema, "query"),
-  handle(storageController.downloadFile),
+  storageController.downloadFile,
 );
 
-router.delete("/files", validate(deleteFilesSchema), handle(storageController.deleteFiles));
+router.delete("/files", validate(deleteFilesSchema), storageController.deleteFiles);
 
 router.get(
   "/files/metadata",
   validate(getFileMetadataSchema, "query"),
-  handle(storageController.getFileMetadata),
+  storageController.getFileMetadata,
 );
 
-router.post("/folders", validate(createFolderSchema), handle(storageController.createFolder));
+router.post("/folders", validate(createFolderSchema), storageController.createFolder);
 
-router.delete("/folders/:folderPath", handle(storageController.deleteFolder));
+router.delete("/folders/:folderPath", storageController.deleteFolder);
 
-router.put("/files/rename", validate(renameFileSchema), handle(storageController.renameFile));
+router.put("/files/rename", validate(renameFileSchema), storageController.renameFile);
 
-router.post("/shares", validate(createPublicShareSchema), handle(storageController.createPublicShare));
+router.post("/shares", validate(createPublicShareSchema), storageController.createPublicShare);
 
 router.get(
   "/shares",
   validate(listSharesForFileSchema, "query"),
-  handle(storageController.listSharesForFile),
+  storageController.listSharesForFile,
 );
 
-router.delete("/shares/:shareId", handle(storageController.revokeShare as any));
+router.delete("/shares/:shareId", storageController.revokeShare);
 
 export default router;

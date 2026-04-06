@@ -1,16 +1,14 @@
-import { Router } from "express";
+import { createRouter } from "@/core/utils/router.utils";
 import * as todoController from "./todo.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { createTodoSchema, updateTodoSchema } from "@/app/todo/todo.validation";
-import { handle } from "@/core/middlewares/route-handler.middleware";
+import { createTodoSchema, updateTodoSchema } from "./todo.validation";
 
-const router = Router();
+const router = createRouter();
 
-router.post("/", validate(createTodoSchema), handle(todoController.create));
-router.get("/", handle(todoController.getAll));
-router.get("/:id", handle(todoController.getById));
-router.put("/:id", validate(updateTodoSchema), handle(todoController.update));
-router.delete("/:id", handle(todoController.deleteTodo));
+router.get("/", todoController.getAll);
+router.post("/", validate(createTodoSchema, "body"), todoController.create);
+router.get("/:id", todoController.getById);
+router.put("/:id", validate(updateTodoSchema, "body"), todoController.update);
 router.delete("/:id", todoController.deleteTodo);
 
 export default router;
