@@ -1,5 +1,5 @@
 import { HttpError } from "./http-error";
-import type { ErrorCodeEnum } from "./error-codes";
+import type { ErrorCodeValue } from "./error-codes";
 
 type BoomData = unknown;
 
@@ -7,7 +7,7 @@ type BoomData = unknown;
  * Create a factory function for a given HTTP status code.
  */
 function createFactory(statusCode: number) {
-  return (message?: string, data?: BoomData, code?: ErrorCodeEnum): HttpError => {
+  return (message?: string, data?: BoomData, code?: ErrorCodeValue): HttpError => {
     return new HttpError(statusCode, message, data, code);
   };
 }

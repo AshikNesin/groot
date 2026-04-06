@@ -16,7 +16,6 @@ import {
   errorHandlerMiddleware,
   notFoundHandler,
 } from "@/core/middlewares/error-handler.middleware";
-import { stopJobQueue } from "@/core/job";
 
 export interface ServerOptions {
   distPath: string;
@@ -27,6 +26,11 @@ export interface ServerInstance {
   app: Express;
   httpServer: http.Server;
   viteServer: ViteDevServer | null;
+}
+
+export interface StartServerOptions {
+  onStart?: () => Promise<void>;
+  onShutdown?: () => Promise<void>;
 }
 
 let isShuttingDown = false;
@@ -165,16 +169,16 @@ export function setupErrorHandling(app: Express): void {
 export async function startServer(
   httpServer: http.Server,
   viteServer: ViteDevServer | null,
-  onStart?: () => Promise<void>,
+  options?: StartServerOptions,
 ): Promise<void> {
   const port = env.PORT;
 
   httpServer.listen(port, async () => {
     logger.info(`Server is running on http://localhost:${port}`);
 
-    if (onStart) {
+    if (options?.onStart) {
       try {
-        await onStart();
+        await options.onStart();
       } catch (err) {
         logger.error({ err }, "Error during server startup callback");
       }
@@ -191,10 +195,12 @@ export async function startServer(
     // Wait for load balancer to stop sending traffic
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    try {
-      await stopJobQueue();
-    } catch (error) {
-      logger.error({ error }, "Failed to stop job queue");
+    if (options?.onShutdown) {
+      try {
+        await options.onShutdown();
+      } catch (error) {
+        logger.error({ error }, "Failed to run shutdown hook");
+      }
     }
 
     if (viteServer) {

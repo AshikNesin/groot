@@ -3,9 +3,9 @@ import { fileURLToPath } from "node:url";
 import { createServer, setupSpaFallback, setupErrorHandling, startServer } from "@/core/server";
 import { env } from "@/core/env";
 import { logger } from "@/core/logger";
-import { registerRoutes } from "@/routes";
+import { registerRoutes, registerJobHandlers } from "@/routes";
 import { notificationService } from "@/shared/notification/notification.service";
-import { initJobQueue, startWorkers } from "@/core/job";
+import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +20,9 @@ async function main() {
     clientRoot,
   });
 
+  // Register feature job handlers before routes
+  registerJobHandlers();
+
   // Register feature routes and job handlers
   registerRoutes(app);
 
@@ -30,31 +33,38 @@ async function main() {
   setupErrorHandling(app);
 
   // Start server
-  await startServer(httpServer, viteServer, async () => {
-    // Initialize job queue after server is listening
-    if (env.ENABLE_JOB_QUEUE) {
-      try {
-        await initJobQueue();
-        await startWorkers();
-        logger.info("Job queue initialized and workers started");
-      } catch (error) {
-        logger.error({ error }, "Failed to initialize job queue");
+  await startServer(httpServer, viteServer, {
+    onStart: async () => {
+      // Initialize job queue after server is listening
+      if (env.ENABLE_JOB_QUEUE) {
+        try {
+          await initJobQueue();
+          await startWorkers();
+          logger.info("Job queue initialized and workers started");
+        } catch (error) {
+          logger.error({ error }, "Failed to initialize job queue");
+        }
+      } else {
+        logger.info("Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)");
       }
-    } else {
-      logger.info("Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)");
-    }
 
-    // Send server startup notification in production
-    if (isProd) {
-      try {
-        await notificationService.sendServerStartupNotification(
-          env.PORT,
-          env.NODE_ENV || "unknown",
-        );
-      } catch (error) {
-        logger.error({ error }, "Failed to send server startup notification");
+      // Send server startup notification in production
+      if (isProd) {
+        try {
+          await notificationService.sendServerStartupNotification(
+            env.PORT,
+            env.NODE_ENV || "unknown",
+          );
+        } catch (error) {
+          logger.error({ error }, "Failed to send server startup notification");
+        }
       }
-    }
+    },
+    onShutdown: async () => {
+      if (env.ENABLE_JOB_QUEUE) {
+        await stopJobQueue();
+      }
+    },
   });
 }
 

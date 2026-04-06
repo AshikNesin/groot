@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { publicShareService } from "@/shared/storage/public-share.service";
-import { Boom, ErrorCodeEnum } from "@/core/errors";
+import { Boom, ErrorCode } from "@/core/errors";
 import type { VerifySharePasswordDTO } from "@/shared/storage/storage.validation";
 
 export class PublicFileController extends BaseController {
@@ -27,7 +27,11 @@ export class PublicFileController extends BaseController {
     const validation = await publicShareService.validateShareAccess(shareId);
 
     if (!validation.isValid) {
-      throw Boom.forbidden(validation.reason ?? undefined, null, ErrorCodeEnum.SHARE_ACCESS_DENIED);
+      throw Boom.forbidden(
+        validation.reason ?? undefined,
+        null,
+        ErrorCode.SHARE_ACCESS_DENIED.code,
+      );
     }
 
     res.json({

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { BaseController } from "@/core/base-controller";
 import { ResponseHandler } from "@/core/response-handler";
 import { prisma } from "@/core/database";
-import { Boom, ErrorCodeEnum } from "@/core/errors";
+import { Boom, ErrorCode } from "@/core/errors";
 import {
   addJob,
   scheduleJob,
@@ -31,14 +31,14 @@ function parsePagination(limit?: string, offset?: string) {
     throw Boom.badRequest(
       "limit must be an integer between 1 and 1000",
       null,
-      ErrorCodeEnum.VALIDATION_ERROR,
+      ErrorCode.VALIDATION_ERROR.code,
     );
   }
   if (parsedOffset === null || parsedOffset < 0) {
     throw Boom.badRequest(
       "offset must be a non-negative integer",
       null,
-      ErrorCodeEnum.VALIDATION_ERROR,
+      ErrorCode.VALIDATION_ERROR.code,
     );
   }
 
@@ -59,7 +59,7 @@ class JobController extends BaseController {
       throw Boom.badRequest(
         "Missing required fields: jobName and data",
         null,
-        ErrorCodeEnum.JOB_VALIDATION_ERROR,
+        ErrorCode.JOB_VALIDATION_ERROR.code,
       );
     }
 
@@ -68,7 +68,7 @@ class JobController extends BaseController {
       throw Boom.badRequest(
         "Invalid job name",
         { availableJobs: registeredJobs },
-        ErrorCodeEnum.JOB_NAME_INVALID,
+        ErrorCode.JOB_NAME_INVALID.code,
       );
     }
 
@@ -83,7 +83,7 @@ class JobController extends BaseController {
       throw Boom.badRequest(
         "Missing required fields: jobName, data, cron",
         null,
-        ErrorCodeEnum.JOB_SCHEDULE_VALIDATION_ERROR,
+        ErrorCode.JOB_SCHEDULE_VALIDATION_ERROR.code,
       );
     }
 
@@ -92,7 +92,7 @@ class JobController extends BaseController {
       throw Boom.badRequest(
         "Invalid job name",
         { availableJobs: registeredJobs },
-        ErrorCodeEnum.JOB_NAME_INVALID,
+        ErrorCode.JOB_NAME_INVALID.code,
       );
     }
 
@@ -143,7 +143,7 @@ class JobController extends BaseController {
       throw Boom.badRequest(
         "Missing required field: jobs (array of {queueName, jobId})",
         null,
-        ErrorCodeEnum.JOB_BULK_RERUN_VALIDATION_ERROR,
+        ErrorCode.JOB_BULK_RERUN_VALIDATION_ERROR.code,
       );
     }
 
@@ -205,7 +205,7 @@ class JobController extends BaseController {
   async getById(req: Request, res: Response) {
     const job = await getJobById(req.params.queueName, req.params.jobId);
     if (!job) {
-      throw Boom.notFound("Job not found", null, ErrorCodeEnum.JOB_NOT_FOUND);
+      throw Boom.notFound("Job not found", null, ErrorCode.JOB_NOT_FOUND.code);
     }
     return ResponseHandler.success(res, job, "Job details retrieved");
   }

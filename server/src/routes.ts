@@ -14,10 +14,16 @@ import aiRoutes from "@/shared/ai/ai.routes";
 // Feature job registrations
 import { registerTodoJobs } from "@/app/todo/todo.jobs";
 
-export function registerRoutes(app: Express): void {
-  // Register job handlers for all features
+/**
+ * Register all feature job handlers.
+ * Call this before startWorkers() so every queue name is known upfront.
+ */
+export function registerJobHandlers(): void {
   registerTodoJobs();
+  // add future feature job registrations here: registerPostJobs(), etc.
+}
 
+export function registerRoutes(app: Express): void {
   // Public routes (no auth)
   app.use("/api/v1/public/files", publicFileRoutes);
 
