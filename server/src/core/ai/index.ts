@@ -1,5 +1,5 @@
-import { AIClient } from "./client";
-import * as schema from "./schema";
+import { AIClient } from "@/core/ai/client";
+import * as schema from "@/core/ai/schema";
 
 /**
  * Unified AI System namespace
@@ -10,9 +10,9 @@ export const AISystem = {
 } as const;
 
 // Backwards-compatible exports
-export { AIClient as AI } from "./client";
+export { AIClient as AI } from "@/core/ai/client";
 
 // Flat exports
-export * from "./client";
-export * from "./schema";
-export * from "./types";
+export * from "@/core/ai/client";
+export * from "@/core/ai/schema";
+export * from "@/core/ai/types";

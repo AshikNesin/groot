@@ -1,7 +1,7 @@
 import { createRouter } from "@/core/utils/router.utils";
-import * as aiController from "./ai.controller";
+import * as aiController from "@/shared/ai/ai.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { askSchema, summarizeSchema, translateSchema } from "./ai.validation";
+import { askSchema, summarizeSchema, translateSchema } from "@/shared/ai/ai.validation";
 
 const router = createRouter();
 

@@ -16,8 +16,8 @@ import type {
   PiAITool,
   TextContent,
   ImageContent,
-} from "./types";
-import { zodToTypeBox } from "./schema";
+} from "@/core/ai/types";
+import { zodToTypeBox } from "@/core/ai/schema";
 
 export type CompleteParams = CompletionOptions & {
   prompt: string | (TextContent | ImageContent)[];

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as TodoService from "./todo.service";
-import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
+import * as TodoService from "@/app/todo/todo.service";
+import type { CreateTodoDTO, UpdateTodoDTO } from "@/app/todo/todo.validation";
 import { parseId } from "@/core/utils/controller.utils";
 
 export async function create(req: Request, res: Response) {

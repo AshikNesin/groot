@@ -1,4 +1,4 @@
-import { StorageService } from "./service";
+import { StorageService } from "@/core/storage/service";
 import { S3Client } from "@aws-sdk/client-s3";
 
 /**
@@ -15,5 +15,5 @@ export const StorageSystem = {
 } as const;
 
 // Types
-export * from "./types";
+export * from "@/core/storage/types";
 export { StorageService, S3Client };

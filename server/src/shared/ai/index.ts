@@ -1,6 +1,6 @@
-import * as AIServices from "./ai.service";
-import * as AIValidation from "./ai.validation";
-import { aiUsageModel, aiConversationModel } from "./ai-usage.model";
+import * as AIServices from "@/shared/ai/ai.service";
+import * as AIValidation from "@/shared/ai/ai.validation";
+import { aiUsageModel, aiConversationModel } from "@/shared/ai/ai-usage.model";
 
 export const AISystem = {
   ...AIServices,
@@ -11,7 +11,7 @@ export const AISystem = {
   },
 } as const;
 
-export * as AIController from "./ai.controller";
-export * as AIRoutes from "./ai.routes";
-export * as AIService from "./ai.service";
-export * as AIValidation from "./ai.validation";
+export * as AIController from "@/shared/ai/ai.controller";
+export * as AIRoutes from "@/shared/ai/ai.routes";
+export * as AIService from "@/shared/ai/ai.service";
+export * as AIValidation from "@/shared/ai/ai.validation";

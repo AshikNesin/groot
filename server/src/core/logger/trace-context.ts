@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { getLoggerContext } from "./context";
+import { getLoggerContext } from "@/core/logger/context";
 
 /**
  * Trace context for request correlation

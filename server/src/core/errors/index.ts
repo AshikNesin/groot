@@ -1,8 +1,17 @@
-export { HttpError } from "./http-error";
-export type { HttpErrorOutput } from "./http-error";
-export { Boom } from "./boom";
-export { ErrorCode, ErrorCodeEnum, type ErrorCodeKey, type ErrorCodeValue } from "./error-codes";
-export { isPrismaError, handlePrismaError, PrismaHandler } from "./prisma-error-handler";
+export { HttpError } from "@/core/errors/http-error";
+export type { HttpErrorOutput } from "@/core/errors/http-error";
+export { Boom } from "@/core/errors/boom";
+export {
+  ErrorCode,
+  ErrorCodeEnum,
+  type ErrorCodeKey,
+  type ErrorCodeValue,
+} from "@/core/errors/error-codes";
+export {
+  isPrismaError,
+  handlePrismaError,
+  PrismaHandler,
+} from "@/core/errors/prisma-error-handler";
 
 /**
  * Consolidated namespace for all error functionality.

@@ -1,7 +1,7 @@
 import pino, { type Logger } from "pino";
 import dayjs from "dayjs";
 import { env } from "@/core/env";
-import { serializeObject } from "./utils";
+import { serializeObject } from "@/core/logger/utils";
 
 export const isDevelopment = env.NODE_ENV !== "production";
 export const logLevel = env.LOG_LEVEL;

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { Breadcrumb } from "./breadcrumbs";
-import type { TraceContext } from "./trace-context";
+import type { Breadcrumb } from "@/core/logger/breadcrumbs";
+import type { TraceContext } from "@/core/logger/trace-context";
 
 export interface LoggerContextData {
   trace: TraceContext | null;

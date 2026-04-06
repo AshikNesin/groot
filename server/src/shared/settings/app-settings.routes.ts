@@ -1,7 +1,7 @@
 import { createRouter } from "@/core/utils/router.utils";
-import * as appSettingsController from "./app-settings.controller";
+import * as appSettingsController from "@/shared/settings/app-settings.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { upsertAppSettingSchema } from "./app-settings.validation";
+import { upsertAppSettingSchema } from "@/shared/settings/app-settings.validation";
 import { adminAuthMiddleware } from "@/core/middlewares/admin-auth.middleware";
 
 const router = createRouter();

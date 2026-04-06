@@ -1,6 +1,6 @@
 import type { Request } from "express";
-import * as AuthService from "./auth.service";
-import type { LoginDTO, CreateUserDTO } from "./auth.validation";
+import * as AuthService from "@/shared/auth/auth.service";
+import type { LoginDTO, CreateUserDTO } from "@/shared/auth/auth.validation";
 import { Boom } from "@/core/errors";
 
 /**

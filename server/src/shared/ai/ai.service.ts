@@ -1,13 +1,13 @@
 import { AI } from "@/core/ai";
 import { getModel, type KnownProvider } from "@mariozechner/pi-ai";
-import { aiUsageModel, aiConversationModel } from "./ai-usage.model";
+import { aiUsageModel, aiConversationModel } from "@/shared/ai/ai-usage.model";
 import { env } from "@/core/env";
 import type {
   ChatDTO,
   UsageQueryDTO,
   CreateConversationDTO,
   UpdateConversationDTO,
-} from "./ai.validation";
+} from "@/shared/ai/ai.validation";
 import { randomUUID } from "node:crypto";
 import dayjs from "dayjs";
 

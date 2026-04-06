@@ -27,7 +27,7 @@ import type {
   GetStringOptions,
   CreateSignedUrlOptions,
   SignedUrlResult,
-} from "./types";
+} from "@/core/storage/types";
 
 export class StorageService {
   private client: S3Client;

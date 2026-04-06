@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import { userModel } from "./user.model";
+import { userModel } from "@/shared/auth/user.model";
 import { Boom } from "@/core/errors";
 import { generateToken } from "@/core/utils/jwt.utils";
-import type { CreateUserDTO, LoginDTO } from "./auth.validation";
+import type { CreateUserDTO, LoginDTO } from "@/shared/auth/auth.validation";
 
 export async function login(data: LoginDTO) {
   const user = await userModel.findByEmail(data.email);

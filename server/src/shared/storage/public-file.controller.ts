@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import * as PublicShareService from "./public-share.service";
+import * as PublicShareService from "@/shared/storage/public-share.service";
 import { Boom, ErrorCode } from "@/core/errors";
-import type { VerifySharePasswordDTO } from "./storage.validation";
+import type { VerifySharePasswordDTO } from "@/shared/storage/storage.validation";
 
 export async function servePublicFile(req: Request, res: Response) {
   const { shareId } = req.params;

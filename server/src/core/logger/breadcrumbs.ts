@@ -12,7 +12,7 @@ export interface Breadcrumb {
   data?: Record<string, unknown>;
 }
 
-import { getLoggerContext } from "./context";
+import { getLoggerContext } from "@/core/logger/context";
 
 const MAX_BREADCRUMBS = 50;
 

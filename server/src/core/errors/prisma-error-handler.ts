@@ -1,6 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
-import { Boom } from "./boom";
-import type { HttpError } from "./http-error";
+import { Boom } from "@/core/errors/boom";
+import type { HttpError } from "@/core/errors/http-error";
 
 export type PrismaErrorHandlerFn = (error: Prisma.PrismaClientKnownRequestError) => HttpError;
 

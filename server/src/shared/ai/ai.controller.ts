@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
-import * as AISystem from "./ai.service";
+import * as AISystem from "@/shared/ai/ai.service";
 import type {
   ChatDTO,
   UsageQueryDTO,
   CreateConversationDTO,
   UpdateConversationDTO,
   ListConversationsQueryDTO,
-} from "./ai.validation";
+} from "@/shared/ai/ai.validation";
 import { parseId } from "@/core/utils/controller.utils";
 import { Boom } from "@/core/errors";
 

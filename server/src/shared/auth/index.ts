@@ -1,6 +1,6 @@
-import * as AuthServices from "./auth.service";
-import * as AuthValidation from "./auth.validation";
-import { userModel } from "./user.model";
+import * as AuthServices from "@/shared/auth/auth.service";
+import * as AuthValidation from "@/shared/auth/auth.validation";
+import { userModel } from "@/shared/auth/user.model";
 
 export const AuthSystem = {
   ...AuthServices,
@@ -8,8 +8,8 @@ export const AuthSystem = {
   model: userModel,
 } as const;
 
-export * as AuthController from "./auth.controller";
-export * as AuthRoutes from "./auth.routes";
-export * as AuthService from "./auth.service";
-export * as AuthValidation from "./auth.validation";
-export * as UserModel from "./user.model";
+export * as AuthController from "@/shared/auth/auth.controller";
+export * as AuthRoutes from "@/shared/auth/auth.routes";
+export * as AuthService from "@/shared/auth/auth.service";
+export * as AuthValidation from "@/shared/auth/auth.validation";
+export * as UserModel from "@/shared/auth/user.model";

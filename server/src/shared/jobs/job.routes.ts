@@ -1,5 +1,5 @@
 import { createRouter } from "@/core/utils/router.utils";
-import * as jobController from "./job.controller";
+import * as jobController from "@/shared/jobs/job.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import {
   createJobSchema,

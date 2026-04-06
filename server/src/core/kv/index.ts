@@ -1,5 +1,5 @@
-import { kv, createNamespaceKv, store } from "./store";
-import { PrismaKeyvAdapter } from "./keyv-prisma-adapter";
+import { kv, createNamespaceKv, store } from "@/core/kv/store";
+import { PrismaKeyvAdapter } from "@/core/kv/keyv-prisma-adapter";
 
 /**
  * Global Unified KV System namespace
@@ -11,8 +11,8 @@ export const KVSystem = {
   PrismaKeyvAdapter,
 } as const;
 
-export * from "./store";
-export * from "./keyv-prisma-adapter";
+export * from "@/core/kv/store";
+export * from "@/core/kv/keyv-prisma-adapter";
 
 // Maintain backwards compatibility for default imports
 export default kv;

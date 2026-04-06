@@ -1,7 +1,7 @@
 import { Boom } from "@/core/errors";
-import { appSettingsModel } from "./app-settings.model";
-import type { AppSetting } from "./app-settings.model";
-import type { UpsertAppSettingDTO } from "./app-settings.validation";
+import { appSettingsModel } from "@/shared/settings/app-settings.model";
+import type { AppSetting } from "@/shared/settings/app-settings.model";
+import type { UpsertAppSettingDTO } from "@/shared/settings/app-settings.validation";
 
 export async function get<T = unknown>({ key }: { key: string }): Promise<AppSetting<T>> {
   const setting = await appSettingsModel.get<T>(key);

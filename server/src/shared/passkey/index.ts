@@ -1,6 +1,6 @@
-import * as PasskeyServices from "./passkey.service";
-import * as PasskeyValidation from "./passkey.validation";
-import { passkeyModel } from "./passkey.model";
+import * as PasskeyServices from "@/shared/passkey/passkey.service";
+import * as PasskeyValidation from "@/shared/passkey/passkey.validation";
+import { passkeyModel } from "@/shared/passkey/passkey.model";
 
 export const PasskeySystem = {
   ...PasskeyServices,
@@ -8,8 +8,8 @@ export const PasskeySystem = {
   model: passkeyModel,
 } as const;
 
-export * as PasskeyController from "./passkey.controller";
-export * as PasskeyRoutes from "./passkey.routes";
-export * as PasskeyService from "./passkey.service";
-export * as PasskeyValidation from "./passkey.validation";
-export * as PasskeyModel from "./passkey.model";
+export * as PasskeyController from "@/shared/passkey/passkey.controller";
+export * as PasskeyRoutes from "@/shared/passkey/passkey.routes";
+export * as PasskeyService from "@/shared/passkey/passkey.service";
+export * as PasskeyValidation from "@/shared/passkey/passkey.validation";
+export * as PasskeyModel from "@/shared/passkey/passkey.model";

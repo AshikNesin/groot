@@ -1,5 +1,5 @@
-import { HttpError } from "./http-error";
-import type { ErrorCodeValue } from "./error-codes";
+import { HttpError } from "@/core/errors/http-error";
+import type { ErrorCodeValue } from "@/core/errors/error-codes";
 
 type BoomData = unknown;
 

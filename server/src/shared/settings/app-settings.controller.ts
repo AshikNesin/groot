@@ -1,6 +1,6 @@
 import type { Request } from "express";
-import * as AppSettingsService from "./app-settings.service";
-import type { UpsertAppSettingDTO } from "./app-settings.validation";
+import * as AppSettingsService from "@/shared/settings/app-settings.service";
+import type { UpsertAppSettingDTO } from "@/shared/settings/app-settings.validation";
 
 /**
  * Get all app settings

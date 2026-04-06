@@ -3,8 +3,8 @@ import type { Request } from "express";
 import pino, { type Logger } from "pino";
 import pinoPretty from "pino-pretty";
 import dayjs from "dayjs";
-import { createJobLogStream } from "./job-stream";
-import { logger, loggerConfig, isDevelopment, logLevel } from "./core";
+import { createJobLogStream } from "@/core/logger/job-stream";
+import { logger, loggerConfig, isDevelopment, logLevel } from "@/core/logger/core";
 
 export interface CreateRequestLoggerOptions {
   req: Request;

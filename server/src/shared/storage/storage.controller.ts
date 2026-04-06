@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as StorageFileService from "./storage.service";
-import * as PublicShareService from "./public-share.service";
+import * as StorageFileService from "@/shared/storage/storage.service";
+import * as PublicShareService from "@/shared/storage/public-share.service";
 import type {
   ListFilesDTO,
   DownloadFileDTO,
@@ -10,7 +10,7 @@ import type {
   RenameFileDTO,
   CreatePublicShareDTO,
   ListSharesForFileDTO,
-} from "./storage.validation";
+} from "@/shared/storage/storage.validation";
 import { Boom } from "@/core/errors";
 
 export async function listFiles(req: Request) {

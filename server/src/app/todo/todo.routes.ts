@@ -1,7 +1,7 @@
 import { createRouter } from "@/core/utils/router.utils";
-import * as todoController from "./todo.controller";
+import * as todoController from "@/app/todo/todo.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
-import { createTodoSchema, updateTodoSchema } from "./todo.validation";
+import { createTodoSchema, updateTodoSchema } from "@/app/todo/todo.validation";
 
 const router = createRouter();
 

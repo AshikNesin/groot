@@ -1,7 +1,7 @@
-import * as TodoServices from "./todo.service";
-import * as TodoValidation from "./todo.validation";
-import { todoModel } from "./todo.model";
-import * as TodoJobs from "./todo.jobs";
+import * as TodoServices from "@/app/todo/todo.service";
+import * as TodoValidation from "@/app/todo/todo.validation";
+import { todoModel } from "@/app/todo/todo.model";
+import * as TodoJobs from "@/app/todo/todo.jobs";
 
 export const TodoSystem = {
   ...TodoServices,
@@ -12,8 +12,8 @@ export const TodoSystem = {
   jobs: TodoJobs,
 } as const;
 
-export * as TodoController from "./todo.controller";
-export * as TodoRoutes from "./todo.routes";
-export * as TodoService from "./todo.service";
-export * as TodoValidation from "./todo.validation";
-export * as TodoJobs from "./todo.jobs";
+export * as TodoController from "@/app/todo/todo.controller";
+export * as TodoRoutes from "@/app/todo/todo.routes";
+export * as TodoService from "@/app/todo/todo.service";
+export * as TodoValidation from "@/app/todo/todo.validation";
+export * as TodoJobs from "@/app/todo/todo.jobs";
