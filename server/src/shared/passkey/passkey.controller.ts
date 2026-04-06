@@ -1,109 +1,94 @@
-import { ResponseHandler } from "@/core/response-handler";
+import type { Request } from "express";
 import * as PasskeySystem from "./passkey.service";
+import type { VerifyRegistrationDTO, VerifyAuthenticationDTO, UpdatePasskeyNameDTO, GenerateAuthenticationOptionsDTO } from "./passkey.validation";
 import { Boom } from "@/core/errors";
-import type { Request, Response } from "express";
-import { env } from "@/core/env";
-import { parseId } from "@/core/utils/controller.utils";
 
-export async function generateRegistrationOptions(req: Request, res: Response): Promise<void> {
-  if (!req.user) {
-    throw Boom.unauthorized("Not authenticated");
+/**
+ * Generate options for passkey registration
+ */
+export async function generateRegistrationOptions(req: Request) {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw Boom.unauthorized("Authentication required");
   }
-
-  const options = await PasskeySystem.generateRegistrationOptions({ userId: req.user.userId });
-
-  ResponseHandler.success(res, options, "Registration options generated successfully");
+  return await PasskeySystem.generateRegistrationOptions({ userId });
 }
 
-export async function verifyRegistration(req: Request, res: Response): Promise<void> {
-  if (!req.user) {
-    throw Boom.unauthorized("Not authenticated");
+/**
+ * Verify passkey registration
+ */
+export async function verifyRegistration(req: Request) {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw Boom.unauthorized("Authentication required");
   }
+  const payload = (req.validated?.body || req.body) as VerifyRegistrationDTO;
 
-  const { response, credentialName } = req.body;
-
-  const passkey = await PasskeySystem.verifyRegistration({
-    userId: req.user.userId,
-    response,
-    credentialName,
+  return await PasskeySystem.verifyRegistration({
+    userId,
+    response: payload.response,
+    credentialName: payload.credentialName,
   });
-
-  ResponseHandler.created(
-    res,
-    {
-      id: passkey.id,
-      credentialName: passkey.credentialName,
-      createdAt: passkey.createdAt,
-    },
-    "Passkey registered successfully",
-  );
 }
 
-export async function generateAuthenticationOptions(req: Request, res: Response): Promise<void> {
-  const { email } = req.body;
-
-  const options = await PasskeySystem.generateAuthenticationOptions({ email });
-
-  ResponseHandler.success(res, options, "Authentication options generated successfully");
+/**
+ * Generate options for passkey authentication
+ */
+export async function generateAuthenticationOptions(req: Request) {
+  const body = (req.validated?.body || req.body) as GenerateAuthenticationOptionsDTO;
+  return await PasskeySystem.generateAuthenticationOptions({ email: body?.email });
 }
 
-export async function verifyAuthentication(req: Request, res: Response): Promise<void> {
-  const { response, email } = req.body;
-
-  const { token, user } = await PasskeySystem.verifyAuthentication({ response, email });
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+/**
+ * Verify passkey authentication
+ */
+export async function verifyAuthentication(req: Request) {
+  const body = (req.validated?.body || req.body) as VerifyAuthenticationDTO;
+  return await PasskeySystem.verifyAuthentication({
+    email: body.email,
+    response: body.response,
   });
-
-  ResponseHandler.success(res, { token, user }, "Authentication successful");
 }
 
-export async function listPasskeys(req: Request, res: Response): Promise<void> {
-  if (!req.user) {
-    throw Boom.unauthorized("Not authenticated");
+/**
+ * List all passkeys for the user
+ */
+export async function listPasskeys(req: Request) {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw Boom.unauthorized("Authentication required");
   }
-
-  const passkeys = await PasskeySystem.listPasskeys({ userId: req.user.userId });
-
-  ResponseHandler.success(res, passkeys);
+  return await PasskeySystem.listPasskeys({ userId });
 }
 
-export async function deletePasskey(req: Request, res: Response): Promise<void> {
-  if (!req.user) {
-    throw Boom.unauthorized("Not authenticated");
+/**
+ * Delete a passkey (remove passkey)
+ */
+export async function deletePasskey(req: Request) {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw Boom.unauthorized("Authentication required");
   }
+  const passkeyId = Number(req.params.id);
 
-  const passkeyId = parseId(req.params.id, "Passkey ID");
-
-  await PasskeySystem.deletePasskey({ passkeyId, userId: req.user.userId });
-
-  ResponseHandler.success(res, null, "Passkey deleted successfully");
+  return await PasskeySystem.deletePasskey({ userId, passkeyId });
 }
 
-export async function updatePasskeyName(req: Request, res: Response): Promise<void> {
-  if (!req.user) {
-    throw Boom.unauthorized("Not authenticated");
+/**
+ * Update passkey name
+ */
+export async function updatePasskeyName(req: Request) {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw Boom.unauthorized("Authentication required");
   }
 
-  const passkeyId = parseId(req.params.id, "Passkey ID");
-  const { credentialName } = req.body;
+  const passkeyId = Number(req.params.id);
+  const payload = (req.validated?.body || req.body) as UpdatePasskeyNameDTO;
 
-  const updatedPasskey = await PasskeySystem.updatePasskeyName({
+  return await PasskeySystem.updatePasskeyName({
+    userId,
     passkeyId,
-    userId: req.user.userId,
-    credentialName,
+    credentialName: payload.credentialName,
   });
-
-  ResponseHandler.success(
-    res,
-    {
-      id: updatedPasskey.id,
-      credentialName: updatedPasskey.credentialName,
-    },
-    "Passkey name updated successfully",
-  );
 }

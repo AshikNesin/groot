@@ -1,35 +1,30 @@
 import type { Request, Response } from "express";
-import { ResponseHandler } from "@/core/response-handler";
 import * as TodoService from "./todo.service";
 import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
 import { parseId } from "@/core/utils/controller.utils";
 
-export async function create(req: Request, res: Response): Promise<void> {
+export async function create(req: Request, res: Response) {
   const payload = (req.validated?.body || req.body) as CreateTodoDTO;
-  const todo = await TodoService.create({ data: payload });
-  ResponseHandler.created(res, todo, "Todo created successfully");
+  res.status(201);
+  return await TodoService.create({ data: payload });
 }
 
-export async function getAll(_req: Request, res: Response): Promise<void> {
-  const todos = await TodoService.findAll();
-  ResponseHandler.success(res, todos);
+export async function getAll() {
+  return await TodoService.findAll();
 }
 
-export async function getById(req: Request, res: Response): Promise<void> {
+export async function getById(req: Request) {
   const id = parseId(req.params.id);
-  const todo = await TodoService.findById({ id });
-  ResponseHandler.success(res, todo);
+  return await TodoService.findById({ id });
 }
 
-export async function update(req: Request, res: Response): Promise<void> {
+export async function update(req: Request) {
   const id = parseId(req.params.id);
   const payload = (req.validated?.body || req.body) as UpdateTodoDTO;
-  const todo = await TodoService.update({ id, data: payload });
-  ResponseHandler.success(res, todo, "Todo updated successfully");
+  return await TodoService.update({ id, data: payload });
 }
 
-export async function deleteTodo(req: Request, res: Response): Promise<void> {
+export async function deleteTodo(req: Request) {
   const id = parseId(req.params.id);
   await TodoService.deleteTodo({ id });
-  ResponseHandler.success(res, null, "Todo deleted successfully");
 }

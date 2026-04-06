@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as passkeyController from "./passkey.controller";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { validate } from "@/core/middlewares/validation.middleware";
+import { handle } from "@/core/middlewares/route-handler.middleware";
 import {
   verifyRegistrationSchema,
   verifyAuthenticationSchema,
@@ -12,42 +13,46 @@ import {
 const router = Router();
 
 // Generate registration options (requires authentication)
-router.post("/register/options", jwtAuthMiddleware, passkeyController.generateRegistrationOptions);
+router.post(
+  "/register/options",
+  jwtAuthMiddleware,
+  handle(passkeyController.generateRegistrationOptions),
+);
 
 // Verify registration (requires authentication)
 router.post(
   "/register/verify",
   jwtAuthMiddleware,
   validate(verifyRegistrationSchema),
-  passkeyController.verifyRegistration,
+  handle(passkeyController.verifyRegistration),
 );
 
 // Generate authentication options (public endpoint)
 router.post(
   "/login/options",
   validate(generateAuthenticationOptionsSchema),
-  passkeyController.generateAuthenticationOptions,
+  handle(passkeyController.generateAuthenticationOptions),
 );
 
 // Verify authentication (public endpoint)
 router.post(
   "/login/verify",
   validate(verifyAuthenticationSchema),
-  passkeyController.verifyAuthentication,
+  handle(passkeyController.verifyAuthentication),
 );
 
 // List passkeys (requires authentication)
-router.get("/list", jwtAuthMiddleware, passkeyController.listPasskeys);
+router.get("/list", jwtAuthMiddleware, handle(passkeyController.listPasskeys));
 
 // Delete passkey (requires authentication)
-router.delete("/:id", jwtAuthMiddleware, passkeyController.deletePasskey);
+router.delete("/:id", jwtAuthMiddleware, handle(passkeyController.deletePasskey));
 
 // Update passkey name (requires authentication)
 router.patch(
   "/:id",
   jwtAuthMiddleware,
   validate(updatePasskeyNameSchema),
-  passkeyController.updatePasskeyName,
+  handle(passkeyController.updatePasskeyName),
 );
 
 export default router;

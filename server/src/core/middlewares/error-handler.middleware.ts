@@ -5,7 +5,6 @@ import { logBusinessEvent } from "@/core/logger";
 import { getBreadcrumbs } from "@/core/logger/breadcrumbs";
 import { getCurrentTraceContext } from "@/core/logger/trace-context";
 import { sanitizeRequestBody } from "@/core/logger/utils";
-import { ResponseHandler } from "@/core/response-handler";
 import { ZodError } from "zod";
 import { getRequestLogger } from "@/core/middlewares/requestLogger.middleware";
 import { env } from "@/core/env";
@@ -157,13 +156,14 @@ export function errorHandlerMiddleware(
       level: "warn",
     });
 
-    ResponseHandler.error(
-      res,
-      "Validation failed",
-      ErrorCode.VALIDATION_ERROR.code,
-      ErrorCode.VALIDATION_ERROR.status,
-      errors,
-    );
+    res.status(ErrorCode.VALIDATION_ERROR.status).json({
+      success: false,
+      error: {
+        code: ErrorCode.VALIDATION_ERROR.code,
+        message: "Validation failed",
+        details: errors,
+      },
+    });
     return;
   }
 
@@ -174,7 +174,14 @@ export function errorHandlerMiddleware(
     } catch (handledError) {
       if (Boom.isHttpError(handledError)) {
         const { statusCode, message, code, data } = handledError.output;
-        ResponseHandler.error(res, message, code, statusCode, data);
+        res.status(statusCode).json({
+          success: false,
+          error: {
+            code,
+            message,
+            details: data,
+          },
+        });
         return;
       }
     }
@@ -183,20 +190,28 @@ export function errorHandlerMiddleware(
   // Handle HttpError (all Boom-created errors)
   if (Boom.isHttpError(error)) {
     const { statusCode, message, code, data } = error.output;
-    ResponseHandler.error(res, message, code, statusCode, data);
+    res.status(statusCode).json({
+      success: false,
+      error: {
+        code,
+        message,
+        details: data,
+      },
+    });
     return;
   }
 
   // Handle unknown errors
   const isDevelopment = env.NODE_ENV === "development";
 
-  ResponseHandler.error(
-    res,
-    isDevelopment ? error.message : "An unexpected error occurred",
-    ErrorCode.INTERNAL_ERROR.code,
-    ErrorCode.INTERNAL_ERROR.status,
-    isDevelopment ? { stack: error.stack } : undefined,
-  );
+  res.status(ErrorCode.INTERNAL_ERROR.status).json({
+    success: false,
+    error: {
+      code: ErrorCode.INTERNAL_ERROR.code,
+      message: isDevelopment ? error.message : "An unexpected error occurred",
+      details: isDevelopment ? { stack: error.stack } : undefined,
+    },
+  });
 }
 
 /**
@@ -217,12 +232,13 @@ export function notFoundHandler(req: Request, res: Response): void {
     `Route not found: ${req.method} ${req.path}`,
   );
 
-  ResponseHandler.error(
-    res,
-    `Cannot ${req.method} ${req.path}`,
-    ErrorCode.NOT_FOUND.code,
-    ErrorCode.NOT_FOUND.status,
-  );
+  res.status(ErrorCode.NOT_FOUND.status).json({
+    success: false,
+    error: {
+      code: ErrorCode.NOT_FOUND.code,
+      message: `Cannot ${req.method} ${req.path}`,
+    },
+  });
 }
 
 // Re-import for use in this file

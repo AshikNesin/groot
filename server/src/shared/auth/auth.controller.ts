@@ -1,58 +1,47 @@
-import type { Request, Response } from "express";
-import { ResponseHandler } from "@/core/response-handler";
+import type { Request } from "express";
 import * as AuthService from "./auth.service";
+import type { LoginDTO, CreateUserDTO } from "./auth.validation";
 import { Boom } from "@/core/errors";
-import { env } from "@/core/env";
 
 /**
- * Login with email and password
+ * Handle user login
  */
-export async function login(req: Request, res: Response) {
-  const { token, user } = await AuthService.login(req.body);
-
-  // Set HTTP-only cookie
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
-
-  ResponseHandler.success(res, { token, user }, "Login successful");
+export async function login(req: Request) {
+  const body = (req.validated?.body || req.body) as LoginDTO;
+  return await AuthService.login(body);
 }
 
 /**
- * Logout and clear cookie
+ * Handle user logout (placeholder)
  */
-export async function logout(_req: Request, res: Response) {
-  res.clearCookie("token");
-  ResponseHandler.success(res, null, "Logout successful");
+export async function logout(req: Request) {
+  // Logic for logout if needed (e.g., token revocation)
+  return { status: "logged out" };
 }
 
 /**
  * Get current authenticated user
  */
-export async function getCurrentUser(req: Request, res: Response) {
-  if (!req.user) {
-    throw Boom.unauthorized("Not authenticated");
+export async function getCurrentUser(req: Request) {
+  const user = req.user;
+  if (!user) {
+    throw Boom.unauthorized("Authentication required");
   }
 
-  const user = await AuthService.getUserById({ userId: req.user.userId });
-  ResponseHandler.success(res, user, "User retrieved");
+  return await AuthService.getUserById({ userId: user.userId });
 }
 
 /**
  * Create a new user (admin only)
  */
-export async function createUser(req: Request, res: Response) {
-  const user = await AuthService.createUser(req.body);
-  ResponseHandler.created(res, user, "User created successfully");
+export async function createUser(req: Request) {
+  const body = (req.validated?.body || req.body) as CreateUserDTO;
+  return await AuthService.createUser(body);
 }
 
 /**
  * Get all users (admin only)
  */
-export async function getAllUsers(_req: Request, res: Response) {
-  const users = await AuthService.getAllUsers();
-  ResponseHandler.success(res, users, "Users retrieved");
+export async function getAllUsers(req: Request) {
+  return await AuthService.getAllUsers();
 }

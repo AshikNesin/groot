@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import { ResponseHandler } from "@/core/response-handler";
 import * as AISystem from "./ai.service";
 import type {
   ChatDTO,
@@ -9,15 +8,15 @@ import type {
   ListConversationsQueryDTO,
 } from "./ai.validation";
 import { parseId } from "@/core/utils/controller.utils";
+import { Boom } from "@/core/errors";
 
-export async function chat(req: Request, res: Response): Promise<void> {
+export async function chat(req: Request) {
   const payload = (req.validated?.body || req.body) as ChatDTO;
   const userId = req.user?.userId;
-  const result = await AISystem.chat({ input: payload, userId });
-  ResponseHandler.success(res, result);
+  return await AISystem.chat({ input: payload, userId });
 }
 
-export async function chatStream(req: Request, res: Response): Promise<void> {
+export async function chatStream(req: Request, res: Response) {
   const payload = (req.validated?.body || req.body) as ChatDTO;
   const userId = req.user?.userId;
 
@@ -38,79 +37,71 @@ export async function chatStream(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function getModels(_req: Request, res: Response): Promise<void> {
-  const models = await AISystem.getModels();
-  ResponseHandler.success(res, models);
+export async function getModels() {
+  return await AISystem.getModels();
 }
 
-export async function getUsage(req: Request, res: Response): Promise<void> {
+export async function getUsage(req: Request) {
   const userId = req.user?.userId;
   const query = (req.validated?.query || req.query) as UsageQueryDTO;
-  const stats = await AISystem.getUsage({ userId, params: query });
-  ResponseHandler.success(res, stats);
+  return await AISystem.getUsage({ userId, params: query });
 }
 
-export async function getUsageRecords(req: Request, res: Response): Promise<void> {
+export async function getUsageRecords(req: Request) {
   const userId = req.user?.userId;
   const query = (req.validated?.query || req.query) as UsageQueryDTO;
-  const records = await AISystem.getUsageRecords({ userId, params: query });
-  ResponseHandler.success(res, records);
+  return await AISystem.getUsageRecords({ userId, params: query });
 }
 
-export async function listConversations(req: Request, res: Response): Promise<void> {
+export async function listConversations(req: Request) {
   const userId = req.user?.userId;
   const query = (req.validated?.query || req.query) as ListConversationsQueryDTO;
-  const conversations = await AISystem.listConversations({
+  return await AISystem.listConversations({
     userId,
     limit: query.limit,
     offset: query.offset,
   });
-  ResponseHandler.success(res, conversations);
 }
 
-export async function getConversation(req: Request, res: Response): Promise<void> {
+export async function getConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
   const conversation = await AISystem.getConversation({ id, userId });
 
   if (!conversation) {
-    ResponseHandler.notFound(res, "Conversation not found");
-    return;
+    throw Boom.notFound("Conversation not found");
   }
 
-  ResponseHandler.success(res, conversation);
+  return conversation;
 }
 
-export async function createConversation(req: Request, res: Response): Promise<void> {
+export async function createConversation(req: Request, res: Response) {
   const userId = req.user?.userId;
   const payload = (req.validated?.body || req.body) as CreateConversationDTO;
-  const conversation = await AISystem.createConversation({ data: payload, userId });
-  ResponseHandler.created(res, conversation);
+  res.status(201);
+  return await AISystem.createConversation({ data: payload, userId });
 }
 
-export async function updateConversation(req: Request, res: Response): Promise<void> {
+export async function updateConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
   const payload = (req.validated?.body || req.body) as UpdateConversationDTO;
   const conversation = await AISystem.updateConversation({ id, data: payload, userId });
 
   if (!conversation) {
-    ResponseHandler.notFound(res, "Conversation not found");
-    return;
+    throw Boom.notFound("Conversation not found");
   }
 
-  ResponseHandler.success(res, conversation);
+  return conversation;
 }
 
-export async function deleteConversation(req: Request, res: Response): Promise<void> {
+export async function deleteConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
   const deleted = await AISystem.deleteConversation({ id, userId });
 
   if (!deleted) {
-    ResponseHandler.notFound(res, "Conversation not found");
-    return;
+    throw Boom.notFound("Conversation not found");
   }
-
-  ResponseHandler.noContent(res);
+  // returns undefined, which means 204 No Content under route-handler.
 }

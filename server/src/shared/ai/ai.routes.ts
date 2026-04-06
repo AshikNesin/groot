@@ -11,56 +11,59 @@ import {
   listConversationsQuerySchema,
 } from "@/shared/ai/ai.validation";
 
+import { handle } from "@/core/middlewares/route-handler.middleware";
+
 const router = Router();
 
-// ── Chat ─────────────────────────────────────────────────────────────────────
+// Chat endpoints
+router.post(
+  "/chat",
+  jwtAuthMiddleware,
+  validate(chatSchema),
+  aiRateLimiter,
+  handle(aiController.chat),
+);
 
-// Non-streaming chat with rate limiter
-router.post("/chat", aiRateLimiter, validate(chatSchema), aiController.chat);
+router.post(
+  "/chat/stream",
+  jwtAuthMiddleware,
+  validate(chatSchema),
+  aiStreamRateLimiter,
+  handle(aiController.chatStream),
+);
 
-// Streaming chat with stricter rate limiter (dedicated endpoint)
-router.post("/chat/stream", aiStreamRateLimiter, validate(chatSchema), aiController.chatStream);
+// Models endpoint
+router.get("/models", handle(aiController.getModels));
 
-// ── Models ───────────────────────────────────────────────────────────────────
-
-router.get("/models", aiController.getModels);
-
-// ── Usage (requires auth to scope to user) ────────────────────────────────────
-
-router.get("/usage", jwtAuthMiddleware, validate(usageQuerySchema, "query"), aiController.getUsage);
+// Usage endpoints
+router.get("/usage", jwtAuthMiddleware, validate(usageQuerySchema, "query"), handle(aiController.getUsage));
 
 router.get(
   "/usage/records",
   jwtAuthMiddleware,
   validate(usageQuerySchema, "query"),
-  aiController.getUsageRecords,
+  handle(aiController.getUsageRecords),
 );
 
-// ── Conversations (requires auth) ─────────────────────────────────────────────
-
-router.get(
-  "/conversations",
-  jwtAuthMiddleware,
-  validate(listConversationsQuerySchema, "query"),
-  aiController.listConversations,
-);
-
+// Conversation endpoints
 router.post(
   "/conversations",
   jwtAuthMiddleware,
   validate(createConversationSchema),
-  aiController.createConversation,
+  handle(aiController.createConversation),
 );
 
-router.get("/conversations/:id", jwtAuthMiddleware, aiController.getConversation);
+router.get("/conversations", jwtAuthMiddleware, validate(listConversationsQuerySchema, "query"), handle(aiController.listConversations));
+
+router.get("/conversations/:id", jwtAuthMiddleware, handle(aiController.getConversation));
 
 router.patch(
   "/conversations/:id",
   jwtAuthMiddleware,
   validate(updateConversationSchema),
-  aiController.updateConversation,
+  handle(aiController.updateConversation),
 );
 
-router.delete("/conversations/:id", jwtAuthMiddleware, aiController.deleteConversation);
+router.delete("/conversations/:id", jwtAuthMiddleware, handle(aiController.deleteConversation));
 
 export default router;

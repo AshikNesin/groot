@@ -3,7 +3,7 @@ import * as PublicShareService from "./public-share.service";
 import { Boom, ErrorCode } from "@/core/errors";
 import type { VerifySharePasswordDTO } from "./storage.validation";
 
-export async function servePublicFile(req: Request, res: Response): Promise<void> {
+export async function servePublicFile(req: Request, res: Response) {
   const { shareId } = req.params;
   if (!shareId) {
     throw Boom.badRequest("Share ID is required");
@@ -16,7 +16,7 @@ export async function servePublicFile(req: Request, res: Response): Promise<void
   res.send(file.buffer);
 }
 
-export async function getPublicShareInfo(req: Request, res: Response): Promise<void> {
+export async function getPublicShareInfo(req: Request) {
   const { shareId } = req.params;
   if (!shareId) {
     throw Boom.badRequest("Share ID is required");
@@ -32,20 +32,17 @@ export async function getPublicShareInfo(req: Request, res: Response): Promise<v
     );
   }
 
-  res.json({
-    success: true,
-    data: {
-      fileName: validation.share?.fileName,
-      fileSize: validation.share?.fileSize,
-      contentType: validation.share?.contentType,
-      expiresAt: validation.share?.expiresAt,
-      isExpired: validation.share?.isExpired,
-      isPasswordProtected: validation.share?.isPasswordProtected,
-    },
-  });
+  return {
+    fileName: validation.share?.fileName,
+    fileSize: validation.share?.fileSize,
+    contentType: validation.share?.contentType,
+    expiresAt: validation.share?.expiresAt,
+    isExpired: validation.share?.isExpired,
+    isPasswordProtected: validation.share?.isPasswordProtected,
+  };
 }
 
-export async function verifySharePassword(req: Request, res: Response): Promise<void> {
+export async function verifySharePassword(req: Request) {
   const { shareId } = req.params;
   const body: VerifySharePasswordDTO = req.validated?.body ?? req.body;
 
@@ -55,8 +52,5 @@ export async function verifySharePassword(req: Request, res: Response): Promise<
 
   const isValid = await PublicShareService.verifySharePassword({ shareId, password: body.password });
 
-  res.json({
-    success: true,
-    data: { isValid },
-  });
+  return { isValid };
 }

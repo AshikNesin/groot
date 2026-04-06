@@ -1,27 +1,35 @@
-import type { Request, Response } from "express";
-import { ResponseHandler } from "@/core/response-handler";
-import * as SettingSystem from "./app-settings.service";
+import type { Request } from "express";
+import * as AppSettingsService from "./app-settings.service";
+import type { UpsertAppSettingDTO } from "./app-settings.validation";
 
-export async function getAll(_req: Request, res: Response) {
-  const settings = await SettingSystem.getAll();
-  ResponseHandler.success(res, settings);
+/**
+ * Get all app settings
+ */
+export async function getAll() {
+  return await AppSettingsService.getAll();
 }
 
-export async function getByKey(req: Request, res: Response) {
+/**
+ * Get a single app setting by key
+ */
+export async function getByKey(req: Request) {
   const { key } = req.params;
-  const setting = await SettingSystem.get({ key });
-  ResponseHandler.success(res, setting);
+  return await AppSettingsService.get({ key });
 }
 
-export async function upsert(req: Request, res: Response) {
+/**
+ * Upsert an app setting
+ */
+export async function upsert(req: Request) {
   const { key } = req.params;
-  const data = req.validated?.body || req.body;
-  const setting = await SettingSystem.upsert({ key, data });
-  ResponseHandler.success(res, setting, "Setting saved successfully");
+  const payload = (req.validated?.body || req.body) as UpsertAppSettingDTO;
+  return await AppSettingsService.upsert({ key, data: payload });
 }
 
-export async function deleteSetting(req: Request, res: Response) {
+/**
+ * Delete an app setting
+ */
+export async function deleteSetting(req: Request) {
   const { key } = req.params;
-  await SettingSystem.deleteSetting({ key });
-  ResponseHandler.success(res, null, "Setting deleted successfully");
+  return await AppSettingsService.deleteSetting({ key });
 }
