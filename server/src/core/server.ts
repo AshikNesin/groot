@@ -16,7 +16,7 @@ import {
   errorHandlerMiddleware,
   notFoundHandler,
 } from "@/core/middlewares/error-handler.middleware";
-import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
+import { stopJobQueue } from "@/core/job";
 
 export interface ServerOptions {
   distPath: string;
@@ -172,10 +172,6 @@ export async function startServer(
   httpServer.listen(port, async () => {
     logger.info(`Server is running on http://localhost:${port}`);
 
-    // Initialize job queue
-    void initializeJobQueue();
-
-    // Run custom startup callback
     if (onStart) {
       try {
         await onStart();
@@ -213,18 +209,3 @@ export async function startServer(
     await new Promise<void>((resolve) => httpServer.close(() => resolve()));
   });
 }
-
-const initializeJobQueue = async () => {
-  if (!env.ENABLE_JOB_QUEUE) {
-    logger.info("Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)");
-    return;
-  }
-
-  try {
-    await initJobQueue();
-    await startWorkers();
-    logger.info("Job queue initialized and workers started");
-  } catch (error) {
-    logger.error({ error }, "Failed to initialize job queue");
-  }
-};

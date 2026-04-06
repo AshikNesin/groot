@@ -3,8 +3,7 @@ import type { Job as BossJob, SendOptions, ScheduleOptions } from "pg-boss";
 import dayjs from "dayjs";
 import { logger } from "@/core/logger";
 import { prisma } from "@/core/database";
-import { jobConfig, defaultJobOptions, jobOptions } from "@/core/job/config";
-import type { JobName, JobDataMap } from "@/core/job/queue";
+import { jobConfig, defaultJobOptions } from "@/core/job/config";
 import { VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
 
 let bossInstance: PgBoss | null = null;
@@ -56,23 +55,24 @@ export const stopJobQueue = async (): Promise<void> => {
   }
 };
 
-// Queue a job for immediate execution
-export const addJob = async <T extends JobName>(
-  name: T,
-  data: JobDataMap[T],
+// Queue a job for immediate execution.
+// Pass feature-specific options (e.g. todoJobOptions) merged with defaults.
+export const addJob = async (
+  name: string,
+  data: unknown,
   options?: SendOptions,
 ): Promise<string | null> => {
   const boss = getBoss();
-  const jobOpts = { ...defaultJobOptions, ...jobOptions[name], ...options } as SendOptions;
+  const jobOpts = { ...defaultJobOptions, ...options } as SendOptions;
   const jobId = await boss.send(name, data, jobOpts);
   logger.info({ jobId, name }, "Job queued");
   return jobId;
 };
 
 // Schedule a recurring job
-export const scheduleJob = async <T extends JobName>(
-  name: T,
-  data: JobDataMap[T],
+export const scheduleJob = async (
+  name: string,
+  data: unknown,
   cron: string,
   options?: ScheduleOptions,
 ): Promise<void> => {
@@ -329,8 +329,7 @@ export const rerunJob = async (queueName: string, jobId: string): Promise<string
   if (!job) {
     throw new Error(`Job not found: ${queueName}/${jobId}`);
   }
-  const jobOpts = { ...defaultJobOptions, ...jobOptions[job.name as JobName] } as SendOptions;
-  return boss.send(job.name, job.data, jobOpts);
+  return boss.send(job.name, job.data, { ...defaultJobOptions } as SendOptions);
 };
 
 // Bulk re-run jobs
@@ -371,7 +370,11 @@ export const rerunJobs = async (
   });
 };
 
-// Re-export worker functions and types
-export { startWorkers, stopWorkers } from "@/core/job/worker";
-export { JobName, type JobDataMap } from "@/core/job/queue";
+// Re-export worker functions
+export {
+  startWorkers,
+  stopWorkers,
+  registerJobHandler,
+  getRegisteredHandlers,
+} from "@/core/job/worker";
 export { JOB_STATES, VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";

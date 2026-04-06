@@ -1,13 +1,12 @@
 import type { PgBoss, WorkOptions } from "pg-boss";
 import { logger, createJobLogger } from "@/core/logger";
 import { jobConfig } from "@/core/job/config";
-import type { JobName } from "@/core/job/queue";
 import { withSentryErrorCapture, type JobHandler } from "@/core/job/error-handler";
 
-const jobHandlers = new Map<JobName, JobHandler<unknown>>();
+const jobHandlers = new Map<string, JobHandler<unknown>>();
 let workersStarted = false;
 
-export const registerJobHandler = <T>(name: JobName, handler: JobHandler<T>): void => {
+export const registerJobHandler = <T>(name: string, handler: JobHandler<T>): void => {
   const wrappedHandler = withSentryErrorCapture(handler as JobHandler, name);
   jobHandlers.set(name, wrappedHandler as JobHandler<unknown>);
   logger.debug({ jobName: name }, "Job handler registered");
@@ -20,8 +19,6 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   }
 
   const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
-
-  // Job definitions are now imported via routes.ts
 
   if (jobHandlers.size === 0) {
     logger.warn("No job handlers registered. Job queue running without workers.");
@@ -89,4 +86,4 @@ export const stopWorkers = async (): Promise<void> => {
   workersStarted = false;
 };
 
-export const getRegisteredHandlers = (): JobName[] => Array.from(jobHandlers.keys());
+export const getRegisteredHandlers = (): string[] => Array.from(jobHandlers.keys());

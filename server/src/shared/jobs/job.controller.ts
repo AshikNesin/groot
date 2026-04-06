@@ -20,7 +20,7 @@ import {
   getJobs,
   purgeJobsByState,
   deleteJob,
-  JobName,
+  getRegisteredHandlers,
 } from "@/core/job";
 
 function parsePagination(limit?: string, offset?: string) {
@@ -63,15 +63,16 @@ class JobController extends BaseController {
       );
     }
 
-    if (!Object.values(JobName).includes(jobName as JobName)) {
+    const registeredJobs = getRegisteredHandlers();
+    if (!registeredJobs.includes(jobName)) {
       throw Boom.badRequest(
         "Invalid job name",
-        { availableJobs: Object.values(JobName) },
+        { availableJobs: registeredJobs },
         ErrorCodeEnum.JOB_NAME_INVALID,
       );
     }
 
-    const jobId = await addJob(jobName as JobName, data, options);
+    const jobId = await addJob(jobName, data, options);
     return ResponseHandler.created(res, { jobId, jobName, data }, "Job queued successfully");
   }
 
@@ -86,15 +87,16 @@ class JobController extends BaseController {
       );
     }
 
-    if (!Object.values(JobName).includes(jobName as JobName)) {
+    const registeredJobs = getRegisteredHandlers();
+    if (!registeredJobs.includes(jobName)) {
       throw Boom.badRequest(
         "Invalid job name",
-        { availableJobs: Object.values(JobName) },
+        { availableJobs: registeredJobs },
         ErrorCodeEnum.JOB_NAME_INVALID,
       );
     }
 
-    await scheduleJob(jobName as JobName, data, cron, options);
+    await scheduleJob(jobName, data, cron, options);
     return ResponseHandler.created(res, { jobName, cron, data }, "Job scheduled successfully");
   }
 
@@ -182,7 +184,7 @@ class JobController extends BaseController {
   }
 
   async getAvailable(_req: Request, res: Response) {
-    return ResponseHandler.success(res, Object.values(JobName), "Available jobs retrieved");
+    return ResponseHandler.success(res, getRegisteredHandlers(), "Available jobs retrieved");
   }
 
   async getFailed(req: Request, res: Response) {

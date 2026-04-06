@@ -4,18 +4,20 @@ import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 // Feature routes
 import authRoutes from "@/shared/auth/auth.routes";
 import passkeyRoutes from "@/shared/passkey/passkey.routes";
-import todoRoutes from "@/app/routes/todo.routes";
+import todoRoutes from "@/app/todo/todo.routes";
 import jobRoutes from "@/shared/jobs/job.routes";
 import storageRoutes from "@/shared/storage/storage.routes";
 import publicFileRoutes from "@/shared/storage/public-file.routes";
 import appSettingsRoutes from "@/shared/settings/app-settings.routes";
 import aiRoutes from "@/shared/ai/ai.routes";
 
-// Feature jobs (import to register handlers)
-import "@/app/jobs/todo-cleanup";
-import "@/app/jobs/todo-summary";
+// Feature job registrations
+import { registerTodoJobs } from "@/app/todo/todo.jobs";
 
 export function registerRoutes(app: Express): void {
+  // Register job handlers for all features
+  registerTodoJobs();
+
   // Public routes (no auth)
   app.use("/api/v1/public/files", publicFileRoutes);
 
