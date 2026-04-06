@@ -102,7 +102,7 @@ class JobController extends BaseController {
 
   async retry(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
-    await retryJob(queueName, jobId);
+    await retryJob({ queueName, jobId });
     return ResponseHandler.success(
       res,
       { queueName, jobId },
@@ -112,7 +112,7 @@ class JobController extends BaseController {
 
   async cancel(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
-    await cancelJob(queueName, jobId);
+    await cancelJob({ queueName, jobId });
     return ResponseHandler.success(
       res,
       { queueName, jobId },
@@ -122,13 +122,13 @@ class JobController extends BaseController {
 
   async resume(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
-    await resumeJob(queueName, jobId);
+    await resumeJob({ queueName, jobId });
     return ResponseHandler.success(res, { queueName, jobId }, `Job ${queueName}/${jobId} resumed`);
   }
 
   async rerun(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
-    const newJobId = await rerunJob(queueName, jobId);
+    const newJobId = await rerunJob({ queueName, jobId });
     return ResponseHandler.success(
       res,
       { originalJobId: jobId, newJobId, queueName },
@@ -168,13 +168,13 @@ class JobController extends BaseController {
   }
 
   async purgeByState(req: Request, res: Response) {
-    const deletedCount = await purgeJobsByState(req.params.state);
+    const deletedCount = await purgeJobsByState({ state: req.params.state });
     return ResponseHandler.success(res, { state: req.params.state, deletedCount }, "Jobs purged");
   }
 
   async delete(req: Request, res: Response) {
     const { queueName, jobId } = req.params;
-    await deleteJob(queueName, jobId);
+    await deleteJob({ queueName, jobId });
     return ResponseHandler.success(res, { queueName, jobId }, "Job deleted");
   }
 
@@ -189,7 +189,7 @@ class JobController extends BaseController {
 
   async getFailed(req: Request, res: Response) {
     const { limit } = parsePagination(req.query.limit as string | undefined);
-    const jobs = await getFailedJobs(limit);
+    const jobs = await getFailedJobs({ limit: limit || undefined });
     return ResponseHandler.success(res, jobs, "Failed jobs retrieved");
   }
 
@@ -198,12 +198,16 @@ class JobController extends BaseController {
       req.query.limit as string | undefined,
       req.query.offset as string | undefined,
     );
-    const result = await getJobsByState(req.params.state, limit, offset);
+    const result = await getJobsByState({
+      state: req.params.state,
+      limit: limit || undefined,
+      offset: offset || undefined,
+    });
     return ResponseHandler.success(res, result, "Jobs by state retrieved");
   }
 
   async getById(req: Request, res: Response) {
-    const job = await getJobById(req.params.queueName, req.params.jobId);
+    const job = await getJobById({ queueName: req.params.queueName, jobId: req.params.jobId });
     if (!job) {
       throw Boom.notFound("Job not found", null, ErrorCode.JOB_NOT_FOUND.code);
     }
