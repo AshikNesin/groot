@@ -91,7 +91,8 @@ class AIService {
     }
 
     try {
-      const text = await ai.complete(input.message, {
+      const text = await ai.complete({
+        prompt: input.message,
         systemPrompt: input.systemPrompt,
         temperature: input.temperature,
         maxTokens: input.maxTokens,
@@ -155,7 +156,8 @@ class AIService {
     }
 
     try {
-      for await (const chunk of ai.stream(input.message, {
+      for await (const chunk of ai.stream({
+        prompt: input.message,
         systemPrompt: input.systemPrompt,
         temperature: input.temperature,
         maxTokens: input.maxTokens,

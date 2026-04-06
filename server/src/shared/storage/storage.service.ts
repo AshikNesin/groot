@@ -21,7 +21,7 @@ export class StorageFileService {
 
   async listFiles(params: { prefix?: string; delimiter?: string }): Promise<FileInfo[]> {
     const { prefix, delimiter = "/" } = params;
-    const result = await this.storage.list(prefix, 1000);
+    const result = await this.storage.list({ prefix, maxKeys: 1000 });
 
     if (result.error) {
       throw new Error(`Failed to list files: ${result.error.message}`);
@@ -86,7 +86,9 @@ export class StorageFileService {
       throw Boom.badRequest("File path is required");
     }
 
-    const result = await this.storage.upload(params.filePath, params.fileData, {
+    const result = await this.storage.upload({
+      filePath: params.filePath,
+      fileData: params.fileData,
       contentType: params.contentType,
       metadata: params.metadata,
     });
@@ -112,7 +114,9 @@ export class StorageFileService {
       params.files.map((file) =>
         limit(async () => {
           try {
-            const result = await this.storage.upload(file.filePath, file.fileData, {
+            const result = await this.storage.upload({
+              filePath: file.filePath,
+              fileData: file.fileData,
               contentType: file.contentType,
             });
 
@@ -142,7 +146,7 @@ export class StorageFileService {
     contentType?: string;
     fileName: string;
   }> {
-    const exists = await this.storage.fileExists(params.filePath);
+    const exists = await this.storage.fileExists({ filePath: params.filePath });
     if (exists.error) {
       throw new Error(`Failed to verify file: ${exists.error.message}`);
     }
@@ -151,7 +155,7 @@ export class StorageFileService {
       throw Boom.notFound(`File not found: ${params.filePath}`);
     }
 
-    const file = await this.storage.getBuffer(params.filePath);
+    const file = await this.storage.getBuffer({ s3Path: params.filePath });
     if (file.error || !file.data) {
       throw new Error(`Failed to download file: ${file.error?.message ?? "Unknown error"}`);
     }
@@ -170,7 +174,7 @@ export class StorageFileService {
     if (!params.filePaths.length) {
       throw Boom.badRequest("No files specified for deletion");
     }
-    const result = await this.storage.remove(params.filePaths);
+    const result = await this.storage.remove({ filePaths: params.filePaths });
     if (result.error) {
       throw new Error(`Failed to delete files: ${result.error.message}`);
     }
@@ -183,7 +187,7 @@ export class StorageFileService {
     lastModified?: Date;
     fileName: string;
   }> {
-    const result = await this.storage.fileExists(params.filePath);
+    const result = await this.storage.fileExists({ filePath: params.filePath });
     if (result.error) {
       throw new Error(`Failed to get metadata: ${result.error.message}`);
     }
@@ -199,7 +203,9 @@ export class StorageFileService {
     if (!folderPath.endsWith("/")) {
       throw Boom.badRequest("Folder path must end with /");
     }
-    const result = await this.storage.upload(`${folderPath}.keep`, "", {
+    const result = await this.storage.upload({
+      filePath: `${folderPath}.keep`,
+      fileData: "",
       contentType: "text/plain",
       metadata: { type: "folder-marker" },
     });
@@ -213,7 +219,7 @@ export class StorageFileService {
     if (!folderPath.endsWith("/")) {
       throw Boom.badRequest("Folder path must end with /");
     }
-    const listResult = await this.storage.list(folderPath, 1000);
+    const listResult = await this.storage.list({ prefix: folderPath, maxKeys: 1000 });
     if (listResult.error) {
       throw new Error(`Failed to list folder contents: ${listResult.error.message}`);
     }
@@ -221,7 +227,7 @@ export class StorageFileService {
     if (!fileKeys.length) {
       return { deletedCount: 0 };
     }
-    const deleteResult = await this.storage.remove(fileKeys);
+    const deleteResult = await this.storage.remove({ filePaths: fileKeys });
     if (deleteResult.error) {
       throw new Error(`Failed to delete folder: ${deleteResult.error.message}`);
     }
@@ -231,17 +237,20 @@ export class StorageFileService {
   async renameFile(params: { oldPath: string; newPath: string }): Promise<{
     newPath: string;
   }> {
-    const exists = await this.storage.fileExists(params.oldPath);
+    const exists = await this.storage.fileExists({ filePath: params.oldPath });
     if (exists.error || !exists.data?.exists) {
       throw Boom.notFound(`Source file not found: ${params.oldPath}`);
     }
 
-    const copyResult = await this.storage.copy(params.oldPath, params.newPath);
+    const copyResult = await this.storage.copy({
+      sourcePath: params.oldPath,
+      destinationPath: params.newPath,
+    });
     if (copyResult.error) {
       throw new Error(`Failed to copy file: ${copyResult.error.message}`);
     }
 
-    const deleteResult = await this.storage.remove([params.oldPath]);
+    const deleteResult = await this.storage.remove({ filePaths: [params.oldPath] });
     if (deleteResult.error) {
       throw new Error(`Failed to delete old file: ${deleteResult.error.message}`);
     }
