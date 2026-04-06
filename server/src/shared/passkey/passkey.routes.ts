@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { passkeyController } from "@/shared/passkey/passkey.controller";
+import * as passkeyController from "./passkey.controller";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { validate } from "@/core/middlewares/validation.middleware";
 import {

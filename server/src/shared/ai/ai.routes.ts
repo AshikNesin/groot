@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { aiController } from "@/shared/ai/ai.controller";
+import * as aiController from "./ai.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 import { aiRateLimiter, aiStreamRateLimiter } from "@/core/middlewares/rate-limit.middleware";

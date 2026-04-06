@@ -1,33 +1,29 @@
-import { todoModel } from "@/app/todo/todo.model";
+import { todoModel } from "./todo.model";
 import { Boom } from "@/core/errors";
-import type { CreateTodoDTO, UpdateTodoDTO } from "@/app/todo/todo.validation";
+import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
 
-class TodoService {
-  create(data: CreateTodoDTO) {
-    return todoModel.create(data);
-  }
-
-  findAll() {
-    return todoModel.findAll();
-  }
-
-  async findById(id: number) {
-    const todo = await todoModel.findById(id);
-    if (!todo) {
-      throw Boom.notFound("Todo not found");
-    }
-    return todo;
-  }
-
-  async update(id: number, data: UpdateTodoDTO) {
-    await this.findById(id);
-    return todoModel.update(id, data);
-  }
-
-  async delete(id: number) {
-    await this.findById(id);
-    return todoModel.delete(id);
-  }
+export async function create({ data }: { data: CreateTodoDTO }) {
+  return todoModel.create(data);
 }
 
-export const todoService = new TodoService();
+export async function findAll() {
+  return todoModel.findAll();
+}
+
+export async function findById({ id }: { id: number }) {
+  const todo = await todoModel.findById(id);
+  if (!todo) {
+    throw Boom.notFound("Todo not found");
+  }
+  return todo;
+}
+
+export async function update({ id, data }: { id: number; data: UpdateTodoDTO }) {
+  await findById({ id });
+  return todoModel.update(id, data);
+}
+
+export async function deleteTodo({ id }: { id: number }) {
+  await findById({ id });
+  return todoModel.delete(id);
+}

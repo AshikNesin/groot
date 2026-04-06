@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { storageController } from "@/shared/storage/storage.controller";
+import * as storageController from "./storage.controller";
 import { validate } from "@/core/middlewares/validation.middleware";
 import {
   listFilesSchema,

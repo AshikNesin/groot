@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { publicFileController } from "@/shared/storage/public-file.controller";
+import * as publicFileController from "./public-file.controller";
 import { publicFileRateLimiter } from "@/core/middlewares/rate-limit.middleware";
 import { validate } from "@/core/middlewares/validation.middleware";
 import { verifySharePasswordSchema } from "@/shared/storage/storage.validation";

@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { jobController } from "@/shared/jobs/job.controller";
+import * as jobController from "./job.controller";
+import { adminAuthMiddleware } from "@/core/middlewares/admin-auth.middleware";
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.get("/state/:state", jobController.getByState);
 router.get("/", jobController.getAll);
 router.get("/:queueName/:jobId", jobController.getById);
 router.get("/:queueName/:jobId/logs", jobController.getLogs);
-router.delete("/:queueName/:jobId", jobController.delete);
+router.delete("/:queueName/:jobId", adminAuthMiddleware, jobController.deleteJobHandler);
 
 // Job actions
 router.post("/:queueName/:jobId/retry", jobController.retry);
