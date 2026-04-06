@@ -1,77 +1,63 @@
 import { Prisma } from "@/generated/prisma/client";
 import { Boom } from "./boom";
+import type { HttpError } from "./http-error";
 
-/**
- * Check if an error is a Prisma error
- */
-export function isPrismaError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError ||
-    error instanceof Prisma.PrismaClientValidationError ||
-    error instanceof Prisma.PrismaClientRustPanicError ||
-    error instanceof Prisma.PrismaClientInitializationError
-  );
-}
+export type PrismaErrorHandlerFn = (error: Prisma.PrismaClientKnownRequestError) => HttpError;
 
-/**
- * Handle Prisma errors and convert them to HttpError via Boom
- */
-export function handlePrismaError(error: unknown): never {
-  // Handle known Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
-      case "P2002": {
-        // Unique constraint violation
-        const target = error.meta?.target as string[] | undefined;
-        const field = target ? target[0] : "field";
-        throw Boom.conflict(`A record with this ${field} already exists`);
+const defaultRegistry: Record<string, PrismaErrorHandlerFn> = {
+  P2002: (error) => {
+    const target = error.meta?.target as string[] | undefined;
+    const field = target ? target[0] : "field";
+    return Boom.conflict(`A record with this ${field} already exists`);
+  },
+  P2025: () => Boom.notFound("Record not found"),
+  P2003: () => Boom.badRequest("Cannot perform this operation due to related records"),
+  P2014: () => Boom.badRequest("The change would violate the required relation"),
+  P2021: () => Boom.badRequest("Database table does not exist"),
+  P2022: () => Boom.badRequest("Database column does not exist"),
+};
+
+export const PrismaHandler = {
+  registry: { ...defaultRegistry } as Record<string, PrismaErrorHandlerFn>,
+
+  isPrismaError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError ||
+      error instanceof Prisma.PrismaClientValidationError ||
+      error instanceof Prisma.PrismaClientRustPanicError ||
+      error instanceof Prisma.PrismaClientInitializationError
+    );
+  },
+
+  registerHandler(code: string, handler: PrismaErrorHandlerFn) {
+    this.registry[code] = handler;
+  },
+
+  handle(error: unknown): never {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const handler = this.registry[error.code];
+      if (handler) {
+        throw handler(error); // Handler returns HttpError, we throw it
       }
-
-      case "P2025": {
-        // Record not found
-        throw Boom.notFound("Record not found");
-      }
-
-      case "P2003": {
-        // Foreign key constraint failed
-        throw Boom.badRequest("Cannot perform this operation due to related records");
-      }
-
-      case "P2014": {
-        // Required relation violation
-        throw Boom.badRequest("The change would violate the required relation");
-      }
-
-      case "P2021": {
-        // Table does not exist
-        throw Boom.badRequest("Database table does not exist");
-      }
-
-      case "P2022": {
-        // Column does not exist
-        throw Boom.badRequest("Database column does not exist");
-      }
-
-      default:
-        throw Boom.badRequest(`Database error: ${error.message}`);
+      throw Boom.badRequest(`Database error: ${error.message}`);
     }
-  }
 
-  // Handle validation errors
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    throw Boom.badRequest("Invalid data provided");
-  }
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      throw Boom.badRequest("Invalid data provided");
+    }
 
-  // Handle initialization errors
-  if (error instanceof Prisma.PrismaClientInitializationError) {
-    throw Boom.badRequest("Database connection error");
-  }
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      throw Boom.badRequest("Database connection error");
+    }
 
-  // Handle rust panic errors
-  if (error instanceof Prisma.PrismaClientRustPanicError) {
-    throw Boom.badRequest("Database internal error");
-  }
+    if (error instanceof Prisma.PrismaClientRustPanicError) {
+      throw Boom.badRequest("Database internal error");
+    }
 
-  // If not a Prisma error, rethrow
-  throw error;
-}
+    throw error;
+  },
+};
+
+// Backwards compatibility for existing imports
+export const isPrismaError = PrismaHandler.isPrismaError;
+export const handlePrismaError = (error: unknown) => PrismaHandler.handle(error);
