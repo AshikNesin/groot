@@ -7,7 +7,7 @@ import {
   bulkRerunSchema,
   getJobsByStateSchema,
   getJobsSchema,
-} from "./job.validation";
+} from "@/shared/jobs/job.validation";
 
 const router = createRouter();
 
