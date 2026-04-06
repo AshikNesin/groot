@@ -39,7 +39,7 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   for (const [name, handler] of jobHandlers.entries()) {
     await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
       for (const job of jobs) {
-        const jobLogger = createJobLogger(job.id, name);
+        const jobLogger = createJobLogger({ jobId: job.id, jobName: name });
         const startTime = Date.now();
 
         jobLogger.info({ data: job.data }, `Starting job ${name}`);

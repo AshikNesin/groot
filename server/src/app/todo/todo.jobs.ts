@@ -40,7 +40,7 @@ export const todoJobOptions: Record<string, Partial<SendOptions>> = {
 const DEFAULT_DAYS_TO_KEEP = 30;
 
 const todoCleanupHandler = async (job: Job<TodoCleanupJobData>): Promise<void> => {
-  const logger = createJobLogger(job.id, TODO_JOB_NAMES.CLEANUP);
+  const logger = createJobLogger({ jobId: job.id, jobName: TODO_JOB_NAMES.CLEANUP });
   const daysToKeep = job.data?.daysToKeep ?? DEFAULT_DAYS_TO_KEEP;
   const cutoff = dayjs().subtract(daysToKeep, "day").toDate();
 
@@ -55,7 +55,7 @@ const todoCleanupHandler = async (job: Job<TodoCleanupJobData>): Promise<void> =
 };
 
 const todoSummaryHandler = async (job: Job<TodoSummaryJobData>): Promise<void> => {
-  const logger = createJobLogger(job.id, TODO_JOB_NAMES.SUMMARY);
+  const logger = createJobLogger({ jobId: job.id, jobName: TODO_JOB_NAMES.SUMMARY });
 
   const [total, completed, pending] = await Promise.all([
     prisma.todo.count(),

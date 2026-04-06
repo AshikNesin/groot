@@ -81,17 +81,17 @@ export function errorHandlerMiddleware(
     requestLogger.warn(errorContext, `Operational error: ${error.message}`);
 
     // Log as business event for operational errors
-    logBusinessEvent(
-      "operational_error",
-      {
+    logBusinessEvent({
+      event: "operational_error",
+      data: {
         errorType: error.constructor.name,
         errorCode: error.code,
         errorMessage: error.message,
         endpoint: `${req.method} ${req.path}`,
         userAgent: req.headers?.["user-agent"],
       },
-      "warn",
-    );
+      level: "warn",
+    });
   } else {
     // Unexpected errors (system failures)
     requestLogger.error(errorContext, `System error: ${error.message}`);
@@ -111,16 +111,16 @@ export function errorHandlerMiddleware(
     });
 
     // Log as business event for system errors
-    logBusinessEvent(
-      "system_error",
-      {
+    logBusinessEvent({
+      event: "system_error",
+      data: {
         errorType: error.constructor.name,
         errorMessage: error.message,
         endpoint: `${req.method} ${req.path}`,
         userAgent: req.headers?.["user-agent"],
       },
-      "error",
-    );
+      level: "error",
+    });
   }
 
   // Handle Zod validation errors
@@ -147,15 +147,15 @@ export function errorHandlerMiddleware(
     );
 
     // Log as business event for monitoring
-    logBusinessEvent(
-      "validation_failed",
-      {
+    logBusinessEvent({
+      event: "validation_failed",
+      data: {
         errorCount: error.errors.length,
         fieldCount: Object.keys(errors).length,
         endpoint: `${req.method} ${req.path}`,
       },
-      "warn",
-    );
+      level: "warn",
+    });
 
     ResponseHandler.error(
       res,

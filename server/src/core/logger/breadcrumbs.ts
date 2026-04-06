@@ -12,8 +12,8 @@ export interface Breadcrumb {
   data?: Record<string, unknown>;
 }
 
-// Store breadcrumbs in AsyncLocalStorage for request-specific tracking
-const breadcrumbs: Breadcrumb[] = [];
+import { getLoggerContext } from "./context";
+
 const MAX_BREADCRUMBS = 50;
 
 /**
@@ -33,11 +33,14 @@ export function addBreadcrumb(
     data,
   };
 
-  breadcrumbs.push(breadcrumb);
+  const context = getLoggerContext();
+  if (!context) return; // If we aren't in a request context, simply drop it
+
+  context.breadcrumbs.push(breadcrumb);
 
   // Keep only the last N breadcrumbs
-  if (breadcrumbs.length > MAX_BREADCRUMBS) {
-    breadcrumbs.shift();
+  if (context.breadcrumbs.length > MAX_BREADCRUMBS) {
+    context.breadcrumbs.shift();
   }
 }
 
@@ -45,12 +48,16 @@ export function addBreadcrumb(
  * Get all breadcrumbs
  */
 export function getBreadcrumbs(): Breadcrumb[] {
-  return [...breadcrumbs];
+  const context = getLoggerContext();
+  if (!context) return [];
+  return [...context.breadcrumbs];
 }
 
 /**
  * Clear all breadcrumbs
  */
 export function clearBreadcrumbs(): void {
-  breadcrumbs.length = 0;
+  const context = getLoggerContext();
+  if (!context) return;
+  context.breadcrumbs.length = 0;
 }

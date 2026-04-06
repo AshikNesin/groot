@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Logger } from "pino";
-import { createRequestLogger } from "@/core/logger";
-import { createTraceContext } from "@/core/logger/trace-context";
+import { createRequestLogger, runWithLoggerContext, createTraceContext } from "@/core/logger";
 
 // Extend Express Request type to include logger and timing
 declare global {
@@ -14,37 +13,44 @@ declare global {
 }
 
 /**
- * Request logger middleware
- * Attaches a request-specific logger and tracks request timing
+ * Enhanced request logging middleware with performance tracking
+ * and trace context initialization
  */
-export function requestLoggerMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  // Create trace context for this request
-  createTraceContext();
+export function requestLoggerMiddleware(req: Request, res: Response, next: NextFunction): void {
+  runWithLoggerContext(() => {
+    // Initialize trace context for this request
+    createTraceContext();
 
-  // Attach request-specific logger
-  req.logger = createRequestLogger(req);
+    // Attach request-specific logger
+    req.logger = createRequestLogger({ req });
 
-  // Track request start time
-  req.startTime = Date.now();
+    // Track request start time
+    req.startTime = Date.now();
 
-  // Log incoming request
-  req.logger.info(
-    {
-      method: req.method,
-      path: req.path,
-      query: req.query,
-      ip: req.ip || req.headers["x-forwarded-for"],
-      userAgent: req.headers["user-agent"],
-    },
-    "Incoming request",
-  );
+    // Log request start
+    req.logger.info(`Incoming ${req.method} request to ${req.url}`);
 
-  next();
+    // Wait for response to finish
+    res.on("finish", () => {
+      const duration = Date.now() - req.startTime!;
+      const level = res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info";
+
+      req.logger![level](
+        {
+          statusCode: res.statusCode,
+          duration: `${duration}ms`,
+        },
+        `Request completed with status ${res.statusCode} in ${duration}ms`,
+      );
+    });
+
+    next();
+  });
 }
 
 /**
  * Helper to get request logger (with fallback)
  */
 export function getRequestLogger(req: Request): Logger {
-  return req.logger || createRequestLogger(req);
+  return req.logger || createRequestLogger({ req });
 }
