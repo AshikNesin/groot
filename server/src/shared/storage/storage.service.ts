@@ -16,7 +16,10 @@ export interface BucketInfo {
   creationDate?: Date;
 }
 
-export async function listFiles(params: { prefix?: string; delimiter?: string }): Promise<FileInfo[]> {
+export async function listFiles(params: {
+  prefix?: string;
+  delimiter?: string;
+}): Promise<FileInfo[]> {
   const { prefix, delimiter = "/" } = params;
   const result = await StorageSystem.core.list({ prefix, maxKeys: 1000 });
 
@@ -196,7 +199,11 @@ export async function getFileMetadata(params: { filePath: string }): Promise<{
   };
 }
 
-export async function createFolder({ folderPath }: { folderPath: string }): Promise<{ folderPath: string }> {
+export async function createFolder({
+  folderPath,
+}: {
+  folderPath: string;
+}): Promise<{ folderPath: string }> {
   if (!folderPath.endsWith("/")) {
     throw Boom.badRequest("Folder path must end with /");
   }
@@ -212,7 +219,11 @@ export async function createFolder({ folderPath }: { folderPath: string }): Prom
   return { folderPath };
 }
 
-export async function deleteFolder({ folderPath }: { folderPath: string }): Promise<{ deletedCount: number }> {
+export async function deleteFolder({
+  folderPath,
+}: {
+  folderPath: string;
+}): Promise<{ deletedCount: number }> {
   if (!folderPath.endsWith("/")) {
     throw Boom.badRequest("Folder path must end with /");
   }

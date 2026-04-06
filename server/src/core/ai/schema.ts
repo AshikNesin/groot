@@ -6,6 +6,8 @@ import type { z } from "zod";
  * Supports common types: string, number, boolean, object, array, optional, enum, nullable.
  */
 export function zodToTypeBox(schema: z.ZodTypeAny): TSchema {
+  // Access internal Zod definition - ZodTypeAny doesn't expose _def in types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const def = (schema as any)._def;
   if (!def) {
     return Type.Any();

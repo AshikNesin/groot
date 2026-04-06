@@ -1,6 +1,11 @@
 import type { Request } from "express";
 import * as PasskeySystem from "./passkey.service";
-import type { VerifyRegistrationDTO, VerifyAuthenticationDTO, UpdatePasskeyNameDTO, GenerateAuthenticationOptionsDTO } from "./passkey.validation";
+import type {
+  VerifyRegistrationDTO,
+  VerifyAuthenticationDTO,
+  UpdatePasskeyNameDTO,
+  GenerateAuthenticationOptionsDTO,
+} from "./passkey.validation";
 import { Boom } from "@/core/errors";
 
 /**

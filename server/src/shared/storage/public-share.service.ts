@@ -60,7 +60,11 @@ export async function createShare(params: CreatePublicShareParams): Promise<Publ
   return formatShare(share);
 }
 
-export async function listSharesForFile({ filePath }: { filePath: string }): Promise<PublicShareInfo[]> {
+export async function listSharesForFile({
+  filePath,
+}: {
+  filePath: string;
+}): Promise<PublicShareInfo[]> {
   const shares = await prisma.publicFileShare.findMany({
     where: {
       filePath,
@@ -87,7 +91,13 @@ export async function revokeShare({ shareId }: { shareId: string }): Promise<voi
   });
 }
 
-export async function verifySharePassword({ shareId, password }: { shareId: string; password: string }): Promise<boolean> {
+export async function verifySharePassword({
+  shareId,
+  password,
+}: {
+  shareId: string;
+  password: string;
+}): Promise<boolean> {
   const share = await prisma.publicFileShare.findUnique({
     where: { shareId, isDeleted: false },
   });
@@ -125,7 +135,11 @@ export async function getShareFileContent({
   };
 }
 
-export async function getShareByShareId({ shareId }: { shareId: string }): Promise<PublicShareInfo> {
+export async function getShareByShareId({
+  shareId,
+}: {
+  shareId: string;
+}): Promise<PublicShareInfo> {
   const share = await prisma.publicFileShare.findUnique({
     where: { shareId, isDeleted: false },
   });

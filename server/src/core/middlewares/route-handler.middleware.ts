@@ -7,6 +7,7 @@ import type { Request, Response, NextFunction } from "express";
  * If it returns `null` or `undefined`, a 204 No Content is sent (unless headers are already sent).
  * If the function throws an error, it is passed to `next()` for centralized error handling.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Controller return type is intentionally dynamic
 export const handle =
   (fn: (req: Request, res: Response) => Promise<any> | any) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {

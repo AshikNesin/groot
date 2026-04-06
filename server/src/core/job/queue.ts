@@ -1,5 +1,6 @@
 import type { SendOptions, ScheduleOptions } from "pg-boss";
 import { logger } from "@/core/logger";
+import { Boom } from "@/core/errors";
 import { defaultJobOptions } from "@/core/job/config";
 import { getBoss } from "@/core/job/client";
 import type { BulkRerunResult, RerunJobOptions } from "@/core/job/types";
@@ -40,7 +41,7 @@ export const deleteJob = async (options: { queueName: string; jobId: string }): 
   const boss = getBoss();
   const deleted = await boss.deleteJob(options.queueName, options.jobId);
   if (!deleted) {
-    throw new Error(`Failed to delete job: ${options.queueName}/${options.jobId}`);
+    throw Boom.internal(`Failed to delete job: ${options.queueName}/${options.jobId}`);
   }
 };
 
@@ -49,7 +50,7 @@ export const retryJob = async (options: { queueName: string; jobId: string }): P
   const boss = getBoss();
   const retried = await boss.retry(options.queueName, options.jobId);
   if (!retried) {
-    throw new Error("Retry failed");
+    throw Boom.internal("Retry failed");
   }
 };
 
@@ -58,7 +59,7 @@ export const cancelJob = async (options: { queueName: string; jobId: string }): 
   const boss = getBoss();
   const cancelled = await boss.cancel(options.queueName, options.jobId);
   if (!cancelled) {
-    throw new Error("Cancel failed");
+    throw Boom.internal("Cancel failed");
   }
 };
 
@@ -67,7 +68,7 @@ export const resumeJob = async (options: { queueName: string; jobId: string }): 
   const boss = getBoss();
   const resumed = await boss.resume(options.queueName, options.jobId);
   if (!resumed) {
-    throw new Error("Resume failed");
+    throw Boom.internal("Resume failed");
   }
 };
 
@@ -78,7 +79,7 @@ export const rerunJob = async (
   const boss = getBoss();
   const job = await boss.getJobById(options.queueName, options.jobId);
   if (!job) {
-    throw new Error(`Job not found: ${options.queueName}/${options.jobId}`);
+    throw Boom.notFound(`Job not found: ${options.queueName}/${options.jobId}`);
   }
   return boss.send(job.name, job.data, { ...defaultJobOptions } as SendOptions);
 };

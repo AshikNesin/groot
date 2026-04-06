@@ -1,6 +1,11 @@
 import type { Request } from "express";
 import { JobSystem } from "@/core/job";
-import type { PaginationOptions, GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "@/core/job/types";
+import type {
+  PaginationOptions,
+  GetJobsByStateOptions,
+  GetJobsOptions,
+  RerunJobOptions,
+} from "@/core/job/types";
 import { Boom } from "@/core/errors";
 
 /**

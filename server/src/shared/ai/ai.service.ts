@@ -313,7 +313,13 @@ export async function getUsage({
   };
 }
 
-export async function getUsageRecords({ userId, params }: { userId?: number; params: UsageQueryDTO }) {
+export async function getUsageRecords({
+  userId,
+  params,
+}: {
+  userId?: number;
+  params: UsageQueryDTO;
+}) {
   if (userId === undefined) {
     throw new Error("Authentication required for usage records");
   }
@@ -344,13 +350,7 @@ export async function createConversation({
   });
 }
 
-export async function getConversation({
-  id,
-  userId,
-}: {
-  id: number;
-  userId?: number;
-}) {
+export async function getConversation({ id, userId }: { id: number; userId?: number }) {
   return aiConversationModel.findById(id, userId);
 }
 

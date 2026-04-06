@@ -25,11 +25,7 @@ export async function getPublicShareInfo(req: Request) {
   const validation = await PublicShareService.validateShareAccess({ shareId });
 
   if (!validation.isValid) {
-    throw Boom.forbidden(
-      validation.reason ?? undefined,
-      null,
-      ErrorCode.SHARE_ACCESS_DENIED.code,
-    );
+    throw Boom.forbidden(validation.reason ?? undefined, null, ErrorCode.SHARE_ACCESS_DENIED.code);
   }
 
   return {
@@ -50,7 +46,10 @@ export async function verifySharePassword(req: Request) {
     throw Boom.badRequest("Share ID is required");
   }
 
-  const isValid = await PublicShareService.verifySharePassword({ shareId, password: body.password });
+  const isValid = await PublicShareService.verifySharePassword({
+    shareId,
+    password: body.password,
+  });
 
   return { isValid };
 }
