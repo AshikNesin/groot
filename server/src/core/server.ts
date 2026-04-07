@@ -11,12 +11,11 @@ import { Sentry } from "@/core/instrument";
 import { env } from "@/core/env";
 import { logger } from "@/core/logger";
 import corsMiddleware from "@/core/middlewares/cors.middleware";
-import { requestLoggerMiddleware } from "@/core/middlewares/requestLogger.middleware";
+import { requestLoggerMiddleware } from "@/core/middlewares/request-logger.middleware";
 import {
   errorHandlerMiddleware,
   notFoundHandler,
 } from "@/core/middlewares/error-handler.middleware";
-import { initJobQueue, startWorkers, stopJobQueue } from "@/core/job";
 
 export interface ServerOptions {
   distPath: string;
@@ -27,6 +26,11 @@ export interface ServerInstance {
   app: Express;
   httpServer: http.Server;
   viteServer: ViteDevServer | null;
+}
+
+export interface StartServerOptions {
+  onStart?: () => Promise<void>;
+  onShutdown?: () => Promise<void>;
 }
 
 let isShuttingDown = false;
@@ -165,20 +169,16 @@ export function setupErrorHandling(app: Express): void {
 export async function startServer(
   httpServer: http.Server,
   viteServer: ViteDevServer | null,
-  onStart?: () => Promise<void>,
+  options?: StartServerOptions,
 ): Promise<void> {
   const port = env.PORT;
 
   httpServer.listen(port, async () => {
     logger.info(`Server is running on http://localhost:${port}`);
 
-    // Initialize job queue
-    void initializeJobQueue();
-
-    // Run custom startup callback
-    if (onStart) {
+    if (options?.onStart) {
       try {
-        await onStart();
+        await options.onStart();
       } catch (err) {
         logger.error({ err }, "Error during server startup callback");
       }
@@ -195,10 +195,12 @@ export async function startServer(
     // Wait for load balancer to stop sending traffic
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    try {
-      await stopJobQueue();
-    } catch (error) {
-      logger.error({ error }, "Failed to stop job queue");
+    if (options?.onShutdown) {
+      try {
+        await options.onShutdown();
+      } catch (error) {
+        logger.error({ error }, "Failed to run shutdown hook");
+      }
     }
 
     if (viteServer) {
@@ -213,18 +215,3 @@ export async function startServer(
     await new Promise<void>((resolve) => httpServer.close(() => resolve()));
   });
 }
-
-const initializeJobQueue = async () => {
-  if (!env.ENABLE_JOB_QUEUE) {
-    logger.info("Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)");
-    return;
-  }
-
-  try {
-    await initJobQueue();
-    await startWorkers();
-    logger.info("Job queue initialized and workers started");
-  } catch (error) {
-    logger.error({ error }, "Failed to initialize job queue");
-  }
-};

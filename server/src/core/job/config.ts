@@ -1,5 +1,4 @@
 import { env } from "@/core/env";
-import { JobName } from "@/core/job/queue";
 
 export const jobConfig = {
   connectionString: env.DATABASE_URL,
@@ -10,22 +9,11 @@ export const jobConfig = {
   monitorStateIntervalSeconds: env.JOB_MONITOR_STATE_INTERVAL,
 } as const;
 
+// Default options applied to all jobs unless overridden by the feature.
+// Feature-specific options are defined alongside their job handlers.
 export const defaultJobOptions = {
   retryLimit: 3,
   retryDelay: 60,
   retryBackoff: true,
   expireInSeconds: 60 * 60 * 12,
 } as const;
-
-export const jobOptions: Record<JobName, typeof defaultJobOptions> = {
-  [JobName.TODO_CLEANUP]: {
-    ...defaultJobOptions,
-    retryLimit: 2,
-    retryDelay: 120,
-  },
-  [JobName.TODO_SUMMARY]: {
-    ...defaultJobOptions,
-    retryLimit: 3,
-    retryDelay: 60,
-  },
-};

@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 import type { NextFunction, Request, Response } from "express";
-import { Boom, ErrorCodeEnum } from "@/core/errors";
+import { Boom, ErrorCode } from "@/core/errors";
 
 export const storageRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -12,7 +12,7 @@ export const storageRateLimiter = rateLimit({
       Boom.tooManyRequests(
         "Too many storage operations from this IP, please try again later.",
         null,
-        ErrorCodeEnum.RATE_LIMIT_EXCEEDED,
+        ErrorCode.RATE_LIMIT_EXCEEDED.code,
       ),
     );
   },
@@ -28,7 +28,7 @@ export const uploadRateLimiter = rateLimit({
       Boom.tooManyRequests(
         "Too many file uploads from this IP, please try again later.",
         null,
-        ErrorCodeEnum.UPLOAD_RATE_LIMIT_EXCEEDED,
+        ErrorCode.UPLOAD_RATE_LIMIT_EXCEEDED.code,
       ),
     );
   },
@@ -44,7 +44,7 @@ export const publicFileRateLimiter = rateLimit({
       Boom.tooManyRequests(
         "Too many download requests, please try again later.",
         null,
-        ErrorCodeEnum.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED,
+        ErrorCode.PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED.code,
       ),
     );
   },
@@ -60,7 +60,7 @@ export const aiRateLimiter = rateLimit({
       Boom.tooManyRequests(
         "Too many AI requests. Please try again later.",
         null,
-        ErrorCodeEnum.AI_RATE_LIMIT_EXCEEDED,
+        ErrorCode.AI_RATE_LIMIT_EXCEEDED.code,
       ),
     );
   },
@@ -76,7 +76,7 @@ export const aiStreamRateLimiter = rateLimit({
       Boom.tooManyRequests(
         "Too many streaming AI requests. Please try again later.",
         null,
-        ErrorCodeEnum.AI_STREAM_RATE_LIMIT_EXCEEDED,
+        ErrorCode.AI_STREAM_RATE_LIMIT_EXCEEDED.code,
       ),
     );
   },

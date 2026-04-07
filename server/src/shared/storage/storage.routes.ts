@@ -1,7 +1,7 @@
-import { Router } from "express";
+import { createRouter } from "@/core/utils/router.utils";
 import multer from "multer";
-import { storageController } from "@/shared/storage/storage.controller";
-import { validate } from "@/core/middlewares/validation.middleware";
+import * as storageController from "@/shared/storage/storage.controller";
+import { validateBody, validateQuery } from "@/core/middlewares/validation.middleware";
 import {
   listFilesSchema,
   downloadFileSchema,
@@ -14,7 +14,7 @@ import {
 } from "@/shared/storage/storage.validation";
 import { storageRateLimiter, uploadRateLimiter } from "@/core/middlewares/rate-limit.middleware";
 
-const router = Router();
+const router = createRouter();
 
 router.use(storageRateLimiter);
 
@@ -25,7 +25,7 @@ const upload = multer({
   },
 });
 
-router.get("/files", validate(listFilesSchema, "query"), storageController.listFiles);
+router.get("/files", validateQuery(listFilesSchema), storageController.listFiles);
 
 router.post(
   "/files/upload",
@@ -41,33 +41,25 @@ router.post(
   storageController.bulkUpload,
 );
 
-router.get(
-  "/files/download",
-  validate(downloadFileSchema, "query"),
-  storageController.downloadFile,
-);
+router.get("/files/download", validateQuery(downloadFileSchema), storageController.downloadFile);
 
-router.delete("/files", validate(deleteFilesSchema), storageController.deleteFiles);
+router.delete("/files", validateBody(deleteFilesSchema), storageController.deleteFiles);
 
 router.get(
   "/files/metadata",
-  validate(getFileMetadataSchema, "query"),
+  validateQuery(getFileMetadataSchema),
   storageController.getFileMetadata,
 );
 
-router.post("/folders", validate(createFolderSchema), storageController.createFolder);
+router.post("/folders", validateBody(createFolderSchema), storageController.createFolder);
 
 router.delete("/folders/:folderPath", storageController.deleteFolder);
 
-router.put("/files/rename", validate(renameFileSchema), storageController.renameFile);
+router.put("/files/rename", validateBody(renameFileSchema), storageController.renameFile);
 
-router.post("/shares", validate(createPublicShareSchema), storageController.createPublicShare);
+router.post("/shares", validateBody(createPublicShareSchema), storageController.createPublicShare);
 
-router.get(
-  "/shares",
-  validate(listSharesForFileSchema, "query"),
-  storageController.listSharesForFile,
-);
+router.get("/shares", validateQuery(listSharesForFileSchema), storageController.listSharesForFile);
 
 router.delete("/shares/:shareId", storageController.revokeShare);
 

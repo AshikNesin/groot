@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { BaseController } from "@/core/base-controller";
-import { ResponseHandler } from "@/core/response-handler";
-import { aiService } from "@/shared/ai/ai.service";
+import * as AIService from "@/shared/ai/ai.service";
+import * as AIUsageService from "@/shared/ai/ai-usage.service";
+import * as AIConversationService from "@/shared/ai/ai-conversation.service";
 import type {
   ChatDTO,
   UsageQueryDTO,
@@ -9,105 +9,105 @@ import type {
   UpdateConversationDTO,
   ListConversationsQueryDTO,
 } from "@/shared/ai/ai.validation";
+import { parseId } from "@/core/utils/controller.utils";
+import { Boom } from "@/core/errors";
 
-class AIController extends BaseController {
-  async chat(req: Request, res: Response) {
-    const payload = (req.validated?.body || req.body) as ChatDTO;
-    const userId = req.user?.userId;
-    const result = await aiService.chat(payload, userId);
-    ResponseHandler.success(res, result);
-  }
+export async function chat(req: Request) {
+  const payload = req.body as ChatDTO;
+  const userId = req.user?.userId;
+  return await AIService.chat({ input: payload, userId });
+}
 
-  async chatStream(req: Request, res: Response) {
-    const payload = (req.validated?.body || req.body) as ChatDTO;
-    const userId = req.user?.userId;
+export async function chatStream(req: Request, res: Response) {
+  const payload = req.body as ChatDTO;
+  const userId = req.user?.userId;
 
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
 
-    try {
-      for await (const chunk of aiService.chatStream(payload, userId)) {
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-      }
-      res.write("data: [DONE]\n\n");
-      res.end();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "AI streaming error";
-      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-      res.end();
+  try {
+    for await (const chunk of AIService.chatStream({ input: payload, userId })) {
+      res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
     }
-  }
-
-  async getModels(_req: Request, res: Response) {
-    const models = await aiService.getModels();
-    ResponseHandler.success(res, models);
-  }
-
-  async getUsage(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const query = (req.validated?.query || req.query) as UsageQueryDTO;
-    const stats = await aiService.getUsage(userId, query);
-    ResponseHandler.success(res, stats);
-  }
-
-  async getUsageRecords(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const query = (req.validated?.query || req.query) as UsageQueryDTO;
-    const records = await aiService.getUsageRecords(userId, query);
-    ResponseHandler.success(res, records);
-  }
-
-  async listConversations(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const query = (req.validated?.query || req.query) as ListConversationsQueryDTO;
-    const conversations = await aiService.listConversations(userId, query.limit, query.offset);
-    ResponseHandler.success(res, conversations);
-  }
-
-  async getConversation(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const id = this.parseId(req.params.id);
-    const conversation = await aiService.getConversation(id, userId);
-
-    if (!conversation) {
-      return ResponseHandler.notFound(res, "Conversation not found");
-    }
-
-    ResponseHandler.success(res, conversation);
-  }
-
-  async createConversation(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const payload = (req.validated?.body || req.body) as CreateConversationDTO;
-    const conversation = await aiService.createConversation(payload, userId);
-    ResponseHandler.created(res, conversation);
-  }
-
-  async updateConversation(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const id = this.parseId(req.params.id);
-    const payload = (req.validated?.body || req.body) as UpdateConversationDTO;
-    const conversation = await aiService.updateConversation(id, payload, userId);
-
-    if (!conversation) {
-      return ResponseHandler.notFound(res, "Conversation not found");
-    }
-
-    ResponseHandler.success(res, conversation);
-  }
-
-  async deleteConversation(req: Request, res: Response) {
-    const userId = req.user?.userId;
-    const id = this.parseId(req.params.id);
-    const deleted = await aiService.deleteConversation(id, userId);
-
-    if (!deleted) {
-      return ResponseHandler.notFound(res, "Conversation not found");
-    }
-
-    ResponseHandler.noContent(res);
+    res.write("data: [DONE]\n\n");
+    res.end();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "AI streaming error";
+    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+    res.end();
   }
 }
 
-export const aiController = new AIController();
+export async function getModels() {
+  return await AIService.getModels();
+}
+
+export async function getUsage(req: Request) {
+  const userId = req.user?.userId;
+  const query = req.query as unknown as UsageQueryDTO;
+  return await AIUsageService.getUsage({ userId, params: query });
+}
+
+export async function getUsageRecords(req: Request) {
+  const userId = req.user?.userId;
+  const query = req.query as unknown as UsageQueryDTO;
+  return await AIUsageService.getUsageRecords({ userId, params: query });
+}
+
+export async function listConversations(req: Request) {
+  const userId = req.user?.userId;
+  const query = req.query as unknown as ListConversationsQueryDTO;
+  return await AIConversationService.listConversations({
+    userId,
+    limit: query.limit,
+    offset: query.offset,
+  });
+}
+
+export async function getConversation(req: Request) {
+  const userId = req.user?.userId;
+  const id = parseId(req.params.id);
+  const conversation = await AIConversationService.getConversation({ id, userId });
+
+  if (!conversation) {
+    throw Boom.notFound("Conversation not found");
+  }
+
+  return conversation;
+}
+
+export async function createConversation(req: Request, res: Response) {
+  const userId = req.user?.userId;
+  const payload = req.body as CreateConversationDTO;
+  res.status(201);
+  return await AIConversationService.createConversation({ data: payload, userId });
+}
+
+export async function updateConversation(req: Request) {
+  const userId = req.user?.userId;
+  const id = parseId(req.params.id);
+  const payload = req.body as UpdateConversationDTO;
+  const conversation = await AIConversationService.updateConversation({
+    id,
+    data: payload,
+    userId,
+  });
+
+  if (!conversation) {
+    throw Boom.notFound("Conversation not found");
+  }
+
+  return conversation;
+}
+
+export async function deleteConversation(req: Request) {
+  const userId = req.user?.userId;
+  const id = parseId(req.params.id);
+  const deleted = await AIConversationService.deleteConversation({ id, userId });
+
+  if (!deleted) {
+    throw Boom.notFound("Conversation not found");
+  }
+  // returns undefined, which means 204 No Content under route-handler.
+}

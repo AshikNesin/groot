@@ -1,63 +1,60 @@
 import type { Request, Response } from "express";
-import { BaseController } from "@/core/base-controller";
-import { ResponseHandler } from "@/core/response-handler";
-import { authService } from "@/shared/auth/auth.service";
+import * as AuthService from "@/shared/auth/auth.service";
+import type { LoginDTO, CreateUserDTO } from "@/shared/auth/auth.validation";
 import { Boom } from "@/core/errors";
 import { env } from "@/core/env";
 
-class AuthController extends BaseController {
-  /**
-   * Login with email and password
-   */
-  async login(req: Request, res: Response) {
-    const { token, user } = await authService.login(req.body);
+/**
+ * Handle user login
+ */
+export async function login(req: Request, res: Response) {
+  const body = req.body as LoginDTO;
+  const result = await AuthService.login(body);
 
-    // Set HTTP-only cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+  const isProduction = env.NODE_ENV === "production";
 
-    return ResponseHandler.success(res, { token, user }, "Login successful");
-  }
+  res.cookie("token", result.token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: "/",
+  });
 
-  /**
-   * Logout and clear cookie
-   */
-  async logout(_req: Request, res: Response) {
-    res.clearCookie("token");
-    return ResponseHandler.success(res, null, "Logout successful");
-  }
-
-  /**
-   * Get current authenticated user
-   */
-  async getCurrentUser(req: Request, res: Response) {
-    if (!req.user) {
-      throw Boom.unauthorized("Not authenticated");
-    }
-
-    const user = await authService.getUserById(req.user.userId);
-    return ResponseHandler.success(res, user, "User retrieved");
-  }
-
-  /**
-   * Create a new user (admin only)
-   */
-  async createUser(req: Request, res: Response) {
-    const user = await authService.createUser(req.body);
-    return ResponseHandler.created(res, user, "User created successfully");
-  }
-
-  /**
-   * Get all users (admin only)
-   */
-  async getAllUsers(_req: Request, res: Response) {
-    const users = await authService.getAllUsers();
-    return ResponseHandler.success(res, users, "Users retrieved");
-  }
+  return result;
 }
 
-export const authController = new AuthController();
+/**
+ * Handle user logout (placeholder)
+ */
+export async function logout(req: Request, res: Response) {
+  res.clearCookie("token", { path: "/" });
+  return { status: "logged out" };
+}
+
+/**
+ * Get current authenticated user
+ */
+export async function getCurrentUser(req: Request) {
+  const user = req.user;
+  if (!user) {
+    throw Boom.unauthorized("Authentication required");
+  }
+
+  return await AuthService.getUserById({ userId: user.userId });
+}
+
+/**
+ * Create a new user (admin only)
+ */
+export async function createUser(req: Request) {
+  const body = req.body as CreateUserDTO;
+  return await AuthService.createUser(body);
+}
+
+/**
+ * Get all users (admin only)
+ */
+export async function getAllUsers(req: Request) {
+  return await AuthService.getAllUsers();
+}

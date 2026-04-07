@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { getLoggerContext } from "@/core/logger/context";
 
 /**
  * Trace context for request correlation
@@ -11,33 +12,38 @@ export interface TraceContext {
   startTime: number;
 }
 
-// Simple in-memory storage (in production, use AsyncLocalStorage)
-let currentTraceContext: TraceContext | null = null;
-
 /**
  * Create a new trace context
+ * Note: must be called inside a runWithLoggerContext block!
  */
 export function createTraceContext(parentTraceId?: string): TraceContext {
-  const context: TraceContext = {
+  const traceContext: TraceContext = {
     traceId: randomUUID(),
     parentTraceId,
     startTime: Date.now(),
   };
 
-  currentTraceContext = context;
-  return context;
+  const context = getLoggerContext();
+  if (context) {
+    context.trace = traceContext;
+  }
+
+  return traceContext;
 }
 
 /**
  * Get the current trace context
  */
 export function getCurrentTraceContext(): TraceContext | null {
-  return currentTraceContext;
+  return getLoggerContext()?.trace ?? null;
 }
 
 /**
  * Clear the current trace context
  */
 export function clearTraceContext(): void {
-  currentTraceContext = null;
+  const context = getLoggerContext();
+  if (context) {
+    context.trace = null;
+  }
 }
