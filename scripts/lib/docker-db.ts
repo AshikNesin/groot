@@ -1,8 +1,7 @@
 /**
  * Docker PostgreSQL Manager for Local Development
  *
- * Provides multi-connection PostgreSQL support via Docker, avoiding the
- * single-connection limitation of PGlite.
+ * Provides multi-connection PostgreSQL support via Docker.
  */
 
 import { exec } from "node:child_process";

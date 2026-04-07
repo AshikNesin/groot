@@ -281,7 +281,6 @@ await apiClient.delete("/todos/1");
 ```bash
 # Development
 pnpm dev              # Start dev server
-pnpm dev:pglite       # Start with PGlite (local DB)
 pnpm dev:docker       # Start with Docker PostgreSQL
 
 # Database
