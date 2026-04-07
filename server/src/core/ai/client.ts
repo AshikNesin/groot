@@ -6,8 +6,6 @@ import {
   completeSimple as piCompleteSimple,
   validateToolCall,
 } from "@mariozechner/pi-ai";
-import { Type } from "@mariozechner/pi-ai";
-import type { TSchema } from "@mariozechner/pi-ai";
 import type { z } from "zod";
 import type {
   AIConfig,
@@ -18,89 +16,26 @@ import type {
   PiAITool,
   TextContent,
   ImageContent,
-} from "./types";
+} from "@/core/ai/types";
+import { zodToTypeBox } from "@/core/ai/schema";
 
-/**
- * Convert a Zod schema to a TypeBox schema for pi-ai tool definitions.
- * Supports common types: string, number, boolean, object, array, optional, enum, nullable.
- */
-function zodToTypeBox(schema: z.ZodTypeAny): TSchema {
-  const def = (schema as any)._def;
-  if (!def) {
-    return Type.Any();
-  }
+export type CompleteParams = CompletionOptions & {
+  prompt: string | (TextContent | ImageContent)[];
+};
 
-  const typeName = def.typeName;
+export type GenerateObjectParams<T> = GenerateObjectOptions & {
+  prompt: string | (TextContent | ImageContent)[];
+  schema: z.ZodType<T>;
+};
 
-  switch (typeName) {
-    case "ZodString":
-      return Type.String(def.description ? { description: def.description } : undefined);
-
-    case "ZodNumber":
-      return Type.Number(def.description ? { description: def.description } : undefined);
-
-    case "ZodBoolean":
-      return Type.Boolean(def.description ? { description: def.description } : undefined);
-
-    case "ZodObject": {
-      const shape = def.shape?.();
-      if (!shape) return Type.Object({});
-      const properties: Record<string, TSchema> = {};
-      for (const [key, value] of Object.entries(shape)) {
-        properties[key] = zodToTypeBox(value as z.ZodTypeAny);
-      }
-      return Type.Object(properties);
-    }
-
-    case "ZodArray":
-      return Type.Array(zodToTypeBox(def.type));
-
-    case "ZodOptional":
-      return Type.Optional(zodToTypeBox(def.innerType));
-
-    case "ZodNullable":
-      return Type.Union([zodToTypeBox(def.innerType), Type.Null()]);
-
-    case "ZodEnum":
-      return Type.Union((def.values as string[]).map((v: string) => Type.Literal(v)));
-
-    case "ZodLiteral":
-      return Type.Literal(def.value);
-
-    case "ZodDefault":
-      return zodToTypeBox(def.innerType);
-
-    case "ZodEffects":
-      return zodToTypeBox(def.schema);
-
-    default:
-      return Type.Any();
-  }
-}
+export type StreamParams = CompletionOptions & {
+  prompt: string | (TextContent | ImageContent)[];
+};
 
 /**
  * AI adapter wrapping @mariozechner/pi-ai with a simplified developer experience.
- *
- * @example
- * ```ts
- * const ai = new AI({ provider: "anthropic", model: "claude-sonnet-4-6" });
- *
- * // Simple completion
- * const text = await ai.complete("Summarize this article: ...");
- *
- * // Streaming
- * for await (const chunk of ai.stream("Write a poem")) {
- *   process.stdout.write(chunk);
- * }
- *
- * // Structured output with Zod
- * const result = await ai.generateObject(
- *   "Extract info: John is 30",
- *   z.object({ name: z.string(), age: z.number() })
- * );
- * ```
  */
-export class AI {
+export class AIClient {
   private config: AIConfig;
   private _model: ReturnType<typeof getModel>;
 
@@ -119,10 +54,8 @@ export class AI {
   /**
    * Simple text completion — send a prompt, get a string back.
    */
-  async complete(
-    prompt: string | (TextContent | ImageContent)[],
-    options: CompletionOptions = {},
-  ): Promise<string> {
+  async complete(params: CompleteParams): Promise<string> {
+    const { prompt, ...options } = params;
     const context = this.buildContext(prompt, options);
     const streamOptions = this.buildStreamOptions(options);
 
@@ -139,10 +72,8 @@ export class AI {
   /**
    * Stream text completion — returns an async generator yielding text deltas.
    */
-  async *stream(
-    prompt: string | (TextContent | ImageContent)[],
-    options: CompletionOptions = {},
-  ): AsyncGenerator<string, void, undefined> {
+  async *stream(params: StreamParams): AsyncGenerator<string, void, undefined> {
+    const { prompt, ...options } = params;
     const context = this.buildContext(prompt, options);
     const streamOptions = this.buildStreamOptions(options);
 
@@ -164,18 +95,10 @@ export class AI {
 
   /**
    * Generate a structured object from a Zod schema.
-   *
-   * Uses a tool-calling approach: the schema is converted to a TypeBox
-   * tool definition, the model is forced to call it, and the result is
-   * validated against the Zod schema.
-   *
-   * @throws Error if schema is not a ZodObject (tool parameters must be objects)
    */
-  async generateObject<T>(
-    prompt: string | (TextContent | ImageContent)[],
-    schema: z.ZodType<T>,
-    options: GenerateObjectOptions = {},
-  ): Promise<T> {
+  async generateObject<T>(params: GenerateObjectParams<T>): Promise<T> {
+    const { prompt, schema, ...options } = params;
+
     // Validate that the schema is an object type - tool parameters must be objects
     const def = (schema as any)._def;
     const typeName = def?.typeName;
@@ -205,7 +128,6 @@ export class AI {
 
     const streamOptions = this.buildStreamOptions(options);
 
-    // Support reasoning option - use simple variants when reasoning is specified
     const response = options.reasoning
       ? await piCompleteSimple(this._model, context, {
           ...streamOptions,
@@ -238,12 +160,6 @@ export class AI {
 
   /**
    * Escape hatch — get the raw pi-ai primitives for full control.
-   *
-   * @example
-   * ```ts
-   * const { model, stream, complete } = ai.raw();
-   * const response = await complete(model, myCustomContext, myOptions);
-   * ```
    */
   raw() {
     return {

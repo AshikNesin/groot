@@ -1,14 +1,21 @@
 import type { NextFunction, Request, Response } from "express";
-import { Boom, ErrorCode } from "@/core/errors";
+import { Boom } from "@/core/errors";
 import { Sentry } from "@/core/instrument";
 import { logBusinessEvent } from "@/core/logger";
-import { getBreadcrumbs } from "@/core/logger/breadcrumbs";
-import { getCurrentTraceContext } from "@/core/logger/trace-context";
-import { sanitizeRequestBody } from "@/core/logger/utils";
-import { ResponseHandler } from "@/core/response-handler";
 import { ZodError } from "zod";
-import { getRequestLogger } from "@/core/middlewares/requestLogger.middleware";
+import { getRequestLogger } from "@/core/middlewares/request-logger.middleware";
+import { buildErrorContext } from "@/core/middlewares/error-context";
+import {
+  formatZodResponse,
+  formatPrismaResponse,
+  formatHttpErrorResponse,
+  formatUnknownErrorResponse,
+} from "@/core/middlewares/error-response";
+import { isPrismaError } from "@/core/errors";
+
 import { env } from "@/core/env";
+
+import { ErrorCode } from "@/core/errors";
 
 /**
  * Global error handling middleware
@@ -26,177 +33,73 @@ export function errorHandlerMiddleware(
     return;
   }
 
-  // Get request logger for correlation
   const requestLogger = getRequestLogger(req);
   const requestDuration = req.startTime ? Date.now() - req.startTime : undefined;
+  const errorContext = buildErrorContext(error, req, res, requestDuration);
 
-  // Get trace context and breadcrumbs
-  const traceContext = getCurrentTraceContext();
-  const breadcrumbs = getBreadcrumbs();
-
-  // Sanitize request body for logging (remove sensitive data)
-  const sanitizedBody = sanitizeRequestBody(req.body);
-
-  // Enhanced error logging with full context
-  const errorContext = {
-    type: "application_error",
-    traceId: traceContext?.traceId,
-    parentTraceId: traceContext?.parentTraceId,
-    error: {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      isOperational: Boom.isHttpError(error) ? error.isOperational : false,
-    },
-    request: {
-      method: req.method,
-      url: req.url,
-      path: req.path,
-      params: req.params,
-      query: req.query,
-      body: sanitizedBody,
-      userAgent: req.headers?.["user-agent"],
-      ip: req.ip || req.headers?.["x-forwarded-for"],
-    },
-    response: {
-      statusCode: res.statusCode,
-      headersSent: res.headersSent,
-    },
-    performance: requestDuration
-      ? {
-          requestDuration: `${requestDuration}ms`,
-        }
-      : undefined,
-    breadcrumbs: breadcrumbs.map((b) => ({
-      timestamp: b.timestamp,
-      category: b.category,
-      message: b.message,
-      level: b.level,
-    })),
-  };
-
-  // Log with appropriate level based on error type
+  // Log with appropriate level
   if (Boom.isHttpError(error) && error.isOperational) {
-    // Operational errors (expected business logic errors)
     requestLogger.warn(errorContext, `Operational error: ${error.message}`);
-
-    // Log as business event for operational errors
-    logBusinessEvent(
-      "operational_error",
-      {
+    logBusinessEvent({
+      event: "operational_error",
+      data: {
         errorType: error.constructor.name,
         errorCode: error.code,
         errorMessage: error.message,
         endpoint: `${req.method} ${req.path}`,
         userAgent: req.headers?.["user-agent"],
       },
-      "warn",
-    );
+      level: "warn",
+    });
   } else {
-    // Unexpected errors (system failures)
     requestLogger.error(errorContext, `System error: ${error.message}`);
-
-    // Capture in Sentry with breadcrumbs and trace context
     Sentry.captureException(error, {
       extra: {
-        traceId: traceContext?.traceId,
-        parentTraceId: traceContext?.parentTraceId,
-        breadcrumbs,
+        traceId: errorContext.traceId,
+        parentTraceId: errorContext.parentTraceId,
+        breadcrumbs: errorContext.breadcrumbs,
         performance: errorContext.performance,
         request: errorContext.request,
       },
       tags: {
-        traceId: traceContext?.traceId,
+        traceId: errorContext.traceId,
       },
     });
-
-    // Log as business event for system errors
-    logBusinessEvent(
-      "system_error",
-      {
+    logBusinessEvent({
+      event: "system_error",
+      data: {
         errorType: error.constructor.name,
         errorMessage: error.message,
         endpoint: `${req.method} ${req.path}`,
         userAgent: req.headers?.["user-agent"],
       },
-      "error",
-    );
+      level: "error",
+    });
   }
 
   // Handle Zod validation errors
   if (error instanceof ZodError) {
-    const errors: Record<string, string[]> = {};
-
-    for (const err of error.errors) {
-      const field = err.path.join(".");
-      if (!errors[field]) {
-        errors[field] = [];
-      }
-      errors[field].push(err.message);
-    }
-
-    // Log validation error with detailed context
-    requestLogger.warn(
-      {
-        type: "validation_error",
-        validationErrors: errors,
-        fieldCount: Object.keys(errors).length,
-        receivedData: sanitizedBody,
-      },
-      `Validation failed with ${Object.keys(errors).length} field errors`,
-    );
-
-    // Log as business event for monitoring
-    logBusinessEvent(
-      "validation_failed",
-      {
-        errorCount: error.errors.length,
-        fieldCount: Object.keys(errors).length,
-        endpoint: `${req.method} ${req.path}`,
-      },
-      "warn",
-    );
-
-    ResponseHandler.error(
+    return formatZodResponse(
       res,
-      "Validation failed",
-      ErrorCode.VALIDATION_ERROR.code,
-      ErrorCode.VALIDATION_ERROR.status,
-      errors,
+      error,
+      requestLogger,
+      errorContext.request.body,
+      req.method,
+      req.path,
     );
-    return;
   }
 
   // Handle Prisma errors
   if (isPrismaError(error)) {
-    try {
-      handlePrismaError(error);
-    } catch (handledError) {
-      if (Boom.isHttpError(handledError)) {
-        const { statusCode, message, code, data } = handledError.output;
-        ResponseHandler.error(res, message, code, statusCode, data);
-        return;
-      }
-    }
+    return formatPrismaResponse(res, error);
   }
-
   // Handle HttpError (all Boom-created errors)
   if (Boom.isHttpError(error)) {
-    const { statusCode, message, code, data } = error.output;
-    ResponseHandler.error(res, message, code, statusCode, data);
-    return;
+    formatHttpErrorResponse(res, error);
+  } else {
+    // Handle unknown errors
+    formatUnknownErrorResponse(res, error);
   }
-
-  // Handle unknown errors
-  const isDevelopment = env.NODE_ENV === "development";
-
-  ResponseHandler.error(
-    res,
-    isDevelopment ? error.message : "An unexpected error occurred",
-    ErrorCode.INTERNAL_ERROR.code,
-    ErrorCode.INTERNAL_ERROR.status,
-    isDevelopment ? { stack: error.stack } : undefined,
-  );
 }
 
 /**
@@ -205,7 +108,6 @@ export function errorHandlerMiddleware(
 export function notFoundHandler(req: Request, res: Response): void {
   const requestLogger = getRequestLogger(req);
 
-  // Log 404 with context
   requestLogger.warn(
     {
       type: "not_found_error",
@@ -217,13 +119,11 @@ export function notFoundHandler(req: Request, res: Response): void {
     `Route not found: ${req.method} ${req.path}`,
   );
 
-  ResponseHandler.error(
-    res,
-    `Cannot ${req.method} ${req.path}`,
-    ErrorCode.NOT_FOUND.code,
-    ErrorCode.NOT_FOUND.status,
-  );
+  res.status(ErrorCode.NOT_FOUND.status).json({
+    success: false,
+    error: {
+      code: ErrorCode.NOT_FOUND.code,
+      message: `Cannot ${req.method} ${req.path}`,
+    },
+  });
 }
-
-// Re-import for use in this file
-import { isPrismaError, handlePrismaError } from "@/core/errors";

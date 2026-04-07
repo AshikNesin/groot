@@ -1,15 +1,38 @@
-import { HttpError } from "./http-error";
-import type { ErrorCodeEnum } from "./error-codes";
+import { HttpError } from "@/core/errors/http-error";
+import type { ErrorCodeValue } from "@/core/errors/error-codes";
 
 type BoomData = unknown;
+
+export interface BoomOptions {
+  message?: string;
+  data?: BoomData;
+  code?: ErrorCodeValue;
+  cause?: Error;
+}
 
 /**
  * Create a factory function for a given HTTP status code.
  */
 function createFactory(statusCode: number) {
-  return (message?: string, data?: BoomData, code?: ErrorCodeEnum): HttpError => {
-    return new HttpError(statusCode, message, data, code);
-  };
+  function factory(options: BoomOptions): HttpError;
+  function factory(message?: string, data?: BoomData, code?: ErrorCodeValue): HttpError;
+  function factory(
+    messageOrOptions?: string | BoomOptions,
+    data?: BoomData,
+    code?: ErrorCodeValue,
+  ): HttpError {
+    if (typeof messageOrOptions === "object" && messageOrOptions !== null) {
+      return new HttpError(
+        statusCode,
+        messageOrOptions.message,
+        messageOrOptions.data,
+        messageOrOptions.code,
+        messageOrOptions.cause,
+      );
+    }
+    return new HttpError(statusCode, messageOrOptions as string | undefined, data, code);
+  }
+  return factory;
 }
 
 /**

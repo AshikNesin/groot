@@ -1,78 +1,114 @@
 # Express + React Boilerplate Docs
 
-Welcome to the documentation hub for the Express + React boilerplate. Use this space to discover how the API, background jobs, and Vite client fit together.
+Welcome to the documentation hub for the Express + React boilerplate. This guide covers the domain-driven architecture, feature modules, and modern development patterns.
 
 ## Quick Navigation
 
-### 🚀 Getting Started
+### Getting Started
 
 - **[Quick Start](./quick-start.md)** – Get started in 3 steps with authentication, components, and examples
 - **[Setup Guide](./setup-guide.md)** – Environment variables, database, and local workflow
 - **[Development Workflow](./guides/development.md)** – Day-to-day commands, conventions, and scripts
 
-### 🧱 Guides
+### Guides
 
+- **[Architecture](./guides/architecture.md)** – Feature modules, core infrastructure, and request flow
 - **[Portless & HTTPS](./guides/portless-https.md)** – Local HTTPS setup, certificate trust, and troubleshooting
-- **[Architecture](./guides/architecture.md)** – Server layers, job system, and client structure
 - **[Testing](./guides/testing.md)** – Vitest + Supertest guidance and patterns
 - **[Pre-commit Hooks](./precommit-hooks.md)** – Gitleaks secret detection and linting automation
 
-### ✨ Features
+### Features
 
 - **[Todos API](./features/todos.md)** – CRUD contract, validation, and React integration
-- **[Background Jobs](./features/jobs.md)** – pg-boss queues, handlers, and job API
+- **[Background Jobs](./features/jobs.md)** – pg-boss queues, dynamic registration, and job API
 - **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
 - **[Storage](./features/storage.md)** – S3-backed file browser, secure shares, and rate limits
 - **[Passkey Authentication](./features/passkey-authentication.md)** – WebAuthn/FIDO2 passwordless authentication
-- **[AI Inference](./features/ai-inference.md)** – Unified LLM API integration with Zod structured output
+- **[AI Inference](./features/ai-inference.md)** – Unified LLM API with Zod structured output
+- **[KV Storage](./kv.md)** – Keyv-based key-value storage with PostgreSQL backend
 
-### 📚 Examples & Reference
+### Examples & Reference
 
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets
-- **[Boilerplate Enhancements](./boilerplate-enhancements.md)** – Complete reference of all added features (60+ files, 8000+ lines)
+- **[Boilerplate Enhancements](./boilerplate-enhancements.md)** – Complete reference of all added features
 - **[Changelog](./CHANGELOG.md)** – Documentation changes over time
 
 ## Project Overview
 
-This boilerplate ships a secure Express 5 + TypeScript server inside `server/src` and a Vite-powered React 19 client inside `client/src`. The API exposes `/api/v1/todos` for CRUD operations and `/api/v1/jobs` for pg-boss queue management, all protected by basic authentication. The SPA consumes the same API via Axios + React Query, rendering dashboards and todo lists for authenticated users.
+This boilerplate ships a secure Express 5 + TypeScript server with a domain-driven architecture inside `server/src` and a Vite-powered React 19 client inside `client/src`.
 
-Key capabilities:
+### Architecture Highlights
 
-- **Todo lifecycle** – Validation via `todo.validation.ts`, persistence through Prisma, and consistent responses via `ResponseHandler`
-- **Background processing** – Pg-boss queues boot from `core/job`, with workers registered in `server/src/jobs`
-- **Full-stack DX** – Shared TypeScript tooling, Vite+ (Oxlint/Oxfmt), Vitest tests, and Tailwind UI components
+- **Feature Modules** – Self-contained domains with routes, controllers, services, and jobs
+- **App vs Shared** – `app/` for domain features, `shared/` for reusable modules
+- **Core Infrastructure** – Modularized systems for jobs, logging, errors, storage, and AI
+- **Functional Controllers** – Simple async functions returning values (auto-serialized)
 
-## Tech Stack Highlights
+### Key Capabilities
+
+- **Todo lifecycle** – Validation via Zod, persistence through Prisma, Boom error handling
+- **Background processing** – pg-boss queues with dynamic handler registration
+- **Full-stack DX** – TypeScript, Vite+ (Oxlint/Oxfmt), Vitest, Playwright, Tailwind UI
+
+## Tech Stack
 
 | Area    | Technologies                                                       |
 | ------- | ------------------------------------------------------------------ |
-| Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry                 |
+| Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry, Boom           |
 | Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
-| Tooling | TypeScript 5.8, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
+| Tooling | TypeScript 5.9, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
+| AI      | @mariozechner/pi-ai (unified LLM API with Zod structured output)   |
 
 ## API Surface
 
-- `GET /health` – Health probe without auth
-- `GET/POST/PUT/DELETE /api/v1/todos` – Todo CRUD guarded by `basicAuthMiddleware`
-- `POST /api/v1/jobs` – Queue jobs defined in `core/job/queue.ts`
-- `POST /api/v1/jobs/schedule` – Cron scheduling
-- `GET /api/v1/jobs` – Filter jobs by state/name, plus supporting routes for retries, cancellations, stats, and failed listings
+| Prefix                 | Purpose                        | Auth                |
+| ---------------------- | ------------------------------ | ------------------- |
+| `/api/v1/todos`        | CRUD operations                | JWT                 |
+| `/api/v1/auth`         | Login, logout, user management | Mixed               |
+| `/api/v1/storage`      | File storage operations        | JWT                 |
+| `/api/v1/public/files` | Public file sharing            | None (rate-limited) |
+| `/api/v1/jobs`         | Background job management      | JWT                 |
+| `/api/v1/passkeys`     | Passkey registration/auth      | Public              |
+| `/api/v1/settings`     | App key-value settings         | JWT                 |
+| `/api/v1/ai`           | AI inference (chat, streaming) | JWT                 |
+| `GET /health`          | Health probe                   | None                |
 
-## Architecture at a Glance
+## Quick Architecture Diagram
 
 ```
-Request → Middlewares (logging, auth, validation)
-        → Routes (`routes/*.ts`)
-        → Controllers (`controllers/*.ts`)
-        → Services (`services/*.ts`)
-        → Models / Prisma (`models/*.ts`)
-        → PostgreSQL
+HTTP Request
+    ↓
+Middlewares (logging, auth, validation)
+    ↓
+createRouter (auto-wraps handlers)
+    ↓
+Controller (async function → return value)
+    ↓
+Service (business logic)
+    ↓
+Model (Prisma queries)
+    ↓
+PostgreSQL
 
-Jobs: PgBoss → Handlers (`jobs/*.ts`) → Prisma/logger/Sentry
-
-Client: React Router → Layout + ProtectedRoute → Pages → Hooks (React Query) → Axios → /api/v1
+Background Jobs:
+Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
 ```
+
+## Core Modules
+
+| Module      | Location            | Purpose                                             |
+| ----------- | ------------------- | --------------------------------------------------- |
+| AI          | `core/ai/`          | Unified LLM client with Zod schema conversion       |
+| Errors      | `core/errors/`      | Boom factory, error codes, Prisma error handler     |
+| Jobs        | `core/job/`         | Queue client, queries, worker, dynamic registration |
+| KV          | `core/kv/`          | Keyv key-value storage with PostgreSQL              |
+| Logger      | `core/logger/`      | Pino with AsyncLocalStorage context                 |
+| Storage     | `core/storage/`     | S3 file storage service                             |
+| Middlewares | `core/middlewares/` | Auth, validation, rate-limiting, error handling     |
+| Utils       | `core/utils/`       | `createRouter`, `parseId`, validation helpers       |
 
 ## Next Steps
 
-Jump into the guides linked above to understand setup, architecture decisions, feature specifics, and real-world API commands. Keep the changelog updated when documentation evolves.
+1. Read [Architecture Guide](./guides/architecture.md) for detailed patterns
+2. Check [Setup Guide](./setup-guide.md) for environment configuration
+3. Explore feature docs for specific implementation details

@@ -1,53 +1,271 @@
 # Architecture Guide
 
-This project splits responsibilities between a layered Express API (`server/src`) and a Vite-powered React client (`client/src`).
+This project uses a domain-driven, feature-based architecture with clear separation between app-specific and shared modules.
+
+## High-Level Structure
+
+```
+server/src/
+├── app/              # App-specific domain modules
+├── shared/           # Reusable feature modules
+├── core/             # Infrastructure and utilities
+├── routes.ts         # Central route registration
+└── index.ts          # Server entry point
+```
 
 ## Server Layers
 
-1. **Middlewares** – Located in `server/src/middlewares`. They handle CORS, compression, logging (`requestLogger.middleware.ts`), basic auth, validation (`validation.middleware.ts`), and error formatting.
-2. **Routes** – Declared in `server/src/routes`. `index.ts` mounts domain-specific routers such as `todo.routes.ts` and `job.routes.ts` under `/api/v1`.
-3. **Controllers** – `controllers/todo.controller.ts` translates HTTP requests into service calls, using `BaseController` helpers (ID parsing) and `ResponseHandler` for consistent JSON envelopes.
-4. **Services** – `services/todo.service.ts` contains business logic, orchestrating Prisma models and throwing domain errors (`NotFoundError`).
-5. **Models** – `models/todo.model.ts` encapsulates Prisma queries, ensuring controllers never touch the ORM directly.
-6. **Core Utilities** – Logging (`core/logger`), env parsing (`env.ts` + `@t3-oss/env-core`), Sentry instrumentation (`core/instrument.ts`), response helpers, and Prisma bootstrap (`core/database.ts`).
+### 1. Feature Modules (`app/` and `shared/`)
 
-### Error & Validation Flow
+Each feature is a self-contained module with all its components:
 
-- Requests pass through `requestLoggerMiddleware` → `basicAuthMiddleware` → optional `validate(zodSchema)`.
-- Controllers bubble domain errors to the centralized `error-handler.middleware.ts`, which formats responses and delegates exceptions to Sentry.
+```
+feature/
+├── feature.routes.ts      # Route definitions
+├── feature.controller.ts  # Request handlers
+├── feature.service.ts     # Business logic
+├── feature.validation.ts  # Zod schemas
+├── feature.model.ts       # Prisma queries
+├── feature.jobs.ts        # Background jobs (optional)
+└── index.ts               # Exports
+```
 
-## Background Job Pipeline
+**App vs Shared:**
 
-The job system is built on [pg-boss](https://github.com/timgit/pg-boss).
+- `app/` - Domain-specific features (e.g., `todo/`)
+- `shared/` - Reusable features (auth, storage, jobs, settings, ai)
 
-1. **Configuration** – `core/job/config.ts` wires queue settings from validated env vars and defines default retry policies.
-2. **Queue Runtime** – `core/job/index.ts` owns the singleton PgBoss instance, provides helpers (`addJob`, `scheduleJob`, `retryJob`, etc.), and coordinates lifecycle (`initJobQueue`, `stopJobQueue`).
-3. **Workers** – `core/job/worker.ts` registers handlers via `registerJobHandler`, wraps them with `withSentryErrorCapture`, creates queues, and spins up `JOB_CONCURRENCY` workers per job.
-4. **Handlers** – Stored in `server/src/jobs`. Each file imports `registerJobHandler` and implements the business logic (e.g., `todo-cleanup` deleting completed todos after a cutoff, `todo-summary` logging aggregate stats).
-5. **Contracts** – `core/job/queue.ts` exports the `JobName` enum and TypeScript payload shapes consumed by both API routes and handlers.
+### 2. Core Infrastructure (`core/`)
 
-Routes in `server/src/routes/job.routes.ts` expose a comprehensive REST surface for queueing, scheduling, retrying, cancelling, purging, and inspecting jobs. Tests in `server/src/routes/job.routes.test.ts` demonstrate mocking the job module when validating the API.
+| Directory      | Purpose                                             |
+| -------------- | --------------------------------------------------- |
+| `ai/`          | Unified LLM client with Zod structured output       |
+| `errors/`      | Boom HTTP errors, error codes, Prisma error handler |
+| `job/`         | Job queue (client, queries, queue, worker)          |
+| `kv/`          | Keyv-based key-value storage                        |
+| `logger/`      | Pino logger with AsyncLocalStorage context          |
+| `middlewares/` | Auth, validation, rate-limiting, error handling     |
+| `storage/`     | S3 storage service                                  |
+| `utils/`       | Router helper, controller utilities                 |
+
+### 3. Request Flow
+
+```
+HTTP Request
+    ↓
+Middlewares (CORS, logging, auth, JSON parsing)
+    ↓
+Route Handler (createRouter auto-wraps with handle middleware)
+    ↓
+Controller (async function returning value)
+    ↓
+Service (business logic)
+    ↓
+Model (Prisma queries)
+    ↓
+Database (PostgreSQL)
+    ↓
+Response (auto-serialized by handle middleware)
+```
+
+## Key Patterns
+
+### createRouter Utility
+
+Routes use `createRouter()` which automatically wraps handlers:
+
+```typescript
+import { createRouter } from "@/core/utils/router.utils";
+import * as controller from "./todo.controller";
+
+const router = createRouter();
+
+// Handler is auto-wrapped with handle() middleware
+router.get("/", controller.getAll);
+router.post("/", controller.create);
+
+export default router;
+```
+
+### Functional Controllers
+
+Controllers are simple async functions that return values:
+
+```typescript
+export async function getAll() {
+  return await TodoService.findAll();
+}
+
+export async function create(req: Request, res: Response) {
+  const payload = req.validated?.body || req.body;
+  res.status(201);
+  return await TodoService.create({ data: payload });
+}
+
+export async function getById(req: Request) {
+  const id = parseId(req.params.id);
+  return await TodoService.findById({ id });
+}
+```
+
+No base classes, no manual response handling - just return values.
+
+### Validation Middleware
+
+Zod schemas validate requests:
+
+```typescript
+import { validate } from "@/core/middlewares/validation.middleware";
+import { createTodoSchema } from "./todo.validation";
+
+router.post("/", validate(createTodoSchema, "body"), controller.create);
+```
+
+Validated data is available at `req.validated.body`.
+
+### Error Handling
+
+Use `Boom` for HTTP errors:
+
+```typescript
+import { Boom } from "@/core/errors";
+
+if (!todo) {
+  throw Boom.notFound("Todo not found");
+}
+```
+
+Prisma errors are automatically transformed by `PrismaHandler`.
+
+## Background Job System
+
+Built on pg-boss with modular structure:
+
+| File                        | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `core/job/config.ts`        | Environment-based configuration   |
+| `core/job/client.ts`        | PgBoss singleton instance         |
+| `core/job/queue.ts`         | Job registration and queueing API |
+| `core/job/queries.ts`       | Job inspection queries            |
+| `core/job/worker.ts`        | Worker management                 |
+| `core/job/error-handler.ts` | Sentry + logging wrapper          |
+
+### Job Registration
+
+Jobs are registered in feature modules:
+
+```typescript
+// todo.jobs.ts
+import { registerJobHandler, type JobHandler } from "@/core/job";
+
+export const cleanupHandler: JobHandler<CleanupPayload> = async ({ data }) => {
+  // Job logic
+};
+
+export function registerTodoJobs(): void {
+  registerJobHandler("todo-cleanup", cleanupHandler);
+}
+```
+
+Then added to `routes.ts`:
+
+```typescript
+export function registerJobHandlers(): void {
+  registerTodoJobs();
+  // Future jobs...
+}
+```
+
+## Logger System
+
+Pino-based logging with context management:
+
+```typescript
+import { logger, createContextLogger } from "@/core/logger";
+
+// Basic logging
+logger.info("User logged in", { userId });
+
+// Context-aware logging
+const log = createContextLogger("todo-service");
+log.debug("Processing todo", { todoId });
+```
+
+Uses AsyncLocalStorage for request tracing.
+
+## Key-Value Store
+
+Keyv with PostgreSQL adapter:
+
+```typescript
+import kv, { createNamespaceKv } from "@/core/kv";
+
+// Basic usage
+await kv.set("key", { data: "value" });
+const value = await kv.get("key");
+
+// Namespaced
+const cacheKv = createNamespaceKv("cache");
+await cacheKv.set("user:123", userData);
+```
+
+## Authentication Flow
+
+1. **Public Routes** (`/api/v1/auth`, `/api/v1/passkey`, `/api/v1/public/*`)
+   - No auth required
+
+2. **Protected Routes** (`/api/v1/*` except public)
+   - JWT token via `Authorization: Bearer <token>`
+   - Validated by `jwtAuthMiddleware`
+
+3. **Admin Routes**
+   - Additional `X-Admin-Auth` header
+   - Validated by `adminAuthMiddleware`
+
+## Route Registration
+
+Centralized in `routes.ts`:
+
+```typescript
+export function registerRoutes(app: Express): void {
+  // Public routes
+  app.use("/api/v1/public/files", publicFileRoutes);
+  app.use("/api/v1/auth", authRoutes);
+  app.use("/api/v1/passkey", passkeyRoutes);
+
+  // Protected routes (JWT required)
+  const protectedRouter = Router();
+  protectedRouter.use("/todos", todoRoutes);
+  protectedRouter.use("/jobs", jobRoutes);
+  protectedRouter.use("/storage", storageRoutes);
+  protectedRouter.use("/settings", appSettingsRoutes);
+  protectedRouter.use("/ai", aiRoutes);
+
+  app.use("/api/v1", jwtAuthMiddleware, protectedRouter);
+}
+```
 
 ## Client Architecture
 
-1. **Routing** – `client/src/App.tsx` sets up `react-router-dom` routes, gating protected content with `components/ProtectedRoute.tsx` and wrapping everything in a shared `Layout`.
-2. **State & Auth** – `store/auth.ts` uses Zustand to manage basic auth tokens stored in `localStorage`. `Layout` and other components read from this store to show user context or redirect to `/login`.
-3. **Data Layer** – `lib/api.ts` configures Axios with base URL `/api/v1` and injects the Basic Authorization header. Hooks inside `hooks/api/useTodos.ts` lean on React Query for caching, mutations, and automatic refetching.
-4. **UI Components** – Tailwind + shadcn-inspired primitives live in `components/ui`. Pages such as `pages/Todos.tsx`, `pages/Dashboard.tsx`, and `pages/Login.tsx` compose these building blocks.
-5. **Feedback** – `hooks/use-toast.ts` and `components/ui/toaster` surface optimistic UI feedback around mutations.
+1. **Routing** – React Router 7 in `client/src/App.tsx`
+2. **State** – Zustand stores (`store/auth.ts`)
+3. **Data Fetching** – React Query + Axios (`lib/api.ts`)
+4. **UI** – Tailwind + Radix primitives (`components/ui/`)
 
-## Request Lifecycle Summary
+## Adding a New Feature
 
-```
-Client (React Router + Axios)
-    → /api/v1/* request with Basic Auth header
-    → Express middlewares (logging, auth, JSON parsing, validation)
-    → Route handler forwards to controller
-    → Controller invokes service → model → Prisma → PostgreSQL
-    → ResponseHandler standardizes payload
-    → React Query cache updates + UI re-renders
+1. Create feature directory in `app/` or `shared/`
+2. Add files: routes, controller, service, validation, model
+3. Register routes in `routes.ts`
+4. Register jobs in `registerJobHandlers()` if needed
+5. Add environment variables to `.env.schema`
+6. Write tests in `tests/server/`
 
-Background jobs follow a similar path but start from PgBoss instead of HTTP, still using shared services/models when needed.
-```
+## Design Principles
 
-Use this layering blueprint when adding new domains: introduce validation, routes, controllers, services, models, and optional jobs in the same structure for consistency.
+- **Feature Isolation**: Each feature is self-contained
+- **Functional Controllers**: Simple functions, no classes
+- **Automatic Serialization**: Return values, not response objects
+- **Centralized Registration**: One place for routes and jobs
+- **Standardized Errors**: Boom factory methods throughout
+- **Validated Inputs**: Zod schemas at system boundaries

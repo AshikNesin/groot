@@ -1,32 +1,35 @@
-import type { Request, Response } from "express";
-import { BaseController } from "@/core/base-controller";
-import { ResponseHandler } from "@/core/response-handler";
-import { appSettingsService } from "@/shared/settings/app-settings.service";
+import type { Request } from "express";
+import * as AppSettingsService from "@/shared/settings/app-settings.service";
+import type { UpsertAppSettingDTO } from "@/shared/settings/app-settings.validation";
 
-class AppSettingsController extends BaseController {
-  async getAll(_req: Request, res: Response) {
-    const settings = await appSettingsService.getAll();
-    ResponseHandler.success(res, settings);
-  }
-
-  async getByKey(req: Request, res: Response) {
-    const { key } = req.params;
-    const setting = await appSettingsService.get(key);
-    ResponseHandler.success(res, setting);
-  }
-
-  async upsert(req: Request, res: Response) {
-    const { key } = req.params;
-    const data = req.validated?.body || req.body;
-    const setting = await appSettingsService.upsert(key, data);
-    ResponseHandler.success(res, setting, "Setting saved successfully");
-  }
-
-  async delete(req: Request, res: Response) {
-    const { key } = req.params;
-    await appSettingsService.delete(key);
-    ResponseHandler.success(res, null, "Setting deleted successfully");
-  }
+/**
+ * Get all app settings
+ */
+export async function getAll() {
+  return await AppSettingsService.getAll();
 }
 
-export const appSettingsController = new AppSettingsController();
+/**
+ * Get a single app setting by key
+ */
+export async function getByKey(req: Request) {
+  const { key } = req.params;
+  return await AppSettingsService.get({ key });
+}
+
+/**
+ * Upsert an app setting
+ */
+export async function upsert(req: Request) {
+  const { key } = req.params;
+  const payload = req.body as UpsertAppSettingDTO;
+  return await AppSettingsService.upsert({ key, data: payload });
+}
+
+/**
+ * Delete an app setting
+ */
+export async function deleteSetting(req: Request) {
+  const { key } = req.params;
+  return await AppSettingsService.deleteSetting({ key });
+}
