@@ -31,21 +31,22 @@ feature/
 ```
 
 **App vs Shared:**
+
 - `app/` - Domain-specific features (e.g., `todo/`)
 - `shared/` - Reusable features (auth, storage, jobs, settings, ai)
 
 ### 2. Core Infrastructure (`core/`)
 
-| Directory | Purpose |
-| --------- | ------- |
-| `ai/` | Unified LLM client with Zod structured output |
-| `errors/` | Boom HTTP errors, error codes, Prisma error handler |
-| `job/` | Job queue (client, queries, queue, worker) |
-| `kv/` | Keyv-based key-value storage |
-| `logger/` | Pino logger with AsyncLocalStorage context |
-| `middlewares/` | Auth, validation, rate-limiting, error handling |
-| `storage/` | S3 storage service |
-| `utils/` | Router helper, controller utilities |
+| Directory      | Purpose                                             |
+| -------------- | --------------------------------------------------- |
+| `ai/`          | Unified LLM client with Zod structured output       |
+| `errors/`      | Boom HTTP errors, error codes, Prisma error handler |
+| `job/`         | Job queue (client, queries, queue, worker)          |
+| `kv/`          | Keyv-based key-value storage                        |
+| `logger/`      | Pino logger with AsyncLocalStorage context          |
+| `middlewares/` | Auth, validation, rate-limiting, error handling     |
+| `storage/`     | S3 storage service                                  |
+| `utils/`       | Router helper, controller utilities                 |
 
 ### 3. Request Flow
 
@@ -140,14 +141,14 @@ Prisma errors are automatically transformed by `PrismaHandler`.
 
 Built on pg-boss with modular structure:
 
-| File | Purpose |
-| ---- | ------- |
-| `core/job/config.ts` | Environment-based configuration |
-| `core/job/client.ts` | PgBoss singleton instance |
-| `core/job/queue.ts` | Job registration and queueing API |
-| `core/job/queries.ts` | Job inspection queries |
-| `core/job/worker.ts` | Worker management |
-| `core/job/error-handler.ts` | Sentry + logging wrapper |
+| File                        | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `core/job/config.ts`        | Environment-based configuration   |
+| `core/job/client.ts`        | PgBoss singleton instance         |
+| `core/job/queue.ts`         | Job registration and queueing API |
+| `core/job/queries.ts`       | Job inspection queries            |
+| `core/job/worker.ts`        | Worker management                 |
+| `core/job/error-handler.ts` | Sentry + logging wrapper          |
 
 ### Job Registration
 

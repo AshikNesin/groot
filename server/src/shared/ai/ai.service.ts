@@ -1,15 +1,9 @@
 import { AI } from "@/core/ai";
 import { getModel, type KnownProvider } from "@mariozechner/pi-ai";
-import { aiUsageModel, aiConversationModel } from "@/shared/ai/ai-usage.model";
+import { aiUsageModel } from "@/shared/ai/ai-usage.model";
 import { env } from "@/core/env";
-import type {
-  ChatDTO,
-  UsageQueryDTO,
-  CreateConversationDTO,
-  UpdateConversationDTO,
-} from "@/shared/ai/ai.validation";
+import type { ChatDTO } from "@/shared/ai/ai.validation";
 import { randomUUID } from "node:crypto";
-import dayjs from "dayjs";
 
 export interface ChatOptions {
   signal?: AbortSignal;
@@ -33,21 +27,6 @@ export interface ModelInfo {
   maxTokens: number;
   inputCapabilities: string[];
   reasoning: boolean;
-}
-
-export interface UsageStats {
-  totalRequests: number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  totalCost: number;
-  byModel: Array<{
-    provider: string;
-    model: string;
-    count: number;
-    inputTokens: number;
-    outputTokens: number;
-    cost: number;
-  }>;
 }
 
 const defaultProvider = env.AI_DEFAULT_PROVIDER;
@@ -274,128 +253,4 @@ export async function getModels(): Promise<ModelInfo[]> {
   }
 
   return models;
-}
-
-export async function getUsage({
-  userId,
-  params,
-}: {
-  userId?: number;
-  params: UsageQueryDTO;
-}): Promise<UsageStats> {
-  if (userId === undefined) {
-    throw new Error("Authentication required for usage statistics");
-  }
-
-  const startDate = params.startDate
-    ? dayjs(params.startDate).toDate()
-    : dayjs().subtract(30, "day").toDate();
-  const endDate = params.endDate ? dayjs(params.endDate).toDate() : dayjs().toDate();
-
-  const [totalStats, groupedStats] = await Promise.all([
-    aiUsageModel.getTotalStats(userId, startDate, endDate),
-    aiUsageModel.getAggregatedStats(userId, startDate, endDate),
-  ]);
-
-  return {
-    totalRequests: totalStats._count,
-    totalInputTokens: totalStats._sum.inputTokens ?? 0,
-    totalOutputTokens: totalStats._sum.outputTokens ?? 0,
-    totalCost: Number(totalStats._sum.totalCost ?? 0),
-    byModel: groupedStats.map((g) => ({
-      provider: g.provider,
-      model: g.model,
-      count: g._count,
-      inputTokens: g._sum.inputTokens ?? 0,
-      outputTokens: g._sum.outputTokens ?? 0,
-      cost: Number(g._sum.totalCost ?? 0),
-    })),
-  };
-}
-
-export async function getUsageRecords({
-  userId,
-  params,
-}: {
-  userId?: number;
-  params: UsageQueryDTO;
-}) {
-  if (userId === undefined) {
-    throw new Error("Authentication required for usage records");
-  }
-
-  return aiUsageModel.findByUser({
-    userId,
-    startDate: params.startDate ? dayjs(params.startDate).toDate() : undefined,
-    endDate: params.endDate ? dayjs(params.endDate).toDate() : undefined,
-    provider: params.provider,
-    model: params.model,
-    limit: params.limit,
-    offset: params.offset,
-  });
-}
-
-export async function createConversation({
-  data,
-  userId,
-}: {
-  data: CreateConversationDTO;
-  userId?: number;
-}) {
-  return aiConversationModel.create({
-    userId,
-    title: data.title,
-    context: data.context as Record<string, unknown>,
-    lastModel: data.lastModel,
-  });
-}
-
-export async function getConversation({ id, userId }: { id: number; userId?: number }) {
-  return aiConversationModel.findById(id, userId);
-}
-
-export async function listConversations({
-  userId,
-  limit = 20,
-  offset = 0,
-}: {
-  userId?: number;
-  limit?: number;
-  offset?: number;
-}) {
-  if (userId === undefined) {
-    throw new Error("Authentication required for listing conversations");
-  }
-  return aiConversationModel.findByUser(userId, limit, offset);
-}
-
-export async function updateConversation({
-  id,
-  data,
-  userId,
-}: {
-  id: number;
-  data: UpdateConversationDTO;
-  userId?: number;
-}) {
-  const existing = await aiConversationModel.findById(id, userId);
-  if (!existing) {
-    return null;
-  }
-
-  const updateData: Parameters<typeof aiConversationModel.update>[1] = {};
-  if (data.title !== undefined) updateData.title = data.title;
-  if (data.context !== undefined) updateData.context = data.context as Record<string, unknown>;
-  if (data.lastModel !== undefined) updateData.lastModel = data.lastModel;
-
-  return aiConversationModel.update(id, updateData);
-}
-
-export async function deleteConversation({ id, userId }: { id: number; userId?: number }) {
-  const existing = await aiConversationModel.findById(id, userId);
-  if (!existing) {
-    return null;
-  }
-
-  return aiConversationModel.delete(id);
 }

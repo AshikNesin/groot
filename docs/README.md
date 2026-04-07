@@ -52,12 +52,12 @@ This boilerplate ships a secure Express 5 + TypeScript server with a domain-driv
 
 ## Tech Stack
 
-| Area      | Technologies                                                        |
-| --------- | ------------------------------------------------------------------- |
-| Server    | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry, Boom           |
-| Client    | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
-| Tooling   | TypeScript 5.9, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
-| AI        | @mariozechner/pi-ai (unified LLM API with Zod structured output)    |
+| Area    | Technologies                                                       |
+| ------- | ------------------------------------------------------------------ |
+| Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry, Boom           |
+| Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
+| Tooling | TypeScript 5.9, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
+| AI      | @mariozechner/pi-ai (unified LLM API with Zod structured output)   |
 
 ## API Surface
 
@@ -96,16 +96,16 @@ Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
 
 ## Core Modules
 
-| Module | Location | Purpose |
-| ------ | -------- | ------- |
-| AI | `core/ai/` | Unified LLM client with Zod schema conversion |
-| Errors | `core/errors/` | Boom factory, error codes, Prisma error handler |
-| Jobs | `core/job/` | Queue client, queries, worker, dynamic registration |
-| KV | `core/kv/` | Keyv key-value storage with PostgreSQL |
-| Logger | `core/logger/` | Pino with AsyncLocalStorage context |
-| Storage | `core/storage/` | S3 file storage service |
-| Middlewares | `core/middlewares/` | Auth, validation, rate-limiting, error handling |
-| Utils | `core/utils/` | `createRouter`, `parseId`, validation helpers |
+| Module      | Location            | Purpose                                             |
+| ----------- | ------------------- | --------------------------------------------------- |
+| AI          | `core/ai/`          | Unified LLM client with Zod schema conversion       |
+| Errors      | `core/errors/`      | Boom factory, error codes, Prisma error handler     |
+| Jobs        | `core/job/`         | Queue client, queries, worker, dynamic registration |
+| KV          | `core/kv/`          | Keyv key-value storage with PostgreSQL              |
+| Logger      | `core/logger/`      | Pino with AsyncLocalStorage context                 |
+| Storage     | `core/storage/`     | S3 file storage service                             |
+| Middlewares | `core/middlewares/` | Auth, validation, rate-limiting, error handling     |
+| Utils       | `core/utils/`       | `createRouter`, `parseId`, validation helpers       |
 
 ## Next Steps
 

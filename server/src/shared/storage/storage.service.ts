@@ -2,6 +2,7 @@ import type { Readable } from "node:stream";
 import pLimit from "p-limit";
 import { StorageSystem } from "@/core/storage";
 import { Boom } from "@/core/errors";
+import { getContentType } from "@/shared/storage/storage.utils";
 
 export interface FileInfo {
   key: string;
@@ -264,25 +265,4 @@ export async function renameFile(params: { oldPath: string; newPath: string }): 
   }
 
   return { newPath: params.newPath };
-}
-
-function getContentType(fileName: string): string {
-  const extension = fileName.split(".").pop()?.toLowerCase();
-  const map: Record<string, string> = {
-    pdf: "application/pdf",
-    json: "application/json",
-    csv: "text/csv",
-    txt: "text/plain",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    svg: "image/svg+xml",
-    html: "text/html",
-    xml: "application/xml",
-  };
-  if (!extension) {
-    return "application/octet-stream";
-  }
-  return map[extension] ?? "application/octet-stream";
 }

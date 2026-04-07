@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
-import * as AISystem from "@/shared/ai/ai.service";
+import * as AIService from "@/shared/ai/ai.service";
+import * as AIUsageService from "@/shared/ai/ai-usage.service";
+import * as AIConversationService from "@/shared/ai/ai-conversation.service";
 import type {
   ChatDTO,
   UsageQueryDTO,
@@ -13,7 +15,7 @@ import { Boom } from "@/core/errors";
 export async function chat(req: Request) {
   const payload = req.body as ChatDTO;
   const userId = req.user?.userId;
-  return await AISystem.chat({ input: payload, userId });
+  return await AIService.chat({ input: payload, userId });
 }
 
 export async function chatStream(req: Request, res: Response) {
@@ -25,7 +27,7 @@ export async function chatStream(req: Request, res: Response) {
   res.setHeader("Connection", "keep-alive");
 
   try {
-    for await (const chunk of AISystem.chatStream({ input: payload, userId })) {
+    for await (const chunk of AIService.chatStream({ input: payload, userId })) {
       res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
     }
     res.write("data: [DONE]\n\n");
@@ -38,25 +40,25 @@ export async function chatStream(req: Request, res: Response) {
 }
 
 export async function getModels() {
-  return await AISystem.getModels();
+  return await AIService.getModels();
 }
 
 export async function getUsage(req: Request) {
   const userId = req.user?.userId;
   const query = req.query as unknown as UsageQueryDTO;
-  return await AISystem.getUsage({ userId, params: query });
+  return await AIUsageService.getUsage({ userId, params: query });
 }
 
 export async function getUsageRecords(req: Request) {
   const userId = req.user?.userId;
   const query = req.query as unknown as UsageQueryDTO;
-  return await AISystem.getUsageRecords({ userId, params: query });
+  return await AIUsageService.getUsageRecords({ userId, params: query });
 }
 
 export async function listConversations(req: Request) {
   const userId = req.user?.userId;
   const query = req.query as unknown as ListConversationsQueryDTO;
-  return await AISystem.listConversations({
+  return await AIConversationService.listConversations({
     userId,
     limit: query.limit,
     offset: query.offset,
@@ -66,7 +68,7 @@ export async function listConversations(req: Request) {
 export async function getConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
-  const conversation = await AISystem.getConversation({ id, userId });
+  const conversation = await AIConversationService.getConversation({ id, userId });
 
   if (!conversation) {
     throw Boom.notFound("Conversation not found");
@@ -79,14 +81,18 @@ export async function createConversation(req: Request, res: Response) {
   const userId = req.user?.userId;
   const payload = req.body as CreateConversationDTO;
   res.status(201);
-  return await AISystem.createConversation({ data: payload, userId });
+  return await AIConversationService.createConversation({ data: payload, userId });
 }
 
 export async function updateConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
   const payload = req.body as UpdateConversationDTO;
-  const conversation = await AISystem.updateConversation({ id, data: payload, userId });
+  const conversation = await AIConversationService.updateConversation({
+    id,
+    data: payload,
+    userId,
+  });
 
   if (!conversation) {
     throw Boom.notFound("Conversation not found");
@@ -98,7 +104,7 @@ export async function updateConversation(req: Request) {
 export async function deleteConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
-  const deleted = await AISystem.deleteConversation({ id, userId });
+  const deleted = await AIConversationService.deleteConversation({ id, userId });
 
   if (!deleted) {
     throw Boom.notFound("Conversation not found");

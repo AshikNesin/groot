@@ -90,13 +90,13 @@ logger.info({ userId }, "User action");
 
 **Modularized pg-boss** (`core/job/`):
 
-| Module | Purpose |
-| ------ | ------- |
-| `config.ts` | Environment configuration |
-| `client.ts` | PgBoss singleton |
-| `queue.ts` | Job queueing/scheduling |
-| `queries.ts` | Job inspection |
-| `worker.ts` | Handler registration |
+| Module       | Purpose                   |
+| ------------ | ------------------------- |
+| `config.ts`  | Environment configuration |
+| `client.ts`  | PgBoss singleton          |
+| `queue.ts`   | Job queueing/scheduling   |
+| `queries.ts` | Job inspection            |
+| `worker.ts`  | Handler registration      |
 
 **Dynamic Registration**:
 
@@ -237,15 +237,15 @@ export async function create(req: Request, res: Response) {
 
 ### UI Components (26 components)
 
-| Category | Components |
-|----------|------------|
-| Forms | Input, Textarea, Select, Checkbox, Switch, Form |
-| Data | Table, Badge, Pagination |
-| Feedback | Alert, Progress, LoadingSpinner, LoadingSkeleton |
-| Overlays | Dialog, Sheet, Popover, DropdownMenu |
-| Layout | PageLayout, PageHeader, PageContainer, Section |
-| Navigation | Tabs, Breadcrumb |
-| Utility | Button, Card, Separator, EmptyState, ErrorState |
+| Category   | Components                                       |
+| ---------- | ------------------------------------------------ |
+| Forms      | Input, Textarea, Select, Checkbox, Switch, Form  |
+| Data       | Table, Badge, Pagination                         |
+| Feedback   | Alert, Progress, LoadingSpinner, LoadingSkeleton |
+| Overlays   | Dialog, Sheet, Popover, DropdownMenu             |
+| Layout     | PageLayout, PageHeader, PageContainer, Section   |
+| Navigation | Tabs, Breadcrumb                                 |
+| Utility    | Button, Card, Separator, EmptyState, ErrorState  |
 
 ### API Client
 
@@ -363,29 +363,29 @@ GEMINI_API_KEY=...
 
 ## API Endpoints
 
-| Prefix | Purpose | Auth |
-|--------|---------|------|
-| `/api/v1/auth` | Login, logout, users | Mixed |
-| `/api/v1/passkey` | Passkey registration/auth | Mixed |
-| `/api/v1/todos` | CRUD operations | JWT |
-| `/api/v1/jobs` | Background job management | JWT |
-| `/api/v1/storage` | File operations | JWT |
-| `/api/v1/settings` | App settings | JWT |
-| `/api/v1/ai` | AI inference | JWT |
-| `/api/v1/public/files` | Public file sharing | None |
+| Prefix                 | Purpose                   | Auth  |
+| ---------------------- | ------------------------- | ----- |
+| `/api/v1/auth`         | Login, logout, users      | Mixed |
+| `/api/v1/passkey`      | Passkey registration/auth | Mixed |
+| `/api/v1/todos`        | CRUD operations           | JWT   |
+| `/api/v1/jobs`         | Background job management | JWT   |
+| `/api/v1/storage`      | File operations           | JWT   |
+| `/api/v1/settings`     | App settings              | JWT   |
+| `/api/v1/ai`           | AI inference              | JWT   |
+| `/api/v1/public/files` | Public file sharing       | None  |
 
 ---
 
 ## Key Patterns
 
-| Pattern | Description |
-|---------|-------------|
-| Feature modules | Self-contained with routes, controller, service, validation |
-| Functional controllers | Simple async functions returning values |
-| createRouter | Auto-wraps handlers with response middleware |
-| Boom errors | Factory methods for HTTP errors |
-| Dynamic job registration | Jobs registered in feature modules |
-| Zod validation | Input validation at system boundaries |
+| Pattern                  | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
+| Feature modules          | Self-contained with routes, controller, service, validation |
+| Functional controllers   | Simple async functions returning values                     |
+| createRouter             | Auto-wraps handlers with response middleware                |
+| Boom errors              | Factory methods for HTTP errors                             |
+| Dynamic job registration | Jobs registered in feature modules                          |
+| Zod validation           | Input validation at system boundaries                       |
 
 ---
 

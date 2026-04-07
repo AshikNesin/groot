@@ -6,14 +6,14 @@ Pg-boss powers asynchronous work with a modularized, dynamically-registered job 
 
 The job system is split into focused modules:
 
-| Module | File | Purpose |
-| ------ | ---- | ------- |
-| Config | `core/job/config.ts` | Environment-based configuration |
-| Client | `core/job/client.ts` | PgBoss singleton instance |
-| Queue | `core/job/queue.ts` | Job queueing and scheduling |
-| Queries | `core/job/queries.ts` | Job inspection and management |
-| Worker | `core/job/worker.ts` | Handler registration and execution |
-| Error Handler | `core/job/error-handler.ts` | Sentry capture + logging |
+| Module        | File                        | Purpose                            |
+| ------------- | --------------------------- | ---------------------------------- |
+| Config        | `core/job/config.ts`        | Environment-based configuration    |
+| Client        | `core/job/client.ts`        | PgBoss singleton instance          |
+| Queue         | `core/job/queue.ts`         | Job queueing and scheduling        |
+| Queries       | `core/job/queries.ts`       | Job inspection and management      |
+| Worker        | `core/job/worker.ts`        | Handler registration and execution |
+| Error Handler | `core/job/error-handler.ts` | Sentry capture + logging           |
 
 ## Job Registration
 
@@ -46,10 +46,10 @@ export function registerJobHandlers(): void {
 
 ## Available Jobs
 
-| Job | Handler | Description |
-| --- | ------- | ----------- |
+| Job            | Handler                | Description                                                  |
+| -------------- | ---------------------- | ------------------------------------------------------------ |
 | `todo-cleanup` | `jobs/todo-cleanup.ts` | Deletes completed todos older than `daysToKeep` (default 30) |
-| `todo-summary` | `jobs/todo-summary.ts` | Logs aggregate todo stats |
+| `todo-summary` | `jobs/todo-summary.ts` | Logs aggregate todo stats                                    |
 
 Each handler receives `{ jobId, data }` from PgBoss.
 
@@ -85,17 +85,17 @@ curl -H "Authorization: Bearer <token>" \
 
 ## Job API Endpoints
 
-| Endpoint | Method | Description |
-| -------- | ------ | ----------- |
-| `/api/v1/jobs` | POST | Queue a new job |
-| `/api/v1/jobs/schedule` | POST | Schedule a job with cron |
-| `/api/v1/jobs/available` | GET | List valid job names |
-| `/api/v1/jobs` | GET | Filter jobs by state/name |
-| `/api/v1/jobs/stats` | GET | Aggregated counts per queue/state |
-| `/api/v1/jobs/state/failed` | DELETE | Purge all failed jobs |
-| `/api/v1/jobs/:name/:id` | GET | Inspect specific job |
-| `/api/v1/jobs/:name/:id/retry` | POST | Retry a failed job |
-| `/api/v1/jobs/:name/:id/cancel` | POST | Cancel a queued job |
+| Endpoint                        | Method | Description                       |
+| ------------------------------- | ------ | --------------------------------- |
+| `/api/v1/jobs`                  | POST   | Queue a new job                   |
+| `/api/v1/jobs/schedule`         | POST   | Schedule a job with cron          |
+| `/api/v1/jobs/available`        | GET    | List valid job names              |
+| `/api/v1/jobs`                  | GET    | Filter jobs by state/name         |
+| `/api/v1/jobs/stats`            | GET    | Aggregated counts per queue/state |
+| `/api/v1/jobs/state/failed`     | DELETE | Purge all failed jobs             |
+| `/api/v1/jobs/:name/:id`        | GET    | Inspect specific job              |
+| `/api/v1/jobs/:name/:id/retry`  | POST   | Retry a failed job                |
+| `/api/v1/jobs/:name/:id/cancel` | POST   | Cancel a queued job               |
 
 All endpoints require JWT authentication.
 
@@ -103,14 +103,14 @@ All endpoints require JWT authentication.
 
 Environment variables (see `core/job/config.ts`):
 
-| Variable | Default | Description |
-| -------- | ------- | ----------- |
-| `ENABLE_JOB_QUEUE` | `true` | Enable/disable job processing |
-| `JOB_CONCURRENCY` | `5` | Workers per job |
-| `JOB_POLL_INTERVAL` | `2000` | Worker poll interval (ms) |
-| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | `86400` | Archive window |
-| `JOB_DELETE_ARCHIVED_AFTER_SECONDS` | `604800` | Deletion window |
-| `JOB_MONITOR_STATE_INTERVAL` | `30000` | Metrics interval |
+| Variable                              | Default  | Description                   |
+| ------------------------------------- | -------- | ----------------------------- |
+| `ENABLE_JOB_QUEUE`                    | `true`   | Enable/disable job processing |
+| `JOB_CONCURRENCY`                     | `5`      | Workers per job               |
+| `JOB_POLL_INTERVAL`                   | `2000`   | Worker poll interval (ms)     |
+| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | `86400`  | Archive window                |
+| `JOB_DELETE_ARCHIVED_AFTER_SECONDS`   | `604800` | Deletion window               |
+| `JOB_MONITOR_STATE_INTERVAL`          | `30000`  | Metrics interval              |
 
 ## Monitoring
 

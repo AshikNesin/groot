@@ -5,6 +5,7 @@ import { prisma } from "@/core/database";
 import * as StorageFileService from "@/shared/storage/storage.service";
 import { Boom, HttpError } from "@/core/errors";
 import { env } from "@/core/env";
+import { getContentType } from "@/shared/storage/storage.utils";
 
 export interface CreatePublicShareParams {
   filePath: string;
@@ -41,7 +42,7 @@ export async function createShare(params: CreatePublicShareParams): Promise<Publ
   const expiresAt = dayjs().add(expiresInHours, "hour").toDate();
 
   const passwordHash = password ? await bcrypt.hash(password, 10) : null;
-  const contentType = inferContentType(metadata.fileName);
+  const contentType = getContentType(metadata.fileName);
 
   const share = await prisma.publicFileShare.create({
     data: {
@@ -233,25 +234,4 @@ function formatShare(
     isExpired,
     isAccessLimitReached,
   };
-}
-
-function inferContentType(fileName: string): string {
-  const extension = fileName.split(".").pop()?.toLowerCase();
-  const map: Record<string, string> = {
-    pdf: "application/pdf",
-    json: "application/json",
-    csv: "text/csv",
-    txt: "text/plain",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    svg: "image/svg+xml",
-    html: "text/html",
-    xml: "application/xml",
-  };
-  if (!extension) {
-    return "application/octet-stream";
-  }
-  return map[extension] ?? "application/octet-stream";
 }

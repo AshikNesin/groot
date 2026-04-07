@@ -148,10 +148,10 @@ export async function findById({ id }: { id: number }) {
 
 Defined in `todo.jobs.ts`:
 
-| Job | Description |
-| --- | --- |
+| Job            | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
 | `todo-cleanup` | Deletes completed todos older than `daysToKeep` (default 30) |
-| `todo-summary` | Logs aggregate stats (total, completed, pending) |
+| `todo-summary` | Logs aggregate stats (total, completed, pending)             |
 
 ```typescript
 // todo.jobs.ts

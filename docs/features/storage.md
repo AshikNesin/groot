@@ -38,23 +38,23 @@ server/src/core/storage/
 
 All endpoints require JWT auth unless noted.
 
-| Method   | Path                                                        | Notes                                                  |
-| -------- | ----------------------------------------------------------- | ------------------------------------------------------ |
-| GET      | `/api/v1/storage/files?prefix=docs/&delimiter=/`            | List files + pseudo folders                            |
-| POST     | `/api/v1/storage/files/upload` _(multipart)_                | Single upload with optional `filePath`                 |
-| POST     | `/api/v1/storage/files/bulk-upload` _(multipart)_           | Up to 50 files (`files` array)                         |
-| GET      | `/api/v1/storage/files/download?filePath=docs/invoice.pdf`  | Streams file contents                                  |
-| DELETE   | `/api/v1/storage/files`                                     | Body: `{ "filePaths": ["docs/invoice.pdf"] }`          |
-| GET      | `/api/v1/storage/files/metadata?filePath=docs/invoice.pdf`  | Size + modified timestamp                              |
-| POST     | `/api/v1/storage/folders`                                   | Body: `{ "folderPath": "docs/2025/" }`                 |
-| DELETE   | `/api/v1/storage/folders/:folderPath`                       | Removes folder recursively                             |
-| PUT      | `/api/v1/storage/files/rename`                              | Body: `{ "oldPath": "a.pdf", "newPath": "b.pdf" }`     |
-| POST     | `/api/v1/storage/shares`                                    | Create public share (optional password, expiry)        |
-| GET      | `/api/v1/storage/shares?filePath=docs/a.pdf`                | List existing shares for a file                        |
-| DELETE   | `/api/v1/storage/shares/:shareId`                           | Soft-delete share                                       |
-| **GET**  | `/api/v1/public/files/:shareId` _(no auth)_                 | Stream shared file (rate limited)                      |
-| **GET**  | `/api/v1/public/files/:shareId/info` _(no auth)_            | Metadata for share preview                              |
-| **POST** | `/api/v1/public/files/:shareId/verify-password` _(no auth)_ | Body `{ password: "..." }` for protected shares        |
+| Method   | Path                                                        | Notes                                              |
+| -------- | ----------------------------------------------------------- | -------------------------------------------------- |
+| GET      | `/api/v1/storage/files?prefix=docs/&delimiter=/`            | List files + pseudo folders                        |
+| POST     | `/api/v1/storage/files/upload` _(multipart)_                | Single upload with optional `filePath`             |
+| POST     | `/api/v1/storage/files/bulk-upload` _(multipart)_           | Up to 50 files (`files` array)                     |
+| GET      | `/api/v1/storage/files/download?filePath=docs/invoice.pdf`  | Streams file contents                              |
+| DELETE   | `/api/v1/storage/files`                                     | Body: `{ "filePaths": ["docs/invoice.pdf"] }`      |
+| GET      | `/api/v1/storage/files/metadata?filePath=docs/invoice.pdf`  | Size + modified timestamp                          |
+| POST     | `/api/v1/storage/folders`                                   | Body: `{ "folderPath": "docs/2025/" }`             |
+| DELETE   | `/api/v1/storage/folders/:folderPath`                       | Removes folder recursively                         |
+| PUT      | `/api/v1/storage/files/rename`                              | Body: `{ "oldPath": "a.pdf", "newPath": "b.pdf" }` |
+| POST     | `/api/v1/storage/shares`                                    | Create public share (optional password, expiry)    |
+| GET      | `/api/v1/storage/shares?filePath=docs/a.pdf`                | List existing shares for a file                    |
+| DELETE   | `/api/v1/storage/shares/:shareId`                           | Soft-delete share                                  |
+| **GET**  | `/api/v1/public/files/:shareId` _(no auth)_                 | Stream shared file (rate limited)                  |
+| **GET**  | `/api/v1/public/files/:shareId/info` _(no auth)_            | Metadata for share preview                         |
+| **POST** | `/api/v1/public/files/:shareId/verify-password` _(no auth)_ | Body `{ password: "..." }` for protected shares    |
 
 ### Example Requests
 

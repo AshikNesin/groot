@@ -55,16 +55,12 @@ describe("Todo Routes", () => {
   });
 
   it("POST /todos with valid data creates todo", async () => {
-    const res = await request(app)
-      .post("/todos")
-      .send({ title: "New Todo" });
+    const res = await request(app).post("/todos").send({ title: "New Todo" });
     expect(res.status).toBe(201);
   });
 
   it("POST /todos with invalid data returns 400", async () => {
-    const res = await request(app)
-      .post("/todos")
-      .send({});
+    const res = await request(app).post("/todos").send({});
     expect(res.status).toBe(400);
   });
 });

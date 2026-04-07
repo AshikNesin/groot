@@ -111,6 +111,7 @@ pnpm test:e2e         # Run Playwright E2E tests
 ### Feature Module Structure
 
 Each feature is self-contained with:
+
 - `*.routes.ts` - Route definitions using `createRouter()`
 - `*.controller.ts` - Request handlers (simple async functions)
 - `*.service.ts` - Business logic

@@ -30,10 +30,22 @@ router.get("/usage/records", validateQuery(usageQuerySchema), aiController.getUs
 
 // ── Conversations (Require Auth) ─────────────────────────────────────────────
 
-router.get("/conversations", validateQuery(listConversationsQuerySchema), aiController.listConversations);
-router.post("/conversations", validateBody(createConversationSchema), aiController.createConversation);
+router.get(
+  "/conversations",
+  validateQuery(listConversationsQuerySchema),
+  aiController.listConversations,
+);
+router.post(
+  "/conversations",
+  validateBody(createConversationSchema),
+  aiController.createConversation,
+);
 router.get("/conversations/:id", aiController.getConversation);
-router.patch("/conversations/:id", validateBody(updateConversationSchema), aiController.updateConversation);
+router.patch(
+  "/conversations/:id",
+  validateBody(updateConversationSchema),
+  aiController.updateConversation,
+);
 router.delete("/conversations/:id", aiController.deleteConversation);
 
 export default router;
