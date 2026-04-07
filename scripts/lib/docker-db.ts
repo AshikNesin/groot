@@ -9,7 +9,7 @@ import { promisify } from "node:util";
 
 const execAsync = promisify(exec);
 
-const CONTAINER_NAME = "local-dev-postgres";
+const CONTAINER_NAME = "groot-local-dev-db";
 const POSTGRES_USER = "postgres";
 const POSTGRES_PASSWORD = "postgres";
 const DEFAULT_PORT = 5433;
