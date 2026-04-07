@@ -9,6 +9,10 @@ export {
   PrismaHandler,
 } from "@/core/errors/prisma-error-handler";
 
+import { Boom } from "@/core/errors/boom";
+import { ErrorCode } from "@/core/errors/error-codes";
+import { PrismaHandler } from "@/core/errors/prisma-error-handler";
+
 /**
  * Consolidated namespace for all error functionality.
  */
