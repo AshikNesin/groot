@@ -162,12 +162,20 @@ async function startContainer(port: number): Promise<void> {
   const exists = await containerExists(CONTAINER_NAME);
 
   if (exists) {
-    const running = await isContainerRunning(CONTAINER_NAME);
-    if (!running) {
-      console.log(`   Starting existing container "${CONTAINER_NAME}"...`);
-      await execAsync(`docker start ${CONTAINER_NAME}`);
+    // PG18+ changed the data directory layout — old containers with /var/lib/postgresql/data mount
+    // will crash. Detect and recreate them.
+    if (await isOldVolumeMount(CONTAINER_NAME)) {
+      console.log(`   Recreating container for PostgreSQL 18+ compatibility...`);
+      await removeContainer();
+      // Fall through to create a new container below
+    } else {
+      const running = await isContainerRunning(CONTAINER_NAME);
+      if (!running) {
+        console.log(`   Starting existing container "${CONTAINER_NAME}"...`);
+        await execAsync(`docker start ${CONTAINER_NAME}`);
+      }
+      return;
     }
-    return;
   }
 
   console.log(`   Creating PostgreSQL container "${CONTAINER_NAME}"...`);
@@ -179,15 +187,30 @@ async function startContainer(port: number): Promise<void> {
 			-e POSTGRES_USER=${POSTGRES_USER} \
 			-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
 			-p ${port}:5432 \
-			-v ${CONTAINER_NAME}-data:/var/lib/postgresql/data \
+			-v ${CONTAINER_NAME}-data:/var/lib/postgresql \
 			${POSTGRES_IMAGE}`,
   );
 }
 
 /**
+ * Check if the container uses the old PG17 volume mount path (/var/lib/postgresql/data)
+ * PG18+ changed the data directory layout and requires mounting at /var/lib/postgresql
+ */
+async function isOldVolumeMount(containerName: string): Promise<boolean> {
+  try {
+    const { stdout } = await execAsync(
+      `docker inspect ${containerName} --format '{{range .Mounts}}{{.Destination}} {{end}}'`,
+    );
+    return stdout.includes("/var/lib/postgresql/data");
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Wait for PostgreSQL to be ready to accept connections
  */
-async function waitForPostgres(port: number, maxAttempts = 30): Promise<void> {
+async function waitForPostgres(port: number, maxAttempts = 60): Promise<void> {
   const pgReadyCmd = `docker exec ${CONTAINER_NAME} pg_isready -U ${POSTGRES_USER}`;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -195,10 +218,21 @@ async function waitForPostgres(port: number, maxAttempts = 30): Promise<void> {
       await execAsync(pgReadyCmd);
       return;
     } catch {
+      if (attempt % 10 === 0) {
+        console.log(`   Waiting for PostgreSQL... (${attempt}/${maxAttempts})`);
+      }
       if (attempt === maxAttempts) {
+        // Show container logs to help diagnose the issue
+        try {
+          const { stdout } = await execAsync(`docker logs ${CONTAINER_NAME} --tail 30`);
+          console.error(
+            `\n   Container logs:\n${stdout.split("\n").map((l) => "   " + l).join("\n")}\n`,
+          );
+        } catch {
+          // ignore log retrieval failure
+        }
         throw new Error(`PostgreSQL failed to start after ${maxAttempts} attempts`);
       }
-      // Wait 500ms before next attempt
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
