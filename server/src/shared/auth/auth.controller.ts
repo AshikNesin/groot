@@ -7,7 +7,7 @@ import { Boom } from "@/core/errors";
  * Handle user login
  */
 export async function login(req: Request) {
-  const body = (req.validated?.body || req.body) as LoginDTO;
+  const body = req.body as LoginDTO;
   return await AuthService.login(body);
 }
 
@@ -35,7 +35,7 @@ export async function getCurrentUser(req: Request) {
  * Create a new user (admin only)
  */
 export async function createUser(req: Request) {
-  const body = (req.validated?.body || req.body) as CreateUserDTO;
+  const body = req.body as CreateUserDTO;
   return await AuthService.createUser(body);
 }
 

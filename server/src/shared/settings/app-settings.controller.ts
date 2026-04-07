@@ -22,7 +22,7 @@ export async function getByKey(req: Request) {
  */
 export async function upsert(req: Request) {
   const { key } = req.params;
-  const payload = (req.validated?.body || req.body) as UpsertAppSettingDTO;
+  const payload = req.body as UpsertAppSettingDTO;
   return await AppSettingsService.upsert({ key, data: payload });
 }
 

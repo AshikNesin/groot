@@ -27,7 +27,7 @@ export async function verifyRegistration(req: Request) {
   if (!userId) {
     throw Boom.unauthorized("Authentication required");
   }
-  const payload = (req.validated?.body || req.body) as VerifyRegistrationDTO;
+  const payload = req.body as VerifyRegistrationDTO;
 
   return await PasskeySystem.verifyRegistration({
     userId,
@@ -40,7 +40,7 @@ export async function verifyRegistration(req: Request) {
  * Generate options for passkey authentication
  */
 export async function generateAuthenticationOptions(req: Request) {
-  const body = (req.validated?.body || req.body) as GenerateAuthenticationOptionsDTO;
+  const body = req.body as GenerateAuthenticationOptionsDTO;
   return await PasskeySystem.generateAuthenticationOptions({ email: body?.email });
 }
 
@@ -48,7 +48,7 @@ export async function generateAuthenticationOptions(req: Request) {
  * Verify passkey authentication
  */
 export async function verifyAuthentication(req: Request) {
-  const body = (req.validated?.body || req.body) as VerifyAuthenticationDTO;
+  const body = req.body as VerifyAuthenticationDTO;
   return await PasskeySystem.verifyAuthentication({
     email: body.email,
     response: body.response,
@@ -89,7 +89,7 @@ export async function updatePasskeyName(req: Request) {
   }
 
   const passkeyId = Number(req.params.id);
-  const payload = (req.validated?.body || req.body) as UpdatePasskeyNameDTO;
+  const payload = req.body as UpdatePasskeyNameDTO;
 
   return await PasskeySystem.updatePasskeyName({
     userId,

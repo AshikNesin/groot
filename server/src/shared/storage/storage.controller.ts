@@ -14,7 +14,7 @@ import type {
 import { Boom } from "@/core/errors";
 
 export async function listFiles(req: Request) {
-  const query = (req.validated?.query ?? req.query) as ListFilesDTO;
+  const query = req.query as unknown as ListFilesDTO;
   return await StorageFileService.listFiles({
     prefix: query.prefix,
     delimiter: query.delimiter,
@@ -23,7 +23,7 @@ export async function listFiles(req: Request) {
 
 export async function uploadFile(req: Request) {
   const file = req.file;
-  const body = req.validated?.body ?? req.body;
+  const body = req.body;
 
   if (!file) {
     throw Boom.badRequest("No file uploaded");
@@ -38,7 +38,7 @@ export async function uploadFile(req: Request) {
 }
 
 export async function downloadFile(req: Request, res: Response) {
-  const query = (req.validated?.query ?? req.query) as DownloadFileDTO;
+  const query = req.query as unknown as DownloadFileDTO;
   const file = await StorageFileService.downloadFile({
     filePath: query.filePath,
   });
@@ -49,21 +49,21 @@ export async function downloadFile(req: Request, res: Response) {
 }
 
 export async function deleteFiles(req: Request) {
-  const body = (req.validated?.body ?? req.body) as DeleteFilesDTO;
+  const body = req.body as DeleteFilesDTO;
   return await StorageFileService.deleteFiles({
     filePaths: body.filePaths,
   });
 }
 
 export async function getFileMetadata(req: Request) {
-  const query = (req.validated?.query ?? req.query) as GetFileMetadataDTO;
+  const query = req.query as unknown as GetFileMetadataDTO;
   return await StorageFileService.getFileMetadata({
     filePath: query.filePath,
   });
 }
 
 export async function createFolder(req: Request) {
-  const body = (req.validated?.body ?? req.body) as CreateFolderDTO;
+  const body = req.body as CreateFolderDTO;
   return await StorageFileService.createFolder({ folderPath: body.folderPath });
 }
 
@@ -77,7 +77,7 @@ export async function deleteFolder(req: Request<{ folderPath?: string }>) {
 }
 
 export async function renameFile(req: Request) {
-  const body = (req.validated?.body ?? req.body) as RenameFileDTO;
+  const body = req.body as RenameFileDTO;
   return await StorageFileService.renameFile({
     oldPath: body.oldPath,
     newPath: body.newPath,
@@ -105,12 +105,12 @@ export async function bulkUpload(req: Request) {
 }
 
 export async function createPublicShare(req: Request) {
-  const body = (req.validated?.body ?? req.body) as CreatePublicShareDTO;
+  const body = req.body as CreatePublicShareDTO;
   return await PublicShareService.createShare(body);
 }
 
 export async function listSharesForFile(req: Request) {
-  const query = (req.validated?.query ?? req.query) as ListSharesForFileDTO;
+  const query = req.query as unknown as ListSharesForFileDTO;
   return await PublicShareService.listSharesForFile({ filePath: query.filePath });
 }
 

@@ -1,7 +1,7 @@
 import { createRouter } from "@/core/utils/router.utils";
 import * as passkeyController from "@/shared/passkey/passkey.controller";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
-import { validate } from "@/core/middlewares/validation.middleware";
+import { validateBody } from "@/core/middlewares/validation.middleware";
 import {
   verifyRegistrationSchema,
   verifyAuthenticationSchema,
@@ -18,21 +18,21 @@ router.post("/register/options", jwtAuthMiddleware, passkeyController.generateRe
 router.post(
   "/register/verify",
   jwtAuthMiddleware,
-  validate(verifyRegistrationSchema),
+  validateBody(verifyRegistrationSchema),
   passkeyController.verifyRegistration,
 );
 
 // Generate authentication options (public endpoint)
 router.post(
   "/login/options",
-  validate(generateAuthenticationOptionsSchema),
+  validateBody(generateAuthenticationOptionsSchema),
   passkeyController.generateAuthenticationOptions,
 );
 
 // Verify authentication (public endpoint)
 router.post(
   "/login/verify",
-  validate(verifyAuthenticationSchema),
+  validateBody(verifyAuthenticationSchema),
   passkeyController.verifyAuthentication,
 );
 
@@ -46,7 +46,7 @@ router.delete("/:id", jwtAuthMiddleware, passkeyController.deletePasskey);
 router.patch(
   "/:id",
   jwtAuthMiddleware,
-  validate(updatePasskeyNameSchema),
+  validateBody(updatePasskeyNameSchema),
   passkeyController.updatePasskeyName,
 );
 

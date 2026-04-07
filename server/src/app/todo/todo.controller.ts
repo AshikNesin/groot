@@ -4,7 +4,7 @@ import type { CreateTodoDTO, UpdateTodoDTO } from "@/app/todo/todo.validation";
 import { parseId } from "@/core/utils/controller.utils";
 
 export async function create(req: Request, res: Response) {
-  const payload = (req.validated?.body || req.body) as CreateTodoDTO;
+  const payload = req.body as CreateTodoDTO;
   res.status(201);
   return await TodoService.create({ data: payload });
 }
@@ -20,7 +20,7 @@ export async function getById(req: Request) {
 
 export async function update(req: Request) {
   const id = parseId(req.params.id);
-  const payload = (req.validated?.body || req.body) as UpdateTodoDTO;
+  const payload = req.body as UpdateTodoDTO;
   return await TodoService.update({ id, data: payload });
 }
 

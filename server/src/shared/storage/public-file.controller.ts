@@ -40,7 +40,7 @@ export async function getPublicShareInfo(req: Request) {
 
 export async function verifySharePassword(req: Request) {
   const { shareId } = req.params;
-  const body: VerifySharePasswordDTO = req.validated?.body ?? req.body;
+  const body: VerifySharePasswordDTO = req.body;
 
   if (!shareId) {
     throw Boom.badRequest("Share ID is required");

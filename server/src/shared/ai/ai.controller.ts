@@ -11,13 +11,13 @@ import { parseId } from "@/core/utils/controller.utils";
 import { Boom } from "@/core/errors";
 
 export async function chat(req: Request) {
-  const payload = (req.validated?.body || req.body) as ChatDTO;
+  const payload = req.body as ChatDTO;
   const userId = req.user?.userId;
   return await AISystem.chat({ input: payload, userId });
 }
 
 export async function chatStream(req: Request, res: Response) {
-  const payload = (req.validated?.body || req.body) as ChatDTO;
+  const payload = req.body as ChatDTO;
   const userId = req.user?.userId;
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -43,19 +43,19 @@ export async function getModels() {
 
 export async function getUsage(req: Request) {
   const userId = req.user?.userId;
-  const query = (req.validated?.query || req.query) as UsageQueryDTO;
+  const query = req.query as unknown as UsageQueryDTO;
   return await AISystem.getUsage({ userId, params: query });
 }
 
 export async function getUsageRecords(req: Request) {
   const userId = req.user?.userId;
-  const query = (req.validated?.query || req.query) as UsageQueryDTO;
+  const query = req.query as unknown as UsageQueryDTO;
   return await AISystem.getUsageRecords({ userId, params: query });
 }
 
 export async function listConversations(req: Request) {
   const userId = req.user?.userId;
-  const query = (req.validated?.query || req.query) as ListConversationsQueryDTO;
+  const query = req.query as unknown as ListConversationsQueryDTO;
   return await AISystem.listConversations({
     userId,
     limit: query.limit,
@@ -77,7 +77,7 @@ export async function getConversation(req: Request) {
 
 export async function createConversation(req: Request, res: Response) {
   const userId = req.user?.userId;
-  const payload = (req.validated?.body || req.body) as CreateConversationDTO;
+  const payload = req.body as CreateConversationDTO;
   res.status(201);
   return await AISystem.createConversation({ data: payload, userId });
 }
@@ -85,7 +85,7 @@ export async function createConversation(req: Request, res: Response) {
 export async function updateConversation(req: Request) {
   const userId = req.user?.userId;
   const id = parseId(req.params.id);
-  const payload = (req.validated?.body || req.body) as UpdateConversationDTO;
+  const payload = req.body as UpdateConversationDTO;
   const conversation = await AISystem.updateConversation({ id, data: payload, userId });
 
   if (!conversation) {
