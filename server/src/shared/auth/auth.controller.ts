@@ -1,21 +1,34 @@
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import * as AuthService from "@/shared/auth/auth.service";
 import type { LoginDTO, CreateUserDTO } from "@/shared/auth/auth.validation";
 import { Boom } from "@/core/errors";
+import { env } from "@/core/env";
 
 /**
  * Handle user login
  */
-export async function login(req: Request) {
+export async function login(req: Request, res: Response) {
   const body = req.body as LoginDTO;
-  return await AuthService.login(body);
+  const result = await AuthService.login(body);
+
+  const isProduction = env.NODE_ENV === "production";
+
+  res.cookie("token", result.token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: "/",
+  });
+
+  return result;
 }
 
 /**
  * Handle user logout (placeholder)
  */
-export async function logout(req: Request) {
-  // Logic for logout if needed (e.g., token revocation)
+export async function logout(req: Request, res: Response) {
+  res.clearCookie("token", { path: "/" });
   return { status: "logged out" };
 }
 
