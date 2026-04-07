@@ -28,15 +28,95 @@ export interface DockerDbResult {
 }
 
 /**
- * Check if Docker is available and running
+ * Check if Docker CLI is installed
  */
-export async function isDockerAvailable(): Promise<boolean> {
+async function isDockerCliInstalled(): Promise<boolean> {
+  try {
+    await execAsync("which docker");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if Docker daemon is running
+ */
+async function isDockerRunning(): Promise<boolean> {
   try {
     await execAsync("docker info");
     return true;
   } catch {
     return false;
   }
+}
+
+/**
+ * Start Docker daemon (Docker Desktop on macOS, systemctl on Linux)
+ */
+async function startDocker(): Promise<void> {
+  const platform = process.platform;
+
+  if (platform === "darwin") {
+    console.log("   Starting Docker Desktop...");
+    await execAsync("open -a Docker");
+  } else if (platform === "linux") {
+    console.log("   Starting Docker service...");
+    // Try systemctl first, fall back to service command
+    try {
+      await execAsync("systemctl start docker");
+    } catch {
+      await execAsync("service docker start");
+    }
+  } else {
+    throw new Error(`Unsupported platform for auto-starting Docker: ${platform}`);
+  }
+}
+
+/**
+ * Wait for Docker daemon to be ready
+ */
+async function waitForDocker(maxAttempts = 120): Promise<void> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (await isDockerRunning()) return;
+    if (attempt % 10 === 0) {
+      console.log(`   Still waiting for Docker... (${attempt}s)`);
+    }
+    if (attempt === maxAttempts) {
+      throw new Error("Docker failed to start. Please start Docker manually and try again.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
+
+/**
+ * Ensure Docker is available and running.
+ * Throws if CLI is not installed, auto-starts daemon if not running.
+ */
+export async function ensureDockerReady(): Promise<void> {
+  if (!(await isDockerCliInstalled())) {
+    throw new Error(
+      "Docker is not installed. Please install Docker to use local development:\n" +
+        "  macOS:  https://docs.docker.com/desktop/install/mac-install/\n" +
+        "  Linux:  https://docs.docker.com/engine/install/",
+    );
+  }
+
+  if (!(await isDockerRunning())) {
+    console.log("\n🐳 Docker is not running. Starting it now...\n");
+    await startDocker();
+    console.log("   Waiting for Docker to be ready...");
+    await waitForDocker();
+    console.log("   Docker is ready!\n");
+  }
+}
+
+/**
+ * Check if Docker is available and running
+ */
+export async function isDockerAvailable(): Promise<boolean> {
+  if (!(await isDockerCliInstalled())) return false;
+  return isDockerRunning();
 }
 
 /**
@@ -208,6 +288,9 @@ async function removeContainer(): Promise<void> {
 export async function ensurePostgresContainer(options: DockerDbOptions): Promise<DockerDbResult> {
   const { projectName, port = DEFAULT_PORT } = options;
   const dbName = sanitizeDbName(projectName);
+
+  // Ensure Docker is installed and running
+  await ensureDockerReady();
 
   // Start container if needed
   await startContainer(port);

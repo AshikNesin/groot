@@ -1,12 +1,8 @@
 export { HttpError } from "@/core/errors/http-error";
 export type { HttpErrorOutput } from "@/core/errors/http-error";
 export { Boom } from "@/core/errors/boom";
-export {
-  ErrorCode,
-  ErrorCodeEnum,
-  type ErrorCodeKey,
-  type ErrorCodeValue,
-} from "@/core/errors/error-codes";
+export { ErrorCode } from "@/core/errors/error-codes";
+export type { ErrorCodeEnum, ErrorCodeKey, ErrorCodeValue } from "@/core/errors/error-codes";
 export {
   isPrismaError,
   handlePrismaError,
