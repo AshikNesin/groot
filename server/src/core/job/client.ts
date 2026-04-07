@@ -44,9 +44,12 @@ export const stopJobQueue = async (): Promise<void> => {
   try {
     const { stopWorkers } = await import("@/core/job/worker");
     await stopWorkers();
-    await bossInstance.stop();
-    logger.info("Job queue stopped");
   } finally {
-    bossInstance = null;
+    try {
+      await bossInstance.stop();
+      logger.info("Job queue stopped");
+    } finally {
+      bossInstance = null;
+    }
   }
 };

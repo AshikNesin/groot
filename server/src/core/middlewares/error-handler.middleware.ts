@@ -79,12 +79,19 @@ export function errorHandlerMiddleware(
 
   // Handle Zod validation errors
   if (error instanceof ZodError) {
-    formatZodResponse(res, error, requestLogger, errorContext.request.body, req.method, req.path);
+    return formatZodResponse(
+      res,
+      error,
+      requestLogger,
+      errorContext.request.body,
+      req.method,
+      req.path,
+    );
   }
 
   // Handle Prisma errors
   if (isPrismaError(error)) {
-    formatPrismaResponse(res, error);
+    return formatPrismaResponse(res, error);
   }
   // Handle HttpError (all Boom-created errors)
   if (Boom.isHttpError(error)) {

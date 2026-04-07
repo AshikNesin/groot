@@ -7,6 +7,7 @@ import type {
   GenerateAuthenticationOptionsDTO,
 } from "@/shared/passkey/passkey.validation";
 import { Boom } from "@/core/errors";
+import { parseId } from "@/core/utils/controller.utils";
 
 /**
  * Generate options for passkey registration
@@ -74,7 +75,7 @@ export async function deletePasskey(req: Request) {
   if (!userId) {
     throw Boom.unauthorized("Authentication required");
   }
-  const passkeyId = Number(req.params.id);
+  const passkeyId = parseId(req.params.id);
 
   return await PasskeySystem.deletePasskey({ userId, passkeyId });
 }
@@ -88,7 +89,7 @@ export async function updatePasskeyName(req: Request) {
     throw Boom.unauthorized("Authentication required");
   }
 
-  const passkeyId = Number(req.params.id);
+  const passkeyId = parseId(req.params.id);
   const payload = req.body as UpdatePasskeyNameDTO;
 
   return await PasskeySystem.updatePasskeyName({

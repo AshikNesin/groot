@@ -9,13 +9,14 @@ import {
   listConversationsQuerySchema,
 } from "@/shared/ai/ai.validation";
 import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
+import { aiRateLimiter, aiStreamRateLimiter } from "@/core/middlewares/rate-limit.middleware";
 
 const router = createRouter();
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
 
-router.post("/chat", validateBody(chatSchema), aiController.chat);
-router.post("/chat/stream", validateBody(chatSchema), aiController.chatStream);
+router.post("/chat", aiRateLimiter, validateBody(chatSchema), aiController.chat);
+router.post("/chat/stream", aiStreamRateLimiter, validateBody(chatSchema), aiController.chatStream);
 
 // ── Models ───────────────────────────────────────────────────────────────────
 

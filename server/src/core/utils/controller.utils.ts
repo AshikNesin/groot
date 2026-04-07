@@ -32,6 +32,17 @@ export function parseBoolean(value: string | undefined, defaultValue = false): b
 }
 
 /**
+ * Parse and sanitize a limit query parameter
+ * Returns a positive integer clamped to [1, maxLimit], or defaultValue if missing/invalid
+ */
+export function parseLimit(value: string | undefined, defaultValue = 50, maxLimit = 100): number {
+  if (value === undefined) return defaultValue;
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 1) return defaultValue;
+  return Math.min(parsed, maxLimit);
+}
+
+/**
  * Parse pagination parameters
  */
 export function parsePagination(req: Request) {
@@ -76,6 +87,11 @@ export function extractFields<T extends Record<string, unknown>>(
   allowedFields: (keyof T)[],
 ): Partial<T> {
   const result: Partial<T> = {};
+
+  if (typeof data !== "object" || data === null) {
+    return result;
+  }
+
   const dataObj = data as Record<string, unknown>;
 
   for (const field of allowedFields) {

@@ -38,11 +38,12 @@ export function buildErrorContext(
       statusCode: res.statusCode,
       headersSent: res.headersSent,
     },
-    performance: requestDuration
-      ? {
-          requestDuration: `${requestDuration}ms`,
-        }
-      : undefined,
+    performance:
+      requestDuration != null
+        ? {
+            requestDuration: `${requestDuration}ms`,
+          }
+        : undefined,
     breadcrumbs: breadcrumbs.map((b) => ({
       timestamp: b.timestamp,
       category: b.category,

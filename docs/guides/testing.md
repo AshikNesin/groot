@@ -114,7 +114,7 @@ describe("Todo Jobs", () => {
 ### Prisma Mocking
 
 ```typescript
-import { vi } from "vitetest";
+import { vi } from "vitest";
 
 vi.mock("@/core/database", () => ({
   prisma: {

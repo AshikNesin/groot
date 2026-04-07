@@ -1,3 +1,4 @@
+import { Boom } from "@/core/errors";
 import { aiConversationModel } from "@/shared/ai/ai-usage.model";
 import type { CreateConversationDTO, UpdateConversationDTO } from "@/shared/ai/ai.validation";
 
@@ -44,6 +45,10 @@ export async function updateConversation({
   data: UpdateConversationDTO;
   userId?: number;
 }) {
+  if (!userId) {
+    throw Boom.badRequest("User ID is required to update a conversation");
+  }
+
   const existing = await aiConversationModel.findById(id, userId);
   if (!existing) {
     return null;
@@ -58,6 +63,10 @@ export async function updateConversation({
 }
 
 export async function deleteConversation({ id, userId }: { id: number; userId?: number }) {
+  if (!userId) {
+    throw Boom.badRequest("User ID is required to delete a conversation");
+  }
+
   const existing = await aiConversationModel.findById(id, userId);
   if (!existing) {
     return null;

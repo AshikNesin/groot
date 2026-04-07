@@ -7,6 +7,7 @@ import type {
   RerunJobOptions,
 } from "@/core/job/types";
 import { Boom } from "@/core/errors";
+import { parseLimit } from "@/core/utils/controller.utils";
 
 /**
  * Queue a job for immediate execution
@@ -62,7 +63,7 @@ export async function getStats() {
  */
 export async function getAvailable(req: Request) {
   const queueName = req.query.queue as string;
-  const limit = req.query.limit ? Number(req.query.limit) : 50;
+  const limit = parseLimit(req.query.limit as string);
   return await JobSystem.queries.fetchJobs({ queueName, limit });
 }
 
@@ -79,7 +80,7 @@ export async function purgeByState(req: Request) {
  * Get failed jobs
  */
 export async function getFailed(req: Request) {
-  const limit = req.query.limit ? Number(req.query.limit) : 50;
+  const limit = parseLimit(req.query.limit as string);
   return await JobSystem.queries.getFailedJobs({ limit });
 }
 
@@ -88,8 +89,8 @@ export async function getFailed(req: Request) {
  */
 export async function getByState(req: Request) {
   const { state } = req.params;
-  const limit = req.query.limit ? Number(req.query.limit) : 50;
-  const offset = req.query.offset ? Number(req.query.offset) : 0;
+  const limit = parseLimit(req.query.limit as string);
+  const offset = Math.max(0, Number.parseInt(req.query.offset as string, 10) || 0);
   return await JobSystem.queries.getJobsByState({ state, limit, offset } as GetJobsByStateOptions);
 }
 

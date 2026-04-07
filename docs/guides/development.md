@@ -57,6 +57,7 @@ export type CreateDTO = z.infer<typeof createSchema>;
 ```typescript
 // server/src/app/myfeature/myfeature.model.ts
 import { prisma } from "@/core/database";
+import type { CreateDTO } from "./myfeature.validation";
 
 export async function create(data: CreateDTO) {
   return prisma.myfeature.create({ data });

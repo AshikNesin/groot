@@ -203,7 +203,10 @@ async function waitForPostgres(port: number, maxAttempts = 60): Promise<void> {
         try {
           const { stdout } = await execAsync(`docker logs ${CONTAINER_NAME} --tail 30`);
           console.error(
-            `\n   Container logs:\n${stdout.split("\n").map((l) => "   " + l).join("\n")}\n`,
+            `\n   Container logs:\n${stdout
+              .split("\n")
+              .map((l) => "   " + l)
+              .join("\n")}\n`,
           );
         } catch {
           // ignore log retrieval failure

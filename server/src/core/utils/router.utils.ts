@@ -38,9 +38,14 @@ export function createRouter(options?: RouterOptions): EnhancedRouter {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     router[method] = (...args: any[]) => {
       const lastIdx = args.length - 1;
-      // Automatically wrap the last argument if it's a function (the handler)
-      if (typeof args[lastIdx] === "function") {
-        args[lastIdx] = handle(args[lastIdx]);
+      const lastArg = args[lastIdx];
+      // Only wrap if the last argument is a function that expects 2 or fewer
+      // parameters (i.e. (req, res) controllers). Functions with 3+ declared
+      // params — such as middleware using (req, res, next) or Express error
+      // handlers using (err, req, res, next) — must be passed through as-is
+      // so Express provides the next/error parameters correctly.
+      if (typeof lastArg === "function" && lastArg.length <= 2) {
+        args[lastIdx] = handle(lastArg);
       }
       return originalMethod(...args);
     };
