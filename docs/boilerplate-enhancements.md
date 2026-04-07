@@ -2,662 +2,392 @@
 
 ## Overview
 
-This document outlines all the generic, reusable components extracted from `nesins-finance-api` and integrated into `groot`.
+This document describes the production-ready features and architecture of the groot boilerplate.
 
 ---
 
-## ✅ Phase 1: Backend Foundation (COMPLETED)
+## Architecture
 
-### 1. Enhanced Error Handling System
+### Domain-Driven Structure
 
-- ✅ **Base errors** (`server/src/core/errors/base.errors.ts`)
-  - 7 error types: `AppError`, `BadRequestError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`, `ConflictError`, `InternalError`
-  - Proper prototype chain and stack traces
-  - Operational vs non-operational error classification
+The codebase uses a feature-based architecture:
 
-- ✅ **Prisma error handler** (`server/src/core/errors/prisma-error-handler.ts`)
-  - Converts Prisma errors to application errors
-  - Handles unique constraints, not found, foreign key violations
-
-- ✅ **Enhanced error middleware** (`server/src/middlewares/error-handler.middleware.ts`)
-  - Sentry integration for error tracking
-  - Breadcrumb tracking for debugging
-  - Trace context for request correlation
-  - Automatic sanitization of sensitive data (passwords, tokens, etc.)
-  - Business event logging
-  - Performance tracking
-  - Zod validation error handling
-  - Development vs production error messages
-
-### 2. Complete JWT Authentication System
-
-- ✅ **JWT utilities** (`server/src/utils/jwt.utils.ts`)
-  - Token generation with configurable expiry
-  - Token verification with proper error handling
-  - Decode utility for debugging
-
-- ✅ **Auth service** (`server/src/services/auth.service.ts`)
-  - Login with email/password
-  - User creation (admin only)
-  - Get user by ID
-  - Get all users (admin only)
-  - Password hashing with bcryptjs
-
-- ✅ **Auth middleware** (`server/src/middlewares/jwt-auth.middleware.ts`)
-  - JWT authentication middleware
-  - Optional JWT authentication (for public endpoints)
-  - Cookie and Authorization header support
-
-- ✅ **Admin auth middleware** (`server/src/middlewares/admin-auth.middleware.ts`)
-  - Protected admin endpoints
-  - X-Admin-Auth header validation
-
-- ✅ **Auth controller** (`server/src/controllers/auth.controller.ts`)
-  - Login endpoint
-  - Logout endpoint
-  - Get current user endpoint
-  - Create user endpoint (admin)
-  - Get all users endpoint (admin)
-
-- ✅ **Auth routes** (`server/src/routes/auth.routes.ts`)
-  - `/api/v1/auth/login` - Login (public)
-  - `/api/v1/auth/logout` - Logout (requires JWT)
-  - `/api/v1/auth/me` - Current user (requires JWT)
-  - `/api/v1/auth/users` - Create user (admin only)
-  - `/api/v1/auth/users` - Get all users (admin only)
-
-- ✅ **Auth validation** (`server/src/validations/auth.validation.ts`)
-  - Zod schemas for login, create user, update user
-
-### 3. Passkey/WebAuthn Authentication
-
-- ✅ **WebAuthn utilities** (`server/src/utils/webauthn.utils.ts`)
-  - Generate registration/authentication options
-  - Verify registration/authentication responses
-  - Device name generation
-  - Transport serialization
-  - Uses @simplewebauthn/server v13
-
-- ✅ **Passkey model** (`server/src/models/passkey.model.ts`)
-  - Create, find, update, delete passkeys
-  - Find by credential ID, user ID
-  - Count passkeys per user
-
-- ✅ **Passkey service** (`server/src/services/passkey.service.ts`)
-  - Generate registration options
-  - Verify registration and create passkey
-  - Generate authentication options
-  - Verify authentication and return JWT
-  - List, update, delete passkeys
-  - Challenge storage (in-memory, should use Redis in production)
-
-- ✅ **Passkey controller** (`server/src/controllers/passkey.controller.ts`)
-  - Registration endpoints
-  - Authentication endpoints
-  - Management endpoints (list, update, delete)
-
-- ✅ **Passkey routes** (`server/src/routes/passkey.routes.ts`)
-  - `/api/v1/passkey/register/options` - Generate registration options (JWT required)
-  - `/api/v1/passkey/register/verify` - Verify registration (JWT required)
-  - `/api/v1/passkey/login/options` - Generate auth options (public)
-  - `/api/v1/passkey/login/verify` - Verify auth and login (public)
-  - `/api/v1/passkey/list` - List passkeys (JWT required)
-  - `/api/v1/passkey/:id` - Update/delete passkey (JWT required)
-
-- ✅ **Passkey validation** (`server/src/validations/passkey.validation.ts`)
-  - Zod schemas for registration, authentication, update
-
-- ✅ **Environment variables**
-  - `RP_NAME` - Relying Party name (shown to users)
-  - `RP_ID` - Your domain (localhost for dev)
-  - `ORIGIN` - Full frontend URL (must match exactly)
-
-### 4. Enhanced Logger System
-
-- ✅ **Main logger** (`server/src/core/logger/index.ts`)
-  - Enhanced Pino configuration
-  - BigInt serialization support
-  - Context-aware logger factories
-  - Request-aware logger factory
-  - Job-aware logger factory
-  - Business event logging
-  - Performance logging
-
-- ✅ **Breadcrumbs** (`server/src/core/logger/breadcrumbs.ts`)
-  - Breadcrumb tracking (last 50 actions)
-  - Category, level, message, data
-  - Helps debug errors by showing what led up to them
-
-- ✅ **Trace context** (`server/src/core/logger/trace-context.ts`)
-  - Request correlation across services
-  - Trace ID and parent trace ID
-  - Request timing
-
-- ✅ **Logger utilities** (`server/src/core/logger/utils.ts`)
-  - Object serialization (handles BigInt, Dates, Errors)
-  - Request body sanitization (removes sensitive data)
-
-- ✅ **Enhanced request logger** (`server/src/middlewares/requestLogger.middleware.ts`)
-  - Attaches request-specific logger
-  - Tracks request timing
-  - Creates trace context
-  - Helper function to get request logger
-
-### 5. Enhanced Base Controller & Utilities
-
-- ✅ **Base controller** (`server/src/core/base-controller.ts`)
-  - `parseId()` - Safe ID parsing with validation
-  - `parseBoolean()` - Boolean query param parsing
-  - `parsePagination()` - Pagination with page, limit, skip
-  - `parseSorting()` - Sorting with field validation
-  - `extractFields()` - Safe field extraction from request body
-
-- ✅ **Date utilities** (`server/src/utils/date.utils.ts`)
-  - Format dates (ISO, YYYY-MM-DD, YYYY-MM)
-  - Start/end of day/month
-  - Add/subtract days/months
-  - Date comparisons (isBefore, isAfter, isSameDay)
-  - Parse dates
-
-- ✅ **Validation utilities** (`server/src/utils/validation.utils.ts`)
-  - Email, URL, UUID validation
-  - Date string validation
-  - Phone number validation
-  - HTML sanitization
-  - Whitespace normalization
-  - Alphanumeric checking
-
-- ✅ **Array utilities** (`server/src/utils/array.utils.ts`)
-  - chunk, unique, uniqueBy
-  - groupBy, sortBy
-  - sample, shuffle
-  - sum, average
-  - partition
-
-### 6. Async Handler Wrapper
-
-- ✅ **Async handler** (`server/src/core/async-handler.ts`)
-  - Eliminates try-catch boilerplate
-  - Automatic error propagation to error middleware
-  - Type-safe async handler
-
-### 7. Environment Configuration
-
-- ✅ **Environment variables** (`server/src/env.ts`)
-  - JWT_SECRET (min 32 characters)
-  - JWT_EXPIRES_IN (default: 7d)
-  - ADMIN_AUTH_KEY
-  - LOG_LEVEL (debug, info, warn, error)
-  - Type-safe validation with @t3-oss/env-core
-
-- ✅ **Example config** (`.env.schema`)
-  - All variables documented with examples
-  - Security reminders for production
-
-### 8. Dependencies Installed
-
-- ✅ `jsonwebtoken` & `@types/jsonwebtoken`
-- ✅ `cookie-parser` & `@types/cookie-parser`
-
-### 9. Integration
-
-- ✅ Auth routes registered in main server (`server/src/index.ts`)
-- ✅ Cookie parser middleware added
-- ✅ Auth routes are public (no basic auth required)
-- ✅ All other routes still protected by basic auth
+```
+server/src/
+├── app/              # App-specific domain modules
+│   └── todo/         # Self-contained feature
+│       ├── todo.routes.ts
+│       ├── todo.controller.ts
+│       ├── todo.service.ts
+│       ├── todo.validation.ts
+│       ├── todo.model.ts
+│       ├── todo.jobs.ts
+│       └── index.ts
+├── shared/           # Reusable features
+│   ├── auth/
+│   ├── passkey/
+│   ├── jobs/
+│   ├── storage/
+│   ├── settings/
+│   └── ai/
+├── core/             # Infrastructure
+│   ├── ai/
+│   ├── errors/
+│   ├── job/
+│   ├── kv/
+│   ├── logger/
+│   ├── middlewares/
+│   ├── storage/
+│   └── utils/
+└── routes.ts         # Central registration
+```
 
 ---
 
-## ✅ Phase 2: Frontend Foundation (COMPLETE)
+## Core Infrastructure
 
-### 1. Design System Tokens
+### 1. Error System
 
-- ✅ **Design tokens** (`client/src/lib/design-tokens.ts`)
-  - Gray scale colors (50, 100, 200, 300, 400, 500, 600, 700, 900)
-  - Semantic status colors (success, warning, error, info)
-  - Page layout constants (container, spacing)
-  - Table styles (Stripe-inspired)
-  - Form styles
-  - Card/section styles
-  - Typography scale (h1, h2, h3, body, caption, label)
-  - Font weights
-  - Spacing scale (0-16 in 4px grid)
-  - Gap utilities
-  - Interactive states (hover, active, focus, disabled)
-  - Transition styles
-  - Button variants (primary, secondary, ghost, danger)
-  - Icon sizes (xs, sm, base, lg, xl, 2xl)
-  - Avatar styles
+**Boom Factory** (`core/errors/boom.ts`):
 
-**Design Principles:**
+```typescript
+import { Boom } from "@/core/errors";
 
-- Data-first design
-- Minimal aesthetic (Stripe-inspired)
-- Consistent gray scale
-- Generous white space
-- Subtle interactions
-- No heavy decoration
+throw Boom.notFound("Todo not found");
+throw Boom.badRequest("Invalid input");
+throw Boom.unauthorized("Token expired");
+throw Boom.forbidden("Access denied");
+```
 
-### 2. Date Utilities
+**Error Codes** (`core/errors/error-codes.ts`):
 
-- ✅ **Date utilities** (`client/src/lib/date.utils.ts`)
-  - Format dates (display, date-time, relative time)
-  - Start/end of day/month
-  - Add/subtract days/months
-  - Date comparisons
-  - YYYY-MM formatting
-  - Current month helpers
+- Object-based error codes for consistency
+- Extensible with custom codes
 
-### 3. Enhanced Utils
+**Prisma Handler** (`core/errors/prisma-error-handler.ts`):
 
-- ✅ **Utils** (`client/src/lib/utils.ts`)
-  - `cn()` - Tailwind class merging
-  - `formatCurrency()` - Locale-aware currency formatting
-  - `formatBytes()` - Human-readable file sizes
-  - `debounce()` - Debounce function calls
-  - `truncate()` - Truncate text with ellipsis
-  - `getInitials()` - Generate initials from name
-  - Re-exports all date utilities
-  - Re-exports design tokens
+- Converts Prisma errors to application errors
+- Handles unique constraints, not found, foreign key violations
 
-### 4. Layout Components
+### 2. Logger System
 
-- ✅ **PageContainer** (`client/src/components/layout/PageContainer.tsx`)
-  - Max-width container with padding
-  - Configurable max-width (full, 7xl, 6xl, 5xl, 4xl)
+**Pino with Context** (`core/logger/`):
 
-- ✅ **PageHeader** (`client/src/components/layout/PageHeader.tsx`)
-  - Page title with optional description
-  - Optional actions slot (buttons, etc.)
+- `core.ts` - Main logger configuration
+- `context.ts` - AsyncLocalStorage-based context
+- `breadcrumbs.ts` - Request tracking
+- `trace-context.ts` - Distributed tracing
+- `job-stream.ts` - Job-specific stream
 
-- ✅ **Section** (`client/src/components/layout/Section.tsx`)
-  - Content section with optional title/description
-  - Consistent spacing
+```typescript
+import { createRequestLogger, createJobLogger } from "@/core/logger";
 
-- ✅ **PageLayout** (`client/src/components/layout/PageLayout.tsx`)
-  - Complete page layout (Container + Header + Content)
-  - Ready-to-use page wrapper
+const logger = createRequestLogger(req);
+logger.info({ userId }, "User action");
+```
 
-### 5. Complete UI Component Library (23 components)
+### 3. Job System
 
-- ✅ **Table** - Full-featured data tables
-- ✅ **Badge** - Status badges (7 variants)
-- ✅ **Form** - React Hook Form integration
-- ✅ **Sheet** - Side panel/drawer (4 directions)
-- ✅ **Tabs** - Tab navigation
-- ✅ **Pagination** - Page navigation
-- ✅ **Separator** - Visual dividers
-- ✅ **Popover** - Tooltips & popovers
-- ✅ **Dropdown Menu** - Context menus
-- ✅ **Checkbox** - Checkbox input
-- ✅ **Textarea** - Text area input
-- ✅ **Switch** - Toggle switch
-- ✅ **Alert** - Alert messages (5 variants)
-- ✅ **Breadcrumb** - Navigation breadcrumbs
-- ✅ **Progress** - Progress bars
-- ✅ **Loading Spinner** - Loading states
-- ✅ **Loading Skeleton** - Skeleton loaders
-- ✅ **Empty State** - Empty state messages
-- ✅ **Error State** - Error state messages
+**Modularized pg-boss** (`core/job/`):
 
----
+| Module | Purpose |
+| ------ | ------- |
+| `config.ts` | Environment configuration |
+| `client.ts` | PgBoss singleton |
+| `queue.ts` | Job queueing/scheduling |
+| `queries.ts` | Job inspection |
+| `worker.ts` | Handler registration |
 
-## ✅ Phase 3: Complete UI Library (COMPLETE)
+**Dynamic Registration**:
 
-All 23 UI components have been added with full TypeScript support and Radix UI primitives.
+```typescript
+// Feature jobs
+import { registerJobHandler, type JobHandler } from "@/core/job";
 
----
+export const myHandler: JobHandler<Payload> = async ({ data }) => {
+  // Job logic
+};
 
-## ✅ Phase 4: Frontend Integration (COMPLETE)
+export function registerFeatureJobs(): void {
+  registerJobHandler("my-job", myHandler);
+}
+```
 
-### 1. Enhanced API Client
+### 4. Key-Value Store
 
-- ✅ **API Client class** (`client/src/lib/api.ts`)
-  - Type-safe generic methods (get, post, put, patch, delete)
-  - Automatic 401 handling and redirects
-  - Request/response interceptors
-  - Cookie-based authentication support
-  - Login, logout, getCurrentUser methods
-  - Error handling with proper types
-  - Backward compatible with existing code
+**Keyv with PostgreSQL** (`core/kv/`):
 
-### 2. Enhanced Auth Store
+```typescript
+import kv, { createNamespaceKv } from "@/core/kv";
 
-- ✅ **Auth store** (`client/src/store/auth.ts`)
-  - JWT authentication support
-  - `hasCheckedAuth` state for initial load
-  - `isLoading` and `error` states
-  - Async login/logout/checkAuth methods
-  - Type-safe user object
-  - Backward compatible with basic auth
+// Basic usage
+await kv.set("key", { data: "value" });
+const value = await kv.get("key");
 
-### 3. Tailwind Configuration
+// Namespaced
+const cache = createNamespaceKv("cache");
+await cache.set("user:123", userData);
+```
 
-- ✅ **Updated** (`tailwind.config.js`)
-  - Semantic color tokens (success, warning, info)
-  - Popover colors
-  - All color variants properly configured
+### 5. AI Integration
 
-### 4. CSS Custom Properties
+**Unified LLM API** (`core/ai/`):
 
-- ✅ **Updated** (`client/src/index.css`)
-  - All semantic colors defined
-  - Success, warning, info with foreground variants
-  - Organized with comments
-  - Dark mode support (optional, ready to use)
+- `@mariozechner/pi-ai` integration
+- Zod schema conversion for structured output
+- Support for OpenAI, Anthropic, Google AI
+
+```typescript
+import { ai, schema } from "@/core/ai";
+
+const response = await ai.chat({
+  messages: [{ role: "user", content: "Hello" }],
+  schema: schema.object({
+    greeting: schema.string(),
+  }),
+});
+```
+
+### 6. Storage Service
+
+**S3-Compatible Storage** (`core/storage/`):
+
+- File upload/download
+- Presigned URLs
+- Public file sharing
 
 ---
 
-## ✅ Phase 5: Passkey/WebAuthn Support (COMPLETE)
+## Authentication
 
-### 1. Passkey Service
+### JWT Authentication
 
-- ✅ **Passkey Service** (`client/src/services/passkey.ts`)
-  - `registerPasskey()` - Register new passkey
-  - `loginWithPasskey()` - Authenticate with passkey
-  - `listPasskeys()` - List user's passkeys
-  - `updatePasskeyName()` - Rename a passkey
-  - `deletePasskey()` - Remove a passkey
-  - `isPasskeySupported()` - Check browser support
-  - `isPlatformAuthenticatorAvailable()` - Check platform authenticator availability
-  - Uses @simplewebauthn/browser v13
-  - Full error handling with user-friendly messages
+```typescript
+// Middleware
+import { jwtAuthMiddleware } from "@/core/middlewares/jwt-auth.middleware";
 
-### 2. PasskeyManager Component
+// Protected routes
+app.use("/api/v1", jwtAuthMiddleware, protectedRouter);
+```
 
-- ✅ **PasskeyManager** (`client/src/components/PasskeyManager.tsx`)
-  - Complete passkey management UI
-  - Add new passkeys with optional names
-  - List all passkeys with device info
-  - Edit passkey names
-  - Delete passkeys (with last passkey protection)
-  - Loading states and error handling
-  - Success/error messages
-  - Responsive design
-  - Uses UI components from the library
+### Admin Authentication
 
-### 3. Documentation
+```typescript
+import { adminAuthMiddleware } from "@/core/middlewares/admin-auth.middleware";
 
-- ✅ **Feature documentation** (`docs/features/passkey-authentication.md`)
-  - Complete setup guide
-  - Environment variable configuration
-  - Usage examples for end users
-  - API reference for developers
-  - Security features explained
-  - Browser support information
-  - Troubleshooting guide
-  - Production considerations
-  - Best practices
+// Admin-only endpoints
+router.post("/users", adminAuthMiddleware, createUser);
+```
+
+### Passkey/WebAuthn
+
+Complete passwordless authentication with biometrics:
+
+- `@simplewebauthn/server` + `@simplewebauthn/browser` v13
+- Registration and authentication flows
+- Passkey management UI
 
 ---
 
-## 📦 File Structure
+## Routing System
+
+### createRouter Utility
+
+```typescript
+import { createRouter } from "@/core/utils/router.utils";
+import * as controller from "./feature.controller";
+
+const router = createRouter();
+
+// Handlers auto-wrapped with `handle` middleware
+router.get("/", controller.getAll);
+router.post("/", controller.create);
+
+export default router;
+```
+
+### Route Handler Middleware
+
+Controllers return values, not response objects:
+
+```typescript
+export async function getAll() {
+  return await Service.findAll(); // Auto-serialized to JSON
+}
+
+export async function create(req: Request, res: Response) {
+  res.status(201); // Set status if needed
+  return await Service.create({ data: payload });
+}
+```
+
+---
+
+## Frontend
+
+### Design System
+
+**Tokens** (`client/src/lib/design-tokens.ts`):
+
+- Gray scale colors
+- Semantic colors (success, warning, error, info)
+- Typography scale
+- Spacing scale
+- Component variants
+
+### UI Components (26 components)
+
+| Category | Components |
+|----------|------------|
+| Forms | Input, Textarea, Select, Checkbox, Switch, Form |
+| Data | Table, Badge, Pagination |
+| Feedback | Alert, Progress, LoadingSpinner, LoadingSkeleton |
+| Overlays | Dialog, Sheet, Popover, DropdownMenu |
+| Layout | PageLayout, PageHeader, PageContainer, Section |
+| Navigation | Tabs, Breadcrumb |
+| Utility | Button, Card, Separator, EmptyState, ErrorState |
+
+### API Client
+
+```typescript
+import { apiClient } from "@/lib/api";
+
+// Type-safe requests
+const todos = await apiClient.get<Todo[]>("/todos");
+const created = await apiClient.post<Todo>("/todos", { title: "New" });
+
+// Auth methods
+await apiClient.login(email, password);
+await apiClient.logout();
+const user = await apiClient.getCurrentUser();
+```
+
+---
+
+## Testing
+
+### Structure
+
+```
+tests/
+├── server/
+│   ├── setup.ts
+│   ├── core/          # Core utility tests
+│   └── services/      # Service tests
+└── client/
+    ├── setup.ts
+    └── components/    # Component tests
+```
+
+### Commands
+
+```bash
+pnpm test           # Unit tests
+pnpm test:watch     # Watch mode
+pnpm test:e2e       # E2E tests (Playwright)
+```
+
+---
+
+## File Structure
 
 ```
 groot/
 ├── server/src/
-│   ├── core/
-│   │   ├── async-handler.ts ✨ NEW
-│   │   ├── base-controller.ts ✅ ENHANCED
-│   │   ├── errors/
-│   │   │   ├── index.ts ✨ NEW
-│   │   │   ├── base.errors.ts ✅ ENHANCED
-│   │   │   └── prisma-error-handler.ts ✨ NEW
-│   │   └── logger/
-│   │       ├── index.ts ✅ ENHANCED
-│   │       ├── breadcrumbs.ts ✨ NEW
-│   │       ├── trace-context.ts ✨ NEW
-│   │       └── utils.ts ✨ NEW
-│   ├── middlewares/
-│   │   ├── error-handler.middleware.ts ✅ ENHANCED (243 lines)
-│   │   ├── requestLogger.middleware.ts ✅ ENHANCED
-│   │   ├── jwt-auth.middleware.ts ✨ NEW
-│   │   └── admin-auth.middleware.ts ✨ NEW
-│   ├── routes/
-│   │   └── auth.routes.ts ✨ NEW
-│   ├── controllers/
-│   │   └── auth.controller.ts ✨ NEW
-│   ├── services/
-│   │   └── auth.service.ts ✨ NEW
-│   ├── utils/ ✨ NEW FOLDER
-│   │   ├── jwt.utils.ts
-│   │   ├── date.utils.ts
-│   │   ├── validation.utils.ts
-│   │   └── array.utils.ts
-│   └── validations/
-│       └── auth.validation.ts ✨ NEW
-│
+│   ├── app/              # Domain modules
+│   ├── shared/           # Shared features
+│   ├── core/             # Infrastructure
+│   │   ├── ai/           # AI client
+│   │   ├── errors/       # Boom, error codes, Prisma handler
+│   │   ├── job/          # Job queue
+│   │   ├── kv/           # Key-value store
+│   │   ├── logger/       # Pino logging
+│   │   ├── middlewares/  # Express middlewares
+│   │   ├── storage/      # S3 service
+│   │   └── utils/        # Utilities
+│   ├── routes.ts         # Route registration
+│   └── index.ts          # Entry point
 ├── client/src/
-│   ├── lib/
-│   │   ├── design-tokens.ts ✨ NEW (275 lines)
-│   │   ├── date.utils.ts ✨ NEW (230 lines)
-│   │   └── utils.ts ✅ ENHANCED (101 lines)
-│   └── components/
-│       ├── layout/ ✨ NEW FOLDER
-│       │   ├── PageLayout.tsx
-│       │   ├── PageHeader.tsx
-│       │   ├── PageContainer.tsx
-│       │   ├── Section.tsx
-│       │   └── index.ts
-│       └── ui/
-│           ├── table.tsx ✨ NEW
-│           ├── badge.tsx ✨ NEW
-│           └── form.tsx ✨ NEW
-│
-├── .env.schema ✅ UPDATED
-└── package.json ✅ UPDATED
+│   ├── components/
+│   │   ├── ui/           # 26 UI components
+│   │   └── layout/       # Layout components
+│   ├── lib/              # API client, utilities
+│   ├── store/            # Zustand stores
+│   └── hooks/            # React hooks
+├── tests/                # Centralized tests
+├── docs/                 # Documentation
+└── prisma/               # Database schema
 ```
 
 ---
 
-## 🎯 What's Working Now
-
-### Backend
-
-1. ✅ **Full JWT authentication system** - Login, logout, current user
-2. ✅ **Admin-only endpoints** - Create users, get all users
-3. ✅ **Production-ready error handling** - Sentry, breadcrumbs, tracing
-4. ✅ **Comprehensive logging** - Request correlation, performance tracking
-5. ✅ **Type-safe environment** - Validated env variables
-6. ✅ **Helper utilities** - Date, validation, array operations
-7. ✅ **Base controller** - Pagination, sorting, ID parsing
-
-### Frontend
-
-1. ✅ **Design system** - 275 lines of design tokens
-2. ✅ **Date utilities** - 230 lines of date helpers
-3. ✅ **Layout components** - PageLayout, PageHeader, PageContainer, Section
-4. ✅ **Core UI components** - Table, Badge, Form
-5. ✅ **Enhanced utils** - Currency, bytes, debounce, truncate, initials
-
----
-
----
-
-## 📚 Usage Examples
-
-### Backend
-
-#### Using Auth Routes
+## Environment Variables
 
 ```bash
-# Create user (admin)
-curl -X POST https://groot.localhost/api/v1/auth/users \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Auth: your-admin-key" \
-  -d '{"email":"user@example.com","password":"password123"}'
+# Core
+NODE_ENV=development
+PORT=3000
+DATABASE_URL=postgresql://...
 
-# Login
-curl -X POST https://groot.localhost/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
+# Auth
+JWT_SECRET=your-secret
+ADMIN_AUTH_KEY=admin-key
 
-# Get current user
-curl https://groot.localhost/api/v1/auth/me \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
+# Passkeys
+RP_ID=localhost
+RP_NAME=Groot
+RP_ORIGIN=https://groot.localhost
 
-#### Using Base Controller
+# File Storage
+AWS_ACCESS_KEY_ID=localstack
+AWS_SECRET_ACCESS_KEY=localstack
+AWS_REGION=us-east-1
+AWS_DEFAULT_S3_BUCKET=local-bucket
 
-```typescript
-import { BaseController } from "@/core/base-controller";
+# Job Queue
+ENABLE_JOB_QUEUE=true
+JOB_CONCURRENCY=5
+JOB_POLL_INTERVAL=2000
 
-export class MyController extends BaseController {
-  async getItems(req: Request, res: Response) {
-    const id = this.parseId(req.params.id); // Safe ID parsing
-    const { page, limit, skip } = this.parsePagination(req); // Pagination
-    const { sortBy, sortOrder } = this.parseSorting(req, ["name", "createdAt"], "createdAt"); // Sorting
+# Monitoring
+SENTRY_DSN=https://...
+LOG_LEVEL=info
 
-    // ... your logic
-  }
-}
-```
-
-#### Using Async Handler
-
-```typescript
-import { asyncHandler } from "@/core/async-handler";
-
-router.get(
-  "/items",
-  asyncHandler(async (req, res) => {
-    const items = await itemService.getAll();
-    return ResponseHandler.success(res, items);
-  }),
-);
-```
-
-### Frontend
-
-#### Using PageLayout
-
-```tsx
-import { PageLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-
-export function MyPage() {
-  return (
-    <PageLayout
-      title="Dashboard"
-      description="Overview of your account"
-      actions={<Button>New Item</Button>}
-    >
-      {/* Your content here */}
-    </PageLayout>
-  );
-}
-```
-
-#### Using Table
-
-```tsx
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-
-export function MyTable() {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <TableRow>
-          <TableCell>John Doe</TableCell>
-          <TableCell>john@example.com</TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
-  );
-}
-```
-
-#### Using Date Utilities
-
-```tsx
-import { formatDisplayDate, formatRelativeTime } from "@/lib/utils";
-
-const date = new Date();
-formatDisplayDate(date); // "Jan 1, 2024"
-formatRelativeTime(date); // "2 hours ago"
+# AI (at least one required)
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=...
 ```
 
 ---
 
-## 🎨 Design Philosophy
+## API Endpoints
 
-**Data-First Design**
-
-- Focus on displaying data clearly
-- Minimize decorative elements
-- Use color sparingly and meaningfully
-
-**Consistent Gray Scale**
-
-- gray-900: Primary text and headings
-- gray-600: Secondary text
-- gray-500: Metadata and labels
-- gray-200: Borders and dividers
-- gray-50: Table headers and subtle backgrounds
-
-**Minimal Aesthetic**
-
-- Clean, professional, Stripe-inspired
-- No heavy shadows or gradients
-- Simple, clean table designs
-- Text-based status indicators
-
-**White Space**
-
-- Generous spacing between sections
-- Let content breathe
-
-**Subtle Interactions**
-
-- Use gray-50 for hover states
-- Quick transitions (150-200ms)
+| Prefix | Purpose | Auth |
+|--------|---------|------|
+| `/api/v1/auth` | Login, logout, users | Mixed |
+| `/api/v1/passkey` | Passkey registration/auth | Mixed |
+| `/api/v1/todos` | CRUD operations | JWT |
+| `/api/v1/jobs` | Background job management | JWT |
+| `/api/v1/storage` | File operations | JWT |
+| `/api/v1/settings` | App settings | JWT |
+| `/api/v1/ai` | AI inference | JWT |
+| `/api/v1/public/files` | Public file sharing | None |
 
 ---
 
-## ✅ Build Status
+## Key Patterns
 
-```
-✓ Backend build: Success
-✓ Frontend build: Success
-✓ TypeScript compilation: Success
-✓ All tests: Pending
-```
-
----
-
-## 📝 Notes
-
-- **Security**: Change JWT_SECRET and ADMIN_AUTH_KEY in production
-- **Database**: Run `pnpm prisma generate` after schema changes
-- **Development**: Run `pnpm dev` to start the dev server
-- **Production**: Run `pnpm build && pnpm start`
+| Pattern | Description |
+|---------|-------------|
+| Feature modules | Self-contained with routes, controller, service, validation |
+| Functional controllers | Simple async functions returning values |
+| createRouter | Auto-wraps handlers with response middleware |
+| Boom errors | Factory methods for HTTP errors |
+| Dynamic job registration | Jobs registered in feature modules |
+| Zod validation | Input validation at system boundaries |
 
 ---
 
-**Created**: 2025-12-01  
-**Last Updated**: 2025-12-01  
-**Status**: ✅ ALL PHASES COMPLETE (Including Passkey/WebAuthn)  
-**Build Status**: ✅ Successful (438.22 kB frontend, 395.3 kB backend)  
-**Total Components Added**: 70+ files  
-**Total Lines of Code**: 10,000+ lines
-
-### Latest Addition: Passkey/WebAuthn Authentication
-
-- Full passwordless authentication system
-- Biometric login support (Face ID, Touch ID, Windows Hello)
-- Security key support (YubiKey, etc.)
-- Complete management UI
-- Production-ready with proper error handling
+**Last Updated**: 2026-04-07
+**Status**: Production-ready

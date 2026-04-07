@@ -15,27 +15,47 @@ A production-ready SaaS boilerplate combining Express.js backend with React fron
 | **File Storage**    | AWS S3 SDK (@aws-sdk/client-s3)                       |
 | **Background Jobs** | pg-boss (PostgreSQL-backed queue)                     |
 | **Key-Value Store** | Keyv with PostgreSQL adapter                          |
-| **Logging**         | Pino, Sentry                                          |
+| **Logging**         | Pino, Sentry (with AsyncLocalStorage context)         |
+| **Error Handling**  | Boom (standardized HTTP errors)                       |
 | **File Uploads**    | Multer                                                |
 | **Frontend**        | React 19, TypeScript, Vite 7                          |
 | **UI**              | Radix UI primitives, Tailwind CSS, shadcn/ui patterns |
 | **State**           | Zustand, React Query                                  |
 | **Routing**         | React Router 7                                        |
 | **Tooling**         | Vite+ (Oxlint, Oxfmt), Vitest, Playwright, pnpm       |
-| **AI**              | @mariozechner/pi-ai (unified LLM API)                 |
+| **AI**              | @mariozechner/pi-ai (unified LLM API with Zod output) |
 
 ## Key Directories
 
 ```
 server/src/
-├── controllers/     # Request handlers (thin layer)
-├── services/        # Business logic (fat layer)
-├── routes/          # API route definitions
-├── middlewares/     # Express middlewares (auth, validation, rate-limiting)
-├── core/            # Shared utilities (errors, logger, jobs, storage)
-├── models/          # Prisma client exports and data models
-├── validations/     # Zod schemas for request validation
-└── utils/           # Helper functions
+├── app/              # App-specific features (domain modules)
+│   └── todo/         # Example: todo feature module
+│       ├── todo.routes.ts
+│       ├── todo.controller.ts
+│       ├── todo.service.ts
+│       ├── todo.validation.ts
+│       ├── todo.model.ts
+│       ├── todo.jobs.ts
+│       └── index.ts
+├── shared/           # Shared/reusable features
+│   ├── auth/         # Authentication (login, register, users)
+│   ├── passkey/      # WebAuthn passwordless auth
+│   ├── jobs/         # Background job API routes
+│   ├── storage/      # File storage (S3)
+│   ├── settings/     # App key-value settings
+│   └── ai/           # AI inference endpoints
+├── core/             # Core infrastructure
+│   ├── ai/           # AI client, schema conversion
+│   ├── errors/       # Boom errors, error codes, Prisma handler
+│   ├── job/          # Job queue (client, queries, queue, worker)
+│   ├── kv/           # Key-value store with Keyv
+│   ├── logger/       # Pino logger with context management
+│   ├── middlewares/  # Express middlewares
+│   ├── storage/      # S3 storage service
+│   └── utils/        # Shared utilities (router, controller helpers)
+├── routes.ts         # Central route registration
+└── index.ts          # Server entry point
 
 client/src/
 ├── components/
@@ -50,7 +70,6 @@ tests/               # Centralized test files
 ├── server/          # Server unit tests (mirrors server/src structure)
 │   ├── setup.ts     # Server test setup
 │   ├── core/        # Core utility tests
-│   ├── routes/      # Route tests
 │   └── services/    # Service tests
 └── client/          # Client unit tests (mirrors client/src structure)
     ├── setup.ts     # Client test setup
@@ -89,51 +108,131 @@ pnpm test:e2e         # Run Playwright E2E tests
 
 ## Code Patterns
 
+### Feature Module Structure
+
+Each feature is self-contained with:
+- `*.routes.ts` - Route definitions using `createRouter()`
+- `*.controller.ts` - Request handlers (simple async functions)
+- `*.service.ts` - Business logic
+- `*.validation.ts` - Zod schemas for input validation
+- `*.model.ts` - Prisma queries and data access
+- `*.jobs.ts` - Background job handlers (if applicable)
+- `index.ts` - Feature exports
+
 ### Backend Architecture
 
-- **Routes** → Define endpoints and apply middleware
-- **Controllers** → Parse/validate request, call service, format response
+- **Routes** → Use `createRouter()` which auto-wraps handlers
+- **Controllers** → Simple async functions that return values (auto-serialized)
 - **Services** → Business logic, database access via Prisma
-- **Models** → Re-export Prisma client types
+- **Models** → Prisma client queries
 
 ### Request Flow
 
 ```
-Route (validation middleware)
-  → Controller (asyncHandler wrapper)
+Route (createRouter + validation middleware)
+  → Controller (async function returning value)
     → Service (business logic)
       → Prisma (database)
+  → handle middleware auto-serializes response
+```
+
+### Route Definition Pattern
+
+```typescript
+import { createRouter } from "@/core/utils/router.utils";
+import * as controller from "./feature.controller";
+import { validate } from "@/core/middlewares/validation.middleware";
+import { createSchema } from "./feature.validation";
+
+const router = createRouter();
+
+router.get("/", controller.getAll);
+router.post("/", validate(createSchema, "body"), controller.create);
+router.get("/:id", controller.getById);
+
+export default router;
+```
+
+### Controller Pattern
+
+Controllers are simple async functions that return values:
+
+```typescript
+import type { Request, Response } from "express";
+import * as Service from "./feature.service";
+import { parseId } from "@/core/utils/controller.utils";
+
+export async function create(req: Request, res: Response) {
+  const payload = req.validated?.body || req.body;
+  res.status(201); // Set status if needed
+  return await Service.create({ data: payload });
+}
+
+export async function getById(req: Request) {
+  const id = parseId(req.params.id);
+  return await Service.findById({ id });
+}
 ```
 
 ### Error Handling
 
-- Throw `AppError` from `core/errors` for expected errors
-- Errors automatically caught by `asyncHandler`
-- Unexpected errors logged with Sentry breadcrumbs
+Use `Boom` from `@/core/errors` for HTTP errors:
+
+```typescript
+import { Boom } from "@/core/errors";
+
+// Factory methods
+throw Boom.notFound("Todo not found");
+throw Boom.badRequest("Invalid input");
+throw Boom.unauthorized("Token expired");
+throw Boom.forbidden("Access denied");
+```
+
+Prisma errors are automatically handled by `PrismaHandler`.
 
 ### Validation
 
-- All request bodies validated with Zod schemas in `validations/`
+- All request bodies validated with Zod schemas
 - Use `validate(schema, "body" | "params" | "query")` middleware
+- Validated data available at `req.validated.body/params/query`
 
 ### Authentication
 
-- **Basic Auth**: `basicAuthMiddleware` for API routes
-- **JWT**: `jwtAuthMiddleware` for user sessions
+- **JWT**: `jwtAuthMiddleware` for protected API routes
 - **Admin**: `adminAuthMiddleware` for admin-only routes (X-Admin-Auth header)
 - **Passkeys**: WebAuthn-based passwordless auth
+
+### Job Registration
+
+Jobs are registered dynamically in feature modules:
+
+```typescript
+// feature.jobs.ts
+import { registerJobHandler, type JobHandler } from "@/core/job";
+import { JobName } from "./feature.validation";
+
+export const myJobHandler: JobHandler<MyPayload> = async ({ data }) => {
+  // Job logic
+};
+
+export function registerFeatureJobs(): void {
+  registerJobHandler(JobName.MY_JOB, myJobHandler);
+}
+
+// Then add to routes.ts registerJobHandlers()
+```
 
 ## API Endpoints Summary
 
 | Prefix                 | Purpose                        | Auth                |
 | ---------------------- | ------------------------------ | ------------------- |
-| `/api/v1/todos`        | CRUD operations                | Basic Auth          |
+| `/api/v1/todos`        | CRUD operations                | JWT                 |
 | `/api/v1/auth`         | Login, logout, user management | Mixed               |
-| `/api/v1/storage`      | File storage operations        | Basic Auth          |
+| `/api/v1/storage`      | File storage operations        | JWT                 |
 | `/api/v1/public/files` | Public file sharing            | None (rate-limited) |
-| `/api/v1/jobs`         | Background job management      | Basic Auth          |
-| `/api/v1/passkeys`     | Passkey registration/auth      | JWT                 |
-| `/api/v1/settings`     | App key-value settings         | None                |
+| `/api/v1/jobs`         | Background job management      | JWT                 |
+| `/api/v1/passkeys`     | Passkey registration/auth      | Public              |
+| `/api/v1/settings`     | App key-value settings         | JWT                 |
 | `/api/v1/ai`           | AI inference (chat, streaming) | JWT                 |
 
 ## Environment Variables
@@ -148,8 +247,6 @@ DATABASE_URL=postgresql://...
 
 # Auth
 JWT_SECRET=your-secret
-BASIC_AUTH_USERNAME=user
-BASIC_AUTH_PASSWORD=pass
 ADMIN_AUTH_KEY=admin-key
 
 # File Storage (S3)
@@ -199,9 +296,9 @@ GEMINI_API_KEY=...
 - **TypeScript**: Strict mode enabled
 - **Imports**: Use `@/` alias for server/src paths
 - **Naming**: camelCase for variables/functions, PascalCase for components/types
-- **Exports**: Prefer named exports over default exports
+- **Exports**: Prefer named exports over default exports (use `* as` for controllers)
 - **Async**: Always use async/await, never raw Promises
-- **Errors**: Throw `AppError` with appropriate status code
+- **Errors**: Use `Boom` factory methods for HTTP errors
 
 ## Git Hooks
 
@@ -216,6 +313,8 @@ Install hooks: `pnpm prepare` (runs `vp config`)
 
 1. Read this file and `docs/setup-guide.md` for context
 2. Check `prisma/schema.prisma` for data models
-3. Review existing patterns in similar files before creating new ones
-4. Run `pnpm check` and `pnpm test` before suggesting changes
-5. Ensure environment variables are documented when adding new features
+3. Review existing patterns in similar feature modules before creating new ones
+4. Use `createRouter()` for routes, simple async functions for controllers
+5. Use `Boom` for HTTP errors, Zod for validation
+6. Run `pnpm check` and `pnpm test` before suggesting changes
+7. Ensure environment variables are documented when adding new features

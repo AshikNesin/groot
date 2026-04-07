@@ -1,32 +1,34 @@
-# 🚀 Quick Start Guide
+# Quick Start Guide
 
 ## What You Got
 
-Your boilerplate now includes everything you need to ship a production-ready SaaS:
+Your boilerplate includes everything needed for a production-ready SaaS:
 
-### Backend ✅
+### Backend
 
 - **JWT Authentication** - Login, logout, protected routes
-- **Production Error Handling** - Sentry, breadcrumbs, logging
-- **Enhanced Logging** - Request correlation, performance tracking
-- **Utilities** - Date, validation, array helpers
+- **Passkey/WebAuthn** - Passwordless biometric authentication
+- **Boom Error Handling** - Standardized HTTP errors
+- **Enhanced Logging** - Pino with AsyncLocalStorage context
+- **Background Jobs** - pg-boss with dynamic registration
+- **Key-Value Store** - Keyv for caching and sessions
+- **File Storage** - S3-compatible storage
+- **AI Integration** - Unified LLM API with Zod output
 
-### Frontend ✅
+### Frontend
 
-- **23 UI Components** - Tables, forms, modals, alerts, etc.
+- **26 UI Components** - Tables, forms, modals, alerts, etc.
 - **Design System** - Stripe-inspired, data-first design
 - **Enhanced API Client** - Type-safe, auto 401 handling
 - **Layout Components** - PageLayout, PageHeader, etc.
 
 ---
 
-## Get Started in 3 Steps
+## Get Started in 4 Steps
 
 ### 1. Setup Environment
 
 #### Option A: Automated Setup (Recommended)
-
-Run the setup script to automatically configure your environment:
 
 ```bash
 ./setup-boilerplate.sh
@@ -52,8 +54,8 @@ cp .env.schema .env
 # DATABASE_URL=your-database-url
 ```
 
-> ⚠️ **Security Note**: Always use strong, randomly generated secrets in production!
-> You can generate secure secrets with: `openssl rand -base64 48 | tr -d '/+=' | cut -c1-64`
+> **Security Note**: Always use strong, randomly generated secrets in production!
+> Generate with: `openssl rand -base64 48 | tr -d '/+=' | cut -c1-64`
 
 ### 2. Install & Generate
 
@@ -65,7 +67,7 @@ pnpm install
 pnpm prisma generate
 
 # Push database schema
-pnpm prisma db push
+pnpm prisma:push
 ```
 
 ### 3. Install Portless (One-Time)
@@ -75,7 +77,7 @@ pnpm prisma db push
 npm install -g portless
 ```
 
-On first run, portless will prompt you to trust a local CA certificate (requires sudo). This enables `https://*.localhost` with no browser warnings. See [Portless & HTTPS Guide](./guides/portless-https.md) for details and troubleshooting.
+On first run, portless will prompt you to trust a local CA certificate (requires sudo). This enables `https://*.localhost` with no browser warnings. See [Portless & HTTPS Guide](./guides/portless-https.md) for details.
 
 ### 4. Start Development
 
@@ -105,62 +107,73 @@ curl -X POST https://groot.localhost/api/v1/auth/login \
 
 ---
 
-## Build Your First Page
+## Create Your First Feature
 
-Create a new page using the built-in components:
+Features are self-contained modules with routes, controllers, services, and jobs:
 
-```tsx
-// client/src/pages/MyPage.tsx
-import { PageLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
+### 1. Create the Feature Directory
 
-export function MyPage() {
-  return (
-    <PageLayout
-      title="My Page"
-      description="This is my first page"
-      actions={<Button>New Item</Button>}
-    >
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Table</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>John Doe</TableCell>
-                <TableCell>john@example.com</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </PageLayout>
-  );
+```bash
+mkdir -p server/src/app/myfeature
+```
+
+### 2. Define Routes
+
+```typescript
+// server/src/app/myfeature/myfeature.routes.ts
+import { createRouter } from "@/core/utils/router.utils";
+import * as controller from "./myfeature.controller";
+import { validate } from "@/core/middlewares/validation.middleware";
+import { createSchema } from "./myfeature.validation";
+
+const router = createRouter();
+
+router.get("/", controller.getAll);
+router.post("/", validate(createSchema, "body"), controller.create);
+router.get("/:id", controller.getById);
+
+export default router;
+```
+
+### 3. Create Controller
+
+```typescript
+// server/src/app/myfeature/myfeature.controller.ts
+import type { Request, Response } from "express";
+import * as Service from "./myfeature.service";
+import { parseId } from "@/core/utils/controller.utils";
+
+export async function getAll() {
+  return await Service.findAll();
+}
+
+export async function create(req: Request, res: Response) {
+  const payload = req.validated?.body || req.body;
+  res.status(201);
+  return await Service.create({ data: payload });
+}
+
+export async function getById(req: Request) {
+  const id = parseId(req.params.id);
+  return await Service.findById({ id });
+}
+```
+
+### 4. Register Routes
+
+```typescript
+// server/src/routes.ts
+import myFeatureRoutes from "@/app/myfeature/myfeature.routes";
+
+export function registerRoutes(app: Express): void {
+  // ... existing routes
+  protectedRouter.use("/myfeature", myFeatureRoutes);
 }
 ```
 
 ---
 
 ## Use the Auth System
-
-Update your login page to use JWT:
 
 ```tsx
 // client/src/pages/Login.tsx
@@ -177,114 +190,37 @@ export function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await login(email, password);
-      // Redirect on success
-      window.location.href = "/dashboard";
-    } catch (error) {
-      // Error is handled by the store
-    }
+    await login(email, password);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-4">
-        <h1 className="text-2xl font-medium">Login</h1>
-
-        {error && <div className="p-4 text-sm text-red-600 bg-red-50 rounded">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-        </form>
+    <form onSubmit={handleSubmit}>
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
       </div>
-    </div>
+      <div>
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? "Logging in..." : "Login"}
+      </Button>
+    </form>
   );
 }
-```
-
-Check auth on app load:
-
-```tsx
-// client/src/App.tsx
-import { useEffect } from "react";
-import { useAuthStore } from "@/store/auth";
-
-export function App() {
-  const { checkAuth, hasCheckedAuth } = useAuthStore();
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  if (!hasCheckedAuth) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    // Your app routes
-  );
-}
-```
-
----
-
-## Create an API Endpoint
-
-Add a new protected endpoint:
-
-```typescript
-// server/src/routes/myfeature.routes.ts
-import { Router } from "express";
-import { jwtAuthMiddleware } from "@/middlewares/jwt-auth.middleware";
-import { asyncHandler } from "@/core/async-handler";
-import { ResponseHandler } from "@/core/response-handler";
-
-const router = Router();
-
-router.get(
-  "/",
-  jwtAuthMiddleware,
-  asyncHandler(async (req, res) => {
-    // req.user contains the authenticated user
-    const data = { message: "Hello from protected route!" };
-    return ResponseHandler.success(res, data);
-  }),
-);
-
-export default router;
-```
-
-Register the route:
-
-```typescript
-// server/src/routes/index.ts
-import myFeatureRoutes from "@/routes/myfeature.routes";
-
-router.use("/myfeature", myFeatureRoutes);
 ```
 
 ---
@@ -292,19 +228,18 @@ router.use("/myfeature", myFeatureRoutes);
 ## Use the Enhanced API Client
 
 ```typescript
-// In your React component
 import { apiClient } from "@/lib/api";
 
-// Generic GET request
+// GET request
 const data = await apiClient.get<MyType>("/todos");
 
-// Generic POST request
+// POST request
 const newItem = await apiClient.post<MyType>("/todos", { title: "New Todo" });
 
-// Generic PUT request
+// PUT request
 const updated = await apiClient.put<MyType>("/todos/1", { completed: true });
 
-// Generic DELETE request
+// DELETE request
 await apiClient.delete("/todos/1");
 ```
 
@@ -341,55 +276,31 @@ await apiClient.delete("/todos/1");
 
 ---
 
-## Useful Utilities
+## Common Commands
 
-```typescript
-// Date utilities
-import { formatDisplayDate, formatRelativeTime, addDays, startOfMonth } from "@/lib/utils";
+```bash
+# Development
+pnpm dev              # Start dev server
+pnpm dev:pglite       # Start with PGlite (local DB)
+pnpm dev:docker       # Start with Docker PostgreSQL
 
-formatDisplayDate(new Date()); // "Jan 1, 2024"
-formatRelativeTime(new Date()); // "2 hours ago"
+# Database
+pnpm prisma generate  # Generate Prisma client
+pnpm prisma:push      # Push schema to database
 
-// Currency formatting
-import { formatCurrency } from "@/lib/utils";
-formatCurrency(1234.56); // "$1,234.56"
+# Build
+pnpm build            # Build for production
+pnpm start            # Run production build
 
-// File size formatting
-import { formatBytes } from "@/lib/utils";
-formatBytes(1024); // "1 KB"
+# Code Quality
+pnpm lint             # Lint code
+pnpm format           # Format code
+pnpm check            # Lint and format check
 
-// Truncate text
-import { truncate } from "@/lib/utils";
-truncate("Long text here", 10); // "Long text..."
-
-// Get initials
-import { getInitials } from "@/lib/utils";
-getInitials("John Doe"); // "JD"
-
-// Debounce
-import { debounce } from "@/lib/utils";
-const debouncedFn = debounce(() => console.log("Called!"), 300);
-```
-
----
-
-## Design System
-
-Use the built-in design tokens for consistent styling:
-
-```typescript
-import {
-  pageLayout,
-  typography,
-  statusColors,
-  iconSizes
-} from "@/lib/utils";
-
-// Use in your components
-<div className={pageLayout.container}>
-  <h1 className={typography.h1}>Title</h1>
-  <p className={typography.body}>Body text</p>
-</div>
+# Testing
+pnpm test             # Run tests
+pnpm test:watch       # Watch mode
+pnpm test:e2e         # E2E tests
 ```
 
 ---
@@ -398,57 +309,26 @@ import {
 
 Before deploying to production:
 
-- [ ] Run `./setup-boilerplate.sh` to generate secure secrets (or manually set):
-  - [ ] Change `JWT_SECRET` to a strong random value (min 32 chars)
-  - [ ] Change `ADMIN_AUTH_KEY` to a strong random value
+- [ ] Run `./setup-boilerplate.sh` to generate secure secrets
+- [ ] Change `JWT_SECRET` to a strong random value (min 32 chars)
+- [ ] Change `ADMIN_AUTH_KEY` to a strong random value
 - [ ] Set `DATABASE_URL` to your production database
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
-- [ ] Update `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD`
+- [ ] Configure passkey environment (`RP_ID`, `RP_NAME`, `RP_ORIGIN`)
 - [ ] Set `NODE_ENV=production`
-- [ ] Review and update CORS settings if needed
-- [ ] Test auth endpoints
 - [ ] Run `pnpm build` to verify build succeeds
 - [ ] Run `pnpm test` to verify tests pass
 
 ---
 
-## Common Commands
-
-```bash
-# Development
-pnpm dev              # Start dev server
-pnpm build            # Build for production
-pnpm start            # Run production build
-
-# Database
-pnpm prisma generate  # Generate Prisma client
-pnpm prisma db push   # Push schema to database
-
-# Code Quality
-pnpm lint             # Lint code
-pnpm format           # Format code
-pnpm test             # Run tests
-pnpm test:watch       # Run tests in watch mode
-```
-
----
-
-## Need Help?
-
-- **Full Documentation**: See `BOILERPLATE_ENHANCEMENTS.md`
-- **Component Examples**: Check existing pages in `client/src/pages/`
-- **API Examples**: Check existing routes in `server/src/routes/`
-
----
-
-**Ready to ship!** 🚀
+**Ready to ship!**
 
 Your boilerplate is production-ready with:
 
-- ✅ JWT Authentication
-- ✅ 23 UI Components
-- ✅ Error Handling & Logging
-- ✅ Type-Safe API Client
-- ✅ Design System
-
-Start building your SaaS today!
+- JWT and Passkey authentication
+- 26 UI components
+- Background jobs system
+- Error handling & logging
+- Type-safe API client
+- AI integration
+- File storage

@@ -1,76 +1,164 @@
 # Background Jobs
 
-Pg-boss powers asynchronous work for this project. Jobs are enqueued via HTTP endpoints or server-side helpers and executed by workers registered at boot.
+Pg-boss powers asynchronous work with a modularized, dynamically-registered job system. Jobs are registered at boot time and executed by dedicated workers.
 
-## Configuration
+## Architecture
 
-- `core/job/config.ts` loads connection + retry settings from environment variables.
-- `core/job/index.ts` exports helpers (`addJob`, `scheduleJob`, `getJobs`, etc.) and bootstraps PgBoss via `initJobQueue()`/`startWorkers()` inside `server/src/index.ts`.
-- `core/job/worker.ts` manages handler registration, queue creation, concurrency, and graceful shutdown.
-- `core/job/error-handler.ts` wraps handlers with Sentry capture + structured logging.
+The job system is split into focused modules:
+
+| Module | File | Purpose |
+| ------ | ---- | ------- |
+| Config | `core/job/config.ts` | Environment-based configuration |
+| Client | `core/job/client.ts` | PgBoss singleton instance |
+| Queue | `core/job/queue.ts` | Job queueing and scheduling |
+| Queries | `core/job/queries.ts` | Job inspection and management |
+| Worker | `core/job/worker.ts` | Handler registration and execution |
+| Error Handler | `core/job/error-handler.ts` | Sentry capture + logging |
+
+## Job Registration
+
+Jobs are registered dynamically in feature modules, not via static enums:
+
+```typescript
+// shared/jobs/job.handlers.ts
+import { registerJobHandler, type JobHandler } from "@/core/job";
+import type { TodoCleanupPayload } from "./job.types";
+
+export const todoCleanupHandler: JobHandler<TodoCleanupPayload> = async ({ data }) => {
+  const { daysToKeep } = data;
+  // Cleanup logic...
+};
+
+export function registerJobHandlers(): void {
+  registerJobHandler("todo-cleanup", todoCleanupHandler);
+}
+```
+
+Then register in `routes.ts`:
+
+```typescript
+import { registerJobHandlers } from "@/shared/jobs/job.handlers";
+
+export function registerJobHandlers(): void {
+  registerJobHandlers();
+}
+```
 
 ## Available Jobs
 
-Defined in `core/job/queue.ts` and implemented inside `server/src/jobs`.
-
-| Job            | Handler                | Description                                                  |
-| -------------- | ---------------------- | ------------------------------------------------------------ |
+| Job | Handler | Description |
+| --- | ------- | ----------- |
 | `todo-cleanup` | `jobs/todo-cleanup.ts` | Deletes completed todos older than `daysToKeep` (default 30) |
-| `todo-summary` | `jobs/todo-summary.ts` | Counts total/completed/pending todos and logs aggregates     |
+| `todo-summary` | `jobs/todo-summary.ts` | Logs aggregate todo stats |
 
-Each handler receives `{ jobId, data }` via PgBoss and can access Prisma, Logger, or other services.
+Each handler receives `{ jobId, data }` from PgBoss.
 
-## Enqueuing Jobs
+## Queueing Jobs
 
 ### Via Code
 
-```ts
-import { addJob, JobName } from "@/core/job";
+```typescript
+import { addJob } from "@/core/job";
 
-await addJob(JobName.TODO_CLEANUP, { daysToKeep: 60 });
+await addJob("todo-cleanup", { daysToKeep: 60 });
 ```
 
 ### Via HTTP
 
-Endpoints live under `/api/v1/jobs` (see `server/src/routes/job.routes.ts`). Example requests:
-
 ```bash
 # Queue immediately
-curl -u user:pass -X POST https://groot.localhost/api/v1/jobs \
+curl -H "Authorization: Bearer <token>" \
+  -X POST https://groot.localhost/api/v1/jobs \
   -H "Content-Type: application/json" \
-  -d '{"jobName":"todo-summary","data":{}}'
+  -d '{"jobName":"todo-cleanup","data":{"daysToKeep":60}}'
 
-# Schedule with cron
-curl -u user:pass -X POST https://groot.localhost/api/v1/jobs/schedule \
+# Schedule with cron (runs daily at 2am)
+curl -H "Authorization: Bearer <token>" \
+  -X POST https://groot.localhost/api/v1/jobs/schedule \
   -H "Content-Type: application/json" \
   -d '{"jobName":"todo-cleanup","data":{"daysToKeep":14},"cron":"0 2 * * *"}'
 
 # Retry a failed job
-curl -u user:pass -X POST https://groot.localhost/api/v1/jobs/todo-cleanup/job-123/retry
+curl -H "Authorization: Bearer <token>" \
+  -X POST https://groot.localhost/api/v1/jobs/todo-cleanup/job-123/retry
 ```
 
-Other key endpoints:
+## Job API Endpoints
 
-- `GET /api/v1/jobs/available` – Lists valid `JobName` values
-- `GET /api/v1/jobs?state=failed&name=todo-cleanup` – Filters job history
-- `GET /api/v1/jobs/stats` – Aggregated counts per queue/state
-- `DELETE /api/v1/jobs/state/failed` – Purge an entire state
-- `GET /api/v1/jobs/todo-cleanup/<id>` – Inspect a specific job record
+| Endpoint | Method | Description |
+| -------- | ------ | ----------- |
+| `/api/v1/jobs` | POST | Queue a new job |
+| `/api/v1/jobs/schedule` | POST | Schedule a job with cron |
+| `/api/v1/jobs/available` | GET | List valid job names |
+| `/api/v1/jobs` | GET | Filter jobs by state/name |
+| `/api/v1/jobs/stats` | GET | Aggregated counts per queue/state |
+| `/api/v1/jobs/state/failed` | DELETE | Purge all failed jobs |
+| `/api/v1/jobs/:name/:id` | GET | Inspect specific job |
+| `/api/v1/jobs/:name/:id/retry` | POST | Retry a failed job |
+| `/api/v1/jobs/:name/:id/cancel` | POST | Cancel a queued job |
 
-All routes share consistent error handling thanks to `ResponseHandler` and logger instrumentation.
+All endpoints require JWT authentication.
 
-## Monitoring & Troubleshooting
+## Configuration
 
-- `logger` outputs job lifecycle events (queued, started, errors, completion). In dev mode, PgBoss emits `monitor-states` logs as well.
-- Sentry captures job exceptions with tags (`component=job_queue`, `jobName`).
-- Inspect the database directly: `SELECT * FROM pgboss.job WHERE name = 'todo-cleanup' ORDER BY created_on DESC LIMIT 10;`.
+Environment variables (see `core/job/config.ts`):
 
-## Extending the Job Catalog
+| Variable | Default | Description |
+| -------- | ------- | ----------- |
+| `ENABLE_JOB_QUEUE` | `true` | Enable/disable job processing |
+| `JOB_CONCURRENCY` | `5` | Workers per job |
+| `JOB_POLL_INTERVAL` | `2000` | Worker poll interval (ms) |
+| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | `86400` | Archive window |
+| `JOB_DELETE_ARCHIVED_AFTER_SECONDS` | `604800` | Deletion window |
+| `JOB_MONITOR_STATE_INTERVAL` | `30000` | Metrics interval |
 
-1. Add a new enum + payload type in `core/job/queue.ts`.
-2. Create `server/src/jobs/<name>.ts`, implement `registerJobHandler(JobName.NEW_JOB, handler)`.
-3. Import the handler in `server/src/jobs/index.ts`.
-4. Update `jobOptions` in `core/job/config.ts` if custom retry/timeout behavior is needed.
-5. Document the job here and expose HTTP triggers if necessary.
+## Monitoring
 
-Keep jobs idempotent and short-lived (under five minutes). For longer workflows, split them into smaller jobs or chain queue submissions.
+- **Logs**: Pino outputs job lifecycle events (queued, started, errors, completion)
+- **Sentry**: Captures exceptions with tags (`component=job_queue`, `jobName`)
+- **Database**: Inspect directly via `SELECT * FROM pgboss.job`
+
+## Adding a New Job
+
+1. **Define types** (in feature's validation or types file):
+
+```typescript
+export interface MyJobPayload {
+  someValue: string;
+}
+```
+
+2. **Create handler** (in `feature.jobs.ts`):
+
+```typescript
+import { registerJobHandler, type JobHandler } from "@/core/job";
+import type { MyJobPayload } from "./feature.types";
+
+export const myJobHandler: JobHandler<MyJobPayload> = async ({ data }) => {
+  // Implementation
+};
+
+export function registerFeatureJobs(): void {
+  registerJobHandler("my-job", myJobHandler);
+}
+```
+
+3. **Register in routes.ts**:
+
+```typescript
+import { registerFeatureJobs } from "@/app/feature/feature.jobs";
+
+export function registerJobHandlers(): void {
+  registerFeatureJobs();
+}
+```
+
+4. **Queue the job** via HTTP or code
+
+## Best Practices
+
+- Keep jobs idempotent (safe to retry)
+- Keep jobs short-lived (under 5 minutes)
+- Split long workflows into chained jobs
+- Use structured error handling via Boom
+- Log meaningful context for debugging

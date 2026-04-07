@@ -1,50 +1,197 @@
 # Testing Guide
 
-Vitest powers the unit/integration tests while Supertest handles HTTP assertions.
+Vitest powers the unit/integration tests while Supertest handles HTTP assertions. Tests are centralized in the `tests/` directory.
 
 ## Commands
 
 ```bash
 pnpm test         # Single run, great for CI
 pnpm test:watch   # Watch mode during development
+pnpm test:e2e     # Playwright E2E tests
+```
+
+## Test Structure
+
+```
+tests/
+├── server/              # Server unit tests
+│   ├── setup.ts         # Server test setup
+│   ├── core/            # Core utility tests
+│   │   ├── job/         # Job system tests
+│   │   └── utils/       # Utility tests
+│   └── app/             # Feature tests (mirror server/src/app)
+└── client/              # Client unit tests
+    ├── setup.ts         # Client test setup
+    └── components/      # Component tests
 ```
 
 ## Server Testing Patterns
 
-- **Route tests** – See `server/src/routes/job.routes.test.ts` for an example. It mounts an Express app, mocks `@/core/job`, and exercises the router with Supertest.
-- **Controller/service tests** – Instantiate the controller/service directly and stub Prisma via vi mocks when needed. Throw `NotFoundError` or other domain errors to validate middleware behavior.
-- **Job handlers** – Import the handler and pass a fake `pg-boss` job object. You can assert Prisma calls (`vi.spyOn(prisma.todo, ...)`) without spinning up the queue.
+### Route Tests
+
+Test HTTP endpoints with Supertest:
+
+```typescript
+// tests/server/app/todo/todo.routes.test.ts
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import request from "supertest";
+import express from "express";
+import todoRoutes from "@/app/todo/todo.routes";
+
+vi.mock("@/app/todo/todo.service", () => ({
+  findAll: vi.fn().mockResolvedValue([{ id: 1, title: "Test" }]),
+  create: vi.fn().mockResolvedValue({ id: 1, title: "New" }),
+}));
+
+describe("Todo Routes", () => {
+  const app = express();
+  app.use(express.json());
+  app.use("/todos", todoRoutes);
+
+  it("GET /todos returns array", async () => {
+    const res = await request(app).get("/todos");
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  it("POST /todos with valid data creates todo", async () => {
+    const res = await request(app)
+      .post("/todos")
+      .send({ title: "New Todo" });
+    expect(res.status).toBe(201);
+  });
+
+  it("POST /todos with invalid data returns 400", async () => {
+    const res = await request(app)
+      .post("/todos")
+      .send({});
+    expect(res.status).toBe(400);
+  });
+});
+```
+
+### Service Tests
+
+Test business logic directly:
+
+```typescript
+// tests/server/app/todo/todo.service.test.ts
+import { describe, it, expect, vi } from "vitest";
+import * as TodoService from "@/app/todo/todo.service";
+
+vi.mock("@/app/todo/todo.model", () => ({
+  findAll: vi.fn().mockResolvedValue([]),
+  create: vi.fn().mockResolvedValue({ id: 1 }),
+}));
+
+describe("TodoService", () => {
+  it("findAll returns todos", async () => {
+    const todos = await TodoService.findAll();
+    expect(Array.isArray(todos)).toBe(true);
+  });
+});
+```
+
+### Job Handler Tests
+
+Test job handlers with mock job objects:
+
+```typescript
+// tests/server/app/todo/todo.jobs.test.ts
+import { describe, it, expect, vi } from "vitest";
+import { todoCleanupHandler } from "@/app/todo/todo.jobs";
+
+vi.mock("@/core/logger", () => ({
+  createJobLogger: () => ({ info: vi.fn(), error: vi.fn() }),
+}));
+
+describe("Todo Jobs", () => {
+  it("cleanup handler processes data", async () => {
+    const job = { id: "test-123", data: { daysToKeep: 30 } };
+    await expect(todoCleanupHandler(job)).resolves.toBeUndefined();
+  });
+});
+```
 
 ## Mocking Tips
 
-- Use `vi.hoisted` to build mocks shared across tests.
-- When mocking Prisma, target the specific model methods (e.g., `vi.spyOn(prisma.todo, "deleteMany")`).
-- For PgBoss helpers, mock `@/core/job` exports similar to the job route test.
+### Prisma Mocking
+
+```typescript
+import { vi } from "vitetest";
+
+vi.mock("@/core/database", () => ({
+  prisma: {
+    todo: {
+      findMany: vi.fn().mockResolvedValue([]),
+      create: vi.fn().mockResolvedValue({ id: 1 }),
+      update: vi.fn().mockResolvedValue({ id: 1 }),
+    },
+  },
+}));
+```
+
+### Job System Mocking
+
+```typescript
+vi.mock("@/core/job", () => ({
+  addJob: vi.fn().mockResolvedValue("job-id"),
+  scheduleJob: vi.fn().mockResolvedValue("scheduled-id"),
+  getJobs: vi.fn().mockResolvedValue([]),
+  registerJobHandler: vi.fn(),
+}));
+```
+
+### Logger Mocking
+
+```typescript
+vi.mock("@/core/logger", () => ({
+  createRequestLogger: () => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  }),
+  createJobLogger: () => ({
+    info: vi.fn(),
+    error: vi.fn(),
+  }),
+}));
+```
 
 ## HTTP Coverage Checklist
 
 For each API route, cover:
 
-1. **Success path** – Validate `201/200` responses and response body structure (matches `ResponseHandler`).
-2. **Validation errors** – Send malformed payloads to ensure `validate()` rejects them.
-3. **Auth guard** – Optionally assert that missing `Authorization` headers yield `401` (via middleware tests or integration harnesses).
-4. **Edge cases** – e.g., `JobName` lookups, missing resources, pagination limits.
+1. **Success path** – Validate `201/200` responses and response body structure
+2. **Validation errors** – Send malformed payloads to ensure validation rejects them
+3. **Auth guard** – Assert that missing JWT returns `401` (for protected routes)
+4. **Edge cases** – Missing resources, invalid IDs, pagination limits
 
-## Background Job Coverage
+## Client Testing
 
-- Simulate PgBoss jobs by passing `{ id: "demo", data: {...} }` into handlers.
-- Assert log output via `vi.spyOn(logger, "info")` if you need to ensure telemetry fires.
-- For database mutations (cleanup job) wrap Prisma calls inside transactions during tests or mock them out entirely.
+Use Vitest + `@testing-library/react`:
 
-## Client Testing (Future Work)
+```typescript
+// tests/client/components/ui/Button.test.tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { Button } from "@/components/ui/button";
 
-The current repo focuses on server-side Vitest tests. If you add React component tests:
+describe("Button", () => {
+  it("renders with text", () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByText("Click me")).toBeInTheDocument();
+  });
 
-- Use Vitest + `@testing-library/react`.
-- Mock `react-query` providers and the Axios client.
-- Assert routing via `MemoryRouter`.
+  it("shows loading state", () => {
+    render(<Button disabled>Loading...</Button>);
+    expect(screen.getByText("Loading...")).toBeDisabled();
+  });
+});
+```
 
 ## Continuous Verification
 
-- Run `pnpm lint` + `pnpm test` before opening PRs.
-- Add GitHub Actions or other CI once the project matures to enforce these checks automatically.
+- Run `pnpm check` (lint + format) before opening PRs
+- Run `pnpm test` to verify tests pass
+- Add CI (GitHub Actions) to enforce checks automatically
