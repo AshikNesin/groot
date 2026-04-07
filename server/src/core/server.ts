@@ -11,7 +11,7 @@ import { Sentry } from "@/core/instrument";
 import { env } from "@/core/env";
 import { logger } from "@/core/logger";
 import corsMiddleware from "@/core/middlewares/cors.middleware";
-import { requestLoggerMiddleware } from "@/core/middlewares/requestLogger.middleware";
+import { requestLoggerMiddleware } from "@/core/middlewares/request-logger.middleware";
 import {
   errorHandlerMiddleware,
   notFoundHandler,

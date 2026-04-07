@@ -6,7 +6,7 @@ import { getBreadcrumbs } from "@/core/logger/breadcrumbs";
 import { getCurrentTraceContext } from "@/core/logger/trace-context";
 import { sanitizeRequestBody } from "@/core/logger/utils";
 import { ZodError } from "zod";
-import { getRequestLogger } from "@/core/middlewares/requestLogger.middleware";
+import { getRequestLogger } from "@/core/middlewares/request-logger.middleware";
 import { env } from "@/core/env";
 
 /**
