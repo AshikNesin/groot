@@ -28,17 +28,29 @@ export const getJobById = async (options: {
   return boss.getJobById(options.queueName, options.jobId);
 };
 
-// Get queue statistics
+// Get queue statistics (state-level counts)
 export const getQueueStats = async (): Promise<Record<string, number>> => {
+  const results = await prisma.$queryRaw<
+    Array<{ state: string; count: bigint }>
+  >`SELECT state, COUNT(*) as count FROM pgboss.job GROUP BY state`;
+
+  const stats: Record<string, number> = {};
+  for (const state of VALID_JOB_STATES) {
+    stats[state] = 0;
+  }
+
+  for (const row of results) {
+    stats[row.state] = Number(row.count);
+  }
+
+  return stats;
+};
+
+// Get available queue names
+export const getAvailableQueues = async (): Promise<string[]> => {
   const boss = getBoss();
-  const counts = await boss.getQueueStats();
-  return counts.reduce(
-    (acc, stat) => {
-      acc[stat.queue] = stat.count;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+  const queues = await boss.getQueues();
+  return queues.map((q) => q.name);
 };
 
 // Fetch jobs with filters (queue-based, for fetching from a specific queue)

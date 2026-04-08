@@ -11,6 +11,7 @@ onlyBuiltDependencies:
   - bcrypt
   - esbuild
   - prisma
+  - protobufjs
 
 overrides:
   vite: "catalog:"

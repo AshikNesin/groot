@@ -1,13 +1,13 @@
 import { z } from "zod";
 
 export const createJobSchema = z.object({
-  name: z.string().min(1),
+  jobName: z.string().min(1),
   data: z.any().optional(),
   options: z.any().optional(),
 });
 
 export const scheduleJobSchema = z.object({
-  name: z.string().min(1),
+  jobName: z.string().min(1),
   cron: z.string().min(1),
   data: z.any().optional(),
   options: z.any().optional(),
@@ -35,4 +35,9 @@ export const getJobsSchema = z.object({
   offset: z.coerce.number().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+});
+
+export const fetchAvailableJobsSchema = z.object({
+  queue: z.string().min(1, "Queue name is required"),
+  limit: z.coerce.number().optional(),
 });
