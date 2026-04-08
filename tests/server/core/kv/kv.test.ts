@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
-import { createNamespaceKv } from "@/core/kv";
-import Keyv from "keyv";
 
-// Mock the Prisma client for testing - use vi.hoisted to avoid initialization order issues
+// Mock the Prisma client for testing - use vi.hoisted to share with mock factory
 const mockPrisma = vi.hoisted(() => ({
   keyv: {
     findUnique: vi.fn(),
@@ -13,8 +11,13 @@ const mockPrisma = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/core/database", () => ({
+vi.mock("../../../../server/src/core/database", () => ({
   prisma: mockPrisma,
+}));
+
+vi.mock("../../../../server/src/core/logger", () => ({
+  logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
+  createJobLogger: () => ({ info: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));
 
 // Import after mocking
@@ -30,10 +33,10 @@ describe("KV System", () => {
   });
 
   describe("Namespaced KV", () => {
-    it("should create a namespaced KV instance", () => {
+    it("should create a namespaced KV instance", async () => {
+      const { createNamespaceKv } = await import("@/core/kv/store");
       const nsKv = createNamespaceKv("test-namespace");
       expect(nsKv).toBeDefined();
-      // Check that the namespace is set by looking at the internal options
       expect(nsKv.namespace).toBe("test-namespace");
     });
   });
@@ -42,11 +45,11 @@ describe("KV System", () => {
     let adapter: KeyvPrismaAdapter;
 
     beforeEach(() => {
-      adapter = new KeyvPrismaAdapter({ namespace: "test-adapter" });
+      adapter = new KeyvPrismaAdapter({ namespace: "test-adapter", prisma: mockPrisma as any });
     });
 
     it("should create adapter with default options", () => {
-      const defaultAdapter = new KeyvPrismaAdapter();
+      const defaultAdapter = new KeyvPrismaAdapter({ prisma: mockPrisma as any });
       expect(defaultAdapter).toBeDefined();
     });
 
@@ -59,14 +62,16 @@ describe("KV System", () => {
     });
 
     it("should generate namespaced keys correctly", () => {
-      // Access private method through type assertion for testing
       const adapterWithKey = adapter as KeyvPrismaAdapter & {
         getKey(key: string): string;
       };
       expect(adapterWithKey.getKey("test")).toBe("test-adapter:test");
 
       // Test without namespace
-      const noNsAdapter = new KeyvPrismaAdapter({ namespace: undefined });
+      const noNsAdapter = new KeyvPrismaAdapter({
+        namespace: undefined,
+        prisma: mockPrisma as any,
+      });
       const noNamespace = noNsAdapter as KeyvPrismaAdapter & {
         getKey(key: string): string;
       };
@@ -74,8 +79,7 @@ describe("KV System", () => {
     });
 
     it("should get a value that exists", async () => {
-      const mockValue = { value: '{"name":"test"}' };
-      mockPrisma.keyv.findUnique.mockResolvedValue(mockValue);
+      mockPrisma.keyv.findUnique.mockResolvedValue({ value: '{"name":"test"}' });
 
       const result = await adapter.get("test-key");
       expect(result).toEqual({ name: "test" });
@@ -92,8 +96,7 @@ describe("KV System", () => {
     });
 
     it("should handle non-JSON values", async () => {
-      const mockValue = { value: "plain string value" };
-      mockPrisma.keyv.findUnique.mockResolvedValue(mockValue);
+      mockPrisma.keyv.findUnique.mockResolvedValue({ value: "plain string value" });
 
       const result = await adapter.get("test-key");
       expect(result).toBe("plain string value");
@@ -159,7 +162,10 @@ describe("KV System", () => {
     });
 
     it("should clear all entries when no namespace", async () => {
-      const noNsAdapter = new KeyvPrismaAdapter({ namespace: undefined });
+      const noNsAdapter = new KeyvPrismaAdapter({
+        namespace: undefined,
+        prisma: mockPrisma as any,
+      });
       mockPrisma.keyv.deleteMany.mockResolvedValue({ count: 10 });
 
       await noNsAdapter.clear();
@@ -206,17 +212,18 @@ describe("KV System", () => {
     });
 
     it("should disconnect gracefully", async () => {
-      // Should not throw any errors
       await adapter.disconnect();
     });
   });
 
   describe("Error Handling", () => {
     it("should handle database errors gracefully", async () => {
-      const adapter = new KeyvPrismaAdapter({ namespace: "error-test" });
+      const adapter = new KeyvPrismaAdapter({
+        namespace: "error-test",
+        prisma: mockPrisma as any,
+      });
       mockPrisma.keyv.findUnique.mockRejectedValue(new Error("Database error"));
 
-      // Should reject with error
       await expect(adapter.get("test-key")).rejects.toThrow("Database error");
     });
   });
