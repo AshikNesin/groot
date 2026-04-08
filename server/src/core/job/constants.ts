@@ -5,6 +5,7 @@ export const JOB_STATES = {
   COMPLETED: "completed",
   CANCELLED: "cancelled",
   FAILED: "failed",
+  EXPIRED: "expired",
 } as const;
 
 export const VALID_JOB_STATES = Object.values(JOB_STATES);
@@ -27,6 +28,7 @@ export function getJobStateDescription(state: string): string {
     [JOB_STATES.COMPLETED]: "Job completed successfully",
     [JOB_STATES.CANCELLED]: "Job was cancelled before completion",
     [JOB_STATES.FAILED]: "Job failed and exhausted retries",
+    [JOB_STATES.EXPIRED]: "Job expired before completion",
   };
 
   return descriptions[state] ?? "Unknown job state";

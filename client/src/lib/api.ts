@@ -323,8 +323,8 @@ class ApiClient {
   }
 
   async getAvailableJobs(): Promise<string[]> {
-    const response = await this.client.get<ApiResponse<string[]>>("/jobs/available");
-    return response.data.data ?? [];
+    const response = await this.client.get<ApiResponse<{ jobs: string[] }>>("/jobs/available");
+    return response.data.data?.jobs ?? [];
   }
 
   async getScheduledJobs(): Promise<ScheduledJob[]> {

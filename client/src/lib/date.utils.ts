@@ -50,7 +50,7 @@ export function formatDetailedDateTime(date: DateInput): string {
  * Format date time for locale
  */
 export function formatLocaleDateTime(date: DateInput): string {
-  return toDayjs(date).format("L LT");
+  return toDayjs(date).format("M/D/YYYY, h:mm:ss A");
 }
 
 /**

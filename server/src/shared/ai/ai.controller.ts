@@ -45,19 +45,19 @@ export async function getModels() {
 
 export async function getUsage(req: Request) {
   const userId = req.user?.userId;
-  const query = req.query as unknown as UsageQueryDTO;
+  const query = (req.validated?.query ?? req.query) as UsageQueryDTO;
   return await AIUsageService.getUsage({ userId, params: query });
 }
 
 export async function getUsageRecords(req: Request) {
   const userId = req.user?.userId;
-  const query = req.query as unknown as UsageQueryDTO;
+  const query = (req.validated?.query ?? req.query) as UsageQueryDTO;
   return await AIUsageService.getUsageRecords({ userId, params: query });
 }
 
 export async function listConversations(req: Request) {
   const userId = req.user?.userId;
-  const query = req.query as unknown as ListConversationsQueryDTO;
+  const query = (req.validated?.query ?? req.query) as ListConversationsQueryDTO;
   return await AIConversationService.listConversations({
     userId,
     limit: query.limit,

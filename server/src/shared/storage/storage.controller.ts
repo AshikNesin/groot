@@ -14,7 +14,7 @@ import type {
 import { Boom } from "@/core/errors";
 
 export async function listFiles(req: Request) {
-  const query = req.query as unknown as ListFilesDTO;
+  const query = (req.validated?.query ?? req.query) as ListFilesDTO;
   return await StorageFileService.listFiles({
     prefix: query.prefix,
     delimiter: query.delimiter,
@@ -38,7 +38,7 @@ export async function uploadFile(req: Request) {
 }
 
 export async function downloadFile(req: Request, res: Response) {
-  const query = req.query as unknown as DownloadFileDTO;
+  const query = (req.validated?.query ?? req.query) as DownloadFileDTO;
   const file = await StorageFileService.downloadFile({
     filePath: query.filePath,
   });
@@ -56,7 +56,7 @@ export async function deleteFiles(req: Request) {
 }
 
 export async function getFileMetadata(req: Request) {
-  const query = req.query as unknown as GetFileMetadataDTO;
+  const query = (req.validated?.query ?? req.query) as GetFileMetadataDTO;
   return await StorageFileService.getFileMetadata({
     filePath: query.filePath,
   });
@@ -110,7 +110,7 @@ export async function createPublicShare(req: Request) {
 }
 
 export async function listSharesForFile(req: Request) {
-  const query = req.query as unknown as ListSharesForFileDTO;
+  const query = (req.validated?.query ?? req.query) as ListSharesForFileDTO;
   return await PublicShareService.listSharesForFile({ filePath: query.filePath });
 }
 
