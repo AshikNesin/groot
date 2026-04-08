@@ -98,7 +98,7 @@ export async function getByState(req: Request) {
  * Get all jobs with filters
  */
 export async function getAll(req: Request) {
-  const query = req.query as unknown as GetJobsOptions;
+  const query = (req.validated?.query ?? req.query) as GetJobsOptions;
   return await JobSystem.queries.getJobs(query);
 }
 

@@ -31,10 +31,10 @@ export const getJobById = async (options: {
 // Get queue statistics
 export const getQueueStats = async (): Promise<Record<string, number>> => {
   const boss = getBoss();
-  const counts = await boss.getQueueStats();
-  return counts.reduce(
-    (acc, stat) => {
-      acc[stat.queue] = stat.count;
+  const queues = await boss.getQueues();
+  return queues.reduce(
+    (acc, q) => {
+      acc[q.name] = q.totalCount;
       return acc;
     },
     {} as Record<string, number>,

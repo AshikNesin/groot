@@ -2,11 +2,28 @@ import type { NextFunction, Request, Response } from "express";
 import { type ZodSchema, z } from "zod";
 import { Boom, ErrorCode } from "@/core/errors";
 
+declare global {
+  namespace Express {
+    interface Request {
+      validated?: {
+        body?: unknown;
+        query?: unknown;
+        params?: unknown;
+      };
+    }
+  }
+}
+
 function createValidator(target: "body" | "query" | "params") {
   return function <T extends ZodSchema>(schema: T) {
     return (req: Request, _res: Response, next: NextFunction) => {
       try {
-        req[target] = schema.parse(req[target] ?? {});
+        const parsed = schema.parse(req[target] ?? {});
+        req.validated = req.validated ?? {};
+        req.validated[target] = parsed;
+        if (target === "body") {
+          req.body = parsed;
+        }
         next();
       } catch (error) {
         if (error instanceof z.ZodError) {
