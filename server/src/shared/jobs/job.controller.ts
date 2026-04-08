@@ -1,11 +1,7 @@
 import type { Request } from "express";
 import { JobSystem } from "@/core/job";
-import type {
-  PaginationOptions,
-  GetJobsByStateOptions,
-  GetJobsOptions,
-  RerunJobOptions,
-} from "@/core/job/types";
+import { prisma } from "@/core/database";
+import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "@/core/job/types";
 import { Boom } from "@/core/errors";
 import { parseLimit } from "@/core/utils/controller.utils";
 
@@ -13,17 +9,17 @@ import { parseLimit } from "@/core/utils/controller.utils";
  * Queue a job for immediate execution
  */
 export async function create(req: Request) {
-  const { name, data, options } = req.body;
-  const jobId = await JobSystem.queue.addJob(name, data, options);
-  return { jobId };
+  const { jobName, data, options } = req.body;
+  const jobId = await JobSystem.queue.addJob(jobName, data, options);
+  return { jobId, jobName, data };
 }
 
 /**
  * Schedule a recurring job
  */
 export async function schedule(req: Request) {
-  const { name, data, cron, options } = req.body;
-  await JobSystem.queue.scheduleJob(name, data, cron, options);
+  const { jobName, data, cron, options } = req.body;
+  await JobSystem.queue.scheduleJob(jobName, data, cron, options);
   return { success: true };
 }
 
@@ -59,12 +55,11 @@ export async function getStats() {
 }
 
 /**
- * Fetch jobs (queue-based)
+ * Get available job/queue names
  */
-export async function getAvailable(req: Request) {
-  const queueName = req.query.queue as string;
-  const limit = parseLimit(req.query.limit as string);
-  return await JobSystem.queries.fetchJobs({ queueName, limit });
+export async function getAvailable() {
+  const queues = await JobSystem.queries.getAvailableQueues();
+  return { jobs: queues };
 }
 
 /**
@@ -157,4 +152,26 @@ export async function deleteJobHandler(req: Request) {
   const { queueName, jobId } = req.params;
   await JobSystem.queue.deleteJob({ queueName, jobId });
   return { success: true };
+}
+
+/**
+ * Get job logs
+ */
+export async function getLogs(req: Request) {
+  const { jobId } = req.params;
+  const afterId = req.query.afterId ? Number.parseInt(req.query.afterId as string, 10) : 0;
+
+  const logs = await prisma.jobLog.findMany({
+    where: {
+      jobId,
+      id: {
+        gt: afterId,
+      },
+    },
+    orderBy: {
+      id: "asc",
+    },
+  });
+
+  return logs;
 }
