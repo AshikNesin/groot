@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 import { Boom } from "@/core/errors";
 import { env } from "@/core/env";
+
+dayjs.extend(duration);
 
 interface JWTPayload {
   userId: number;
@@ -10,26 +14,7 @@ interface JWTPayload {
 const JWT_SECRET = env.JWT_SECRET;
 const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
 
-function parseExpiresInToMs(expiresIn: string): number {
-  const match = expiresIn.match(/^(\d+)([smhd])$/);
-  if (!match) return 30 * 24 * 60 * 60 * 1000; // fallback: 30 days
-  const value = parseInt(match[1], 10);
-  const unit = match[2];
-  switch (unit) {
-    case "s":
-      return value * 1000;
-    case "m":
-      return value * 60 * 1000;
-    case "h":
-      return value * 60 * 60 * 1000;
-    case "d":
-      return value * 24 * 60 * 60 * 1000;
-    default:
-      return 30 * 24 * 60 * 60 * 1000;
-  }
-}
-
-export const JWT_EXPIRES_IN_MS = parseExpiresInToMs(JWT_EXPIRES_IN);
+export const JWT_EXPIRES_IN_MS = dayjs.duration(parseInt(JWT_EXPIRES_IN, 10), JWT_EXPIRES_IN.slice(-1) as dayjs.DurationUnitName).asMilliseconds();
 
 /**
  * Generate a JWT token
