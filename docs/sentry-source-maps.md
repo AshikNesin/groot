@@ -21,9 +21,9 @@ There are two ways to create a token:
 3. Click **Create Auth Token**
 4. Set a name (e.g. `groot-source-map-upload`)
 5. Select these scopes:
-   - `org:read`
-   - `project:releases`
+   - `organization:read`
    - `project:write`
+   - `release:admin`
 6. Click **Create Token**
 7. Copy the token — it's only shown once, so store it securely (password manager or CI secret store)
 
@@ -80,7 +80,7 @@ A release identifier (`groot@<git-sha>`) is computed during build and written to
 **Source maps not uploading?**
 - Verify `SENTRY_AUTH_TOKEN` is set in the build environment (not just runtime)
 - Check the build logs for Sentry-related errors
-- Ensure the token has the required scopes (`org:read`, `project:releases`, `project:write`)
+- Ensure the token has the required scopes (`organization:read`, `project:write`, `release:admin`)
 
 **Stack traces still showing bundled paths?**
 - Confirm the release in Sentry matches the release reported by the running app
