@@ -36,6 +36,10 @@ Sentry.init({
   sendDefaultPii: true,
   // https://sentry.io/product/logs/
   enableLogs: true,
+  integrations: [
+    // Auto-forward Pino logs to Sentry structured logs
+    Sentry.pinoIntegration(),
+  ],
 });
 
 export { Sentry };
