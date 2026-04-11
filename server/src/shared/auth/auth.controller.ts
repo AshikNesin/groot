@@ -3,6 +3,7 @@ import * as AuthService from "@/shared/auth/auth.service";
 import type { LoginDTO, CreateUserDTO } from "@/shared/auth/auth.validation";
 import { Boom } from "@/core/errors";
 import { env } from "@/core/env";
+import { JWT_EXPIRES_IN_MS } from "@/core/utils/jwt.utils";
 
 /**
  * Handle user login
@@ -17,7 +18,7 @@ export async function login(req: Request, res: Response) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "strict" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: JWT_EXPIRES_IN_MS,
     path: "/",
   });
 

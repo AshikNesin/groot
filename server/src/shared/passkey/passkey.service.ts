@@ -20,7 +20,51 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 
-const challengeStore = new Map<string, string>();
+// ── Challenge store with TTL and unique keys ──────────────────────────────
+
+interface ChallengeEntry {
+  challenge: string;
+  createdAt: number;
+}
+
+const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const challengeStore = new Map<string, ChallengeEntry>();
+
+function cleanExpiredChallenges(): void {
+  const now = Date.now();
+  for (const [key, entry] of challengeStore) {
+    if (now - entry.createdAt > CHALLENGE_TTL_MS) {
+      challengeStore.delete(key);
+    }
+  }
+}
+
+function storeChallenge(challenge: string): void {
+  cleanExpiredChallenges();
+  challengeStore.set(challenge, { challenge, createdAt: Date.now() });
+}
+
+function getAndDeleteChallenge(challenge: string): string | null {
+  const entry = challengeStore.get(challenge);
+  if (!entry) return null;
+  challengeStore.delete(challenge);
+  if (Date.now() - entry.createdAt > CHALLENGE_TTL_MS) {
+    return null;
+  }
+  return entry.challenge;
+}
+
+function extractChallengeFromResponse(response: {
+  response: { clientDataJSON: string };
+}): string {
+  const clientData = JSON.parse(
+    Buffer.from(response.response.clientDataJSON, "base64url").toString("utf-8"),
+  );
+  return clientData.challenge;
+}
+
+// ── Passkey service ───────────────────────────────────────────────────────
 
 export async function generateRegistrationOptions({
   userId,
@@ -35,7 +79,7 @@ export async function generateRegistrationOptions({
   const existingPasskeys = await passkeyModel.findByUserId(userId);
   const options = await generatePasskeyRegistrationOptions(user, existingPasskeys);
 
-  challengeStore.set(`reg:${userId}`, options.challenge);
+  storeChallenge(options.challenge);
   logger.debug({ userId, email: user.email }, "Generated passkey registration options");
 
   return options;
@@ -50,7 +94,8 @@ export async function verifyRegistration({
   response: RegistrationResponseJSON;
   credentialName?: string;
 }): Promise<Passkey> {
-  const expectedChallenge = challengeStore.get(`reg:${userId}`);
+  const challengeFromResponse = extractChallengeFromResponse(response);
+  const expectedChallenge = getAndDeleteChallenge(challengeFromResponse);
   if (!expectedChallenge) {
     throw Boom.badRequest("Challenge not found or expired");
   }
@@ -92,8 +137,6 @@ export async function verifyRegistration({
     credentialName: defaultName,
   });
 
-  challengeStore.delete(`reg:${userId}`);
-
   logger.info(
     { userId, passkeyId: passkey.id, credentialName: defaultName },
     "Passkey registered successfully",
@@ -116,8 +159,7 @@ export async function generateAuthenticationOptions({
 
   const options = await generatePasskeyAuthenticationOptions(userPasskeys);
 
-  const challengeKey = email ? `auth:${email}` : "auth:discoverable";
-  challengeStore.set(challengeKey, options.challenge);
+  storeChallenge(options.challenge);
 
   logger.debug({ email }, "Generated passkey authentication options");
 
@@ -131,8 +173,8 @@ export async function verifyAuthentication({
   response: AuthenticationResponseJSON;
   email?: string;
 }): Promise<{ token: string; user: Omit<User, "password"> }> {
-  const challengeKey = email ? `auth:${email}` : "auth:discoverable";
-  const expectedChallenge = challengeStore.get(challengeKey);
+  const challengeFromResponse = extractChallengeFromResponse(response);
+  const expectedChallenge = getAndDeleteChallenge(challengeFromResponse);
   if (!expectedChallenge) {
     throw Boom.badRequest("Challenge not found or expired");
   }
@@ -163,8 +205,6 @@ export async function verifyAuthentication({
     userId: user.id,
     email: user.email,
   });
-
-  challengeStore.delete(challengeKey);
 
   logger.info(
     { userId: user.id, email: user.email, passkeyId: passkey.id },

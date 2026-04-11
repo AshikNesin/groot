@@ -18,3 +18,17 @@ export function getContentType(fileName: string): string {
   }
   return map[extension] ?? "application/octet-stream";
 }
+
+/**
+ * Sanitize a filename for safe use in Content-Disposition headers.
+ * Strips characters that break the header and applies RFC 5987 encoding for non-ASCII.
+ */
+export function sanitizeFileName(fileName: string): string {
+  const sanitized = fileName.replace(/[\r\n"]/g, "");
+  const isAscii = /^[\x20-\x7E]*$/.test(sanitized);
+  if (!isAscii) {
+    const encoded = encodeURIComponent(sanitized);
+    return `filename="download"; filename*=UTF-8''${encoded}`;
+  }
+  return `filename="${sanitized}"`;
+}

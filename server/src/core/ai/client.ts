@@ -135,6 +135,14 @@ export class AIClient {
         })
       : await piComplete(this._model, context, streamOptions);
 
+    const errorBlocks = response.content.filter((block) => block.type === "error");
+    if (errorBlocks.length > 0) {
+      const errorBlock = errorBlocks[0] as any;
+      throw new Error(
+        errorBlock.error?.errorMessage || "AI completion error during object generation",
+      );
+    }
+
     const toolCalls = response.content.filter((block) => block.type === "toolCall");
 
     if (toolCalls.length === 0) {
@@ -197,6 +205,12 @@ export class AIClient {
   }
 
   private extractText(response: AssistantMessage): string {
+    const errorBlocks = response.content.filter((block) => block.type === "error");
+    if (errorBlocks.length > 0) {
+      const errorBlock = errorBlocks[0] as any;
+      throw new Error(errorBlock.error?.errorMessage || "AI completion error");
+    }
+
     const textBlocks = response.content.filter((block) => block.type === "text");
     return textBlocks.map((block) => (block as any).text).join("");
   }

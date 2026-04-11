@@ -12,6 +12,7 @@ import type {
   ListSharesForFileDTO,
 } from "@/shared/storage/storage.validation";
 import { Boom } from "@/core/errors";
+import { sanitizeFileName } from "@/shared/storage/storage.utils";
 
 export async function listFiles(req: Request) {
   const query = (req.validated?.query ?? req.query) as ListFilesDTO;
@@ -44,7 +45,7 @@ export async function downloadFile(req: Request, res: Response) {
   });
 
   res.setHeader("Content-Type", file.contentType ?? "application/octet-stream");
-  res.setHeader("Content-Disposition", `inline; filename="${file.fileName}"`);
+  res.setHeader("Content-Disposition", `inline; ${sanitizeFileName(file.fileName)}`);
   res.send(file.buffer);
 }
 
