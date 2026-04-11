@@ -1,10 +1,6 @@
 import jwt from "jsonwebtoken";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
 import { Boom } from "@/core/errors";
 import { env } from "@/core/env";
-
-dayjs.extend(duration);
 
 interface JWTPayload {
   userId: number;
@@ -14,15 +10,15 @@ interface JWTPayload {
 const JWT_SECRET = env.JWT_SECRET;
 const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
 
+const MS_PER_UNIT: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+
 const expiresMatch = JWT_EXPIRES_IN.match(/^(\d+)([smhd])$/);
 if (!expiresMatch) {
   throw new Error(
     `Invalid JWT_EXPIRES_IN format: "${JWT_EXPIRES_IN}". Expected format like "30d", "24h", "60m", or "3600s".`,
   );
 }
-export const JWT_EXPIRES_IN_MS = dayjs
-  .duration(parseInt(expiresMatch[1], 10), expiresMatch[2] as dayjs.DurationUnitName)
-  .asMilliseconds();
+export const JWT_EXPIRES_IN_MS = parseInt(expiresMatch[1], 10) * MS_PER_UNIT[expiresMatch[2]];
 
 /**
  * Generate a JWT token
