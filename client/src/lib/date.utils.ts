@@ -193,3 +193,11 @@ export function getMonthRange(date: DateInput): { start: string; end: string } {
     end: d.endOf("month").format("YYYY-MM-DD"),
   };
 }
+
+/**
+ * Format duration between two dates (e.g., "2.35s")
+ */
+export function formatDuration(start: DateInput, end: DateInput): string {
+  const duration = toDayjs(end).diff(toDayjs(start), "second", true);
+  return `${duration.toFixed(2)}s`;
+}

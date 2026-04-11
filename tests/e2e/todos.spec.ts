@@ -7,8 +7,8 @@ test.describe("Todos page (authenticated)", () => {
     await page.getByLabel(/username/i).fill("demo@example.com");
     await page.getByLabel(/password/i).fill("password123");
     await page.getByRole("button", { name: /sign in/i }).click();
-    // Wait for redirect after login
-    await page.waitForURL(/.*\/.*/);
+    // Wait for redirect to a specific page after login
+    await page.waitForURL(/\/(todos|dashboard)/);
   });
 
   test("can view todos page", async ({ page }) => {
@@ -19,16 +19,12 @@ test.describe("Todos page (authenticated)", () => {
   test("can create a new todo", async ({ page }) => {
     await page.goto("/todos");
 
-    // Find and fill the new todo input
-    const todoInput = page
-      .getByPlaceholder(/add.*todo|new.*todo/i)
-      .or(page.getByLabel(/add.*todo|new.*todo/i));
+    // Open the create dialog
+    await page.getByRole("button", { name: /create todo/i }).click();
 
-    if (await todoInput.isVisible()) {
-      const uniqueTodo = `Test Todo ${Date.now()}`;
-      await todoInput.fill(uniqueTodo);
-      await page.getByRole("button", { name: /add|create/i }).click();
-      await expect(page.getByText(uniqueTodo)).toBeVisible();
-    }
+    const uniqueTodo = `Test Todo ${Date.now()}`;
+    await page.getByPlaceholder(/todo title/i).fill(uniqueTodo);
+    await page.getByRole("button", { name: /^create$/i }).click();
+    await expect(page.getByText(uniqueTodo)).toBeVisible();
   });
 });

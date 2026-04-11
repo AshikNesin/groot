@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import { logger } from "@/core/logger";
 import { verifyToken } from "@/core/utils/jwt.utils";
+import { Boom } from "@/core/errors";
 
 /**
  * Extend Express Request to include user
@@ -39,11 +39,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     }
 
     if (!token) {
-      res.status(401).json({
-        error: "Authentication required",
-        message: "No token provided",
-      });
-      return;
+      throw Boom.unauthorized("No token provided");
     }
 
     // Verify the token
@@ -57,13 +53,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
 
     next();
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Invalid token";
-    logger.debug({ error: errorMessage }, "JWT authentication failed");
-
-    res.status(401).json({
-      error: "Authentication failed",
-      message: errorMessage,
-    });
+    next(error);
   }
 }
 

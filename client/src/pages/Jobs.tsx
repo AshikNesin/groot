@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import dayjs from "dayjs";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   endOfDay,
-  formatDisplayDate,
+  formatDuration,
   formatLocaleDateTime,
   startOfDay,
   startOfMonth,
@@ -522,10 +521,9 @@ export function Jobs() {
     return formatLocaleDateTime(date);
   };
 
-  const formatDuration = (start: string | null, end: string | null) => {
+  const formatJobDuration = (start: string | null, end: string | null) => {
     if (!start || !end) return "N/A";
-    const duration = dayjs(end).diff(dayjs(start), "second", true);
-    return `${duration.toFixed(2)}s`;
+    return formatDuration(start, end);
   };
 
   return (
@@ -986,7 +984,7 @@ export function Jobs() {
                         <div>
                           <span className="text-muted-foreground">Duration</span>
                           <div className="font-medium mt-0.5">
-                            {formatDuration(job.startedon, job.completedon)}
+                            {formatJobDuration(job.startedon, job.completedon)}
                           </div>
                         </div>
                       )}
@@ -1058,7 +1056,7 @@ export function Jobs() {
                         <TableCell className="text-sm">{formatDate(job.startedon)}</TableCell>
                         <TableCell className="text-sm">{formatDate(job.completedon)}</TableCell>
                         <TableCell className="text-sm">
-                          {formatDuration(job.startedon, job.completedon)}
+                          {formatJobDuration(job.startedon, job.completedon)}
                         </TableCell>
                         <TableCell>
                           {job.retrycount}/{job.retrylimit}
