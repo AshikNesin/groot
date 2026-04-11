@@ -14,7 +14,7 @@
     "url": "git+https://github.com/AshikNesin/groot.git"
   },
   "type": "module",
-  "main": "index.js",
+  "main": "dist/bundle.js",
   "scripts": {
     "dev": "NODE_ENV=development PORTLESS_PORT=8888 portless run --name $npm_package_name varlock run -- tsx scripts/dev.ts",
     "dev:debug": "NODE_ENV=development PORTLESS_PORT=8888 portless run --name $npm_package_name varlock run -- node --inspect --import ./node_modules/tsx/dist/loader.mjs server/src/index.ts",

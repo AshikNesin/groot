@@ -25,7 +25,7 @@ export async function listFiles(params: {
   const result = await StorageSystem.core.list({ prefix, maxKeys: 1000 });
 
   if (result.error) {
-    throw new Error(`Failed to list files: ${result.error.message}`);
+    throw Boom.badGateway(`Failed to list files: ${result.error.message}`);
   }
 
   const files: FileInfo[] = [];
@@ -72,7 +72,7 @@ export async function listFiles(params: {
 export async function listBuckets(): Promise<BucketInfo[]> {
   const result = await StorageSystem.core.listBuckets();
   if (result.error) {
-    throw new Error(`Failed to list buckets: ${result.error.message}`);
+    throw Boom.badGateway(`Failed to list buckets: ${result.error.message}`);
   }
   return result.data?.buckets ?? [];
 }
@@ -95,7 +95,7 @@ export async function uploadFile(params: {
   });
 
   if (result.error) {
-    throw new Error(`Failed to upload file: ${result.error.message}`);
+    throw Boom.badGateway(`Failed to upload file: ${result.error.message}`);
   }
 
   return { filePath: result.data?.filePath ?? params.filePath };
@@ -149,7 +149,7 @@ export async function downloadFile(params: { filePath: string }): Promise<{
 }> {
   const exists = await StorageSystem.core.fileExists({ filePath: params.filePath });
   if (exists.error) {
-    throw new Error(`Failed to verify file: ${exists.error.message}`);
+    throw Boom.badGateway(`Failed to verify file: ${exists.error.message}`);
   }
 
   if (!exists.data?.exists) {
@@ -158,7 +158,7 @@ export async function downloadFile(params: { filePath: string }): Promise<{
 
   const file = await StorageSystem.core.getBuffer({ s3Path: params.filePath });
   if (file.error || !file.data) {
-    throw new Error(`Failed to download file: ${file.error?.message ?? "Unknown error"}`);
+    throw Boom.badGateway(`Failed to download file: ${file.error?.message ?? "Unknown error"}`);
   }
 
   const fileName = params.filePath.split("/").pop() ?? "file";
@@ -177,7 +177,7 @@ export async function deleteFiles(params: { filePaths: string[] }): Promise<{
   }
   const result = await StorageSystem.core.remove({ filePaths: params.filePaths });
   if (result.error) {
-    throw new Error(`Failed to delete files: ${result.error.message}`);
+    throw Boom.badGateway(`Failed to delete files: ${result.error.message}`);
   }
   return { deletedCount: params.filePaths.length };
 }
@@ -190,7 +190,7 @@ export async function getFileMetadata(params: { filePath: string }): Promise<{
 }> {
   const result = await StorageSystem.core.fileExists({ filePath: params.filePath });
   if (result.error) {
-    throw new Error(`Failed to get metadata: ${result.error.message}`);
+    throw Boom.badGateway(`Failed to get metadata: ${result.error.message}`);
   }
   return {
     exists: result.data?.exists ?? false,
@@ -215,7 +215,7 @@ export async function createFolder({
     metadata: { type: "folder-marker" },
   });
   if (result.error) {
-    throw new Error(`Failed to create folder: ${result.error.message}`);
+    throw Boom.badGateway(`Failed to create folder: ${result.error.message}`);
   }
   return { folderPath };
 }
@@ -230,7 +230,7 @@ export async function deleteFolder({
   }
   const listResult = await StorageSystem.core.list({ prefix: folderPath, maxKeys: 1000 });
   if (listResult.error) {
-    throw new Error(`Failed to list folder contents: ${listResult.error.message}`);
+    throw Boom.badGateway(`Failed to list folder contents: ${listResult.error.message}`);
   }
   const fileKeys = listResult.data?.files.map((file) => file.key) ?? [];
   if (!fileKeys.length) {
@@ -238,7 +238,7 @@ export async function deleteFolder({
   }
   const deleteResult = await StorageSystem.core.remove({ filePaths: fileKeys });
   if (deleteResult.error) {
-    throw new Error(`Failed to delete folder: ${deleteResult.error.message}`);
+    throw Boom.badGateway(`Failed to delete folder: ${deleteResult.error.message}`);
   }
   return { deletedCount: fileKeys.length };
 }
@@ -256,12 +256,12 @@ export async function renameFile(params: { oldPath: string; newPath: string }): 
     destinationPath: params.newPath,
   });
   if (copyResult.error) {
-    throw new Error(`Failed to copy file: ${copyResult.error.message}`);
+    throw Boom.badGateway(`Failed to copy file: ${copyResult.error.message}`);
   }
 
   const deleteResult = await StorageSystem.core.remove({ filePaths: [params.oldPath] });
   if (deleteResult.error) {
-    throw new Error(`Failed to delete old file: ${deleteResult.error.message}`);
+    throw Boom.badGateway(`Failed to delete old file: ${deleteResult.error.message}`);
   }
 
   return { newPath: params.newPath };
