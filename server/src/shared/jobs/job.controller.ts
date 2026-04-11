@@ -142,7 +142,7 @@ export async function resume(req: Request) {
 export async function rerun(req: Request) {
   const { queueName, jobId } = req.params;
   const newJobId = await JobSystem.queue.rerunJob({ queueName, jobId });
-  return { newJobId };
+  return { newJobId, queueName };
 }
 
 /**
