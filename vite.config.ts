@@ -1,9 +1,26 @@
 import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const clientSrc = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "client/src");
+
+function getSentryRelease() {
+  if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE;
+  const sourceVersion = process.env.SOURCE_VERSION;
+  if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
+  try {
+    const sha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
+    return `groot@${sha.slice(0, 7)}`;
+  } catch {
+    return undefined;
+  }
+}
+
+const release = getSentryRelease();
+const authToken = process.env.SENTRY_AUTH_TOKEN;
 
 export default defineConfig({
   // Git hooks configuration
@@ -13,7 +30,22 @@ export default defineConfig({
 
   // Vite build configuration - build from client directory
   root: "client",
-  plugins: [react()],
+  plugins: [
+    react(),
+    ...(release && authToken
+      ? [
+          sentryVitePlugin({
+            authToken,
+            org: "sentry",
+            project: "groot",
+            release,
+            sourcemaps: {
+              filesToDeleteAfterUpload: ["dist/assets/*.map"],
+            },
+          }),
+        ]
+      : []),
+  ],
   resolve: {
     alias: {
       "@": clientSrc,

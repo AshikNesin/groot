@@ -1,5 +1,7 @@
 import esbuild from "esbuild";
 import alias from "esbuild-plugin-alias";
+import { sentryEsbuildPlugin } from "@sentry/esbuild-plugin";
+import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -9,9 +11,28 @@ async function getExternalDependencies() {
   return Object.keys(packageJson.dependencies || {});
 }
 
+function getSentryRelease() {
+  if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE;
+  const sourceVersion = process.env.SOURCE_VERSION;
+  if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
+  try {
+    const sha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
+    return `groot@${sha.slice(0, 7)}`;
+  } catch {
+    return undefined;
+  }
+}
+
 async function build() {
   try {
     const externals = await getExternalDependencies();
+    const release = getSentryRelease();
+    const authToken = process.env.SENTRY_AUTH_TOKEN;
+
+    // Ensure SENTRY_RELEASE is set for consistent runtime resolution
+    if (release) {
+      process.env.SENTRY_RELEASE = release;
+    }
 
     await esbuild.build({
       entryPoints: ["server/src/index.ts"],
@@ -30,6 +51,19 @@ async function build() {
         "fsevents",
       ],
       plugins: [
+        ...(release && authToken
+          ? [
+              sentryEsbuildPlugin({
+                authToken,
+                org: "sentry",
+                project: "groot",
+                release,
+                sourcemaps: {
+                  filesToDeleteAfterUpload: ["dist/bundle.js.map"],
+                },
+              }),
+            ]
+          : []),
         alias({
           "@": path.resolve(process.cwd(), "server/src"),
         }),
@@ -41,6 +75,11 @@ async function build() {
       tsconfig: "tsconfig.json",
       logLevel: "info",
     });
+
+    // Write release.json for runtime release consistency
+    if (release) {
+      await fs.writeFile("dist/release.json", JSON.stringify({ release }));
+    }
 
     console.log("✓ Build successful: dist/bundle.js created.");
   } catch (error) {

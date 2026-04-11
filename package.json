@@ -103,6 +103,8 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@prisma/client": "^7.7.0",
+    "@sentry/esbuild-plugin": "^5.2.0",
+    "@sentry/vite-plugin": "^5.2.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
