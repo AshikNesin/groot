@@ -10,15 +10,38 @@ This guide covers configuring source map uploads so Sentry shows original TypeSc
 
 ## 1. Create a Sentry Auth Token
 
-1. Go to **Sentry > Settings > Auth Tokens** (https://sentry.io/settings/account/api/auth-tokens/)
-2. Click **Create New Token**
-3. Set a name (e.g. `groot-source-map-upload`)
-4. Select these scopes:
+There are two ways to create a token:
+
+### Option A: Sentry Web UI (recommended)
+
+1. Log in to Sentry (https://sentry.io or your self-hosted URL)
+2. Navigate to token settings:
+   - **Organization tokens** (preferred for CI): **Settings > Organization Settings > Developer Settings > Organization Tokens**
+   - **Personal tokens**: **Settings > Account Settings > API Keys / User Auth Tokens**
+3. Click **Create Auth Token**
+4. Set a name (e.g. `groot-source-map-upload`)
+5. Select these scopes:
    - `org:read`
    - `project:releases`
-   - `project:read`
-5. Click **Create Token**
-6. Copy the token (it won't be shown again)
+   - `project:write`
+6. Click **Create Token**
+7. Copy the token — it's only shown once, so store it securely (password manager or CI secret store)
+
+### Option B: Sentry CLI
+
+1. Install Sentry CLI and run:
+   ```bash
+   sentry-cli login
+   ```
+2. Open the URL shown in your terminal, sign in, and enter the device code
+3. Copy the token from the settings page or `~/.sentryclirc`
+
+### Token types
+
+- **Organization tokens** — bound to a single org, ideal for CI/CD (prefer this for Coolify)
+- **Personal tokens** — bound to your user, can access all orgs/projects you have access to
+
+> **Never commit the token to version control.** Rotate it immediately if you suspect a leak.
 
 ## 2. Add Token to Coolify
 
@@ -55,9 +78,9 @@ A release identifier (`groot@<git-sha>`) is computed during build and written to
 ## Troubleshooting
 
 **Source maps not uploading?**
-- Verify `SENTRY_AUTH_TOKEN` is set in the build environment
+- Verify `SENTRY_AUTH_TOKEN` is set in the build environment (not just runtime)
 - Check the build logs for Sentry-related errors
-- Ensure the token has the required scopes
+- Ensure the token has the required scopes (`org:read`, `project:releases`, `project:write`)
 
 **Stack traces still showing bundled paths?**
 - Confirm the release in Sentry matches the release reported by the running app
