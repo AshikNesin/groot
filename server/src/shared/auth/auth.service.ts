@@ -4,16 +4,14 @@ import { Boom } from "@/core/errors";
 import { generateToken } from "@/core/utils/jwt.utils";
 import type { CreateUserDTO, LoginDTO } from "@/shared/auth/auth.validation";
 
+const DUMMY_HASH = "$2a$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 export async function login(data: LoginDTO) {
   const user = await userModel.findByEmail(data.email);
+  const hash = user?.password ?? DUMMY_HASH;
+  const isValid = await bcrypt.compare(data.password, hash);
 
-  if (!user) {
-    throw Boom.unauthorized("Invalid email or password");
-  }
-
-  const isPasswordValid = await bcrypt.compare(data.password, user.password);
-
-  if (!isPasswordValid) {
+  if (!user || !isValid) {
     throw Boom.unauthorized("Invalid email or password");
   }
 

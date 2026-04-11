@@ -180,6 +180,49 @@ export class StorageService {
     }
   }
 
+  /**
+   * Delete all objects under a prefix. Handles S3 pagination internally
+   * (deletes each listed page immediately to avoid buffering all keys in memory).
+   */
+  async removeByPrefix({
+    prefix,
+  }: {
+    prefix: string;
+  }): Promise<StorageResult<{ deletedCount: number }>> {
+    try {
+      let deletedCount = 0;
+      let continuationToken: string | undefined;
+
+      do {
+        const listResult = await this.list({ prefix, maxKeys: 1000, continuationToken });
+        if (listResult.error) {
+          return { data: null, error: listResult.error };
+        }
+
+        const keys = listResult.data?.files.map((file) => file.key) ?? [];
+        if (keys.length) {
+          const deleteResult = await this.remove({ filePaths: keys });
+          if (deleteResult.error) {
+            return { data: null, error: deleteResult.error };
+          }
+          deletedCount += keys.length;
+        }
+
+        continuationToken =
+          listResult.data?.isTruncated && listResult.data?.nextContinuationToken
+            ? listResult.data.nextContinuationToken
+            : undefined;
+      } while (continuationToken);
+
+      return { data: { deletedCount }, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
+  }
+
   async createSignedUrl(options: CreateSignedUrlOptions): Promise<StorageResult<SignedUrlResult>> {
     try {
       const { filePath, expiresIn = 3600, operation = "get" } = options;

@@ -228,19 +228,11 @@ export async function deleteFolder({
   if (!folderPath.endsWith("/")) {
     throw Boom.badRequest("Folder path must end with /");
   }
-  const listResult = await StorageSystem.core.list({ prefix: folderPath, maxKeys: 1000 });
-  if (listResult.error) {
-    throw Boom.badGateway(`Failed to list folder contents: ${listResult.error.message}`);
+  const result = await StorageSystem.core.removeByPrefix({ prefix: folderPath });
+  if (result.error) {
+    throw Boom.badGateway(`Failed to delete folder: ${result.error.message}`);
   }
-  const fileKeys = listResult.data?.files.map((file) => file.key) ?? [];
-  if (!fileKeys.length) {
-    return { deletedCount: 0 };
-  }
-  const deleteResult = await StorageSystem.core.remove({ filePaths: fileKeys });
-  if (deleteResult.error) {
-    throw Boom.badGateway(`Failed to delete folder: ${deleteResult.error.message}`);
-  }
-  return { deletedCount: fileKeys.length };
+  return { deletedCount: result.data?.deletedCount ?? 0 };
 }
 
 export async function renameFile(params: { oldPath: string; newPath: string }): Promise<{

@@ -173,17 +173,21 @@ export async function startServer(
 ): Promise<void> {
   const port = env.PORT;
 
-  httpServer.listen(port, async () => {
-    logger.info(`Server is running on http://localhost:${port}`);
-
-    if (options?.onStart) {
-      try {
-        await options.onStart();
-      } catch (err) {
-        logger.error({ err }, "Error during server startup callback");
-      }
-    }
+  await new Promise<void>((resolve, reject) => {
+    httpServer.on("error", reject);
+    httpServer.listen(port, () => {
+      logger.info(`Server is running on http://localhost:${port}`);
+      resolve();
+    });
   });
+
+  if (options?.onStart) {
+    try {
+      await options.onStart();
+    } catch (err) {
+      logger.error({ err }, "Error during server startup callback");
+    }
+  }
 
   closeWithGrace({ delay: 10000 }, async ({ signal, err }) => {
     isShuttingDown = true;

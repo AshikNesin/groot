@@ -1,4 +1,4 @@
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import * as PasskeySystem from "@/shared/passkey/passkey.service";
 import type {
   VerifyRegistrationDTO,
@@ -8,6 +8,8 @@ import type {
 } from "@/shared/passkey/passkey.validation";
 import { Boom } from "@/core/errors";
 import { parseId } from "@/core/utils/controller.utils";
+import { env } from "@/core/env";
+import { JWT_EXPIRES_IN_MS } from "@/core/utils/jwt.utils";
 
 /**
  * Generate options for passkey registration
@@ -48,12 +50,23 @@ export async function generateAuthenticationOptions(req: Request) {
 /**
  * Verify passkey authentication
  */
-export async function verifyAuthentication(req: Request) {
+export async function verifyAuthentication(req: Request, res: Response) {
   const body = req.body as VerifyAuthenticationDTO;
-  return await PasskeySystem.verifyAuthentication({
+  const result = await PasskeySystem.verifyAuthentication({
     email: body.email,
     response: body.response,
   });
+
+  const isProduction = env.NODE_ENV === "production";
+  res.cookie("token", result.token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
+    maxAge: JWT_EXPIRES_IN_MS,
+    path: "/",
+  });
+
+  return result;
 }
 
 /**
