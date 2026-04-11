@@ -49,7 +49,11 @@ function combineSignals(timeoutMs: number, userSignal?: AbortSignal): {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   if (userSignal) {
-    userSignal.addEventListener("abort", () => controller.abort(userSignal.reason));
+    if (userSignal.aborted) {
+      controller.abort(userSignal.reason);
+    } else {
+      userSignal.addEventListener("abort", () => controller.abort(userSignal.reason));
+    }
   }
 
   return { signal: controller.signal, clearTimeout: () => clearTimeout(timeoutId) };

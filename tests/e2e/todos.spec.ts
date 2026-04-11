@@ -8,7 +8,7 @@ test.describe("Todos page (authenticated)", () => {
     await page.getByLabel(/password/i).fill("password123");
     await page.getByRole("button", { name: /sign in/i }).click();
     // Wait for redirect to a specific page after login
-    await page.waitForURL(/\/(todos|dashboard|)/);
+    await page.waitForURL(/\/(todos|dashboard)/);
   });
 
   test("can view todos page", async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe("Todos page (authenticated)", () => {
     await page.getByRole("button", { name: /create todo/i }).click();
 
     const uniqueTodo = `Test Todo ${Date.now()}`;
-    await page.getByLabel(/title/i).fill(uniqueTodo);
+    await page.getByPlaceholder(/todo title/i).fill(uniqueTodo);
     await page.getByRole("button", { name: /^create$/i }).click();
     await expect(page.getByText(uniqueTodo)).toBeVisible();
   });
