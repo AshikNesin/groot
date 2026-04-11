@@ -37,8 +37,10 @@ Sentry.init({
   // https://sentry.io/product/logs/
   enableLogs: true,
   integrations: [
-    // Auto-forward Pino logs to Sentry structured logs
+    // https://docs.sentry.io/platforms/javascript/guides/node/configuration/integrations/pino/
     Sentry.pinoIntegration(),
+    // https://docs.sentry.io/platforms/javascript/guides/node/configuration/integrations/zodErrors/
+    Sentry.zodErrorsIntegration(),
   ],
 });
 
