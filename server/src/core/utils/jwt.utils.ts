@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import ms from "ms";
 import { Boom } from "@/core/errors";
 import { env } from "@/core/env";
 
@@ -10,15 +11,12 @@ interface JWTPayload {
 const JWT_SECRET = env.JWT_SECRET;
 const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
 
-const MS_PER_UNIT: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
-
-const expiresMatch = JWT_EXPIRES_IN.match(/^(\d+)([smhd])$/);
-if (!expiresMatch) {
+export const JWT_EXPIRES_IN_MS = ms(JWT_EXPIRES_IN);
+if (!JWT_EXPIRES_IN_MS) {
   throw new Error(
     `Invalid JWT_EXPIRES_IN format: "${JWT_EXPIRES_IN}". Expected format like "30d", "24h", "60m", or "3600s".`,
   );
 }
-export const JWT_EXPIRES_IN_MS = parseInt(expiresMatch[1], 10) * MS_PER_UNIT[expiresMatch[2]];
 
 /**
  * Generate a JWT token
