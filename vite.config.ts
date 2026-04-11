@@ -32,13 +32,12 @@ export default defineConfig({
   root: "client",
   plugins: [
     react(),
-    ...(release && authToken
+    ...(release && authToken && process.env.SENTRY_ORG
       ? [
           sentryVitePlugin({
             authToken,
-            org: "sentry",
+            org: process.env.SENTRY_ORG,
             project: "groot",
-            release,
             sourcemaps: {
               filesToDeleteAfterUpload: ["dist/assets/*.map"],
             },
