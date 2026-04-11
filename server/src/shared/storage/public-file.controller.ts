@@ -59,8 +59,10 @@ export async function verifySharePassword(req: Request, res: Response) {
 
   if (isValid) {
     const accessToken = jwt.sign({ shareId }, env.JWT_SECRET, { expiresIn: "1h" });
+    const isProduction = env.NODE_ENV === "production";
     res.cookie("share_token", accessToken, {
       httpOnly: true,
+      secure: isProduction,
       sameSite: "strict",
       maxAge: 3600000,
       path: `/api/v1/public/files/${shareId}`,

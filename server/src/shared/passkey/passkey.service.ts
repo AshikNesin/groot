@@ -58,10 +58,18 @@ function getAndDeleteChallenge(challenge: string): string | null {
 function extractChallengeFromResponse(response: {
   response: { clientDataJSON: string };
 }): string {
-  const clientData = JSON.parse(
-    Buffer.from(response.response.clientDataJSON, "base64url").toString("utf-8"),
-  );
-  return clientData.challenge;
+  try {
+    const clientData = JSON.parse(
+      Buffer.from(response.response.clientDataJSON, "base64url").toString("utf-8"),
+    );
+    if (!clientData.challenge) {
+      throw Boom.badRequest("Missing challenge in WebAuthn response");
+    }
+    return clientData.challenge;
+  } catch (error) {
+    if (error instanceof Boom) throw error;
+    throw Boom.badRequest("Invalid WebAuthn response: malformed clientDataJSON");
+  }
 }
 
 // ── Passkey service ───────────────────────────────────────────────────────

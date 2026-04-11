@@ -14,7 +14,15 @@ interface JWTPayload {
 const JWT_SECRET = env.JWT_SECRET;
 const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
 
-export const JWT_EXPIRES_IN_MS = dayjs.duration(parseInt(JWT_EXPIRES_IN, 10), JWT_EXPIRES_IN.slice(-1) as dayjs.DurationUnitName).asMilliseconds();
+const expiresMatch = JWT_EXPIRES_IN.match(/^(\d+)([smhd])$/);
+if (!expiresMatch) {
+  throw new Error(
+    `Invalid JWT_EXPIRES_IN format: "${JWT_EXPIRES_IN}". Expected format like "30d", "24h", "60m", or "3600s".`,
+  );
+}
+export const JWT_EXPIRES_IN_MS = dayjs
+  .duration(parseInt(expiresMatch[1], 10), expiresMatch[2] as dayjs.DurationUnitName)
+  .asMilliseconds();
 
 /**
  * Generate a JWT token

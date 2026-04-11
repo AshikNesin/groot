@@ -182,7 +182,7 @@ export class StorageService {
 
   /**
    * Delete all objects under a prefix. Handles S3 pagination internally
-   * (list all pages, delete in batches of 1000).
+   * (deletes each listed page immediately to avoid buffering all keys in memory).
    */
   async removeByPrefix({
     prefix,
@@ -190,7 +190,7 @@ export class StorageService {
     prefix: string;
   }): Promise<StorageResult<{ deletedCount: number }>> {
     try {
-      const allKeys: string[] = [];
+      let deletedCount = 0;
       let continuationToken: string | undefined;
 
       do {
@@ -200,7 +200,13 @@ export class StorageService {
         }
 
         const keys = listResult.data?.files.map((file) => file.key) ?? [];
-        allKeys.push(...keys);
+        if (keys.length) {
+          const deleteResult = await this.remove({ filePaths: keys });
+          if (deleteResult.error) {
+            return { data: null, error: deleteResult.error };
+          }
+          deletedCount += keys.length;
+        }
 
         continuationToken =
           listResult.data?.isTruncated && listResult.data?.nextContinuationToken
@@ -208,20 +214,7 @@ export class StorageService {
             : undefined;
       } while (continuationToken);
 
-      if (!allKeys.length) {
-        return { data: { deletedCount: 0 }, error: null };
-      }
-
-      // Delete in batches of 1000 (S3 DeleteObjects limit)
-      for (let i = 0; i < allKeys.length; i += 1000) {
-        const batch = allKeys.slice(i, i + 1000);
-        const deleteResult = await this.remove({ filePaths: batch });
-        if (deleteResult.error) {
-          return { data: null, error: deleteResult.error };
-        }
-      }
-
-      return { data: { deletedCount: allKeys.length }, error: null };
+      return { data: { deletedCount }, error: null };
     } catch (error) {
       return {
         data: null,
