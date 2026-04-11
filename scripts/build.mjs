@@ -51,11 +51,11 @@ async function build() {
         "fsevents",
       ],
       plugins: [
-        ...(release && authToken
+        ...(release && authToken && process.env.SENTRY_ORG
           ? [
               sentryEsbuildPlugin({
                 authToken,
-                org: "sentry",
+                org: process.env.SENTRY_ORG,
                 project: "groot",
                 release,
                 sourcemaps: {
