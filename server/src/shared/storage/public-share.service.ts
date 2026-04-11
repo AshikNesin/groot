@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import dayjs from "dayjs";
 import { prisma } from "@/core/database";
 import * as StorageFileService from "@/shared/storage/storage.service";
@@ -116,10 +117,12 @@ export async function verifySharePassword({
 
 export async function getShareFileContent({
   shareId,
+  shareAccessToken,
 }: {
   shareId: string;
+  shareAccessToken?: string;
 }): Promise<{ buffer: Buffer; contentType: string; fileName: string }> {
-  const validation = await validateShareAccess({ shareId });
+  const validation = await validateShareAccess({ shareId, shareAccessToken });
   if (!validation.isValid || !validation.share) {
     throw Boom.badRequest(validation.reason ?? "Share is not accessible");
   }
@@ -154,8 +157,10 @@ export async function getShareByShareId({
 
 export async function validateShareAccess({
   shareId,
+  shareAccessToken,
 }: {
   shareId: string;
+  shareAccessToken?: string;
 }): Promise<{ isValid: boolean; share?: PublicShareInfo; reason?: string }> {
   try {
     const share = await getShareByShareId({ shareId });
@@ -171,6 +176,16 @@ export async function validateShareAccess({
       };
     }
 
+    if (share.isPasswordProtected) {
+      if (!shareAccessToken) {
+        return { isValid: false, reason: "Password verification required" };
+      }
+      const decoded = jwt.verify(shareAccessToken, env.JWT_SECRET) as { shareId: string };
+      if (decoded.shareId !== shareId) {
+        return { isValid: false, reason: "Invalid access token" };
+      }
+    }
+
     return { isValid: true, share };
   } catch (error) {
     if (error instanceof HttpError) {
@@ -178,6 +193,9 @@ export async function validateShareAccess({
         isValid: false,
         reason: "Share not found or has been deleted",
       };
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return { isValid: false, reason: "Access token expired or invalid" };
     }
     throw error;
   }
