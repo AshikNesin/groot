@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { prisma } from "@/core/database";
 import { VALID_JOB_STATES, isValidJobState } from "@/core/job/constants";
 import { getBoss } from "@/core/job/client";
+import { Boom } from "@/core/errors";
 import type {
   ScheduledJobInfo,
   FetchJobsOptions,
@@ -92,7 +93,7 @@ export const getJobsByState = async (options: GetJobsByStateOptions): Promise<Jo
   const { state, limit = 50, offset = 0 } = options;
 
   if (!isValidJobState(state)) {
-    throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+    throw Boom.badRequest(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
   const [totalResult, jobs] = await Promise.all([
@@ -132,15 +133,15 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
   const { state, name, limit = 50, offset = 0, startDate, endDate } = options;
 
   if (state && !isValidJobState(state)) {
-    throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+    throw Boom.badRequest(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
   if (startDate && !dayjs(startDate).isValid()) {
-    throw new Error(`Invalid startDate: ${startDate}. Must be a valid date string.`);
+    throw Boom.badRequest(`Invalid startDate: ${startDate}. Must be a valid date string.`);
   }
 
   if (endDate && !dayjs(endDate).isValid()) {
-    throw new Error(`Invalid endDate: ${endDate}. Must be a valid date string.`);
+    throw Boom.badRequest(`Invalid endDate: ${endDate}. Must be a valid date string.`);
   }
 
   const conditions: string[] = [];
@@ -206,7 +207,7 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
 export const purgeJobsByState = async (options: { state: string }): Promise<number> => {
   const { state } = options;
   if (!isValidJobState(state)) {
-    throw new Error(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+    throw Boom.badRequest(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
   }
 
   const deleted = await prisma.$executeRaw`

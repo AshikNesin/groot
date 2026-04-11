@@ -41,6 +41,45 @@ function createAI(input: ChatDTO): AI {
   });
 }
 
+function combineSignals(timeoutMs: number, userSignal?: AbortSignal): {
+  signal: AbortSignal;
+  clearTimeout: () => void;
+} {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (userSignal) {
+    userSignal.addEventListener("abort", () => controller.abort(userSignal.reason));
+  }
+
+  return { signal: controller.signal, clearTimeout: () => clearTimeout(timeoutId) };
+}
+
+async function recordUsage(
+  input: ChatDTO,
+  userId: number | undefined,
+  outputText: string,
+  requestId: string,
+): Promise<void> {
+  if (!trackUsage) return;
+
+  const provider = input.provider || defaultProvider;
+  const model = input.model || defaultModel;
+  const inputTokens = Math.ceil(input.message.length / 4);
+  const outputTokens = Math.ceil(outputText.length / 4);
+
+  await aiUsageModel.create({
+    userId,
+    provider,
+    model,
+    inputTokens,
+    outputTokens,
+    totalCost: estimateCost(provider, model, inputTokens, outputTokens),
+    stopReason: "stop",
+    requestId,
+  });
+}
+
 function getAvailableProviders(): string[] {
   const providers: string[] = [];
   if (env.OPENAI_API_KEY) providers.push("openai");
@@ -97,8 +136,7 @@ function estimateCost(
     "gemini-2.0-flash": [0.1, 0.4],
   };
 
-  const key = model;
-  const [inputCost, outputCost] = costMap[key] ?? [0.5, 1.5];
+  const [inputCost, outputCost] = costMap[model] ?? [0.5, 1.5];
   return (inputTokens * inputCost + outputTokens * outputCost) / 1_000_000;
 }
 
@@ -113,23 +151,10 @@ export async function chat({
 }): Promise<ChatResult> {
   const aiInstance = createAI(input);
   const requestId = randomUUID();
-  const timeout = options?.timeout ?? defaultTimeout;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  let signal = controller.signal;
-  if (options?.signal) {
-    const userSignal = options.signal;
-    const combinedController = new AbortController();
-
-    userSignal.addEventListener("abort", () => combinedController.abort(userSignal.reason));
-    controller.signal.addEventListener("abort", () =>
-      combinedController.abort(controller.signal.reason),
-    );
-
-    signal = combinedController.signal;
-  }
+  const { signal, clearTimeout: clearTimer } = combineSignals(
+    options?.timeout ?? defaultTimeout,
+    options?.signal,
+  );
 
   try {
     const text = await aiInstance.complete({
@@ -140,27 +165,10 @@ export async function chat({
       signal,
     });
 
-    if (trackUsage) {
-      const provider = input.provider || defaultProvider;
-      const model = input.model || defaultModel;
-      const inputTokens = Math.ceil(input.message.length / 4);
-      const outputTokens = Math.ceil(text.length / 4);
-
-      await aiUsageModel.create({
-        userId,
-        provider,
-        model,
-        inputTokens,
-        outputTokens,
-        totalCost: estimateCost(provider, model, inputTokens, outputTokens),
-        stopReason: "stop",
-        requestId,
-      });
-    }
-
+    await recordUsage(input, userId, text, requestId);
     return { text };
   } finally {
-    clearTimeout(timeoutId);
+    clearTimer();
   }
 }
 
@@ -175,24 +183,11 @@ export async function* chatStream({
 }): AsyncGenerator<string, void, undefined> {
   const aiInstance = createAI(input);
   const requestId = randomUUID();
-  const timeout = options?.timeout ?? defaultTimeout;
   let fullText = "";
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  let signal = controller.signal;
-  if (options?.signal) {
-    const userSignal = options.signal;
-    const combinedController = new AbortController();
-
-    userSignal.addEventListener("abort", () => combinedController.abort(userSignal.reason));
-    controller.signal.addEventListener("abort", () =>
-      combinedController.abort(controller.signal.reason),
-    );
-
-    signal = combinedController.signal;
-  }
+  const { signal, clearTimeout: clearTimer } = combineSignals(
+    options?.timeout ?? defaultTimeout,
+    options?.signal,
+  );
 
   try {
     for await (const chunk of aiInstance.stream({
@@ -206,25 +201,9 @@ export async function* chatStream({
       yield chunk;
     }
 
-    if (trackUsage) {
-      const provider = input.provider || defaultProvider;
-      const model = input.model || defaultModel;
-      const inputTokens = Math.ceil(input.message.length / 4);
-      const outputTokens = Math.ceil(fullText.length / 4);
-
-      await aiUsageModel.create({
-        userId,
-        provider,
-        model,
-        inputTokens,
-        outputTokens,
-        totalCost: estimateCost(provider, model, inputTokens, outputTokens),
-        stopReason: "stop",
-        requestId,
-      });
-    }
+    await recordUsage(input, userId, fullText, requestId);
   } finally {
-    clearTimeout(timeoutId);
+    clearTimer();
   }
 }
 

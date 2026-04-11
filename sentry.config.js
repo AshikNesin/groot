@@ -1,7 +1,7 @@
 // Sentry configuration for source maps
 export default {
   org: "sentry",
-  project: "express-typescript-boilerplate",
+  project: "groot",
   authToken: process.env.SENTRY_AUTH_TOKEN,
   url: "https://sentry.io/",
   include: ["./dist"],

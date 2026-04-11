@@ -82,6 +82,7 @@ export {
   parseYYYYMM,
   currentMonth,
   getMonthRange,
+  formatDuration,
 } from "@/lib/date.utils";
 
 // Re-export design tokens for convenience
