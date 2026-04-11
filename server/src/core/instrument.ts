@@ -8,7 +8,7 @@ import { env } from "@/core/env";
 // Must match the logic in scripts/build.mjs
 const getSentryRelease = () => {
   if (env.SENTRY_RELEASE) return env.SENTRY_RELEASE;
-  const sourceVersion = process.env.SOURCE_VERSION;
+  const sourceVersion = env.SOURCE_COMMIT || process.env.SOURCE_VERSION;
   if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
   // Fallback: read release written during build (dist/release.json)
   try {

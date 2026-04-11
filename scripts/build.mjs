@@ -13,7 +13,7 @@ async function getExternalDependencies() {
 
 function getSentryRelease() {
   if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE;
-  const sourceVersion = process.env.SOURCE_VERSION;
+  const sourceVersion = process.env.SOURCE_COMMIT || process.env.SOURCE_VERSION;
   if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
   try {
     const sha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
