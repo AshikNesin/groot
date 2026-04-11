@@ -7,6 +7,7 @@ import {
   validateToolCall,
 } from "@mariozechner/pi-ai";
 import type { z } from "zod";
+import OpenAI from "openai";
 import type {
   AIConfig,
   CompletionOptions,
@@ -18,6 +19,7 @@ import type {
   ImageContent,
 } from "@/core/ai/types";
 import { zodToTypeBox } from "@/core/ai/schema";
+import { env } from "@/core/env";
 
 export type CompleteParams = CompletionOptions & {
   prompt: string | (TextContent | ImageContent)[];
@@ -38,6 +40,7 @@ export type StreamParams = CompletionOptions & {
 export class AIClient {
   private config: AIConfig;
   private _model: ReturnType<typeof getModel>;
+  private _openaiClient: OpenAI | null = null;
 
   constructor(config: AIConfig) {
     this.config = config;
@@ -164,6 +167,23 @@ export class AIClient {
     }
 
     return parsed.data;
+  }
+
+  /**
+   * Generate embeddings for the given text(s) using OpenAI.
+   */
+  async embed(texts: string | string[]): Promise<number[][]> {
+    const input = Array.isArray(texts) ? texts : [texts];
+    if (!this._openaiClient) {
+      this._openaiClient = new OpenAI({
+        apiKey: this.config.apiKey || env.OPENAI_API_KEY,
+      });
+    }
+    const response = await this._openaiClient.embeddings.create({
+      model: this.config.model || "text-embedding-3-small",
+      input,
+    });
+    return response.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
   }
 
   /**
