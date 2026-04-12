@@ -31,6 +31,9 @@ Sentry.init({
   // Release identifier for source map correlation
   release: getSentryRelease(),
 
+  // Environment for filtering in Sentry (production, development, etc.)
+  environment: env.NODE_ENV,
+
   // Setting this option to true will send default PII data to Sentry
   // For example, automatic IP address collection on events
   sendDefaultPii: true,
