@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import { configSchema } from "@/core/config/config.schema";
+import { resolveString } from "@/core/config/config.loader";
 
 // ─── Schema Validation ───────────────────────────────────────────────────────
 
@@ -43,6 +44,11 @@ describe("configSchema", () => {
     expect(result.features.enableNotifications).toBe(false);
   });
 
+  it("rejects invalid boolean strings", () => {
+    expect(() => configSchema.parse({ app: { isProduction: "yes" } })).toThrow();
+    expect(() => configSchema.parse({ app: { isProduction: "maybe" } })).toThrow();
+  });
+
   it("coerces string numbers via z.coerce", () => {
     const result = configSchema.parse({
       jobs: { concurrency: "10", pollIntervalSeconds: "3" },
@@ -62,37 +68,33 @@ describe("configSchema", () => {
 // ─── Variable Resolution ─────────────────────────────────────────────────────
 
 describe("variable resolution", () => {
-  // Uses the same regex logic as config.loader.ts resolveString
-  function resolveEnvVars(value: string): string {
-    return value.replace(/\$\{([^}]+)\}/g, (_, expr: string) => {
-      const [varName, fallback] = expr.split(":-");
-      const envVal = process.env[varName.trim()];
-      if (envVal !== undefined) return envVal;
-      if (fallback !== undefined) return fallback.trim();
-      return "";
-    });
-  }
-
   it("resolves ${VAR} from process.env", () => {
     process.env._TEST_RESOLVE_VAR = "resolved_value";
-    expect(resolveEnvVars("${_TEST_RESOLVE_VAR}")).toBe("resolved_value");
+    expect(resolveString("${_TEST_RESOLVE_VAR}")).toBe("resolved_value");
     delete process.env._TEST_RESOLVE_VAR;
   });
 
   it("resolves ${VAR:-fallback} when var is missing", () => {
     delete process.env._TEST_MISSING_VAR;
-    expect(resolveEnvVars("${_TEST_MISSING_VAR:-default_value}")).toBe("default_value");
+    expect(resolveString("${_TEST_MISSING_VAR:-default_value}")).toBe("default_value");
   });
 
-  it("returns empty string for missing var without fallback", () => {
+  it("throws for missing bare ${VAR} without fallback", () => {
     delete process.env._TEST_MISSING_NO_FALLBACK;
-    expect(resolveEnvVars("${_TEST_MISSING_NO_FALLBACK}")).toBe("");
+    expect(() => resolveString("${_TEST_MISSING_NO_FALLBACK}")).toThrow(
+      /missing env var.*_TEST_MISSING_NO_FALLBACK/,
+    );
+  });
+
+  it("resolves ${VAR:-} to empty string when var is missing", () => {
+    delete process.env._TEST_EMPTY_FALLBACK;
+    expect(resolveString("${_TEST_EMPTY_FALLBACK:-}")).toBe("");
   });
 
   it("resolves multiple vars in one string", () => {
     process.env._TEST_HOST = "db.example.com";
     process.env._TEST_PORT = "5432";
-    expect(resolveEnvVars("postgresql://${_TEST_HOST}:${_TEST_PORT}/mydb")).toBe(
+    expect(resolveString("postgresql://${_TEST_HOST}:${_TEST_PORT}/mydb")).toBe(
       "postgresql://db.example.com:5432/mydb",
     );
     delete process.env._TEST_HOST;
@@ -101,7 +103,12 @@ describe("variable resolution", () => {
 
   it("prefers env var over fallback", () => {
     process.env._TEST_PREF_VAR = "from_env";
-    expect(resolveEnvVars("${_TEST_PREF_VAR:-fallback}")).toBe("from_env");
+    expect(resolveString("${_TEST_PREF_VAR:-fallback}")).toBe("from_env");
     delete process.env._TEST_PREF_VAR;
+  });
+
+  it("preserves :- inside fallback values", () => {
+    delete process.env._TEST_DB_URL;
+    expect(resolveString("${_TEST_DB_URL:-postgres://host:-5432}")).toBe("postgres://host:-5432");
   });
 });

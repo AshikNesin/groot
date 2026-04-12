@@ -1,9 +1,14 @@
 import { z } from "zod";
 
 // z.coerce.boolean() treats "false" as true (Boolean("false") === true).
-// This preprocessor handles string "true"/"false" correctly.
+// This preprocessor handles string "true"/"false" correctly and rejects
+// other strings (e.g. "maybe", "yes") instead of silently coercing to false.
 const bool = z.preprocess((val) => {
-  if (typeof val === "string") return val === "true";
+  if (typeof val === "string") {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val; // Pass through to let z.boolean() reject it
+  }
   return val;
 }, z.boolean());
 

@@ -381,12 +381,15 @@ function resolveVariables(value: unknown): unknown {
 
 function resolveString(value: string): string {
   return value.replace(/\$\{([^}]+)\}/g, (_, expr: string) => {
-    const [varName, fallback] = expr.split(":-");
-    const envVal = process.env[varName.trim()];
+    const idx = expr.indexOf(":-");
+    const hasFallback = idx !== -1;
+    const varName = (hasFallback ? expr.slice(0, idx) : expr).trim();
+    const fallback = hasFallback ? expr.slice(idx + 2).trim() : undefined;
+    const envVal = process.env[varName];
     if (envVal !== undefined) return envVal;
-    if (fallback !== undefined) return fallback.trim();
-    // No fallback — return empty string; Zod validation will catch if required
-    return "";
+    if (fallback !== undefined) return fallback;
+    // Bare ${VAR} with missing env var — throw so Zod defaults aren't silently bypassed
+    throw new Error(`Config references missing env var \${${varName}} with no fallback.`);
   });
 }
 ```
