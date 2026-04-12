@@ -66,10 +66,10 @@ After deploying:
 
 The build pipeline uses two Sentry plugins:
 
-| Plugin | Purpose |
-|--------|---------|
+| Plugin                   | Purpose                                              |
+| ------------------------ | ---------------------------------------------------- |
 | `@sentry/esbuild-plugin` | Uploads server source maps from `dist/bundle.js.map` |
-| `@sentry/vite-plugin` | Uploads client source maps from `dist/assets/*.map` |
+| `@sentry/vite-plugin`    | Uploads client source maps from `dist/assets/*.map`  |
 
 Both plugins only activate when `SENTRY_AUTH_TOKEN` is set. Local builds without the token work normally (plugins are skipped).
 
@@ -78,11 +78,13 @@ A release identifier (`groot@<git-sha>`) is computed during build and written to
 ## Troubleshooting
 
 **Source maps not uploading?**
+
 - Verify `SENTRY_AUTH_TOKEN` is set in the build environment (not just runtime)
 - Check the build logs for Sentry-related errors
 - Ensure the token has the required scopes (`organization:read`, `project:write`, `release:admin`)
 
 **Stack traces still showing bundled paths?**
+
 - Confirm the release in Sentry matches the release reported by the running app
 - Check that `dist/release.json` exists in the deployed artifact
 - Source maps may take a few minutes to process after upload

@@ -93,7 +93,9 @@ export const getJobsByState = async (options: GetJobsByStateOptions): Promise<Jo
   const { state, limit = 50, offset = 0 } = options;
 
   if (!isValidJobState(state)) {
-    throw Boom.badRequest(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+    throw Boom.badRequest(
+      `Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`,
+    );
   }
 
   const [totalResult, jobs] = await Promise.all([
@@ -133,7 +135,9 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
   const { state, name, limit = 50, offset = 0, startDate, endDate } = options;
 
   if (state && !isValidJobState(state)) {
-    throw Boom.badRequest(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+    throw Boom.badRequest(
+      `Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`,
+    );
   }
 
   if (startDate && !dayjs(startDate).isValid()) {
@@ -207,7 +211,9 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
 export const purgeJobsByState = async (options: { state: string }): Promise<number> => {
   const { state } = options;
   if (!isValidJobState(state)) {
-    throw Boom.badRequest(`Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`);
+    throw Boom.badRequest(
+      `Invalid job state: ${state}. Valid states: ${VALID_JOB_STATES.join(", ")}`,
+    );
   }
 
   const deleted = await prisma.$executeRaw`
