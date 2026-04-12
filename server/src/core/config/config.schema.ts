@@ -17,7 +17,13 @@ export const configSchema = z.object({
     .object({
       name: z.string().default("Groot"),
       isProduction: bool.default(false),
-      port: z.coerce.number().int().min(1).default(3000),
+      port: z.preprocess((val) => {
+        // Prefer PORT env var (set by hosting platforms like Coolify)
+        const envPort = process.env.PORT;
+        if (envPort !== undefined && envPort !== "") return Number(envPort);
+        if (typeof val === "number") return val;
+        return undefined; // let .default(3000) kick in
+      }, z.number().int().min(1).default(3000)),
     })
     .default({}),
   cors: z
