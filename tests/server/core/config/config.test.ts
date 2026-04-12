@@ -34,6 +34,23 @@ describe("configSchema", () => {
     expect(() => configSchema.parse({ jobs: { concurrency: -1 } })).toThrow();
   });
 
+  it("coerces string booleans via z.coerce", () => {
+    const result = configSchema.parse({
+      app: { isProduction: "true" },
+      features: { enableNotifications: "false" },
+    });
+    expect(result.app.isProduction).toBe(true);
+    expect(result.features.enableNotifications).toBe(false);
+  });
+
+  it("coerces string numbers via z.coerce", () => {
+    const result = configSchema.parse({
+      jobs: { concurrency: "10", pollInterval: "3000" },
+    });
+    expect(result.jobs.concurrency).toBe(10);
+    expect(result.jobs.pollInterval).toBe(3000);
+  });
+
   it("infers Config type from schema", () => {
     type Config = import("@/core/config/config.schema").Config;
     const cfg: Config = configSchema.parse({});
