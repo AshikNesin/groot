@@ -60,9 +60,6 @@ development:
 production:
   app:
     isProduction: true
-  cors:
-    origins:
-      - "{{ env.CORS_ALLOWED_ORIGINS }}"
   jobs:
     concurrency: 10
   logging:
