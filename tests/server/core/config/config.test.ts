@@ -68,47 +68,32 @@ describe("configSchema", () => {
 // ─── Variable Resolution ─────────────────────────────────────────────────────
 
 describe("variable resolution", () => {
-  it("resolves ${VAR} from process.env", () => {
+  it("resolves {{ env.VAR }} from env", () => {
     process.env._TEST_RESOLVE_VAR = "resolved_value";
-    expect(resolveString("${_TEST_RESOLVE_VAR}")).toBe("resolved_value");
+    expect(resolveString("{{ env._TEST_RESOLVE_VAR }}")).toBe("resolved_value");
     delete process.env._TEST_RESOLVE_VAR;
   });
 
-  it("resolves ${VAR:-fallback} when var is missing", () => {
-    delete process.env._TEST_MISSING_VAR;
-    expect(resolveString("${_TEST_MISSING_VAR:-default_value}")).toBe("default_value");
-  });
-
-  it("throws for missing bare ${VAR} without fallback", () => {
+  it("throws for missing {{ env.VAR }}", () => {
     delete process.env._TEST_MISSING_NO_FALLBACK;
-    expect(() => resolveString("${_TEST_MISSING_NO_FALLBACK}")).toThrow(
-      /missing env var.*_TEST_MISSING_NO_FALLBACK/,
+    expect(() => resolveString("{{ env._TEST_MISSING_NO_FALLBACK }}")).toThrow(
+      /_TEST_MISSING_NO_FALLBACK/,
     );
-  });
-
-  it("resolves ${VAR:-} to empty string when var is missing", () => {
-    delete process.env._TEST_EMPTY_FALLBACK;
-    expect(resolveString("${_TEST_EMPTY_FALLBACK:-}")).toBe("");
   });
 
   it("resolves multiple vars in one string", () => {
     process.env._TEST_HOST = "db.example.com";
     process.env._TEST_PORT = "5432";
-    expect(resolveString("postgresql://${_TEST_HOST}:${_TEST_PORT}/mydb")).toBe(
+    expect(resolveString("postgresql://{{ env._TEST_HOST }}:{{ env._TEST_PORT }}/mydb")).toBe(
       "postgresql://db.example.com:5432/mydb",
     );
     delete process.env._TEST_HOST;
     delete process.env._TEST_PORT;
   });
 
-  it("prefers env var over fallback", () => {
-    process.env._TEST_PREF_VAR = "from_env";
-    expect(resolveString("${_TEST_PREF_VAR:-fallback}")).toBe("from_env");
-    delete process.env._TEST_PREF_VAR;
-  });
-
-  it("preserves :- inside fallback values", () => {
-    delete process.env._TEST_DB_URL;
-    expect(resolveString("${_TEST_DB_URL:-postgres://host:-5432}")).toBe("postgres://host:-5432");
+  it("ignores whitespace inside {{ }}", () => {
+    process.env._TEST_WS_VAR = "value";
+    expect(resolveString("{{env._TEST_WS_VAR}}")).toBe("value");
+    delete process.env._TEST_WS_VAR;
   });
 });

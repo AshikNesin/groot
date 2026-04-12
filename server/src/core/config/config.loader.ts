@@ -4,6 +4,7 @@ import mergeWith from "lodash.mergewith";
 import jsYaml from "js-yaml";
 import { ZodError } from "zod";
 import { env } from "@/core/env";
+import { Boom } from "@/core/errors";
 import { configSchema, type Config } from "@/core/config/config.schema";
 
 const CONFIG_PATH = resolve(process.cwd(), "config.yml");
@@ -26,7 +27,7 @@ function deepFreeze<T>(obj: T): T {
 export function loadConfig(): Config {
   // 1. Parse config.yml
   if (!existsSync(CONFIG_PATH)) {
-    throw new Error(
+    throw Boom.internal(
       `config.yml not found at ${CONFIG_PATH}\nCopy config.example.yml to config.yml to get started.`,
     );
   }
@@ -35,13 +36,13 @@ export function loadConfig(): Config {
   try {
     const parsed = jsYaml.load(readFileSync(CONFIG_PATH, "utf-8"));
     if (parsed === undefined || parsed === null) {
-      throw new Error("config.yml is empty or contains no valid YAML");
+      throw Boom.internal("config.yml is empty or contains no valid YAML");
     }
     raw = parsed as Record<string, unknown>;
   } catch (err) {
     if (err instanceof Error && err.message.startsWith("config.yml is empty")) throw err;
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Failed to parse config.yml: ${message}`);
+    throw Boom.internal(`Failed to parse config.yml: ${message}`);
   }
 
   // 2. Deep merge: default ← active environment section
@@ -60,11 +61,11 @@ export function loadConfig(): Config {
       merged = mergeWith({ ...merged }, localMerged, replaceArrays);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to parse config.local.yml: ${message}`);
+      throw Boom.internal(`Failed to parse config.local.yml: ${message}`);
     }
   }
 
-  // 4. Resolve dynamic variables (${VAR}, ${VAR:-fallback})
+  // 4. Resolve dynamic variables ({{ env.VAR }})
   const resolved = resolveVariables(merged);
 
   // 5. Validate with Zod, freeze for immutability
@@ -75,7 +76,7 @@ export function loadConfig(): Config {
       const details = err.issues
         .map((e) => `  config.${e.path.join(".")} — ${e.message}`)
         .join("\n");
-      throw new Error(`Invalid config.yml:\n${details}`);
+      throw Boom.internal(`Invalid config.yml:\n${details}`);
     }
     throw err;
   }
@@ -99,19 +100,12 @@ function resolveVariables(value: unknown): unknown {
 }
 
 export function resolveString(value: string): string {
-  return value.replace(/\$\{([^}]+)\}/g, (_, expr: string) => {
-    const idx = expr.indexOf(":-");
-    const hasFallback = idx !== -1;
-    const varName = (hasFallback ? expr.slice(0, idx) : expr).trim();
-    const fallback = hasFallback ? expr.slice(idx + 2).trim() : undefined;
-
+  return value.replace(/\{\{\s*env\.(\w+)\s*\}\}/g, (_, varName: string) => {
     const envVal = process.env[varName];
     if (envVal !== undefined) return envVal;
-    if (fallback !== undefined) return fallback;
-    // Bare ${VAR} with missing env var — throw so Zod defaults aren't silently bypassed
-    throw new Error(
-      `Config references missing env var \${${varName}} with no fallback.\n` +
-        `Set ${varName} in your environment, or use \${${varName}:-fallback} to provide a default.`,
+    throw Boom.internal(
+      `Config references env var \`${varName}\` which is not set.\n` +
+        `Add ${varName} to your .env file or .env.schema.`,
     );
   });
 }

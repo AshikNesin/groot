@@ -5,24 +5,23 @@
 # Only override what differs per environment.
 #
 # Dynamic variables:
-#   ${VAR}          - Required env var (startup fails if missing and Zod requires it)
-#   ${VAR:-fallback} - Env var with fallback value
+#   {{ env.VARIABLE_NAME }} - Required env var (throws if missing)
 #
 # Secrets (JWT_SECRET, API keys, S3 credentials) stay in .env files.
-# Only reference them here via ${VAR} syntax.
+# Only reference them here via {{ env.VAR }} syntax.
 
 default:
   app:
     name: "Groot"
     isProduction: false
-    port: "${PORT:-3000}"
+    port: 3000
 
   cors:
     origins:
       - "http://localhost:3000"
 
   auth:
-    jwtExpiresIn: "${JWT_EXPIRES_IN:-30d}"
+    jwtExpiresIn: "30d"
 
   jobs:
     enabled: true
@@ -48,7 +47,7 @@ default:
     origin: "https://groot.localhost"
 
   sentry:
-    dsn: "${SENTRY_DSN:-}"
+    dsn: ""
 
   features:
     enableNotifications: false
@@ -63,7 +62,7 @@ production:
     isProduction: true
   cors:
     origins:
-      - "${CORS_ALLOWED_ORIGINS}"
+      - https://groot.nesin.io
   jobs:
     concurrency: 10
   logging:
