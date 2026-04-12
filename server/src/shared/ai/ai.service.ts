@@ -41,7 +41,10 @@ function createAI(input: ChatDTO): AI {
   });
 }
 
-function combineSignals(timeoutMs: number, userSignal?: AbortSignal): {
+function combineSignals(
+  timeoutMs: number,
+  userSignal?: AbortSignal,
+): {
   signal: AbortSignal;
   clearTimeout: () => void;
 } {

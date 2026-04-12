@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { Boom } from "@/core/errors";
 import { logger } from "@/core/logger";
-import type { Passkey, User } from "@/generated/prisma/models";
+import type { Passkey, User } from "@/generated/prisma";
 import { passkeyModel } from "@/shared/passkey/passkey.model";
 import { userModel } from "@/shared/auth/user.model";
 import { generateToken } from "@/core/utils/jwt.utils";
@@ -18,7 +18,7 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
-} from "@simplewebauthn/types";
+} from "@simplewebauthn/server";
 
 // ── Challenge store with TTL and unique keys ──────────────────────────────
 
@@ -55,9 +55,7 @@ function getAndDeleteChallenge(challenge: string): string | null {
   return entry.challenge;
 }
 
-function extractChallengeFromResponse(response: {
-  response: { clientDataJSON: string };
-}): string {
+function extractChallengeFromResponse(response: { response: { clientDataJSON: string } }): string {
   try {
     const clientData = JSON.parse(
       Buffer.from(response.response.clientDataJSON, "base64url").toString("utf-8"),

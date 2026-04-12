@@ -15,7 +15,7 @@ export function formatZodResponse(
 ): void {
   const errors: Record<string, string[]> = {};
 
-  for (const err of error.errors) {
+  for (const err of error.issues) {
     const field = err.path.join(".");
     if (!errors[field]) {
       errors[field] = [];
@@ -36,7 +36,7 @@ export function formatZodResponse(
   logBusinessEvent({
     event: "validation_failed",
     data: {
-      errorCount: error.errors.length,
+      errorCount: error.issues.length,
       fieldCount: Object.keys(errors).length,
       endpoint: `${method} ${path}`,
     },

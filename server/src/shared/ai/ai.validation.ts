@@ -31,13 +31,13 @@ export type UsageQueryDTO = z.infer<typeof usageQuerySchema>;
 
 export const createConversationSchema = z.object({
   title: z.string().max(200).optional(),
-  context: z.record(z.unknown()), // Serialized pi-ai Context
+  context: z.record(z.string(), z.unknown()), // Serialized pi-ai Context
   lastModel: z.string().min(1),
 });
 
 export const updateConversationSchema = z.object({
   title: z.string().max(200).optional(),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
   lastModel: z.string().min(1).optional(),
 });
 

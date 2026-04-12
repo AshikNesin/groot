@@ -12,7 +12,7 @@ import type {
   AuthenticationResponseJSON,
   AuthenticatorTransportFuture,
   RegistrationResponseJSON,
-} from "@simplewebauthn/types";
+} from "@simplewebauthn/server";
 import { env } from "@/core/env";
 
 // Configuration for WebAuthn

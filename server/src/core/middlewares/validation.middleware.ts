@@ -28,7 +28,7 @@ function createValidator(target: "body" | "query" | "params") {
       } catch (error) {
         if (error instanceof z.ZodError) {
           const details: Record<string, string[]> = {};
-          for (const issue of error.errors) {
+          for (const issue of error.issues) {
             const field = issue.path.join(".") || "global";
             details[field] = [...(details[field] ?? []), issue.message];
           }
