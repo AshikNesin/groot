@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import ms from "ms";
 import { Boom } from "@/core/errors";
 import { env } from "@/core/env";
+import { config } from "@/core/config";
 
 interface JWTPayload {
   userId: number;
@@ -9,7 +10,7 @@ interface JWTPayload {
 }
 
 const JWT_SECRET = env.JWT_SECRET;
-const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
+const JWT_EXPIRES_IN = config.auth.jwtExpiresIn;
 
 export const JWT_EXPIRES_IN_MS = ms(JWT_EXPIRES_IN);
 if (!JWT_EXPIRES_IN_MS) {

@@ -15,28 +15,40 @@ default:
   app:
     name: "Groot"
     isProduction: false
+    port: "${PORT:-3000}"
 
   cors:
     origins:
       - "http://localhost:3000"
 
+  auth:
+    jwtExpiresIn: "${JWT_EXPIRES_IN:-30d}"
+
   jobs:
     enabled: true
     concurrency: 5
-    pollInterval: 2000
-    archiveCompletedAfterSeconds: 3600
-    deleteArchivedAfterSeconds: 86400
-    monitorStateInterval: 60000
+    pollIntervalSeconds: 5
+    archiveCompletedAfterSeconds: 604800
+    deleteArchivedAfterSeconds: 2592000
+    monitorStateIntervalSeconds: 60
 
   ai:
-    defaultProvider: "openai"
-    defaultModel: "gpt-4o-mini"
+    defaultProvider: "anthropic"
+    defaultModel: "claude-sonnet-4-6"
     enableStreaming: true
     trackUsage: true
 
   logging:
     level: "info"
     format: "json"
+
+  passkey:
+    rpName: "Groot"
+    rpId: "localhost"
+    origin: "https://groot.localhost"
+
+  sentry:
+    dsn: "${SENTRY_DSN:-}"
 
   features:
     enableNotifications: false

@@ -12,6 +12,7 @@ export const configSchema = z.object({
     .object({
       name: z.string().default("Groot"),
       isProduction: bool.default(false),
+      port: z.coerce.number().int().min(1).default(3000),
     })
     .default({}),
   cors: z
@@ -19,20 +20,25 @@ export const configSchema = z.object({
       origins: z.array(z.string()).default([]),
     })
     .default({}),
+  auth: z
+    .object({
+      jwtExpiresIn: z.string().default("30d"),
+    })
+    .default({}),
   jobs: z
     .object({
       enabled: bool.default(true),
       concurrency: z.coerce.number().int().min(1).default(5),
-      pollInterval: z.coerce.number().int().min(500).default(2000),
-      archiveCompletedAfterSeconds: z.coerce.number().int().min(0).default(3600),
-      deleteArchivedAfterSeconds: z.coerce.number().int().min(0).default(86400),
-      monitorStateInterval: z.coerce.number().int().min(0).default(60000),
+      pollIntervalSeconds: z.coerce.number().int().min(1).default(5),
+      archiveCompletedAfterSeconds: z.coerce.number().int().min(0).default(604800),
+      deleteArchivedAfterSeconds: z.coerce.number().int().min(0).default(2592000),
+      monitorStateIntervalSeconds: z.coerce.number().int().min(0).default(60),
     })
     .default({}),
   ai: z
     .object({
-      defaultProvider: z.string().default("openai"),
-      defaultModel: z.string().default("gpt-4o-mini"),
+      defaultProvider: z.string().default("anthropic"),
+      defaultModel: z.string().default("claude-sonnet-4-6"),
       enableStreaming: bool.default(true),
       trackUsage: bool.default(true),
     })
@@ -41,6 +47,18 @@ export const configSchema = z.object({
     .object({
       level: z.enum(["debug", "info", "warn", "error", "silent"]).default("info"),
       format: z.enum(["json", "text"]).default("json"),
+    })
+    .default({}),
+  passkey: z
+    .object({
+      rpName: z.string().default("Groot"),
+      rpId: z.string().default("localhost"),
+      origin: z.string().default("https://groot.localhost"),
+    })
+    .default({}),
+  sentry: z
+    .object({
+      dsn: z.string().default(""),
     })
     .default({}),
   features: z

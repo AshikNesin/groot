@@ -2,6 +2,7 @@ import { AI } from "@/core/ai";
 import { getModel, type KnownProvider } from "@mariozechner/pi-ai";
 import { aiUsageModel } from "@/shared/ai/ai-usage.model";
 import { env } from "@/core/env";
+import { config } from "@/core/config";
 import type { ChatDTO } from "@/shared/ai/ai.validation";
 import { randomUUID } from "node:crypto";
 
@@ -29,9 +30,9 @@ export interface ModelInfo {
   reasoning: boolean;
 }
 
-const defaultProvider = env.AI_DEFAULT_PROVIDER;
-const defaultModel = env.AI_DEFAULT_MODEL;
-const trackUsage = env.AI_TRACK_USAGE;
+const defaultProvider = config.ai.defaultProvider;
+const defaultModel = config.ai.defaultModel;
+const trackUsage = config.ai.trackUsage;
 const defaultTimeout = 60000;
 
 function createAI(input: ChatDTO): AI {

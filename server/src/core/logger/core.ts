@@ -1,16 +1,17 @@
 import pino, { type Logger } from "pino";
 import dayjs from "dayjs";
 import { env } from "@/core/env";
+import { config } from "@/core/config";
 import { serializeObject } from "@/core/logger/utils";
 
 export const isDevelopment = env.NODE_ENV !== "production";
-export const logLevel = env.LOG_LEVEL;
+export const logLevel = config.logging.level;
 
 export const loggerConfig = {
   level: logLevel,
   base: {
     env: env.NODE_ENV,
-    service: "groot",
+    service: config.app.name.toLowerCase(),
     pid: process.pid,
   },
   formatters: {

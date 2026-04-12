@@ -1,12 +1,13 @@
+import { config } from "@/core/config";
 import { env } from "@/core/env";
 
 export const jobConfig = {
   connectionString: env.DATABASE_URL,
-  concurrency: env.JOB_CONCURRENCY,
-  pollIntervalSeconds: env.JOB_POLL_INTERVAL,
-  archiveCompletedAfterSeconds: env.JOB_ARCHIVE_COMPLETED_AFTER_SECONDS,
-  deleteArchivedAfterSeconds: env.JOB_DELETE_ARCHIVED_AFTER_SECONDS,
-  monitorStateIntervalSeconds: env.JOB_MONITOR_STATE_INTERVAL,
+  concurrency: config.jobs.concurrency,
+  pollIntervalSeconds: config.jobs.pollIntervalSeconds,
+  archiveCompletedAfterSeconds: config.jobs.archiveCompletedAfterSeconds,
+  deleteArchivedAfterSeconds: config.jobs.deleteArchivedAfterSeconds,
+  monitorStateIntervalSeconds: config.jobs.monitorStateIntervalSeconds,
 } as const;
 
 // Default options applied to all jobs unless overridden by the feature.

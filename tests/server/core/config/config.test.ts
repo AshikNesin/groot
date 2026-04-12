@@ -45,10 +45,10 @@ describe("configSchema", () => {
 
   it("coerces string numbers via z.coerce", () => {
     const result = configSchema.parse({
-      jobs: { concurrency: "10", pollInterval: "3000" },
+      jobs: { concurrency: "10", pollIntervalSeconds: "3" },
     });
     expect(result.jobs.concurrency).toBe(10);
-    expect(result.jobs.pollInterval).toBe(3000);
+    expect(result.jobs.pollIntervalSeconds).toBe(3);
   });
 
   it("infers Config type from schema", () => {
