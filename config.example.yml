@@ -1,0 +1,64 @@
+# config.yml - Application Configuration
+# Copy this file to config.yml and customize for your environment.
+#
+# Structure: environment sections are deep-merged into default.
+# Only override what differs per environment.
+#
+# Dynamic variables:
+#   ${VAR}          - Required env var (startup fails if missing and Zod requires it)
+#   ${VAR:-fallback} - Env var with fallback value
+#
+# Secrets (JWT_SECRET, API keys, S3 credentials) stay in .env files.
+# Only reference them here via ${VAR} syntax.
+
+default:
+  app:
+    name: "Groot"
+    isProduction: false
+
+  cors:
+    origins:
+      - "http://localhost:3000"
+
+  jobs:
+    enabled: true
+    concurrency: 5
+    pollInterval: 2000
+    archiveCompletedAfterSeconds: 3600
+    deleteArchivedAfterSeconds: 86400
+    monitorStateInterval: 60000
+
+  ai:
+    defaultProvider: "openai"
+    defaultModel: "gpt-4o-mini"
+    enableStreaming: true
+    trackUsage: true
+
+  logging:
+    level: "info"
+    format: "json"
+
+  features:
+    enableNotifications: false
+
+development:
+  logging:
+    level: "debug"
+    format: "text"
+
+production:
+  app:
+    isProduction: true
+  cors:
+    origins:
+      - "${CORS_ALLOWED_ORIGINS}"
+  jobs:
+    concurrency: 10
+  logging:
+    level: "warn"
+
+test:
+  logging:
+    level: "silent"
+  jobs:
+    enabled: false

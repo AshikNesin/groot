@@ -162,28 +162,28 @@ Missing required `${VAR}` (no `:-` fallback) on a non-optional Zod field → sta
 
 ### Core System
 
-- [ ] `config.yml` loads and parses at startup with environment sections
-- [ ] Deep merge: `default` ← active environment section ← `config.local.yml`
-- [ ] Dynamic interpolation: `${VAR}` and `${VAR:-fallback}` resolve from `process.env`
-- [ ] Zod schema validates merged config with `z.coerce` for primitives
-- [ ] TypeScript types auto-derived from Zod schema (`z.infer`)
-- [ ] `import { config } from "@/core/config"` provides typed, frozen config object
-- [ ] Startup aborts with clear error on invalid/missing config
-- [ ] `config.example.yml` committed as template
-- [ ] `config.local.yml` added to `.gitignore`
-- [ ] `js-yaml` added as dependency
+- [x] `config.yml` loads and parses at startup with environment sections
+- [x] Deep merge: `default` ← active environment section ← `config.local.yml`
+- [x] Dynamic interpolation: `${VAR}` and `${VAR:-fallback}` resolve from `process.env`
+- [x] Zod schema validates merged config with `z.coerce` for primitives
+- [x] TypeScript types auto-derived from Zod schema (`z.infer`)
+- [x] `import { config } from "@/core/config"` provides typed, frozen config object
+- [x] Startup aborts with clear error on invalid/missing config
+- [x] `config.example.yml` committed as template
+- [x] `config.local.yml` added to `.gitignore`
+- [x] `js-yaml` added as dependency
 
 ### Integration
 
-- [ ] Config module imports from `@/core/env` to ensure varlock loads first
-- [ ] Module-scope consumers can safely access config (synchronous load)
-- [ ] Test environment loads `test:` section from config.yml
-- [ ] Existing `@/core/env` imports continue working unchanged
+- [x] Config module imports from `@/core/env` to ensure varlock loads first
+- [x] Module-scope consumers can safely access config (synchronous load)
+- [x] Test environment loads `test:` section from config.yml
+- [x] Existing `@/core/env` imports continue working unchanged
 
 ### Config Boundary
 
-- [ ] Clear guideline documented: config.yml = deployment-time / environment-level; KV settings = runtime / admin-configurable
-- [ ] Secrets (JWT_SECRET, API keys, S3 credentials) remain in env vars, referenced via `${VAR}`
+- [x] Clear guideline documented: config.yml = deployment-time / environment-level; KV settings = runtime / admin-configurable
+- [x] Secrets (JWT_SECRET, API keys, S3 credentials) remain in env vars, referenced via `${VAR}`
 
 ## Success Metrics
 

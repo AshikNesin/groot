@@ -18,6 +18,9 @@ playwright-report/
 test-results/
 .pnpm-store/
 
+# Local config overrides
+config.local.yml
+
 # Sensitive files
 *.pem
 *.key
