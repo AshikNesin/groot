@@ -55,9 +55,7 @@ function getAndDeleteChallenge(challenge: string): string | null {
   return entry.challenge;
 }
 
-function extractChallengeFromResponse(response: {
-  response: { clientDataJSON: string };
-}): string {
+function extractChallengeFromResponse(response: { response: { clientDataJSON: string } }): string {
   try {
     const clientData = JSON.parse(
       Buffer.from(response.response.clientDataJSON, "base64url").toString("utf-8"),

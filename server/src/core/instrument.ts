@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { env } from "@/core/env";
+import { config } from "@/core/config";
 
 // Generate release version using SOURCE_VERSION (Heroku) or SENTRY_RELEASE env var
 // Must match the logic in scripts/build.mjs
@@ -26,7 +27,7 @@ const getSentryRelease = () => {
 // Initialize Sentry as early as possible
 Sentry.init({
   // Use DSN from environment variables or fall back to the provided one if not set
-  dsn: env.SENTRY_DSN,
+  dsn: config.sentry.dsn,
 
   // Release identifier for source map correlation
   release: getSentryRelease(),

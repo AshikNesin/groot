@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer, setupSpaFallback, setupErrorHandling, startServer } from "@/core/server";
 import { env } from "@/core/env";
+import { config } from "@/core/config";
 import { logger } from "@/core/logger";
 import { registerRoutes, registerJobHandlers } from "@/routes";
 import { notificationService } from "@/shared/notification/notification.service";
@@ -36,7 +37,7 @@ async function main() {
   await startServer(httpServer, viteServer, {
     onStart: async () => {
       // Initialize job queue after server is listening
-      if (env.ENABLE_JOB_QUEUE) {
+      if (config.jobs.enabled) {
         try {
           await initJobQueue();
           await startWorkers();
@@ -45,14 +46,14 @@ async function main() {
           logger.error({ error }, "Failed to initialize job queue");
         }
       } else {
-        logger.info("Job queue disabled (set ENABLE_JOB_QUEUE=true to enable)");
+        logger.info("Job queue disabled (set jobs.enabled=true in config.yml to enable)");
       }
 
       // Send server startup notification in production
       if (isProd) {
         try {
           await notificationService.sendServerStartupNotification(
-            env.PORT,
+            config.app.port,
             env.NODE_ENV || "unknown",
           );
         } catch (error) {
@@ -61,7 +62,7 @@ async function main() {
       }
     },
     onShutdown: async () => {
-      if (env.ENABLE_JOB_QUEUE) {
+      if (config.jobs.enabled) {
         await stopJobQueue();
       }
     },

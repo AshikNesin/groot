@@ -9,6 +9,7 @@ import type { ViteDevServer } from "vite-plus";
 import dayjs from "dayjs";
 import { Sentry } from "@/core/instrument";
 import { env } from "@/core/env";
+import { config } from "@/core/config";
 import { logger } from "@/core/logger";
 import corsMiddleware from "@/core/middlewares/cors.middleware";
 import { requestLoggerMiddleware } from "@/core/middlewares/request-logger.middleware";
@@ -41,7 +42,7 @@ export function getIsShuttingDown(): boolean {
 
 export async function createServer(options: ServerOptions): Promise<ServerInstance> {
   const { distPath, clientRoot } = options;
-  const port = env.PORT;
+  const port = config.app.port;
   const isProd = env.NODE_ENV === "production";
 
   const app = express();
@@ -171,7 +172,7 @@ export async function startServer(
   viteServer: ViteDevServer | null,
   options?: StartServerOptions,
 ): Promise<void> {
-  const port = env.PORT;
+  const port = config.app.port;
 
   await new Promise<void>((resolve, reject) => {
     httpServer.on("error", reject);
