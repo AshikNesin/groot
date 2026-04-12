@@ -5,24 +5,11 @@ import jsYaml from "js-yaml";
 import { ZodError } from "zod";
 import { env } from "@/core/env";
 import { Boom } from "@/core/errors";
+import { deepFreeze, replaceArrays } from "@/core/utils/object.utils";
 import { configSchema, type Config } from "@/core/config/config.schema";
 
 const CONFIG_PATH = resolve(process.cwd(), "config.yml");
 const LOCAL_CONFIG_PATH = resolve(process.cwd(), "config.local.yml");
-
-// Arrays replace (not concatenate), objects merge recursively
-const replaceArrays = (_targetVal: unknown, sourceVal: unknown) => {
-  if (Array.isArray(sourceVal)) return sourceVal;
-  return undefined;
-};
-
-// Deep freeze for runtime immutability
-function deepFreeze<T>(obj: T): T {
-  if (obj === null || typeof obj !== "object") return obj;
-  Object.freeze(obj);
-  for (const val of Object.values(obj as Record<string, unknown>)) deepFreeze(val);
-  return obj;
-}
 
 export function loadConfig(): Config {
   // 1. Parse config.yml
