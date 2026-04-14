@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api";
+import { apiClient } from "@/core/lib/api";
 
 export interface AppSettingMetadata {
   description?: string;

@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/store/auth";
-import { CommandPalette } from "@/components/CommandPalette";
+import { useAuthStore } from "@/core/store/auth";
+import { CommandPalette } from "@/core/components/CommandPalette";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,8 +8,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from "@/ui/dropdown-menu";
+import { Button } from "@/ui/button";
 import { UserCircle, LogOut, Settings as SettingsIcon } from "lucide-react";
 
 export function Layout() {

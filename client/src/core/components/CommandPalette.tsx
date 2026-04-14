@@ -11,7 +11,7 @@ import {
   LogOut,
   Search,
 } from "lucide-react";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/core/store/auth";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);

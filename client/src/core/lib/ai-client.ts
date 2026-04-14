@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api";
+import { apiClient } from "@/core/lib/api";
 import type {
   ChatRequest,
   ChatResult,
@@ -10,7 +10,7 @@ import type {
   CreateConversationRequest,
   UpdateConversationRequest,
   StreamEvent,
-} from "@/types/ai";
+} from "@/core/types/ai";
 
 // ── Stream Connection Interface ──────────────────────────────────────────────
 

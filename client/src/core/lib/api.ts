@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance } from "axios";
-import type { Job, JobLog, JobName, JobStats, ScheduledJob } from "@/types";
+import type { Job, JobLog, JobName, JobStats, ScheduledJob } from "@/core/types/jobs";
 
 /**
  * Standard API response format

@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import { Button } from "@/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useTodos } from "@/hooks/api/useTodos";
-import { PageLayout } from "@/components/layout/PageLayout";
+import { useTodos } from "@/app/todo/hooks/useTodos";
+import { PageLayout } from "@/core/components/layout/PageLayout";
 
 export function Dashboard() {
   const { data: todos, isLoading } = useTodos();

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatRequest, ModelInfo } from "@/types/ai";
+import type { ChatRequest, ModelInfo } from "@/core/types/ai";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

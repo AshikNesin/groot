@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { aiClient } from "@/lib/ai-client";
+import { aiClient } from "@/core/lib/ai-client";
 import type {
   ChatRequest,
   ChatResult,
   UsageQuery,
   CreateConversationRequest,
   UpdateConversationRequest,
-} from "@/types/ai";
+} from "@/core/types/ai";
 
 // ── Non-streaming Chat ───────────────────────────────────────────────────────
 

@@ -1,19 +1,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "@/hooks/api/useTodos";
-import { PageLayout } from "@/components/layout/PageLayout";
+import { Button } from "@/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import { Input } from "@/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/ui/dialog";
+import { useToast } from "@/core/hooks/use-toast";
+import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "@/app/todo/hooks/useTodos";
+import { PageLayout } from "@/core/components/layout/PageLayout";
 
 const todoSchema = z.object({
   title: z.string().min(1, "Title is required"),

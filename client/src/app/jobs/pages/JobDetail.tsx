@@ -1,10 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useToast } from "@/hooks/use-toast";
-import { formatLocaleDateTime } from "@/lib/utils";
-import { apiClient } from "@/lib/api";
-import type { Job, JobLog } from "@/types";
+import { Badge } from "@/ui/badge";
+import { Button } from "@/ui/button";
+import { LoadingSpinner } from "@/ui/loading-spinner";
+import { useToast } from "@/core/hooks/use-toast";
+import { formatLocaleDateTime } from "@/core/lib/utils";
+import { apiClient } from "@/core/lib/api";
+import type { Job, JobLog } from "@/core/types/jobs";
 import { json } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";

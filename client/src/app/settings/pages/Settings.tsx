@@ -1,7 +1,7 @@
-import { AppSettings } from "@/components/AppSettings";
-import { PasskeyManager } from "@/components/PasskeyManager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLayout } from "@/components/layout/PageLayout";
+import { AppSettings } from "@/core/components/AppSettings";
+import { PasskeyManager } from "@/core/components/PasskeyManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
+import { PageLayout } from "@/core/components/layout/PageLayout";
 
 export function Settings() {
   return (

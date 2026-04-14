@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/core/lib/utils";
 import { Activity, AlertCircle, CheckCircle, Clock, RefreshCw, X, XCircle } from "lucide-react";
 import { Badge } from "./badge";
 import type { BadgeProps } from "./badge";

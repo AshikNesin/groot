@@ -15,8 +15,8 @@ import {
   Edit3,
 } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -24,10 +24,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { PublicShare } from "@/hooks/api/useStorage";
+} from "@/ui/dialog";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import type { PublicShare } from "@/app/storage/types/storage";
 import {
   useBulkUpload,
   useCreateFolder,
@@ -39,10 +39,10 @@ import {
   useStorageFiles,
   useStorageShares,
   useUploadFile,
-} from "@/hooks/api/useStorage";
-import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
-import { formatBytes, formatDate } from "@/lib/utils";
+} from "@/app/storage/hooks/useStorage";
+import { useToast } from "@/core/hooks/use-toast";
+import { api } from "@/core/lib/api";
+import { formatBytes, formatDate } from "@/core/lib/utils";
 
 export function Storage() {
   const [currentPath, setCurrentPath] = useQueryState("path", parseAsString.withDefault(""));

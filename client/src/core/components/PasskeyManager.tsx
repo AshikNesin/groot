@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
 import dayjs from "dayjs";
 import {
   Dialog,
@@ -8,13 +8,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { type Passkey, passkeyService } from "@/services/passkey";
+} from "@/ui/dialog";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { Alert } from "@/ui/alert";
+import { Badge } from "@/ui/badge";
+import { LoadingSpinner } from "@/ui/loading-spinner";
+import { type Passkey, passkeyService } from "@/core/services/passkey";
 import { useCallback, useEffect, useState } from "react";
 
 export function PasskeyManager() {

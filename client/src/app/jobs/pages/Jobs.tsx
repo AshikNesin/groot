@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/ui/badge";
+import { Button } from "@/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,35 +7,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+} from "@/ui/dropdown-menu";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { LoadingSpinner } from "@/ui/loading-spinner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
+import { StatusBadge } from "@/ui/status-badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/ui/table";
+import { Checkbox } from "@/ui/checkbox";
+import { Textarea } from "@/ui/textarea";
+import { useToast } from "@/core/hooks/use-toast";
 import {
   endOfDay,
   formatDuration,
@@ -43,9 +30,9 @@ import {
   startOfDay,
   startOfMonth,
   subtractDays,
-} from "@/lib/utils";
-import { apiClient } from "@/lib/api";
-import type { Job, JobName, JobStats, ScheduledJob } from "@/types";
+} from "@/core/lib/utils";
+import { apiClient } from "@/core/lib/api";
+import type { Job, JobName, JobStats, ScheduledJob } from "@/core/types/jobs";
 import { json } from "@codemirror/lang-json";
 import CodeMirror from "@uiw/react-codemirror";
 import {

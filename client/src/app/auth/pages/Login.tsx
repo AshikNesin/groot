@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuthStore } from "@/store/auth";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import { useAuthStore } from "@/core/store/auth";
+import { useToast } from "@/core/hooks/use-toast";
 
 export function Login() {
   const login = useAuthStore((state) => state.login);

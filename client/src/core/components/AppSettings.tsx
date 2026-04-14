@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -7,12 +7,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert } from "@/components/ui/alert";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { type AppSetting, settingsService } from "@/services/settings";
+} from "@/ui/dialog";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { Alert } from "@/ui/alert";
+import { LoadingSpinner } from "@/ui/loading-spinner";
+import { type AppSetting, settingsService } from "@/core/services/settings";
 import { json } from "@codemirror/lang-json";
 import CodeMirror from "@uiw/react-codemirror";
 import { useCallback, useEffect, useState } from "react";
