@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 const SEED_USER = {
   email: "demo@example.com",
-  password: "password123",
+  password: "demo@example.com",
   name: "Demo User",
 };
 
