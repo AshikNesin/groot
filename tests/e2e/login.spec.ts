@@ -11,7 +11,7 @@ test.describe("Login page", () => {
 
     // The form uses "Username" label but accepts email
     await page.getByLabel(/username/i).fill("demo@example.com");
-    await page.getByLabel(/password/i).fill("password123");
+    await page.getByLabel(/password/i).fill("demo@example.com");
     await page.getByRole("button", { name: /sign in/i }).click();
 
     // Should redirect after successful login
