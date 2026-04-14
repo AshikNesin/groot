@@ -1,17 +1,17 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useEffect } from "react";
 import { NuqsAdapter } from "nuqs/adapters/react-router";
-import { useAuthStore } from "@/store/auth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Layout } from "@/components/Layout";
-import { Dashboard } from "@/pages/Dashboard";
-import { Todos } from "@/pages/Todos";
-import { Storage } from "@/pages/Storage";
-import { Jobs } from "@/pages/Jobs";
-import { JobDetail } from "@/pages/JobDetail";
-import { Settings } from "@/pages/Settings";
-import { Login } from "@/pages/Login";
-import { Toaster } from "@/components/ui/toaster";
+import { useAuthStore } from "@/core/store/auth";
+import { ProtectedRoute } from "@/core/components/ProtectedRoute";
+import { Layout } from "@/core/components/Layout";
+import { Dashboard } from "@/app/ai/pages/Dashboard";
+import { Todos } from "@/app/todo/pages/Todos";
+import { Storage } from "@/app/storage/pages/Storage";
+import { Jobs } from "@/app/jobs/pages/Jobs";
+import { JobDetail } from "@/app/jobs/pages/JobDetail";
+import { Settings } from "@/app/settings/pages/Settings";
+import { Login } from "@/app/auth/pages/Login";
+import { Toaster } from "@/ui/toaster";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);

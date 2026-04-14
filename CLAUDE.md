@@ -58,13 +58,27 @@ server/src/
 └── index.ts          # Server entry point
 
 client/src/
-├── components/
-│   ├── ui/          # 26 Radix-based UI components
-│   └── layout/      # PageLayout, PageHeader, etc.
-├── pages/           # Route-level page components
-├── lib/             # API client, utilities
-├── store/           # Zustand stores (auth, etc.)
-└── hooks/           # Custom React hooks
+├── ui/               # Design system (pure shadcn/ui primitives, zero business logic)
+├── core/             # Boilerplate infrastructure (synced to downstream repos)
+│   ├── components/   # Layout shell, ProtectedRoute, CommandPalette, AppSettings, PasskeyManager
+│   │   └── layout/   # PageLayout, PageHeader, PageContainer, Section
+│   ├── hooks/        # use-toast
+│   ├── lib/          # API client (apiClient + axios), AI client, utils, design tokens
+│   ├── services/     # Passkey service, Settings service
+│   ├── store/        # Zustand stores (auth, ai)
+│   └── types/        # Shared types (ai.ts, jobs.ts)
+├── app/              # Business feature modules (unique per downstream project)
+│   ├── todo/         # Example: todo feature module
+│   │   ├── pages/
+│   │   └── hooks/
+│   ├── ai/           # AI chat feature
+│   ├── jobs/         # Job management
+│   ├── storage/      # File storage
+│   ├── settings/     # Settings page
+│   └── auth/         # Login page
+├── App.tsx           # Route definitions
+├── main.tsx          # Entry point
+└── index.css         # Global styles / Tailwind
 
 tests/               # Centralized test files
 ├── server/          # Server unit tests (mirrors server/src structure)
@@ -107,7 +121,56 @@ pnpm test:e2e         # Run Playwright E2E tests
 
 ## Code Patterns
 
-### Feature Module Structure
+### Frontend Architecture
+
+Three-layer separation for clean sync with downstream repos:
+
+| Layer   | Import path              | Purpose                                                        | Synced? |
+| ------- | ------------------------ | -------------------------------------------------------------- | ------- |
+| `ui/`   | `@/ui/button`            | Pure design system primitives                                  | Yes     |
+| `core/` | `@/core/lib/api`         | Boilerplate infrastructure (auth, API client, stores, layouts) | Yes     |
+| `app/`  | `@/app/todo/pages/Todos` | Business feature modules                                       | No      |
+
+**Dependency rule:** `ui/` must not import from `core/` or `app/`. `core/` must not import from `app/`. `app/` can import from both `ui/` and `core/`.
+
+### Frontend Feature Module Structure
+
+Each feature in `app/` is self-contained. Subdirectories are added as needed:
+
+```
+app/<feature>/
+├── pages/       # Route-level page components (required)
+├── hooks/       # React Query data hooks (if the feature has API calls)
+└── types/       # Feature-specific TypeScript types (if used by 3+ consumers)
+```
+
+**Example — adding a new feature:**
+
+```typescript
+// app/invoices/pages/Invoices.tsx
+import { Button } from "@/ui/button";
+import { PageLayout } from "@/core/components/layout/PageLayout";
+import { useInvoices } from "@/app/invoices/hooks/useInvoices";
+
+export function Invoices() {
+  const { data } = useInvoices();
+  return (
+    <PageLayout title="Invoices" description="Manage invoices">
+      {/* ... */}
+    </PageLayout>
+  );
+}
+```
+
+Then register the route in `App.tsx`:
+
+```typescript
+import { Invoices } from "@/app/invoices/pages/Invoices";
+// Add inside the protected routes:
+<Route path="invoices" element={<Invoices />} />
+```
+
+### Backend Feature Module Structure
 
 Each feature is self-contained with:
 
@@ -294,7 +357,9 @@ GEMINI_API_KEY=...
 ## Conventions
 
 - **TypeScript**: Strict mode enabled
-- **Imports**: Use `@/` alias for server/src paths
+- **Imports**: Use `@/` alias (resolves to `server/src/` or `client/src/` based on workspace)
+- **Frontend imports**: `@/ui/*` for design system, `@/core/*` for infrastructure, `@/app/*` for features
+- **Frontend data hooks**: Use `apiClient` from `@/core/lib/api` (not the raw `api` axios instance)
 - **Naming**: camelCase for variables/functions, PascalCase for components/types
 - **Exports**: Prefer named exports over default exports (use `* as` for controllers)
 - **Async**: Always use async/await, never raw Promises
