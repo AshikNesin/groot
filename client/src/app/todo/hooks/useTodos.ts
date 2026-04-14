@@ -1,6 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/core/lib/api";
-import type { Todo, CreateTodoDTO, UpdateTodoDTO } from "../types/todo";
+
+export interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTodoDTO {
+  title: string;
+  completed?: boolean;
+}
+
+export interface UpdateTodoDTO {
+  id: number;
+  data: Partial<CreateTodoDTO>;
+}
 
 export function useTodos() {
   return useQuery({

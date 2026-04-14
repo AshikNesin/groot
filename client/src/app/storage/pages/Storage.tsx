@@ -27,7 +27,7 @@ import {
 } from "@/ui/dialog";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
-import type { PublicShare } from "@/app/storage/types/storage";
+import type { PublicShare } from "@/app/storage/hooks/useStorage";
 import {
   useBulkUpload,
   useCreateFolder,
