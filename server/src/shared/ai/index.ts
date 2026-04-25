@@ -2,7 +2,8 @@ import * as AIServices from "@/shared/ai/ai.service";
 import * as AIUsageServices from "@/shared/ai/ai-usage.service";
 import * as AIConversationServices from "@/shared/ai/ai-conversation.service";
 import * as AIValidation from "@/shared/ai/ai.validation";
-import { aiUsageModel, aiConversationModel } from "@/shared/ai/ai-usage.model";
+import { aiUsageModel } from "@/shared/ai/ai-usage.model";
+import { aiConversationModel } from "@/shared/ai/ai-conversation.model";
 
 export const AISystem = {
   ...AIServices,

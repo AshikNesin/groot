@@ -52,6 +52,23 @@ default:
   features:
     enableNotifications: false
 
+  rateLimits:
+    storage:
+      windowMs: 900000
+      max: 100
+    upload:
+      windowMs: 900000
+      max: 50
+    publicFile:
+      windowMs: 900000
+      max: 200
+    ai:
+      windowMs: 3600000
+      max: 100
+    aiStream:
+      windowMs: 3600000
+      max: 50
+
 development:
   logging:
     level: "debug"

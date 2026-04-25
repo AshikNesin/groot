@@ -1,10 +1,11 @@
 import rateLimit from "express-rate-limit";
 import type { NextFunction, Request, Response } from "express";
 import { Boom, ErrorCode } from "@/core/errors";
+import { config } from "@/core/config";
 
 export const storageRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: config.rateLimits.storage.windowMs,
+  max: config.rateLimits.storage.max,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, _res: Response, next: NextFunction) => {
@@ -19,8 +20,8 @@ export const storageRateLimiter = rateLimit({
 });
 
 export const uploadRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50,
+  windowMs: config.rateLimits.upload.windowMs,
+  max: config.rateLimits.upload.max,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, _res: Response, next: NextFunction) => {
@@ -35,8 +36,8 @@ export const uploadRateLimiter = rateLimit({
 });
 
 export const publicFileRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
+  windowMs: config.rateLimits.publicFile.windowMs,
+  max: config.rateLimits.publicFile.max,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, _res: Response, next: NextFunction) => {
@@ -51,8 +52,8 @@ export const publicFileRateLimiter = rateLimit({
 });
 
 export const aiRateLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 100, // 100 requests per hour
+  windowMs: config.rateLimits.ai.windowMs,
+  max: config.rateLimits.ai.max,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, _res: Response, next: NextFunction) => {
@@ -67,8 +68,8 @@ export const aiRateLimiter = rateLimit({
 });
 
 export const aiStreamRateLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 50, // 50 streaming requests per hour
+  windowMs: config.rateLimits.aiStream.windowMs,
+  max: config.rateLimits.aiStream.max,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, _res: Response, next: NextFunction) => {
