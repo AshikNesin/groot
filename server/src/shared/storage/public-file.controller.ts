@@ -1,10 +1,10 @@
-import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import * as PublicShareService from "@/shared/storage/public-share.service";
 import { Boom, ErrorCode } from "@/core/errors";
 import { env } from "@/core/env";
 import { sanitizeFileName } from "@/shared/storage/storage.utils";
 import type { VerifySharePasswordDTO } from "@/shared/storage/storage.validation";
+import { generateShareToken } from "@/core/utils/jwt.utils";
 
 export async function servePublicFile(req: Request, res: Response) {
   const { shareId } = req.params;
@@ -58,7 +58,7 @@ export async function verifySharePassword(req: Request, res: Response) {
   });
 
   if (isValid) {
-    const accessToken = jwt.sign({ shareId }, env.JWT_SECRET, { expiresIn: "1h" });
+    const accessToken = generateShareToken(shareId);
     const isProduction = env.NODE_ENV === "production";
     res.cookie("share_token", accessToken, {
       httpOnly: true,

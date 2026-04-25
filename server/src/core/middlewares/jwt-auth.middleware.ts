@@ -3,17 +3,6 @@ import { verifyToken } from "@/core/utils/jwt.utils";
 import { Boom } from "@/core/errors";
 import { extractAuthToken } from "@/core/utils/auth-cookie.utils";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: number;
-        email: string;
-      };
-    }
-  }
-}
-
 export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
   try {
     const token = extractAuthToken(req);

@@ -1,8 +1,11 @@
 import dayjs from "dayjs";
 import { createNamespaceKv } from "@/core/kv";
 import { logger } from "@/core/logger";
+import { prisma } from "@/core/database";
 
-const appSettingsKv = createNamespaceKv("APP_SETTING");
+const KV_NAMESPACE = "APP_SETTING";
+const KV_NAMESPACE_PREFIX = `${KV_NAMESPACE}:`;
+const appSettingsKv = createNamespaceKv(KV_NAMESPACE);
 
 export interface AppSettingMetadata {
   description?: string;
@@ -49,22 +52,11 @@ class AppSettingsModel {
   }
 
   private async getAllKeys(): Promise<string[]> {
-    const keysRegistry = await appSettingsKv.get<string[]>("_keys");
-    return keysRegistry || [];
-  }
-
-  private async addKeyToRegistry(key: string): Promise<void> {
-    const keys = await this.getAllKeys();
-    if (!keys.includes(key)) {
-      keys.push(key);
-      await appSettingsKv.set("_keys", keys);
-    }
-  }
-
-  private async removeKeyFromRegistry(key: string): Promise<void> {
-    const keys = await this.getAllKeys();
-    const filteredKeys = keys.filter((k) => k !== key);
-    await appSettingsKv.set("_keys", filteredKeys);
+    const rows = await prisma.$queryRaw<Array<{ key: string }>>`
+      SELECT key FROM keyv
+      WHERE key LIKE ${KV_NAMESPACE_PREFIX + "%"}
+    `;
+    return rows.map((r) => r.key.replace(KV_NAMESPACE_PREFIX, ""));
   }
 
   async set<T = unknown>(
@@ -83,7 +75,6 @@ class AppSettingsModel {
       };
 
       await appSettingsKv.set(key, setting);
-      await this.addKeyToRegistry(key);
 
       logger.info({ key }, "App setting updated");
       return setting;
@@ -97,7 +88,6 @@ class AppSettingsModel {
     try {
       const deleted = await appSettingsKv.delete(key);
       if (deleted) {
-        await this.removeKeyFromRegistry(key);
         logger.info({ key }, "App setting deleted");
       }
       return deleted;

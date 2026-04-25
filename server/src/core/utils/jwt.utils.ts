@@ -46,13 +46,12 @@ export function verifyToken(token: string): JWTPayload {
   }
 }
 
-/**
- * Decode a token without verification (for debugging)
- */
-export function decodeToken(token: string): JWTPayload | null {
-  try {
-    return jwt.decode(token) as JWTPayload;
-  } catch {
-    return null;
-  }
+export function generateShareToken(shareId: string): string {
+  return jwt.sign({ shareId }, JWT_SECRET, { expiresIn: "1h" });
 }
+
+export function verifyShareToken(token: string): { shareId: string } {
+  return jwt.verify(token, JWT_SECRET) as { shareId: string };
+}
+
+export { jwt };
