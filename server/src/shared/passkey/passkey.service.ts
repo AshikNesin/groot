@@ -6,6 +6,7 @@ import { passkeyModel } from "@/shared/passkey/passkey.model";
 import { userModel } from "@/shared/auth/user.model";
 import { generateToken } from "@/core/utils/jwt.utils";
 import { createNamespaceKv } from "@/core/kv";
+import { prisma } from "@/core/database";
 import {
   generateDeviceName,
   generatePasskeyAuthenticationOptions,
@@ -32,10 +33,11 @@ async function storeChallenge(challenge: string): Promise<void> {
 }
 
 async function getAndDeleteChallenge(challenge: string): Promise<string | null> {
-  const stored = await challengeKv.get(challenge);
-  if (!stored) return null;
-  await challengeKv.delete(challenge);
-  return stored as string;
+  const result = await prisma.$queryRawUnsafe<Array<{ key: string }>>(
+    `DELETE FROM keyv WHERE key = $1 RETURNING key`,
+    `passkey:challenge:${challenge}`,
+  );
+  return result.length ? challenge : null;
 }
 
 function extractChallengeFromResponse(response: { response: { clientDataJSON: string } }): string {

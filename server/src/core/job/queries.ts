@@ -13,7 +13,7 @@ import type {
   JobQueryResponse,
 } from "@/core/job/types";
 
-const JOB_SELECT_COLUMNS = `
+const JOB_SELECT_COLUMNS = `SELECT
   id, name, priority, data, state,
   retry_limit as retrylimit,
   retry_count as retrycount,

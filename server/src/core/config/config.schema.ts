@@ -81,29 +81,32 @@ export const configSchema = z.object({
     .object({
       storage: z
         .object({
-          windowMs: z.coerce.number().default(900000),
-          max: z.coerce.number().default(100),
+          windowMs: z.coerce.number().int().positive().default(900000),
+          max: z.coerce.number().int().positive().default(100),
         })
         .default({}),
       upload: z
-        .object({ windowMs: z.coerce.number().default(900000), max: z.coerce.number().default(50) })
+        .object({
+          windowMs: z.coerce.number().int().positive().default(900000),
+          max: z.coerce.number().int().positive().default(50),
+        })
         .default({}),
       publicFile: z
         .object({
-          windowMs: z.coerce.number().default(900000),
-          max: z.coerce.number().default(200),
+          windowMs: z.coerce.number().int().positive().default(900000),
+          max: z.coerce.number().int().positive().default(200),
         })
         .default({}),
       ai: z
         .object({
-          windowMs: z.coerce.number().default(3600000),
-          max: z.coerce.number().default(100),
+          windowMs: z.coerce.number().int().positive().default(3600000),
+          max: z.coerce.number().int().positive().default(100),
         })
         .default({}),
       aiStream: z
         .object({
-          windowMs: z.coerce.number().default(3600000),
-          max: z.coerce.number().default(50),
+          windowMs: z.coerce.number().int().positive().default(3600000),
+          max: z.coerce.number().int().positive().default(50),
         })
         .default({}),
     })
