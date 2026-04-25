@@ -8,8 +8,7 @@ import type {
 } from "@/shared/passkey/passkey.validation";
 import { Boom } from "@/core/errors";
 import { parseId } from "@/core/utils/controller.utils";
-import { env } from "@/core/env";
-import { JWT_EXPIRES_IN_MS } from "@/core/utils/jwt.utils";
+import { setAuthCookie } from "@/core/utils/auth-cookie.utils";
 
 /**
  * Generate options for passkey registration
@@ -57,14 +56,7 @@ export async function verifyAuthentication(req: Request, res: Response) {
     response: body.response,
   });
 
-  const isProduction = env.NODE_ENV === "production";
-  res.cookie("token", result.token, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "strict" : "lax",
-    maxAge: JWT_EXPIRES_IN_MS,
-    path: "/",
-  });
+  setAuthCookie(res, result.token);
 
   return result;
 }
