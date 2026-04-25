@@ -13,6 +13,24 @@ import type {
   JobQueryResponse,
 } from "@/core/job/types";
 
+const JOB_SELECT_COLUMNS = `SELECT
+  id, name, priority, data, state,
+  retry_limit as retrylimit,
+  retry_count as retrycount,
+  retry_delay as retrydelay,
+  retry_backoff as retrybackoff,
+  start_after as startafter,
+  started_on as startedon,
+  singleton_key as singletonkey,
+  singleton_on as singletonon,
+  expire_seconds as expirein,
+  created_on as createdon,
+  completed_on as completedon,
+  keep_until as keepuntil,
+  output,
+  dead_letter as deadletter,
+  policy`;
+
 // Get all scheduled jobs
 export const getScheduledJobs = async (): Promise<ScheduledJobInfo[]> => {
   const boss = getBoss();
@@ -63,29 +81,14 @@ export const fetchJobs = async (options: FetchJobsOptions): Promise<BossJob[]> =
 // Get failed jobs (state-based query)
 export const getFailedJobs = async (options?: GetFailedJobsOptions): Promise<BossJob[]> => {
   const limit = options?.limit ?? 50;
-  return prisma.$queryRaw<BossJob[]>`
-    SELECT
-      id, name, priority, data, state,
-      retry_limit as retrylimit,
-      retry_count as retrycount,
-      retry_delay as retrydelay,
-      retry_backoff as retrybackoff,
-      start_after as startafter,
-      started_on as startedon,
-      singleton_key as singletonkey,
-      singleton_on as singletonon,
-      expire_seconds as expirein,
-      created_on as createdon,
-      completed_on as completedon,
-      keep_until as keepuntil,
-      output,
-      dead_letter as deadletter,
-      policy
+  const query = `
+    ${JOB_SELECT_COLUMNS}
     FROM pgboss.job
     WHERE state = 'failed'::pgboss.job_state
     ORDER BY created_on DESC
-    LIMIT ${limit}
-  `;
+    LIMIT $1`;
+
+  return prisma.$queryRawUnsafe<BossJob[]>(query, limit);
 };
 
 // Get jobs by state (state-based query with pagination)
@@ -102,29 +105,17 @@ export const getJobsByState = async (options: GetJobsByStateOptions): Promise<Jo
     prisma.$queryRaw<Array<{ count: bigint }>>`
       SELECT COUNT(*) as count FROM pgboss.job WHERE state = ${state}::pgboss.job_state
     `,
-    prisma.$queryRaw<BossJob[]>`
-      SELECT
-        id, name, priority, data, state,
-        retry_limit as retrylimit,
-        retry_count as retrycount,
-        retry_delay as retrydelay,
-        retry_backoff as retrybackoff,
-        start_after as startafter,
-        started_on as startedon,
-        singleton_key as singletonkey,
-        singleton_on as singletonon,
-        expire_seconds as expirein,
-        created_on as createdon,
-        completed_on as completedon,
-        keep_until as keepuntil,
-        output,
-        dead_letter as deadletter,
-        policy
+    prisma.$queryRawUnsafe<BossJob[]>(
+      `
+      ${JOB_SELECT_COLUMNS}
       FROM pgboss.job
-      WHERE state = ${state}::pgboss.job_state
+      WHERE state = $1::pgboss.job_state
       ORDER BY created_on DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `,
+      LIMIT $2 OFFSET $3`,
+      state,
+      limit,
+      offset,
+    ),
   ]);
 
   return { jobs, total: Number(totalResult[0]?.count ?? 0) };
@@ -179,23 +170,7 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
   const totalResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(countQuery, ...params);
 
   const jobsQuery = `
-    SELECT
-      id, name, priority, data, state,
-      retry_limit as retrylimit,
-      retry_count as retrycount,
-      retry_delay as retrydelay,
-      retry_backoff as retrybackoff,
-      start_after as startafter,
-      started_on as startedon,
-      singleton_key as singletonkey,
-      singleton_on as singletonon,
-      expire_seconds as expirein,
-      created_on as createdon,
-      completed_on as completedon,
-      keep_until as keepuntil,
-      output,
-      dead_letter as deadletter,
-      policy
+    ${JOB_SELECT_COLUMNS}
     FROM pgboss.job
     ${whereClause}
     ORDER BY created_on DESC

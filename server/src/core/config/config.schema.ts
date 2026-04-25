@@ -77,6 +77,40 @@ export const configSchema = z.object({
       enableNotifications: bool.default(false),
     })
     .default({}),
+  rateLimits: z
+    .object({
+      storage: z
+        .object({
+          windowMs: z.coerce.number().int().positive().default(900000),
+          max: z.coerce.number().int().positive().default(100),
+        })
+        .default({}),
+      upload: z
+        .object({
+          windowMs: z.coerce.number().int().positive().default(900000),
+          max: z.coerce.number().int().positive().default(50),
+        })
+        .default({}),
+      publicFile: z
+        .object({
+          windowMs: z.coerce.number().int().positive().default(900000),
+          max: z.coerce.number().int().positive().default(200),
+        })
+        .default({}),
+      ai: z
+        .object({
+          windowMs: z.coerce.number().int().positive().default(3600000),
+          max: z.coerce.number().int().positive().default(100),
+        })
+        .default({}),
+      aiStream: z
+        .object({
+          windowMs: z.coerce.number().int().positive().default(3600000),
+          max: z.coerce.number().int().positive().default(50),
+        })
+        .default({}),
+    })
+    .default({}),
 });
 
 export type Config = z.infer<typeof configSchema>;

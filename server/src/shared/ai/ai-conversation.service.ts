@@ -1,5 +1,5 @@
 import { Boom } from "@/core/errors";
-import { aiConversationModel } from "@/shared/ai/ai-usage.model";
+import { aiConversationModel } from "@/shared/ai/ai-conversation.model";
 import type { CreateConversationDTO, UpdateConversationDTO } from "@/shared/ai/ai.validation";
 
 export async function createConversation({

@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import dayjs from "dayjs";
 import { prisma } from "@/core/database";
 import * as StorageFileService from "@/shared/storage/storage.service";
 import { Boom, HttpError } from "@/core/errors";
 import { env } from "@/core/env";
 import { getContentType } from "@/shared/storage/storage.utils";
+import { verifyShareToken, jwt } from "@/core/utils/jwt.utils";
 
 export interface CreatePublicShareParams {
   filePath: string;
@@ -180,7 +180,7 @@ export async function validateShareAccess({
       if (!shareAccessToken) {
         return { isValid: false, reason: "Password verification required" };
       }
-      const decoded = jwt.verify(shareAccessToken, env.JWT_SECRET) as { shareId: string };
+      const decoded = verifyShareToken(shareAccessToken);
       if (decoded.shareId !== shareId) {
         return { isValid: false, reason: "Invalid access token" };
       }

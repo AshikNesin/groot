@@ -2,11 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 import { Boom } from "@/core/errors";
 import { Sentry } from "@/core/instrument";
 import { logBusinessEvent } from "@/core/logger";
-import { ZodError } from "zod";
 import { getRequestLogger } from "@/core/middlewares/request-logger.middleware";
 import { buildErrorContext } from "@/core/middlewares/error-context";
 import {
-  formatZodResponse,
   formatPrismaResponse,
   formatHttpErrorResponse,
   formatUnknownErrorResponse,
@@ -75,18 +73,6 @@ export function errorHandlerMiddleware(
       },
       level: "error",
     });
-  }
-
-  // Handle Zod validation errors
-  if (error instanceof ZodError) {
-    return formatZodResponse(
-      res,
-      error,
-      requestLogger,
-      errorContext.request.body,
-      req.method,
-      req.path,
-    );
   }
 
   // Handle Prisma errors

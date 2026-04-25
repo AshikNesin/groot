@@ -5,6 +5,8 @@ import type { Passkey, User } from "@/generated/prisma/models";
 import { passkeyModel } from "@/shared/passkey/passkey.model";
 import { userModel } from "@/shared/auth/user.model";
 import { generateToken } from "@/core/utils/jwt.utils";
+import { createNamespaceKv } from "@/core/kv";
+import { prisma } from "@/core/database";
 import {
   generateDeviceName,
   generatePasskeyAuthenticationOptions,
@@ -20,39 +22,31 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 
-// ── Challenge store with TTL and unique keys ──────────────────────────────
+// ── Challenge store backed by KV with TTL ──────────────────────────────────
 
-interface ChallengeEntry {
-  challenge: string;
-  createdAt: number;
+const CHALLENGE_TTL_MS = 5 * 60 * 1000;
+
+const challengeKv = createNamespaceKv("passkey:challenge");
+
+async function storeChallenge(challenge: string): Promise<void> {
+  await challengeKv.set(challenge, challenge, CHALLENGE_TTL_MS);
 }
 
-const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
-const challengeStore = new Map<string, ChallengeEntry>();
-
-function cleanExpiredChallenges(): void {
+async function getAndDeleteChallenge(challenge: string): Promise<string | null> {
   const now = Date.now();
-  for (const [key, entry] of challengeStore) {
-    if (now - entry.createdAt > CHALLENGE_TTL_MS) {
-      challengeStore.delete(key);
-    }
-  }
-}
+  const result = await prisma.$queryRawUnsafe<Array<{ value: string }>>(
+    `DELETE FROM keyv WHERE key = $1 RETURNING value`,
+    `passkey:challenge:${challenge}`,
+  );
+  if (!result.length) return null;
 
-function storeChallenge(challenge: string): void {
-  cleanExpiredChallenges();
-  challengeStore.set(challenge, { challenge, createdAt: Date.now() });
-}
-
-function getAndDeleteChallenge(challenge: string): string | null {
-  const entry = challengeStore.get(challenge);
-  if (!entry) return null;
-  challengeStore.delete(challenge);
-  if (Date.now() - entry.createdAt > CHALLENGE_TTL_MS) {
+  try {
+    const parsed = JSON.parse(result[0].value);
+    if (parsed.expires && parsed.expires <= now) return null;
+  } catch {
     return null;
   }
-  return entry.challenge;
+  return challenge;
 }
 
 function extractChallengeFromResponse(response: { response: { clientDataJSON: string } }): string {
@@ -85,7 +79,7 @@ export async function generateRegistrationOptions({
   const existingPasskeys = await passkeyModel.findByUserId(userId);
   const options = await generatePasskeyRegistrationOptions(user, existingPasskeys);
 
-  storeChallenge(options.challenge);
+  await storeChallenge(options.challenge);
   logger.debug({ userId, email: user.email }, "Generated passkey registration options");
 
   return options;
@@ -101,7 +95,7 @@ export async function verifyRegistration({
   credentialName?: string;
 }): Promise<Passkey> {
   const challengeFromResponse = extractChallengeFromResponse(response);
-  const expectedChallenge = getAndDeleteChallenge(challengeFromResponse);
+  const expectedChallenge = await getAndDeleteChallenge(challengeFromResponse);
   if (!expectedChallenge) {
     throw Boom.badRequest("Challenge not found or expired");
   }
@@ -165,7 +159,7 @@ export async function generateAuthenticationOptions({
 
   const options = await generatePasskeyAuthenticationOptions(userPasskeys);
 
-  storeChallenge(options.challenge);
+  await storeChallenge(options.challenge);
 
   logger.debug({ email }, "Generated passkey authentication options");
 
@@ -180,7 +174,7 @@ export async function verifyAuthentication({
   email?: string;
 }): Promise<{ token: string; user: Omit<User, "password"> }> {
   const challengeFromResponse = extractChallengeFromResponse(response);
-  const expectedChallenge = getAndDeleteChallenge(challengeFromResponse);
+  const expectedChallenge = await getAndDeleteChallenge(challengeFromResponse);
   if (!expectedChallenge) {
     throw Boom.badRequest("Challenge not found or expired");
   }
