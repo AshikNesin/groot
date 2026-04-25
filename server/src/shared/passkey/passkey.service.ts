@@ -33,11 +33,20 @@ async function storeChallenge(challenge: string): Promise<void> {
 }
 
 async function getAndDeleteChallenge(challenge: string): Promise<string | null> {
-  const result = await prisma.$queryRawUnsafe<Array<{ key: string }>>(
-    `DELETE FROM keyv WHERE key = $1 RETURNING key`,
+  const now = Date.now();
+  const result = await prisma.$queryRawUnsafe<Array<{ value: string }>>(
+    `DELETE FROM keyv WHERE key = $1 RETURNING value`,
     `passkey:challenge:${challenge}`,
   );
-  return result.length ? challenge : null;
+  if (!result.length) return null;
+
+  try {
+    const parsed = JSON.parse(result[0].value);
+    if (parsed.expires && parsed.expires <= now) return null;
+  } catch {
+    return null;
+  }
+  return challenge;
 }
 
 function extractChallengeFromResponse(response: { response: { clientDataJSON: string } }): string {
