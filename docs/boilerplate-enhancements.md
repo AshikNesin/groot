@@ -330,7 +330,7 @@ PORT=3000
 DATABASE_URL=postgresql://...
 
 # Auth
-JWT_SECRET=your-secret
+JWT_SECRET_KEY=your-secret
 ADMIN_AUTH_KEY=admin-key
 
 # Passkeys

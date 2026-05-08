@@ -9,7 +9,7 @@ interface JWTPayload {
   email: string;
 }
 
-const JWT_SECRET = env.JWT_SECRET;
+const JWT_SECRET = env.JWT_SECRET_KEY;
 const JWT_EXPIRES_IN = config.auth.jwtExpiresIn;
 
 export const JWT_EXPIRES_IN_MS = ms(JWT_EXPIRES_IN);

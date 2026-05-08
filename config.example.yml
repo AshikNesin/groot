@@ -7,7 +7,7 @@
 # Dynamic variables:
 #   {{ env.VARIABLE_NAME }} - Required env var (throws if missing)
 #
-# Secrets (JWT_SECRET, API keys, S3 credentials) stay in .env files.
+# Secrets (JWT_SECRET_KEY, API keys, S3 credentials) stay in .env files.
 # Only reference them here via {{ env.VAR }} syntax.
 
 default:

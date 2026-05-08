@@ -33,7 +33,7 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/db
 
 # @required
 # @type=string(minLength=32)
-JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
+JWT_SECRET_KEY=your-super-secret-jwt-key-min-32-characters-long
 ```
 
 Key annotations:
@@ -253,7 +253,7 @@ function createConfig(): Config {
       poolSize: parseInt(process.env.DB_POOL_SIZE || "10", 10),
     },
     auth: {
-      jwtSecret: requireEnv("JWT_SECRET"),
+      jwtSecret: requireEnv("JWT_SECRET_KEY"),
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h",
     },
     features: {
