@@ -126,7 +126,7 @@ production:
 
 | Syntax             | Meaning                         | Example                                         |
 | ------------------ | ------------------------------- | ----------------------------------------------- |
-| `${VAR}`           | Env var reference (required)    | `${JWT_SECRET}` — startup fails if missing      |
+| `${VAR}`           | Env var reference (required)    | `${JWT_SECRET_KEY}` — startup fails if missing  |
 | `${VAR:-fallback}` | Env var with fallback           | `${OPENAI_API_KEY:-}` — empty string if missing |
 | `${VAR:-3000}`     | Env var with non-empty fallback | `${PORT:-3000}`                                 |
 
@@ -183,7 +183,7 @@ Missing required `${VAR}` (no `:-` fallback) on a non-optional Zod field → sta
 ### Config Boundary
 
 - [x] Clear guideline documented: config.yml = deployment-time / environment-level; KV settings = runtime / admin-configurable
-- [x] Secrets (JWT_SECRET, API keys, S3 credentials) remain in env vars, referenced via `${VAR}`
+- [x] Secrets (JWT_SECRET_KEY, API keys, S3 credentials) remain in env vars, referenced via `${VAR}`
 
 ## Success Metrics
 
@@ -414,7 +414,7 @@ function resolveString(value: string): string {
 
 | Location               | Use for                                               | Examples                                                         |
 | ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
-| **Env vars** (varlock) | Secrets, infrastructure, deployment-specific          | JWT_SECRET, DATABASE_URL, S3 credentials, API keys               |
+| **Env vars** (varlock) | Secrets, infrastructure, deployment-specific          | JWT_SECRET_KEY, DATABASE_URL, S3 credentials, API keys           |
 | **config.yml**         | App behavior, feature flags, per-environment settings | log levels, CORS origins, job concurrency, AI defaults           |
 | **KV settings**        | Runtime admin-configurable values                     | Feature toggles that change without restart, per-tenant settings |
 
