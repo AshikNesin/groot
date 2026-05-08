@@ -59,7 +59,7 @@ setup_env() {
     print_info "  - INFISICAL_CLIENT_ID"
     print_info "  - INFISICAL_CLIENT_SECRET"
     print_info ""
-    print_info "Secrets like JWT_SECRET and ADMIN_AUTH_KEY are managed in Infisical."
+    print_info "Secrets like JWT_SECRET_KEY and ADMIN_AUTH_KEY are managed in Infisical."
 }
 
 # Setup portless
