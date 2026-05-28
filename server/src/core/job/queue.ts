@@ -44,6 +44,10 @@ export const editScheduledJob = async (
   data: unknown,
   options?: ScheduleOptions,
 ): Promise<void> => {
+  if (!key) {
+    throw Boom.badRequest("Key is required to edit a scheduled job");
+  }
+
   const boss = getBoss();
   await boss.unschedule(name, key);
   await boss.schedule(name, cron, data, options);
