@@ -23,7 +23,7 @@ Run the setup script to automatically configure your environment:
 This script will:
 
 - Copy `.env.schema` to `.env`
-- Generate secure `JWT_SECRET` (64 characters)
+- Generate secure `JWT_SECRET_KEY` (64 characters)
 - Generate secure `ADMIN_AUTH_KEY` (48 characters)
 - Prompt for your app name and update `RP_NAME`
 - Optionally update package.json and code references
@@ -43,7 +43,7 @@ Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/e
 
 | Variable         | Description                                           |
 | ---------------- | ----------------------------------------------------- |
-| `JWT_SECRET`     | Secret key for signing JWT tokens (min 32 characters) |
+| `JWT_SECRET_KEY` | Secret key for signing JWT tokens (min 32 characters) |
 | `ADMIN_AUTH_KEY` | Key for admin-only routes (X-Admin-Auth header)       |
 
 ### Passkey (WebAuthn) Variables

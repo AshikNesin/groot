@@ -37,7 +37,7 @@ Your boilerplate includes everything needed for a production-ready SaaS:
 This will:
 
 - Copy `.env.schema` to `.env`
-- Generate secure `JWT_SECRET` (64 characters)
+- Generate secure `JWT_SECRET_KEY` (64 characters)
 - Generate secure `ADMIN_AUTH_KEY` (48 characters)
 - Prompt for your app name and update `RP_NAME`
 - Optionally update package.json and code references
@@ -49,7 +49,7 @@ This will:
 cp .env.schema .env
 
 # Edit .env and set these (IMPORTANT):
-# JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
+# JWT_SECRET_KEY=your-super-secret-jwt-key-min-32-characters-long
 # ADMIN_AUTH_KEY=your-admin-auth-key
 # DATABASE_URL=your-database-url
 ```
@@ -309,7 +309,7 @@ pnpm test:e2e         # E2E tests
 Before deploying to production:
 
 - [ ] Run `./setup-boilerplate.sh` to generate secure secrets
-- [ ] Change `JWT_SECRET` to a strong random value (min 32 chars)
+- [ ] Change `JWT_SECRET_KEY` to a strong random value (min 32 chars)
 - [ ] Change `ADMIN_AUTH_KEY` to a strong random value
 - [ ] Set `DATABASE_URL` to your production database
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
