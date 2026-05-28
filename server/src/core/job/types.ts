@@ -33,6 +33,9 @@ export interface RerunJobOptions {
 export interface ScheduledJobInfo {
   name: string;
   cron: string;
+  timezone?: string;
+  data?: unknown;
+  key?: string;
 }
 
 export interface JobQueryResponse {

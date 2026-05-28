@@ -31,9 +31,27 @@ export const scheduleJob = async (
 };
 
 // Cancel a scheduled job
-export const cancelScheduledJob = async (name: string): Promise<void> => {
+export const cancelScheduledJob = async (name: string, key?: string): Promise<void> => {
   const boss = getBoss();
-  await boss.unschedule(name);
+  await boss.unschedule(name, key);
+};
+
+// Edit a scheduled job - unschedule old and schedule new
+export const editScheduledJob = async (
+  name: string,
+  key: string | undefined,
+  cron: string,
+  data: unknown,
+  options?: ScheduleOptions,
+): Promise<void> => {
+  if (!key) {
+    throw Boom.badRequest("Key is required to edit a scheduled job");
+  }
+
+  const boss = getBoss();
+  await boss.unschedule(name, key);
+  await boss.schedule(name, cron, data, options);
+  logger.info({ name, key, cron }, "Job schedule updated");
 };
 
 // Delete a job

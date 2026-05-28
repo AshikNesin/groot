@@ -37,4 +37,13 @@
 # Dev Tools
 
 - Configure portless to use non-privileged ports (8888) to avoid sudo requirements. Confidence: 0.85
+- When bumping package versions, update packages directly rather than adding pnpm overrides. Confidence: 0.85
+
+# Workflow
+
+- When user provides a reference GitHub repo URL for UI/code inspiration, clone it locally and analyze it rather than proceeding without it. Confidence: 0.65
 - Auto-start portless proxy without prompting when not running. Confidence: 0.80
+
+# UI
+
+- For filter dropdowns with search, place the search input at the top with a separator line below it, followed by the scrollable results list. Confidence: 0.65

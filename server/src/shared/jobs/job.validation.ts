@@ -13,6 +13,13 @@ export const scheduleJobSchema = z.object({
   options: z.any().optional(),
 });
 
+export const editScheduledJobSchema = z.object({
+  key: z.string().optional(),
+  cron: z.string().min(1),
+  data: z.any().optional(),
+  options: z.any().optional(),
+});
+
 export const bulkRerunSchema = z.object({
   jobs: z.array(
     z.object({

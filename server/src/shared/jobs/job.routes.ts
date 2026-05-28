@@ -8,6 +8,7 @@ import {
 import {
   createJobSchema,
   scheduleJobSchema,
+  editScheduledJobSchema,
   bulkRerunSchema,
   getJobsByStateSchema,
   getJobsSchema,
@@ -24,6 +25,7 @@ router.post("/bulk-rerun", validateBody(bulkRerunSchema), jobController.bulkReru
 
 // Scheduled jobs
 router.get("/schedule", jobController.getScheduled);
+router.put("/schedule/:jobName", validateBody(editScheduledJobSchema), jobController.editScheduled);
 router.delete("/schedule/:jobName", jobController.cancelScheduled);
 
 // Queue management

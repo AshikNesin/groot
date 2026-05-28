@@ -341,8 +341,18 @@ class ApiClient {
     await this.client.post("/jobs/schedule", { jobName, data, cron, options });
   }
 
-  async cancelScheduledJob(jobName: string): Promise<void> {
-    await this.client.delete(`/jobs/schedule/${jobName}`);
+  async cancelScheduledJob(jobName: string, key?: string): Promise<void> {
+    await this.client.delete(`/jobs/schedule/${jobName}`, { data: { key } });
+  }
+
+  async editScheduledJob(
+    jobName: string,
+    key: string | undefined,
+    cron: string,
+    data: Record<string, unknown>,
+    options?: Record<string, unknown>,
+  ): Promise<void> {
+    await this.client.put(`/jobs/schedule/${jobName}`, { key, cron, data, options });
   }
 }
 
