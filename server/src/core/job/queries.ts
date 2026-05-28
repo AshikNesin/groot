@@ -52,7 +52,15 @@ export const getJobById = async (options: {
   jobId: string;
 }): Promise<BossJob | null> => {
   const boss = getBoss();
-  return boss.getJobById(options.queueName, options.jobId);
+  const job = await boss.getJobById(options.queueName, options.jobId);
+  if (!job) return null;
+  // pg-boss getJobById returns Job (not JobWithMetadata), so we need a full SQL query
+  const result = await prisma.$queryRawUnsafe<BossJob[]>(
+    `${JOB_SELECT_COLUMNS} FROM pgboss.job WHERE id = $1 AND name = $2`,
+    options.jobId,
+    options.queueName,
+  );
+  return result[0] ?? null;
 };
 
 // Get queue statistics (state-level counts)
