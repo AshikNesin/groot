@@ -69,8 +69,11 @@ export function JobDetail() {
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<JobLog[]>([]);
   const lastLogIdRef = useRef<number>(0);
+  const activeJobRef = useRef<string>("");
 
   useEffect(() => {
+    const jobKey = `${queueName}/${jobId}`;
+    activeJobRef.current = jobKey;
     setLogs([]);
     lastLogIdRef.current = 0;
 
@@ -81,15 +84,18 @@ export function JobDetail() {
 
   const fetchLogs = async () => {
     if (!queueName || !jobId) return;
+    const jobKey = `${queueName}/${jobId}`;
     try {
       const currentLastId = lastLogIdRef.current;
       const newLogs = await apiClient.getJobLogs(queueName, jobId, currentLastId);
+      if (activeJobRef.current !== jobKey) return;
       if (newLogs.length > 0) {
         setLogs((prevLogs) => [...prevLogs, ...newLogs]);
         const maxId = Math.max(...newLogs.map((l) => l.id));
         lastLogIdRef.current = Math.max(currentLastId, maxId);
       }
     } catch (err) {
+      if (activeJobRef.current !== jobKey) return;
       console.error("Failed to fetch logs", err);
     }
   };

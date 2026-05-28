@@ -347,11 +347,12 @@ class ApiClient {
 
   async editScheduledJob(
     jobName: string,
+    key: string | undefined,
     cron: string,
     data: Record<string, unknown>,
     options?: Record<string, unknown>,
   ): Promise<void> {
-    await this.client.put(`/jobs/schedule/${jobName}`, { jobName, cron, data, options });
+    await this.client.put(`/jobs/schedule/${jobName}`, { key, cron, data, options });
   }
 }
 

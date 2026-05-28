@@ -53,8 +53,8 @@ export async function cancelScheduled(req: Request) {
  */
 export async function editScheduled(req: Request) {
   const { jobName } = req.params;
-  const { cron, data, options } = req.body;
-  await JobSystem.queue.editScheduledJob(jobName, cron, data, options);
+  const { key, cron, data, options } = req.body;
+  await JobSystem.queue.editScheduledJob(jobName, key, cron, data, options);
   return { success: true };
 }
 

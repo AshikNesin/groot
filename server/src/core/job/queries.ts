@@ -159,10 +159,8 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
   const params: unknown[] = [];
   let paramIndex = 1;
 
-  // Always exclude internal pg-boss queues
-  conditions.push(`name NOT LIKE $${paramIndex}`);
-  params.push("__pgboss__%");
-  paramIndex++;
+  // Always exclude internal pg-boss queues (regex avoids LIKE underscore wildcard issues)
+  conditions.push("name !~ '^__pgboss__'");
 
   if (state) {
     conditions.push(`state = $${paramIndex}::pgboss.job_state`);

@@ -181,6 +181,7 @@ export function Jobs() {
   const [scheduledJobData, setScheduledJobData] = useState("{}");
   const [editScheduledDialogOpen, setEditScheduledDialogOpen] = useState(false);
   const [editScheduledName, setEditScheduledName] = useState("");
+  const [editScheduledKey, setEditScheduledKey] = useState<string | undefined>(undefined);
   const [editScheduledCron, setEditScheduledCron] = useState("");
   const [editScheduledDataStr, setEditScheduledDataStr] = useState("{}");
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
@@ -603,6 +604,7 @@ export function Jobs() {
 
   const openEditScheduledDialog = (job: ScheduledJob) => {
     setEditScheduledName(job.name);
+    setEditScheduledKey(job.key);
     setEditScheduledCron(job.cron);
     setEditScheduledDataStr(JSON.stringify(job.data ?? {}, null, 2));
     setEditScheduledDialogOpen(true);
@@ -620,7 +622,12 @@ export function Jobs() {
 
     try {
       const data = JSON.parse(editScheduledDataStr);
-      await apiClient.editScheduledJob(editScheduledName, editScheduledCron, data);
+      await apiClient.editScheduledJob(
+        editScheduledName,
+        editScheduledKey,
+        editScheduledCron,
+        data,
+      );
       toast({ title: "Success", description: "Scheduled job has been updated" });
       setEditScheduledDialogOpen(false);
       loadScheduledJobs();
@@ -1415,7 +1422,7 @@ export function Jobs() {
               <div className="divide-y divide-border/50">
                 {scheduledJobs.map((job) => (
                   <div
-                    key={job.name}
+                    key={`${job.name}-${job.key}`}
                     className="grid grid-cols-12 items-center gap-4 py-3 text-sm group"
                   >
                     <div className="col-span-3 font-medium">{job.name}</div>
@@ -1455,7 +1462,10 @@ export function Jobs() {
             {/* Mobile scheduled cards */}
             <div className="md:hidden space-y-2">
               {scheduledJobs.map((job) => (
-                <div key={job.name} className="border border-border rounded-lg p-3 space-y-2">
+                <div
+                  key={`${job.name}-${job.key}`}
+                  className="border border-border rounded-lg p-3 space-y-2"
+                >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{job.name}</span>
                     <Button
