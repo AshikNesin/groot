@@ -61,7 +61,7 @@ export function Layout() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+                  className="text-red-500 focus:text-red-600 focus:bg-red-50"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
