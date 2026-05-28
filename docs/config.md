@@ -77,7 +77,7 @@ production:
 
 If the env var is not set, the server throws a startup error with a clear message telling you which variable is missing.
 
-**Secrets stay in `.env`** — never put API keys, JWT secrets, or credentials directly in `config.yml`. Reference them via `{{ env.VAR }}` when needed, or let the code read them from `env` directly (which is the typical pattern for secrets like `JWT_SECRET`).
+**Secrets stay in `.env`** — never put API keys, JWT secrets, or credentials directly in `config.yml`. Reference them via `{{ env.VAR }}` when needed, or let the code read them from `env` directly (which is the typical pattern for secrets like `JWT_SECRET_KEY`).
 
 ## Local Overrides
 

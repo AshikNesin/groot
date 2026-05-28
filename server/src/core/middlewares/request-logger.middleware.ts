@@ -2,20 +2,6 @@ import type { NextFunction, Request, Response } from "express";
 import type { Logger } from "pino";
 import { createRequestLogger, runWithLoggerContext, createTraceContext } from "@/core/logger";
 
-// Extend Express Request type to include logger and timing
-declare global {
-  namespace Express {
-    interface Request {
-      logger?: Logger;
-      startTime?: number;
-    }
-  }
-}
-
-/**
- * Enhanced request logging middleware with performance tracking
- * and trace context initialization
- */
 export function requestLoggerMiddleware(req: Request, res: Response, next: NextFunction): void {
   runWithLoggerContext(() => {
     // Initialize trace context for this request

@@ -1,8 +1,3 @@
-export type StorageResult<T> = {
-  data: T | null;
-  error: Error | null;
-};
-
 export type UploadOptions = {
   filePath: string;
   fileData: any; // Readable | Buffer | string
