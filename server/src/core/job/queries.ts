@@ -35,7 +35,15 @@ const JOB_SELECT_COLUMNS = `SELECT
 export const getScheduledJobs = async (): Promise<ScheduledJobInfo[]> => {
   const boss = getBoss();
   const schedules = await boss.getSchedules();
-  return schedules.map((s) => ({ name: s.name, cron: s.cron }));
+  return schedules
+    .filter((s) => !s.name.startsWith("__pgboss__"))
+    .map((s) => ({
+      name: s.name,
+      cron: s.cron,
+      timezone: s.timezone,
+      data: s.data,
+      key: s.key,
+    }));
 };
 
 // Get job by ID
@@ -44,7 +52,15 @@ export const getJobById = async (options: {
   jobId: string;
 }): Promise<BossJob | null> => {
   const boss = getBoss();
-  return boss.getJobById(options.queueName, options.jobId);
+  const job = await boss.getJobById(options.queueName, options.jobId);
+  if (!job) return null;
+  // pg-boss getJobById returns Job (not JobWithMetadata), so we need a full SQL query
+  const result = await prisma.$queryRawUnsafe<BossJob[]>(
+    `${JOB_SELECT_COLUMNS} FROM pgboss.job WHERE id = $1 AND name = $2`,
+    options.jobId,
+    options.queueName,
+  );
+  return result[0] ?? null;
 };
 
 // Get queue statistics (state-level counts)
@@ -69,7 +85,7 @@ export const getQueueStats = async (): Promise<Record<string, number>> => {
 export const getAvailableQueues = async (): Promise<string[]> => {
   const boss = getBoss();
   const queues = await boss.getQueues();
-  return queues.map((q) => q.name);
+  return queues.map((q) => q.name).filter((name) => !name.startsWith("__pgboss__"));
 };
 
 // Fetch jobs with filters (queue-based, for fetching from a specific queue)
@@ -142,6 +158,9 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
   const conditions: string[] = [];
   const params: unknown[] = [];
   let paramIndex = 1;
+
+  // Always exclude internal pg-boss queues (regex avoids LIKE underscore wildcard issues)
+  conditions.push("name !~ '^__pgboss__'");
 
   if (state) {
     conditions.push(`state = $${paramIndex}::pgboss.job_state`);
