@@ -1,17 +1,17 @@
 import * as React from "react";
-import { Command } from "cmdk";
 import { useNavigate } from "react-router-dom";
-import {
-  Settings,
-  User,
-  LayoutDashboard,
-  CheckSquare,
-  HardDrive,
-  Briefcase,
-  LogOut,
-  Search,
-} from "lucide-react";
+import { Settings, LayoutDashboard, CheckSquare, HardDrive, Briefcase, LogOut } from "lucide-react";
 import { useAuthStore } from "@/core/store/auth";
+import { Dialog, DialogContent, DialogTitle } from "@/ui/dialog";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandSeparator,
+} from "@/ui/command";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
@@ -55,78 +55,49 @@ export function CommandPalette() {
         </kbd>
       </button>
 
-      <Command.Dialog
-        open={open}
-        onOpenChange={setOpen}
-        label="Global Command Menu"
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[500px] bg-background border rounded-xl shadow-2xl overflow-hidden z-50 text-foreground"
-      >
-        <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-          <Command.Input
-            placeholder="Type a command or search..."
-            className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          />
-        </div>
-
-        <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
-          <Command.Empty className="py-6 text-center text-sm">No results found.</Command.Empty>
-
-          <Command.Group
-            heading="Navigation"
-            className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
-          >
-            <Command.Item
-              onSelect={() => runCommand(() => navigate("/"))}
-              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              <span>Dashboard</span>
-            </Command.Item>
-            <Command.Item
-              onSelect={() => runCommand(() => navigate("/todos"))}
-              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-            >
-              <CheckSquare className="mr-2 h-4 w-4" />
-              <span>Todos</span>
-            </Command.Item>
-            <Command.Item
-              onSelect={() => runCommand(() => navigate("/storage"))}
-              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-            >
-              <HardDrive className="mr-2 h-4 w-4" />
-              <span>Storage</span>
-            </Command.Item>
-            <Command.Item
-              onSelect={() => runCommand(() => navigate("/jobs"))}
-              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-            >
-              <Briefcase className="mr-2 h-4 w-4" />
-              <span>Jobs</span>
-            </Command.Item>
-            <Command.Item
-              onSelect={() => runCommand(() => navigate("/settings"))}
-              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </Command.Item>
-          </Command.Group>
-          <Command.Separator className="-mx-1 h-px bg-border my-1" />
-          <Command.Group
-            heading="Account"
-            className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
-          >
-            <Command.Item
-              onSelect={handleLogout}
-              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500 aria-selected:text-red-600"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Logout</span>
-            </Command.Item>
-          </Command.Group>
-        </Command.List>
-      </Command.Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="overflow-hidden p-0 shadow-2xl [&>button]:hidden">
+          <DialogTitle className="sr-only">Command Menu</DialogTitle>
+          <Command className="[&_[cmdk-input-wrapper]]:border-b-0">
+            <CommandInput placeholder="Type a command or search..." />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandGroup heading="Navigation">
+                <CommandItem onSelect={() => runCommand(() => navigate("/"))}>
+                  <LayoutDashboard />
+                  <span>Dashboard</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => navigate("/todos"))}>
+                  <CheckSquare />
+                  <span>Todos</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => navigate("/storage"))}>
+                  <HardDrive />
+                  <span>Storage</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => navigate("/jobs"))}>
+                  <Briefcase />
+                  <span>Jobs</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => navigate("/settings"))}>
+                  <Settings />
+                  <span>Settings</span>
+                </CommandItem>
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading="Account">
+                <CommandItem
+                  onSelect={handleLogout}
+                  className="text-red-500 data-[selected=true]:text-red-600"
+                >
+                  <LogOut />
+                  <span>Logout</span>
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
