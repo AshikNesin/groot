@@ -25,7 +25,7 @@ let isShuttingDown = false;
  * Returns false if DATABASE_URL points to an external database.
  */
 function shouldUseDocker(): boolean {
-  return !process.env.DATABASE_URL;
+  return !process.env.DATABASE_URL || process.env.DATABASE_URL?.includes("localhost");
 }
 
 /**
