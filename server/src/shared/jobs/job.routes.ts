@@ -24,6 +24,7 @@ router.post("/bulk-rerun", validateBody(bulkRerunSchema), jobController.bulkReru
 
 // Scheduled jobs
 router.get("/schedule", jobController.getScheduled);
+router.put("/schedule/:jobName", validateBody(scheduleJobSchema), jobController.editScheduled);
 router.delete("/schedule/:jobName", jobController.cancelScheduled);
 
 // Queue management

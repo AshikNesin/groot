@@ -48,6 +48,7 @@ export interface JobStats {
 export interface ScheduledJob {
   name: string;
   cron: string;
+  key: string;
   timezone: string | null;
   data: Record<string, unknown>;
 }

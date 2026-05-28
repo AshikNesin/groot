@@ -35,7 +35,15 @@ const JOB_SELECT_COLUMNS = `SELECT
 export const getScheduledJobs = async (): Promise<ScheduledJobInfo[]> => {
   const boss = getBoss();
   const schedules = await boss.getSchedules();
-  return schedules.map((s) => ({ name: s.name, cron: s.cron }));
+  return schedules
+    .filter((s) => !s.name.startsWith("__pgboss__"))
+    .map((s) => ({
+      name: s.name,
+      cron: s.cron,
+      timezone: s.timezone,
+      data: s.data,
+      key: s.key,
+    }));
 };
 
 // Get job by ID
@@ -69,7 +77,7 @@ export const getQueueStats = async (): Promise<Record<string, number>> => {
 export const getAvailableQueues = async (): Promise<string[]> => {
   const boss = getBoss();
   const queues = await boss.getQueues();
-  return queues.map((q) => q.name);
+  return queues.map((q) => q.name).filter((name) => !name.startsWith("__pgboss__"));
 };
 
 // Fetch jobs with filters (queue-based, for fetching from a specific queue)
@@ -142,6 +150,11 @@ export const getJobs = async (options: GetJobsOptions): Promise<JobQueryResponse
   const conditions: string[] = [];
   const params: unknown[] = [];
   let paramIndex = 1;
+
+  // Always exclude internal pg-boss queues
+  conditions.push(`name NOT LIKE $${paramIndex}`);
+  params.push("__pgboss__%");
+  paramIndex++;
 
   if (state) {
     conditions.push(`state = $${paramIndex}::pgboss.job_state`);
