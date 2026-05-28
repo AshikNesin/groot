@@ -47,7 +47,8 @@ default:
     origin: "https://groot.localhost"
 
   sentry:
-    dsn: ""
+    # TODO: Update your sentry DNS
+    dsn: "https://52e040a585453b926b90c3cff35506d3@o223853.ingest.us.sentry.io/4511466064773120"
 
   features:
     enableNotifications: false
