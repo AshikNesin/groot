@@ -69,7 +69,7 @@ async function build() {
         }),
       ],
       banner: {
-        js: 'import { createRequire } from "module";const require = createRequire(import.meta.url);',
+        js: 'import { createRequire as __createRequire } from "node:module";const require = __createRequire(import.meta.url);',
       },
       sourcemap: true,
       tsconfig: "tsconfig.json",
