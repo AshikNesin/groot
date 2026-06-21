@@ -21,6 +21,10 @@ test-results/
 # Local config overrides
 config.local.yml
 
+# Local storage (files-sdk fs adapter dev root, see STORAGE_LOCAL_ROOT)
+.uploads/
+.uploads-smoke/
+
 # Sensitive files
 *.pem
 *.key

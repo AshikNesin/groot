@@ -1,6 +1,5 @@
-import type { Readable } from "node:stream";
-import pLimit from "p-limit";
-import { StorageSystem } from "@/core/storage";
+import { FilesError } from "files-sdk";
+import { files } from "@/core/storage";
 import { Boom } from "@/core/errors";
 import { getContentType } from "@/shared/storage/storage.utils";
 
@@ -12,66 +11,64 @@ export interface FileInfo {
   isDirectory: boolean;
 }
 
-export interface BucketInfo {
-  name: string;
-  creationDate?: Date;
-}
-
+/**
+ * List one level of a "folder" under `prefix`, or every key when no delimiter
+ * is passed. Folders come from the adapter's common-prefix listing (S3-style
+ * `prefixes`); files are the {@link StoredFile} items. The cursor is drained
+ * so a level with more than one page of results is returned in full.
+ */
 export async function listFiles(params: {
   prefix?: string;
   delimiter?: string;
 }): Promise<FileInfo[]> {
   const { prefix, delimiter = "/" } = params;
-  const result = await StorageSystem.core.list({ prefix, maxKeys: 1000 });
+  const listOpts = delimiter ? { prefix, delimiter, limit: 1000 } : { prefix, limit: 1000 };
 
-  const files: FileInfo[] = [];
-  const directories = new Set<string>();
+  const directories: FileInfo[] = [];
+  const fileInfos: FileInfo[] = [];
 
-  for (const file of result.files) {
-    let relativePath = file.key;
-    if (prefix) {
-      relativePath = file.key.substring(prefix.length);
+  // Drain the cursor so we return the complete level, not just the first page.
+  let cursor: string | undefined;
+  do {
+    const page = await files.list({ ...listOpts, cursor });
+
+    for (const dirKey of page.prefixes ?? []) {
+      const relative = prefix ? dirKey.slice(prefix.length) : dirKey;
+      const name = relative.replace(/\/$/, "");
+      directories.push({
+        key: dirKey,
+        name,
+        size: 0,
+        lastModified: new Date(0),
+        isDirectory: true,
+      });
     }
 
-    if (delimiter && relativePath.includes(delimiter)) {
-      const dirName = relativePath.split(delimiter)[0];
-      if (dirName && !directories.has(dirName)) {
-        directories.add(dirName);
-        files.push({
-          key: prefix ? `${prefix}${dirName}${delimiter}` : `${dirName}${delimiter}`,
-          name: dirName,
-          size: 0,
-          lastModified: file.lastModified,
-          isDirectory: true,
-        });
-      }
-    } else if (relativePath) {
-      const name = relativePath.split(delimiter).pop() ?? relativePath;
-      files.push({
+    for (const file of page.items) {
+      const relative = prefix ? file.key.slice(prefix.length) : file.key;
+      if (!relative) continue;
+      fileInfos.push({
         key: file.key,
-        name,
+        name: relative.split("/").pop() ?? relative,
         size: file.size,
-        lastModified: file.lastModified,
+        lastModified: file.lastModified ? new Date(file.lastModified) : new Date(),
         isDirectory: false,
       });
     }
-  }
 
-  return files.sort((a, b) => {
+    cursor = page.cursor;
+  } while (cursor);
+
+  return [...directories, ...fileInfos].sort((a, b) => {
     if (a.isDirectory && !b.isDirectory) return -1;
     if (!a.isDirectory && b.isDirectory) return 1;
     return a.name.localeCompare(b.name);
   });
 }
 
-export async function listBuckets(): Promise<BucketInfo[]> {
-  const result = await StorageSystem.core.listBuckets();
-  return result.buckets;
-}
-
 export async function uploadFile(params: {
   filePath: string;
-  fileData: Buffer | Readable | string;
+  fileData: Buffer | string;
   contentType?: string;
   metadata?: Record<string, string>;
 }): Promise<{ filePath: string }> {
@@ -79,14 +76,12 @@ export async function uploadFile(params: {
     throw Boom.badRequest("File path is required");
   }
 
-  const result = await StorageSystem.core.upload({
-    filePath: params.filePath,
-    fileData: params.fileData,
+  const result = await files.upload(params.filePath, params.fileData, {
     contentType: params.contentType,
     metadata: params.metadata,
   });
 
-  return { filePath: result.filePath };
+  return { filePath: result.key };
 }
 
 export async function bulkUpload(params: {
@@ -95,32 +90,22 @@ export async function bulkUpload(params: {
   uploadedFiles: string[];
   failedFiles: Array<{ filePath: string; error: string }>;
 }> {
-  const uploadedFiles: string[] = [];
-  const failedFiles: Array<{ filePath: string; error: string }> = [];
-  const limit = pLimit(5);
-
-  await Promise.all(
-    params.files.map((file) =>
-      limit(async () => {
-        try {
-          const result = await StorageSystem.core.upload({
-            filePath: file.filePath,
-            fileData: file.fileData,
-            contentType: file.contentType,
-          });
-
-          uploadedFiles.push(result.filePath);
-        } catch (error) {
-          failedFiles.push({
-            filePath: file.filePath,
-            error: error instanceof Error ? error.message : "Unknown error",
-          });
-        }
-      }),
-    ),
+  const result = await files.upload(
+    params.files.map((file) => ({
+      key: file.filePath,
+      body: file.fileData,
+      contentType: file.contentType,
+    })),
+    { concurrency: 5 },
   );
 
-  return { uploadedFiles, failedFiles };
+  return {
+    uploadedFiles: result.uploaded.map((u) => u.key),
+    failedFiles: (result.errors ?? []).map((e) => ({
+      filePath: e.key,
+      error: e.error.message,
+    })),
+  };
 }
 
 export async function downloadFile(params: { filePath: string }): Promise<{
@@ -128,30 +113,30 @@ export async function downloadFile(params: { filePath: string }): Promise<{
   contentType?: string;
   fileName: string;
 }> {
-  const exists = await StorageSystem.core.fileExists({ filePath: params.filePath });
-
-  if (!exists.exists) {
+  const exists = await files.exists(params.filePath);
+  if (!exists) {
     throw Boom.notFound(`File not found: ${params.filePath}`);
   }
 
-  const buffer = await StorageSystem.core.getBuffer({ s3Path: params.filePath });
-
+  const file = await files.download(params.filePath);
+  const arrayBuffer = await file.arrayBuffer();
   const fileName = params.filePath.split("/").pop() ?? "file";
+
   return {
-    buffer,
-    contentType: getContentType(fileName),
+    buffer: Buffer.from(arrayBuffer),
+    contentType: file.type || getContentType(fileName),
     fileName,
   };
 }
 
-export async function deleteFiles(params: { filePaths: string[] }): Promise<{
-  deletedCount: number;
-}> {
+export async function deleteFiles(params: {
+  filePaths: string[];
+}): Promise<{ deletedCount: number }> {
   if (!params.filePaths.length) {
     throw Boom.badRequest("No files specified for deletion");
   }
-  await StorageSystem.core.remove({ filePaths: params.filePaths });
-  return { deletedCount: params.filePaths.length };
+  const result = await files.delete(params.filePaths);
+  return { deletedCount: result.deleted.length };
 }
 
 export async function getFileMetadata(params: { filePath: string }): Promise<{
@@ -160,13 +145,22 @@ export async function getFileMetadata(params: { filePath: string }): Promise<{
   lastModified?: Date;
   fileName: string;
 }> {
-  const result = await StorageSystem.core.fileExists({ filePath: params.filePath });
-  return {
-    exists: result.exists,
-    size: result.size,
-    lastModified: result.lastModified,
-    fileName: params.filePath.split("/").pop() ?? params.filePath,
-  };
+  const fileName = params.filePath.split("/").pop() ?? params.filePath;
+
+  try {
+    const file = await files.head(params.filePath);
+    return {
+      exists: true,
+      size: file.size,
+      lastModified: file.lastModified ? new Date(file.lastModified) : undefined,
+      fileName,
+    };
+  } catch (error) {
+    if (error instanceof FilesError && error.code === "NotFound") {
+      return { exists: false, fileName };
+    }
+    throw error;
+  }
 }
 
 export async function createFolder({
@@ -177,9 +171,7 @@ export async function createFolder({
   if (!folderPath.endsWith("/")) {
     throw Boom.badRequest("Folder path must end with /");
   }
-  await StorageSystem.core.upload({
-    filePath: `${folderPath}.keep`,
-    fileData: "",
+  await files.upload(`${folderPath}.keep`, "", {
     contentType: "text/plain",
     metadata: { type: "folder-marker" },
   });
@@ -194,24 +186,27 @@ export async function deleteFolder({
   if (!folderPath.endsWith("/")) {
     throw Boom.badRequest("Folder path must end with /");
   }
-  const result = await StorageSystem.core.removeByPrefix({ prefix: folderPath });
-  return { deletedCount: result.deletedCount };
+
+  const keys: string[] = [];
+  for await (const file of files.listAll({ prefix: folderPath })) {
+    keys.push(file.key);
+  }
+  if (!keys.length) return { deletedCount: 0 };
+
+  const result = await files.delete(keys);
+  return { deletedCount: result.deleted.length };
 }
 
-export async function renameFile(params: { oldPath: string; newPath: string }): Promise<{
+export async function renameFile(params: {
+  oldPath: string;
   newPath: string;
-}> {
-  const exists = await StorageSystem.core.fileExists({ filePath: params.oldPath });
-  if (!exists.exists) {
+}): Promise<{ newPath: string }> {
+  const exists = await files.exists(params.oldPath);
+  if (!exists) {
     throw Boom.notFound(`Source file not found: ${params.oldPath}`);
   }
 
-  await StorageSystem.core.copy({
-    sourcePath: params.oldPath,
-    destinationPath: params.newPath,
-  });
-
-  await StorageSystem.core.remove({ filePaths: [params.oldPath] });
+  await files.move(params.oldPath, params.newPath);
 
   return { newPath: params.newPath };
 }
