@@ -51,14 +51,40 @@ async function isDockerRunning(): Promise<boolean> {
 }
 
 /**
- * Start Docker daemon (Docker Desktop on macOS, systemctl on Linux)
+ * Check if a macOS application is installed (registered with LaunchServices).
+ * Works for apps installed anywhere, not just /Applications.
+ */
+async function macAppExists(appName: string): Promise<boolean> {
+  try {
+    await execAsync(`osascript -e 'id of app "${appName}"'`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Start Docker daemon.
+ * On macOS, prefers OrbStack if installed and falls back to Docker Desktop.
+ * On Linux, uses systemctl / service.
  */
 async function startDocker(): Promise<void> {
   const platform = process.platform;
 
   if (platform === "darwin") {
-    console.log("   Starting Docker Desktop...");
-    await execAsync("open -a Docker");
+    if (await macAppExists("OrbStack")) {
+      console.log("   Starting OrbStack...");
+      await execAsync("open -a OrbStack");
+    } else if (await macAppExists("Docker")) {
+      console.log("   Starting Docker Desktop...");
+      await execAsync("open -a Docker");
+    } else {
+      throw new Error(
+        "Neither OrbStack nor Docker Desktop is installed. Please install one to use local development:\n" +
+          "  OrbStack (preferred): https://docs.orbstack.dev/quickstart\n" +
+          "  Docker Desktop:       https://docs.docker.com/desktop/install/mac-install/",
+      );
+    }
   } else if (platform === "linux") {
     console.log("   Starting Docker service...");
     // Try systemctl first, fall back to service command
@@ -96,7 +122,8 @@ export async function ensureDockerReady(): Promise<void> {
   if (!(await isDockerCliInstalled())) {
     throw new Error(
       "Docker is not installed. Please install Docker to use local development:\n" +
-        "  macOS:  https://docs.docker.com/desktop/install/mac-install/\n" +
+        "  macOS:  OrbStack (preferred) https://docs.orbstack.dev/quickstart\n" +
+        "          or Docker Desktop     https://docs.docker.com/desktop/install/mac-install/\n" +
         "  Linux:  https://docs.docker.com/engine/install/",
     );
   }
