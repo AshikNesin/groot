@@ -22,6 +22,9 @@ export async function listFiles(params: {
   delimiter?: string;
 }): Promise<FileInfo[]> {
   const { prefix, delimiter = "/" } = params;
+  // Derive names against the effective separator. Empty/undefined delimiter
+  // (flat-list mode) falls back to "/" so a key's last path segment still wins.
+  const sep = delimiter || "/";
   const listOpts = delimiter ? { prefix, delimiter, limit: 1000 } : { prefix, limit: 1000 };
 
   const directories: FileInfo[] = [];
@@ -34,7 +37,7 @@ export async function listFiles(params: {
 
     for (const dirKey of page.prefixes ?? []) {
       const relative = prefix ? dirKey.slice(prefix.length) : dirKey;
-      const name = relative.replace(/\/$/, "");
+      const name = relative.endsWith(sep) ? relative.slice(0, -sep.length) : relative;
       directories.push({
         key: dirKey,
         name,
@@ -49,9 +52,10 @@ export async function listFiles(params: {
       if (!relative) continue;
       fileInfos.push({
         key: file.key,
-        name: relative.split("/").pop() ?? relative,
+        name: relative.split(sep).pop() ?? relative,
         size: file.size,
-        lastModified: file.lastModified ? new Date(file.lastModified) : new Date(),
+        // Stable sentinel when the adapter omits the timestamp — never "now".
+        lastModified: file.lastModified ? new Date(file.lastModified) : new Date(0),
         isDirectory: false,
       });
     }
@@ -187,14 +191,28 @@ export async function deleteFolder({
     throw Boom.badRequest("Folder path must end with /");
   }
 
-  const keys: string[] = [];
-  for await (const file of files.listAll({ prefix: folderPath })) {
-    keys.push(file.key);
-  }
-  if (!keys.length) return { deletedCount: 0 };
+  // Delete in fixed-size batches as the listing streams in, so a large prefix
+  // never holds its full key set in memory. 1000 mirrors S3's DeleteObjects cap;
+  // files-sdk would chunk a bigger array anyway, but this bounds peak memory to
+  // one batch.
+  const BATCH_SIZE = 1000;
+  let deletedCount = 0;
+  const batch: string[] = [];
 
-  const result = await files.delete(keys);
-  return { deletedCount: result.deleted.length };
+  const flush = async () => {
+    if (!batch.length) return;
+    const result = await files.delete(batch);
+    deletedCount += result.deleted.length;
+    batch.length = 0;
+  };
+
+  for await (const file of files.listAll({ prefix: folderPath })) {
+    batch.push(file.key);
+    if (batch.length >= BATCH_SIZE) await flush();
+  }
+  await flush();
+
+  return { deletedCount };
 }
 
 export async function renameFile(params: {
