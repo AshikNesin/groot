@@ -11,9 +11,8 @@ import { env } from "@/core/env";
  * Adapter contract.
  *
  * - **Non-production** (development / test) → the local `fs` adapter. Bodies
- *   land under `STORAGE_LOCAL_ROOT` (default `./.uploads`) with a sidecar
- *   `.meta.json` per file. Not for production: no replication, no signing,
- *   no auth.
+ *   land under `./local/uploads` with a sidecar `.meta.json` per file.
+ *   Not for production: no replication, no signing, no auth.
  * - **Production** → the `s3` adapter, scoped to `AWS_DEFAULT_S3_BUCKET`.
  *   Credentials are auto-loaded from the AWS chain (env vars, IAM role,
  *   shared profile), so no secrets are wired here.
@@ -25,7 +24,7 @@ import { env } from "@/core/env";
 function createFiles(): Files {
   if (env.NODE_ENV !== "production") {
     return new Files({
-      adapter: fs({ root: env.STORAGE_LOCAL_ROOT }),
+      adapter: fs({ root: "./local/uploads" }),
     });
   }
 
