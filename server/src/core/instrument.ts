@@ -10,7 +10,7 @@ import { config } from "@/core/config";
 const getSentryRelease = () => {
   if (env.SENTRY_RELEASE) return env.SENTRY_RELEASE;
   const sourceVersion = env.SOURCE_COMMIT || process.env.SOURCE_VERSION;
-  if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
+  if (sourceVersion) return `${config.app.name.toLowerCase()}@${sourceVersion.slice(0, 7)}`;
   // Fallback: read release written during build (dist/release.json)
   try {
     const distDir = path.dirname(fileURLToPath(import.meta.url));
