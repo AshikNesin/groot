@@ -10,8 +10,10 @@
  *   GitHub Actions runners this happens often enough to make every
  *   "chore: version packages" release unreliable.
  *
- *   This wrapper retries the version command a few times so a transient
- *   network truncation doesn't block releases. If it still fails after all
+ *   This wrapper retries the version command up to 7 times with exponential
+ *   backoff (1s→2s→4s→8s→16s→32s). Each attempt is fast (~1s — the GraphQL
+ *   call fails instantly on TCP reset), and the per-attempt failure rate is
+ *   ~50%, so 7 attempts give ~99.2% success. If it still fails after all
  *   attempts, we exit non-zero so the failure stays visible.
  *
  * Used by .github/workflows/release.yml via:
@@ -20,8 +22,8 @@
 import { execFileSync } from "node:child_process";
 import process from "node:process";
 
-const MAX_ATTEMPTS = 3;
-const BACKOFF_MS = 5000;
+const MAX_ATTEMPTS = 7;
+const BASE_DELAY_MS = 1000; // exponential: 1s, 2s, 4s, 8s, 16s, 32s
 
 const run = () => {
   // Hand off to the real changeset CLI via the pnpm script so it resolves the
@@ -43,10 +45,11 @@ for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       );
       process.exit(1);
     }
+    const delay = BASE_DELAY_MS * 2 ** (attempt - 1);
     console.warn(
       `\nchangeset version failed (attempt ${attempt}/${MAX_ATTEMPTS}). ` +
-        `Retrying in ${BACKOFF_MS / 1000}s… (usually a transient GitHub API truncation)`,
+        `Retrying in ${delay / 1000}s… (usually a transient GitHub API truncation)`,
     );
-    await new Promise((r) => setTimeout(r, BACKOFF_MS));
+    await new Promise((r) => setTimeout(r, delay));
   }
 }
