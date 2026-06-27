@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- `7b15a3a` ## Build: copy `server/public/` → `dist/public/`
+
 ## 1.0.2
 
 ### Patch Changes
