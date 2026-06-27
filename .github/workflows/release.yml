@@ -44,7 +44,11 @@ jobs:
         with:
           title: "chore: version packages"
           commit: "chore: version packages"
-          version: pnpm changeset version
+          # Retry wrapper around `changeset version`. @changesets/changelog-github
+          # hits the GitHub GraphQL API with no retry, and its response parse throws
+          # "Premature close" whenever the TCP body is truncated — common on runners.
+          # See scripts/changeset-version.mjs for details.
+          version: node scripts/changeset-version.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Skip the Vite+ pre-commit hook on the bot's version-bump commit.
