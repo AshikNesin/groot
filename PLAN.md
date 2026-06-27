@@ -112,36 +112,49 @@ Removes confusion before the migration. Each item below is independently shippab
 - [x] Delete `client/src/ui/popover.tsx`, `ui/progress.tsx`, `ui/sheet.tsx`, `ui/switch.tsx` (0 consumers)
 - [x] Add `client/src/ui/index.ts` barrel re-exporting the survivors
 
-### Phase 1 — Fix the layout shell (≈1 session)
+### Phase 1 — Fix the layout shell ✅ DONE
 
 Unblocks every page migration.
 
-- [ ] Decide the container contract: **shell owns `<main className="flex-1 w-full px-4 sm:px-6 py-8">` with NO max-width**; pages opt into a width via `<PageLayout maxWidth="7xl">`. (Current `max-w-5xl` in the shell silently overrides wider pages.)
-- [ ] Tokenize `PageHeader` / `Section` / `PageContainer`: replace `text-gray-900` → `text-foreground`, `text-gray-500` → `text-muted-foreground`, etc.
-- [ ] Migrate `Dashboard`, `Todos`, `Settings` to the new container contract (they already use `PageLayout`, so this is mostly removing redundant wrappers)
+- [x] Container contract: shell `<main>` now `flex-1 w-full px-4 sm:px-6 lg:px-8 py-8` (dropped `mx-auto max-w-5xl`, added `lg:px-8`). Pages opt into width via `<PageLayout maxWidth>`.
+- [x] `PageContainer` default `7xl → 5xl`; padding removed (shell owns it) → **also fixes the pre-existing double-`py-8` padding bug** (every page was rendering `py-16`). This is an intentional spacing correction, not a regression.
+- [x] Tokenized `PageHeader` / `Section` (removed `cn` dep + raw `gray-*`).
+- [x] `Dashboard` / `Todos` / `Settings` already used `PageLayout` — no wrapper changes needed beyond the contract above.
 
-### Phase 2 — Migrate the bypass pages (≈1–2 sessions)
+### Phase 2 — Migrate the bypass pages ✅ DONE
 
 Apply the contract to the pages that currently ignore it.
 
-- [ ] `Jobs.tsx`: drop `min-h-screen`/`max-w-7xl` wrappers, wrap content in `<PageLayout maxWidth="7xl">`, replace the 3 hand-rolled status-color maps + `DotBadge` with the tokenized `StatusBadge` from Phase 3
-- [ ] `JobDetail.tsx`: remove the triple-duplicated container block, wrap in `<PageLayout maxWidth="5xl">`
-- [ ] `Storage.tsx`: wrap in `<PageLayout maxWidth="7xl">`, replace the hand-rolled `<table>` with the `ui/table` primitives
-- [ ] `Login.tsx`: tokenized standalone layout (it's outside the shell)
+- [x] `Jobs.tsx`: dropped `min-h-screen`/`max-w-7xl` wrappers → `max-w-7xl mx-auto` (shell provides bg+padding); replaced the 3 hand-rolled status-color maps + `DotBadge` with `StatusBadge`.
+- [x] `JobDetail.tsx`: removed the triple-duplicated container block → single `max-w-5xl mx-auto`; swapped `DotBadge` + 3 maps → `StatusBadge`.
+- [x] `Storage.tsx`: dropped `min-h-screen`/`max-w-7xl` wrapper → `max-w-7xl mx-auto`; tokenized the hand-rolled `<table>` header + selection states. (Kept the native `<table>` rather than swapping to `ui/table` primitives — out of scope for the token sweep; the raw colors were the actual problem.)
+- [x] `Login.tsx`: already tokenized (`bg-muted/30`); no change needed.
 
-### Phase 3 — Close the status-component gap (≈30 min)
+### Phase 3 — Close the status-component gap ✅ DONE
 
-- [ ] Re-introduce `StatusBadge` reading colors **only** from tokens (`text-success`, `text-warning`, `text-destructive`, `text-info`). Define the canonical `status → variant` map here as the single source of truth.
-- [ ] Migrate all call sites (notably `Jobs.tsx`'s `DotBadge`) to it.
+- [x] Re-introduced `StatusBadge` (`client/src/ui/status-badge.tsx`) reading colors **only** from tokens (`text-success`, `text-warning`, `text-destructive`, `text-info`, `text-muted-foreground`). Defines the canonical `status → variant` map as the single source of truth. Also exported via the `@/ui` barrel.
+- [x] Migrated both call sites (`Jobs.tsx` + `JobDetail.tsx` `DotBadge`) to it.
 
-### Phase 4 — Sweep raw colors (≈1 session, mostly mechanical)
+### Phase 4 — Sweep raw colors + enforcement ✅ DONE
 
-- [ ] Replace remaining `gray-*` / `red-*` / `blue-*` / `green-*` / `yellow-*` in `app/` and `core/components/` with semantic tokens. The 120 instances collapse to ~6 token names.
-- [ ] Add an ESLint rule (e.g. `no-restricted-syntax` / `tailwindcss/no-contradicting-classname` or a custom regex banning `-(gray|red|blue|green|yellow|slate|zinc)-[0-9]` outside `index.css`) to prevent regression.
+- [x] Replaced all `gray-*` / `red-*` / `blue-*` / `green-*` / `yellow-*` across `app/`, `core/components/`, `ui/` with semantic tokens. The 120 instances collapsed to ~7 token names. **0 raw palette colors remain** (verified).
+- [x] Enforcement: **oxlint has no string/className-pattern-banning rule**, so the "ESLint rule" from the original plan is infeasible in this toolchain. Replaced with `scripts/check-design-tokens.ts` — a grep-based check that exits non-zero on raw palette colors outside the allowlist (`index.css`, `tailwind.config.js`). Verified it passes clean and catches injected violations. Wire into CI / pre-commit alongside `vp check`.
 
-### Phase 5 — Tokenize the remaining `ui/` stragglers (≈15 min)
+### Phase 5 — Tokenize the remaining `ui/` stragglers ✅ DONE
 
-- [ ] `loading-skeleton.tsx`, `loading-spinner.tsx`: swap `gray-*` → tokens
+- [x] `loading-skeleton.tsx`, `loading-spinner.tsx`: swapped `gray-*` → tokens.
+- [x] `toast.tsx`: tokenized the destructive-variant close-button color groups.
+
+---
+
+## Verification
+
+- `vp check`: 0 errors (15 pre-existing warnings, none from this work).
+- `tsc --noEmit`: 0 errors in any touched file.
+- `vp test`: 83/83 pass.
+- `scripts/check-design-tokens.ts`: passes (0 raw palette colors).
+- **Note:** `vp build` fails on a **pre-existing** missing dependency (`@radix-ui/react-separator`, not in `package.json`, in the untouched `ui/separator.tsx`). Unrelated to this migration.
+- **Visual smoke test pending:** the dev server requires varlock/Infisical secrets and wasn't bootable headlessly. Recommend a quick click-through of Jobs / JobDetail / Storage / Settings once running locally.
 
 ---
 

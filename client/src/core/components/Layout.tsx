@@ -61,7 +61,7 @@ export function Layout() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="text-red-500 focus:text-red-600 focus:bg-red-50"
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -72,7 +72,7 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 mx-auto max-w-5xl w-full px-4 sm:px-6 py-8">
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
     </div>

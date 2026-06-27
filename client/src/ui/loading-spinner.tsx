@@ -18,7 +18,7 @@ export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) 
   return (
     <output
       className={cn(
-        "animate-spin rounded-full border-gray-300 border-t-gray-900",
+        "animate-spin rounded-full border-muted border-t-foreground",
         sizeClasses[size],
         className,
       )}
@@ -36,7 +36,7 @@ export function LoadingState({ text = "Loading..." }: { text?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <LoadingSpinner size="lg" />
-      <p className="mt-4 text-sm text-gray-500">{text}</p>
+      <p className="mt-4 text-sm text-muted-foreground">{text}</p>
     </div>
   );
 }

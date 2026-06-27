@@ -6,7 +6,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
  * Skeleton loader component
  */
 export function Skeleton({ className, ...props }: SkeletonProps) {
-  return <div className={cn("animate-pulse rounded-md bg-gray-200", className)} {...props} />;
+  return <div className={cn("animate-pulse rounded-md bg-muted", className)} {...props} />;
 }
 
 /**
@@ -30,7 +30,7 @@ export const SkeletonVariants = {
    * Card skeleton
    */
   Card: () => (
-    <div className="border border-gray-200 rounded-lg p-6">
+    <div className="border border-border rounded-lg p-6">
       <div className="space-y-3">
         <Skeleton className="h-6 w-1/3" />
         <Skeleton className="h-4 w-full" />

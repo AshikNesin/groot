@@ -88,7 +88,7 @@ export function CommandPalette() {
               <CommandGroup heading="Account">
                 <CommandItem
                   onSelect={handleLogout}
-                  className="text-red-500 data-[selected=true]:text-red-600"
+                  className="text-destructive data-[selected=true]:text-destructive"
                 >
                   <LogOut />
                   <span>Logout</span>

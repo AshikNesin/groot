@@ -149,7 +149,7 @@ export function AppSettings() {
     return (
       <div className="flex h-96 flex-col items-center justify-center">
         <LoadingSpinner size="lg" />
-        <p className="mt-4 text-sm text-gray-500">Loading settings...</p>
+        <p className="mt-4 text-sm text-muted-foreground">Loading settings...</p>
       </div>
     );
   }
@@ -160,7 +160,7 @@ export function AppSettings() {
       {success && <Alert variant="success">{success}</Alert>}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Manage application configuration settings in JSON format
         </p>
         <div className="flex gap-2">
@@ -213,9 +213,9 @@ export function AppSettings() {
               className="h-9"
             />
             {settings.length === 0 ? (
-              <p className="py-4 text-center text-sm text-gray-500">No settings found</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">No settings found</p>
             ) : filteredSettings.length === 0 ? (
-              <p className="py-4 text-center text-sm text-gray-500">No matches</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">No matches</p>
             ) : (
               <div className="space-y-1">
                 {filteredSettings.map((setting) => (
@@ -226,7 +226,7 @@ export function AppSettings() {
                     className={`w-full rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
                       selectedKey === setting.key
                         ? "bg-primary text-primary-foreground"
-                        : "hover:bg-gray-100"
+                        : "hover:bg-muted"
                     }`}
                   >
                     <div className="font-medium">{setting.key}</div>
@@ -301,7 +301,9 @@ export function AppSettings() {
               </div>
             ) : (
               <div className="flex h-96 items-center justify-center">
-                <p className="text-sm text-gray-500">Select a setting from the list to edit</p>
+                <p className="text-sm text-muted-foreground">
+                  Select a setting from the list to edit
+                </p>
               </div>
             )}
           </CardContent>

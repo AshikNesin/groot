@@ -32,12 +32,12 @@ export function PageLayout({
   description,
   actions,
   className,
-  maxWidth = "7xl",
+  maxWidth = "5xl",
 }: PageLayoutProps) {
   return (
     <PageContainer maxWidth={maxWidth} className={className}>
       <PageHeader title={title} description={description} actions={actions} />
-      <div className="space-y-6">{children}</div>
+      <div className="mt-8 space-y-6">{children}</div>
     </PageContainer>
   );
 }

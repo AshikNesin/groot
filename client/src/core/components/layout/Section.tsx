@@ -1,4 +1,3 @@
-import { cn } from "@/core/lib/utils";
 import type { ReactNode } from "react";
 
 interface SectionProps {
@@ -20,11 +19,11 @@ interface SectionProps {
  */
 export function Section({ children, className, title, description }: SectionProps) {
   return (
-    <div className={cn("mb-6", className)}>
+    <div className={className}>
       {(title || description) && (
         <div className="mb-4">
-          {title && <h2 className="text-lg font-medium text-gray-900">{title}</h2>}
-          {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+          {title && <h2 className="text-lg font-medium text-foreground">{title}</h2>}
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
       )}
       {children}

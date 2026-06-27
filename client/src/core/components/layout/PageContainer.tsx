@@ -1,4 +1,3 @@
-import { cn } from "@/core/lib/utils";
 import type { ReactNode } from "react";
 
 interface PageContainerProps {
@@ -8,16 +7,13 @@ interface PageContainerProps {
 }
 
 /**
- * Page container with max-width and padding
+ * Page content max-width wrapper.
  *
- * @example
- * ```tsx
- * <PageContainer maxWidth="7xl">
- *   <h1>My Page</h1>
- * </PageContainer>
- * ```
+ * The app shell (`Layout`) owns horizontal padding + background; this wrapper
+ * owns only the max-width. Default is `5xl` (matches the prior rendered
+ * reality). Use `7xl` for wide data pages (e.g. Jobs, Storage).
  */
-export function PageContainer({ children, className, maxWidth = "7xl" }: PageContainerProps) {
+export function PageContainer({ children, className, maxWidth = "5xl" }: PageContainerProps) {
   const maxWidthClasses = {
     full: "max-w-full",
     "7xl": "max-w-7xl",
@@ -27,8 +23,6 @@ export function PageContainer({ children, className, maxWidth = "7xl" }: PageCon
   };
 
   return (
-    <div className={cn(maxWidthClasses[maxWidth], "mx-auto px-4 sm:px-6 lg:px-8 py-8", className)}>
-      {children}
-    </div>
+    <div className={`${maxWidthClasses[maxWidth]} mx-auto ${className ?? ""}`}>{children}</div>
   );
 }

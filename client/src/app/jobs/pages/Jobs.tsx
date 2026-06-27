@@ -18,6 +18,7 @@ import {
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { Skeleton } from "@/ui/loading-skeleton";
+import { StatusBadge } from "@/ui";
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs";
 import { Checkbox } from "@/ui/checkbox";
 import { Textarea } from "@/ui/textarea";
@@ -75,46 +76,6 @@ const PRIMARY_TABS: StateTab[] = ["all", "active", "failed", "completed"];
 
 const primaryOptions = STATE_TABS.filter((t) => PRIMARY_TABS.includes(t.value));
 const secondaryOptions = STATE_TABS.filter((t) => !PRIMARY_TABS.includes(t.value));
-
-const stateDotClass: Record<string, string> = {
-  active: "bg-blue-500",
-  created: "bg-gray-400",
-  retry: "bg-yellow-500",
-  failed: "bg-red-500",
-  completed: "bg-green-500",
-  cancelled: "bg-gray-400",
-};
-
-const stateTextClass: Record<string, string> = {
-  active: "text-blue-600",
-  created: "text-gray-600",
-  retry: "text-yellow-600",
-  failed: "text-red-600",
-  completed: "text-green-600",
-  cancelled: "text-gray-500",
-};
-
-const stateBgClass: Record<string, string> = {
-  active: "bg-blue-50",
-  created: "bg-gray-50",
-  retry: "bg-yellow-50",
-  failed: "bg-red-50",
-  completed: "bg-green-50",
-  cancelled: "bg-gray-50",
-};
-
-function DotBadge({ state }: { state: string }) {
-  const dot = stateDotClass[state] || "bg-gray-400";
-  const text = stateTextClass[state] || "text-gray-600";
-  const bg = stateBgClass[state] || "bg-gray-50";
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium ${bg}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      <span className={text}>{state.charAt(0).toUpperCase() + state.slice(1)}</span>
-    </span>
-  );
-}
 
 function StatCard({
   label,
@@ -396,7 +357,7 @@ export function Jobs() {
             Job re-run created.{" "}
             <Link
               to={`/jobs/${result.queueName}/${result.newJobId}`}
-              className="underline font-medium hover:text-gray-900"
+              className="underline font-medium hover:text-foreground"
             >
               View new job ({result.newJobId.substring(0, 8)}...)
             </Link>
@@ -531,7 +492,7 @@ export function Jobs() {
             Job has been added to the queue.{" "}
             <Link
               to={`/jobs/${newJobName}/${jobId}`}
-              className="underline font-medium hover:text-gray-900"
+              className="underline font-medium hover:text-foreground"
             >
               View job ({jobId.substring(0, 8)}...)
             </Link>
@@ -653,12 +614,12 @@ export function Jobs() {
   const activeSecondaryTab = secondaryOptions.find((t) => t.value === queryParams.state);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Jobs</h1>
+            <h1 className="text-lg font-semibold text-foreground">Jobs</h1>
             {lastRefreshed && (
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Updated {formatRelativeTime(lastRefreshed)}
@@ -918,7 +879,7 @@ export function Jobs() {
             <StatCard
               label="Total"
               value={stats.active + stats.created + stats.retry + stats.failed + stats.completed}
-              colorClass="text-gray-900"
+              colorClass="text-foreground"
               icon={<Activity className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "all"}
               onClick={() => setQueryParams({ state: "all", page: 0 })}
@@ -926,7 +887,7 @@ export function Jobs() {
             <StatCard
               label="Active"
               value={stats.active}
-              colorClass="text-blue-600"
+              colorClass="text-info"
               icon={<Activity className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "active"}
               onClick={() => setQueryParams({ state: "active", page: 0 })}
@@ -934,7 +895,7 @@ export function Jobs() {
             <StatCard
               label="Created"
               value={stats.created}
-              colorClass="text-gray-600"
+              colorClass="text-muted-foreground"
               icon={<Clock className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "created"}
               onClick={() => setQueryParams({ state: "created", page: 0 })}
@@ -942,7 +903,7 @@ export function Jobs() {
             <StatCard
               label="Retry"
               value={stats.retry}
-              colorClass="text-yellow-600"
+              colorClass="text-warning"
               icon={<RefreshCw className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "retry"}
               onClick={() => setQueryParams({ state: "retry", page: 0 })}
@@ -950,7 +911,7 @@ export function Jobs() {
             <StatCard
               label="Failed"
               value={stats.failed}
-              colorClass="text-red-600"
+              colorClass="text-destructive"
               icon={<XCircle className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "failed"}
               onClick={() => setQueryParams({ state: "failed", page: 0 })}
@@ -958,7 +919,7 @@ export function Jobs() {
             <StatCard
               label="Completed"
               value={stats.completed}
-              colorClass="text-green-600"
+              colorClass="text-success"
               icon={<CheckCircle className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "completed"}
               onClick={() => setQueryParams({ state: "completed", page: 0 })}
@@ -966,7 +927,7 @@ export function Jobs() {
             <StatCard
               label="Cancelled"
               value={stats.cancelled}
-              colorClass="text-gray-500"
+              colorClass="text-muted-foreground"
               icon={<X className="w-3.5 h-3.5" />}
               isActive={queryParams.state === "cancelled"}
               onClick={() => setQueryParams({ state: "cancelled", page: 0 })}
@@ -1110,7 +1071,7 @@ export function Jobs() {
       </div>
 
       {/* Jobs Table */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div>
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -1186,7 +1147,7 @@ export function Jobs() {
               <div className="bg-muted p-3 mb-3">
                 <FileText className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h3 className="font-medium text-sm text-gray-900">No jobs found</h3>
+              <h3 className="font-medium text-sm text-foreground">No jobs found</h3>
               <p className="text-xs text-muted-foreground mt-1">
                 {queryParams.state !== "all"
                   ? `No ${queryParams.state} jobs`
@@ -1244,7 +1205,7 @@ export function Jobs() {
                         </div>
                       </div>
                       <div className="col-span-2">
-                        <DotBadge state={job.state} />
+                        <StatusBadge status={job.state} />
                       </div>
                       <div
                         className="col-span-2 text-muted-foreground"
@@ -1331,7 +1292,7 @@ export function Jobs() {
                           </div>
                         </div>
                       </div>
-                      <DotBadge state={job.state} />
+                      <StatusBadge status={job.state} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">

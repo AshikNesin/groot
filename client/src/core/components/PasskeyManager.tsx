@@ -154,7 +154,7 @@ export function PasskeyManager() {
 
           {/* Passkey List */}
           {passkeys.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               <div className="text-4xl mb-4">🔐</div>
               <p>No passkeys configured yet.</p>
               <p className="text-sm mt-2">
@@ -166,7 +166,7 @@ export function PasskeyManager() {
               {passkeys.map((passkey) => (
                 <div
                   key={passkey.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <div className="text-2xl">{getPasskeyIcon(passkey)}</div>
@@ -174,7 +174,7 @@ export function PasskeyManager() {
                       <p className="font-medium truncate">
                         {passkey.credentialName || "Unnamed Passkey"}
                       </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
                         <span>Added {formatDate(passkey.createdAt)}</span>
                         {passkey.lastUsedAt && (
                           <span>Last used {formatDate(passkey.lastUsedAt)}</span>
@@ -198,7 +198,7 @@ export function PasskeyManager() {
                       size="sm"
                       variant="outline"
                       onClick={() => setPasskeyToDelete(passkey)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-destructive hover:text-destructive"
                     >
                       Delete
                     </Button>
@@ -219,7 +219,7 @@ export function PasskeyManager() {
               Are you sure you want to delete "{passkeyToDelete?.credentialName || "this passkey"}"?
               You won't be able to use it to sign in anymore.
               {passkeys.length === 1 && (
-                <span className="block mt-2 text-red-600 font-medium">
+                <span className="block mt-2 text-destructive font-medium">
                   This is your last passkey. Make sure you can still access your account with a
                   password.
                 </span>
