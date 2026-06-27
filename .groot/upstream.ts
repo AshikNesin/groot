@@ -62,6 +62,15 @@ const IMMUTABLE_EXCLUSIONS: readonly string[] = [
   "*.pem",
   "*.key",
   "secrets/**",
+
+  // Sync tooling state — must NEVER be overwritten with the boilerplate's
+  // own values (would corrupt this project's last_sync baseline).
+  // Project-only docs live here too and must not be clobbered by the
+  // boilerplate's copies.
+  ".groot/boilerplate-sync.json",
+  ".groot/sync-report.json",
+  ".groot/feature-request.md",
+  ".groot/repo-drift.md",
 ] as const;
 
 // ============================================================
@@ -91,6 +100,12 @@ const SYNC_PATTERNS: readonly string[] = [
   ".vite-hooks/**",
   ".gitleaks.toml",
   "scripts/**",
+
+  // Sync tooling — keep the sync tool itself up to date.
+  // State files are guarded by IMMUTABLE_EXCLUSIONS so only the tool's
+  // _code_ is eligible to upstream.
+  ".groot/**",
+  ".agents/skills/groot-sync/**",
 
   // Documentation
   "docs/**",

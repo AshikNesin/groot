@@ -23,6 +23,26 @@ function getSentryRelease() {
   }
 }
 
+/**
+ * Copy static assets from server/public to dist/public so they ship with
+ * the production bundle and can be served via express.static(distPath).
+ * No-op if server/public doesn't exist.
+ */
+async function copyPublicAssets() {
+  const sourceDir = path.join(process.cwd(), "server", "public");
+  const destDir = path.join(process.cwd(), "dist", "public");
+
+  try {
+    await fs.access(sourceDir);
+  } catch {
+    return; // nothing to copy
+  }
+
+  await fs.rm(destDir, { recursive: true, force: true });
+  await fs.cp(sourceDir, destDir, { recursive: true });
+  console.log("✓ Public assets copied to dist/public");
+}
+
 async function build() {
   try {
     const externals = await getExternalDependencies();
@@ -80,6 +100,8 @@ async function build() {
     if (release) {
       await fs.writeFile("dist/release.json", JSON.stringify({ release }));
     }
+
+    await copyPublicAssets();
 
     console.log("✓ Build successful: dist/bundle.js created.");
   } catch (error) {
