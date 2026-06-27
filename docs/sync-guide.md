@@ -74,7 +74,7 @@ pnpm groot:sync
 
 ### How It Works
 
-1. Clones the groot repo to a temp directory (with tags for version resolution)
+1. Acquires the groot boilerplate checkout (see [Boilerplate checkout reuse](#boilerplate-checkout-reuse) below)
 2. Diffs files changed since `last_sync.commit`
 3. Categorizes each file:
    - **Auto-apply**: File matches sync patterns and is unmodified locally
@@ -82,6 +82,19 @@ pnpm groot:sync
    - **Skipped**: File matches skip patterns or doesn't match sync patterns
 4. Extracts changelog between the last synced version and the latest version
 5. Generates a machine-readable `sync-report.json` for CI consumption
+
+### Boilerplate checkout reuse
+
+To avoid re-cloning the boilerplate on every run, `groot:sync` and the `groot:upstream` diff step reuse a local checkout when it's safe to do so:
+
+1. Look for a clone at `~/Code/<boilerplate.name>` (i.e. `~/Code/groot`).
+2. Verify its `origin` matches the configured `boilerplate.repo` (HTTPS and SSH URLs are treated as equivalent).
+3. Confirm the working tree is **clean** (`git status --porcelain` empty).
+4. Check out the default branch and fast-forward it with `git pull --ff-only`.
+
+If any of those checks fail (no local clone, dirty tree, mismatched origin, not a git repo, or the pull is not fast-forwardable), the tool falls back to a fresh shallow clone into a temp directory, which is cleaned up afterwards. A reused local checkout is **never** modified destructively or deleted.
+
+> Tip: keep `~/Code/groot` on `main` with no uncommitted changes and sync runs will skip the clone entirely.
 
 ### What Gets Synced
 

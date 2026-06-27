@@ -6,13 +6,13 @@
  *   pnpm groot:check  - Check for available changes
  *   pnpm groot:sync   - Apply safe changes
  */
-import { readFile, writeFile, mkdir, rm, copyFile, access } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readFile, writeFile, mkdir, copyFile, access } from "node:fs/promises";
 import { join, dirname, normalize } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { z } from "zod";
 import micromatch from "micromatch";
+import { acquireBoilerplate, releaseBoilerplate } from "./_acquire";
 
 const exec = promisify(execFile);
 
@@ -382,41 +382,22 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
   const rawConfig = JSON.parse(await readFile(configPath, "utf-8"));
   const config = SyncConfigSchema.parse(rawConfig);
 
-  // 2. Create temp directory
-  const tempDir = join(tmpdir(), `groot-sync-${Date.now()}`);
-  await mkdir(tempDir, { recursive: true });
+  // 2. Acquire the boilerplate checkout. Prefer a clean local clone at
+  //    ~/Code/<name> (fast-forwarded to the default branch) to avoid
+  //    re-cloning on every sync; fall back to a fresh clone otherwise.
+  const defaultBranch = await resolveDefaultBranch(config.boilerplate.repo);
+  const repo = await acquireBoilerplate({
+    repoUrl: config.boilerplate.repo,
+    name: config.boilerplate.name,
+    defaultBranch,
+    purpose: "sync",
+    ensureCommitReachable: config.last_sync.commit,
+    fetchTags: true,
+  });
+  const tempDir = repo.dir;
 
   try {
-    // 3. Clone boilerplate (with tags for version resolution)
-    const defaultBranch = await resolveDefaultBranch(config.boilerplate.repo);
-    console.log(`Cloning ${config.boilerplate.repo} (branch: ${defaultBranch})...`);
-    await exec("git", [
-      "clone",
-      "--depth",
-      "100",
-      "--branch",
-      defaultBranch,
-      "--tags",
-      config.boilerplate.repo,
-      tempDir,
-    ]);
-
-    // Also fetch all tags (shallow clone may miss some)
-    try {
-      await exec("git", ["-C", tempDir, "fetch", "--tags", "--force"]);
-    } catch {
-      // Non-fatal: continue without full tags
-    }
-
-    // Ensure last_sync commit is reachable; deepen if needed
-    try {
-      await exec("git", ["-C", tempDir, "cat-file", "-t", config.last_sync.commit]);
-    } catch {
-      console.log("Last sync commit not in shallow history, fetching full history...");
-      await exec("git", ["-C", tempDir, "fetch", "--unshallow"]);
-    }
-
-    // 4. Get changed files (exclude deletions)
+    // 3. Get changed files (exclude deletions)
     const { stdout: changedFiles } = await exec("git", [
       "-C",
       tempDir,
@@ -428,7 +409,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
 
     const files = changedFiles.split("\n").filter(Boolean);
 
-    // 5. Resolve version info
+    // 4. Resolve version info
     const latestVersion = await resolveLatestVersion(tempDir);
     const { stdout: latestCommitRaw } = await exec("git", ["-C", tempDir, "rev-parse", "HEAD"]);
     const latestCommit = latestCommitRaw.trim();
@@ -447,7 +428,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
       };
     }
 
-    // 6. Extract changelog between versions
+    // 5. Extract changelog between versions
     const fromRef = config.last_sync.version
       ? `v${config.last_sync.version}`
       : config.last_sync.commit;
@@ -463,7 +444,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
         breakingCommitRe.test(line),
     );
 
-    // 7. Categorize files
+    // 6. Categorize files
     const result: SyncResult = {
       autoApply: [],
       needsReview: [],
@@ -503,7 +484,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
       }
     }
 
-    // 8. Apply changes if requested
+    // 7. Apply changes if requested
     if (command === "apply" && result.autoApply.length > 0) {
       console.log(`\nApplying ${result.autoApply.length} files...`);
 
@@ -532,7 +513,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
       console.log("\nUpdated .groot/boilerplate-sync.json");
     }
 
-    // 9. Write machine-readable sync report for CI
+    // 8. Write machine-readable sync report for CI
     const report: SyncReport = {
       fromVersion: result.fromVersion,
       toVersion: result.toVersion,
@@ -548,8 +529,8 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
 
     return result;
   } finally {
-    // Always cleanup
-    await rm(tempDir, { recursive: true, force: true });
+    // Always cleanup — but only directories we created; never a reused local checkout.
+    await releaseBoilerplate(repo);
   }
 }
 

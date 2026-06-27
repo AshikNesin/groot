@@ -34,7 +34,7 @@ pnpm changeset
 The sync tool is fully deterministic - no AI interpretation needed:
 
 1. **Reads config** from `.groot/boilerplate-sync.json`
-2. **Clones boilerplate** to temp directory (with tags for version resolution)
+2. **Acquires boilerplate** — reuses a clean `~/Code/groot` checkout (fast-forwarded to `main`) when available, otherwise clones to a temp directory (with tags for version resolution)
 3. **Categorizes files** using pattern matching (micromatch)
 4. **Detects conflicts** via git three-way comparison
 5. **Extracts changelog** between synced version and latest version

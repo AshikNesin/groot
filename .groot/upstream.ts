@@ -15,6 +15,7 @@ import { promisify } from "node:util";
 import { createInterface } from "node:readline";
 import { z } from "zod";
 import micromatch from "micromatch";
+import { acquireBoilerplate, releaseBoilerplate, type AcquiredRepo } from "./_acquire";
 
 const exec = promisify(execFile);
 
@@ -371,31 +372,20 @@ async function findModifiedSyncedFiles(
   projectRoot: string,
   config: SyncConfig,
   defaultBranch: string,
-): Promise<{ candidates: UpstreamCandidate[]; tempDir: string }> {
-  const tempDir = join(tmpdir(), `groot-upstream-diff-${Date.now()}`);
-  await mkdir(tempDir, { recursive: true });
+): Promise<{ candidates: UpstreamCandidate[]; repo: AcquiredRepo }> {
+  // Prefer a clean local boilerplate checkout at ~/Code/<name>; fall back to a
+  // fresh clone. Either way, the returned repo handle tells the caller whether
+  // it owns (and must clean up) the directory.
+  const repo = await acquireBoilerplate({
+    repoUrl: config.boilerplate.repo,
+    name: config.boilerplate.name,
+    defaultBranch,
+    purpose: "upstream-diff",
+    ensureCommitReachable: config.last_sync.commit,
+  });
+  const tempDir = repo.dir;
 
   try {
-    // Clone boilerplate (shallow for speed)
-    console.log(`Cloning ${config.boilerplate.repo} (branch: ${defaultBranch})...`);
-    await exec("git", [
-      "clone",
-      "--depth",
-      "100",
-      "--branch",
-      defaultBranch,
-      config.boilerplate.repo,
-      tempDir,
-    ]);
-
-    // Ensure last_sync commit is reachable; deepen if needed
-    try {
-      await exec("git", ["-C", tempDir, "cat-file", "-t", config.last_sync.commit]);
-    } catch {
-      console.log("Last sync commit not in shallow history, fetching full history...");
-      await exec("git", ["-C", tempDir, "fetch", "--unshallow"]);
-    }
-
     // List all files at the last_sync commit that match sync patterns
     const { stdout: treeOutput } = await exec("git", [
       "-C",
@@ -447,10 +437,10 @@ async function findModifiedSyncedFiles(
       }
     }
 
-    return { candidates, tempDir };
+    return { candidates, repo };
   } catch (err) {
-    // Clean up on error
-    await rm(tempDir, { recursive: true, force: true });
+    // Clean up on error — only if we own the directory.
+    await releaseBoilerplate(repo);
     throw err;
   }
 }
@@ -589,21 +579,21 @@ async function main() {
   const defaultBranch = await getDefaultBranch(config.boilerplate.repo);
 
   // 4. Find modified synced files
-  let diffTempDir: string | undefined;
+  let diffRepo: AcquiredRepo | undefined;
   let candidates: UpstreamCandidate[];
 
   try {
     const result = await findModifiedSyncedFiles(projectRoot, config, defaultBranch);
     candidates = result.candidates;
-    diffTempDir = result.tempDir;
+    diffRepo = result.repo;
   } catch (err) {
     throw new Error(
       `Failed to identify modified files: ${err instanceof Error ? err.message : String(err)}`,
     );
   } finally {
-    // Clean up the diff temp dir
-    if (diffTempDir) {
-      await rm(diffTempDir, { recursive: true, force: true });
+    // Clean up the diff checkout — only if we created it (never a reused ~/Code checkout).
+    if (diffRepo) {
+      await releaseBoilerplate(diffRepo);
     }
   }
 
