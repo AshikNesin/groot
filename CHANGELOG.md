@@ -14,6 +14,9 @@ For the pre-changesets history, see [docs/CHANGELOG.md](docs/CHANGELOG.md).
   - **groot sync:** `extractChangelog` no longer captures the entire changelog when `last_sync.version` is unset (commit-SHA `fromRef` had no version to anchor the stop boundary). Breaking-change detection now matches scoped conventional commits like `feat(scope)!:`. Cloning no longer hardcodes `--branch main` (detects the default branch).
   - **groot upstream:** Both clones and the PR `--base` now use the boilerplate's detected default branch instead of hardcoded `main`. `gh pr create --repo` now correctly parses SSH URLs (`ssh://git@github.com/...`, `git@github.com:...`) in addition to HTTPS.
   - **changeset config:** `access` set to `public` to match the ISC-licensed open-source intent.
+- [`7f414be`](https://github.com/AshikNesin/groot/commit/7f414be9f71de04b715f83055e957d339773f366) [`f9cc070`](https://github.com/AshikNesin/groot/commit/f9cc0704b865bdfe5c87ec2a517e7ae27bca3671) Fix the Release workflow so it can actually run (the above fixes shipped, but the workflow itself had never succeeded — three stacked blockers masked each other):
+  - **`pnpm/action-setup` SHA:** was pinned to a commit that doesn't exist in the repo — same 7-char prefix as `v4.0.0`, but the remainder was invalid — so the action could not be resolved and every Release run failed immediately. Pinned to the real `v4.0.0` commit.
+  - **pnpm version source:** now read from `packageManager` (`pnpm@10.32.1`) instead of a `version: 10` input, which conflicted with `packageManager` and caused "Multiple versions of pnpm specified."
 
 ## 1.0.0
 
