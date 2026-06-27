@@ -44,17 +44,14 @@ jobs:
         with:
           title: "chore: version packages"
           commit: "chore: version packages"
-          # Retry wrapper around `changeset version`. @changesets/changelog-github
-          # hits the GitHub GraphQL API with no retry, and its response parse throws
-          # "Premature close" whenever the TCP body is truncated — common on runners.
-          # See scripts/changeset-version.mjs for details.
-          version: node scripts/changeset-version.mjs
+          version: pnpm changeset version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Skip the Vite+ pre-commit hook on the bot's version-bump commit.
-          # gitleaks isn't installed on the GitHub runner ("gitleaks: not found", exit 127),
-          # which would abort every "chore: version packages" commit. The hook wrapper
-          # (.vite-hooks/_/h) bails early when HUSKY=0 or VITE_GIT_HOOKS=0.
+          # gitleaks isn't installed on the GitHub runner ("gitleaks: not found",
+          # exit 127), which would abort every "chore: version packages" commit.
+          # The hook wrapper (.vite-hooks/_/h) bails early when HUSKY=0 or
+          # VITE_GIT_HOOKS=0.
           VITE_GIT_HOOKS: "0"
 
       - name: Create git tag
