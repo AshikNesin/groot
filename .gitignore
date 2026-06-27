@@ -31,3 +31,6 @@ config.local.yml
 secrets/
 credentials.json
 service-account.json
+
+# Groot sync generated report
+.groot/sync-report.json

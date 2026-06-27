@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fe02b34af93d8c0a4a8ad450e2cb0831f2c6f56 # v4.0.0
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          title: "chore: version packages"
+          commit: "chore: version packages"
+          version: pnpm changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create git tag
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+
+          # Check if tag already exists
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
+            exit 0
+          fi
+
+          git tag "$TAG"
+          git push origin "$TAG"
+
+          # Create GitHub Release from CHANGELOG.md
+          # Extract only this version's section: start at the matching
+          # "## <VERSION>" header, print its body, and stop at the next
+          # version header. A range pattern (/start/,/end/) is unsafe here
+          # because the end pattern also matches the start line, so the range
+          # collapses to a single header line ("head -n -1" then strips it,
+          # always producing empty output).
+          CHANGELOG=$(awk -v ver="${VERSION}" '
+            /^## / {
+              hdr = $2; gsub(/[][]/, "", hdr)
+              if (capture) exit
+              if (hdr == ver) { capture = 1; next }
+            }
+            capture
+          ' CHANGELOG.md)
+
+          if [ -n "$CHANGELOG" ]; then
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes "$CHANGELOG" \
+              --latest
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --generate-notes \
+              --latest
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
