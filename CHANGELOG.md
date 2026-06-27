@@ -9,4 +9,4 @@ For the pre-changesets history, see [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 ### Major Changes
 
-- [#37](https://github.com/AshikNesin/groot/pull/37) [`d286b33`](https://github.com/AshikNesin/groot/commit/d286b338c0ff2408741016feb88dd3ce22c7a542) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Initial public release of the Groot starter kit: a minimal Express 5 + React 19 + Postgres boilerplate featuring JWT + Passkey (WebAuthn) auth, a CSS-variable design-token UI component system, S3-compatible file storage, pg-boss background jobs, Playwright e2e tests, and deterministic boilerplate sync/upstream tooling (`pnpm groot:sync` / `groot:upstream`).
+- [#37](https://github.com/AshikNesin/groot/pull/37) [`d286b33`](https://github.com/AshikNesin/groot/commit/d286b338c0ff2408741016feb88dd3ce22c7a542) - Initial public release of the Groot starter kit: a minimal Express 5 + React 19 + Postgres boilerplate featuring JWT + Passkey (WebAuthn) auth, a CSS-variable design-token UI component system, S3-compatible file storage, pg-boss background jobs, Playwright e2e tests, and deterministic boilerplate sync/upstream tooling (`pnpm groot:sync` / `groot:upstream`).
