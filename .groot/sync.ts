@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 /**
- * Groot Sync v2 - Deterministic boilerplate sync tool
+ * Groot Sync v3 - Deterministic, version-aware boilerplate sync tool
  *
  * Usage:
  *   pnpm groot:check  - Check for available changes
  *   pnpm groot:sync   - Apply safe changes
  */
-import { readFile, writeFile, mkdir, rm, copyFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rm, copyFile, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, dirname, normalize } from "node:path";
 import { execFile } from "node:child_process";
@@ -26,6 +26,7 @@ const SyncConfigSchema = z.object({
     repo: z.string().url("Invalid repository URL"),
   }),
   last_sync: z.object({
+    version: z.string().optional().describe("Semver version tag of last sync (e.g. '1.3.0')"),
     commit: z.string().regex(/^[a-f0-9]{7,40}$/, "Invalid commit SHA"),
     date: z.string(),
   }),
@@ -215,6 +216,131 @@ function categorizeFile(
 }
 
 // ============================================================
+// CHANGELOG EXTRACTION - Between versions or commits
+// ============================================================
+
+async function extractChangelog(
+  tempDir: string,
+  fromRef: string,
+  toRef: string,
+): Promise<string[]> {
+  try {
+    // Try to read CHANGELOG.md from the repo
+    const changelogPath = join(tempDir, "CHANGELOG.md");
+    try {
+      await access(changelogPath);
+    } catch {
+      // No CHANGELOG.md, fall back to commit messages
+      return extractCommitMessages(tempDir, fromRef, toRef);
+    }
+
+    const changelog = await readFile(changelogPath, "utf-8");
+    const lines = changelog.split("\n");
+
+    // Extract entries between the two versions
+    // Look for ## headers with version numbers
+    const entries: string[] = [];
+    let capturing = false;
+
+    for (const line of lines) {
+      // Match version headers like "## 1.5.0" or "## v1.5.0"
+      const versionMatch = line.match(/^## \[?v?(\d+\.\d+\.\d+)/);
+      if (versionMatch) {
+        const version = versionMatch[1];
+        if (version === fromRef.replace(/^v/, "")) {
+          // We've reached the old version, stop capturing
+          break;
+        }
+        capturing = true;
+        entries.push(line);
+        continue;
+      }
+
+      if (capturing && line.trim()) {
+        entries.push(line);
+      }
+    }
+
+    if (entries.length > 0) {
+      return entries;
+    }
+
+    // Fallback to commit messages if changelog parsing didn't work
+    return extractCommitMessages(tempDir, fromRef, toRef);
+  } catch {
+    return extractCommitMessages(tempDir, fromRef, toRef);
+  }
+}
+
+async function extractCommitMessages(
+  tempDir: string,
+  fromRef: string,
+  toRef: string,
+): Promise<string[]> {
+  try {
+    const { stdout } = await exec(
+      "git",
+      ["log", "--oneline", `${fromRef}..${toRef}`, "--no-merges"],
+      { cwd: tempDir },
+    );
+    return stdout
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => `- ${line.replace(/^[a-f0-9]+ /, "")}`);
+  } catch {
+    return [];
+  }
+}
+
+// ============================================================
+// VERSION RESOLUTION - Resolve version tags to commits
+// ============================================================
+
+async function resolveLatestVersion(
+  tempDir: string,
+): Promise<{ version: string; commit: string } | null> {
+  try {
+    // Get the latest semver tag
+    const { stdout } = await exec("git", ["tag", "--list", "v*", "--sort=-version:refname"], {
+      cwd: tempDir,
+    });
+    const tags = stdout.split("\n").filter(Boolean);
+    if (tags.length === 0) return null;
+
+    const latestTag = tags[0];
+    const { stdout: commitSha } = await exec("git", ["rev-parse", latestTag], { cwd: tempDir });
+
+    return {
+      version: latestTag.replace(/^v/, ""),
+      commit: commitSha.trim(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================
+// SYNC REPORT - Machine-readable output for CI
+// ============================================================
+
+interface SyncReport {
+  fromVersion: string | null;
+  toVersion: string | null;
+  fromCommit: string;
+  toCommit: string;
+  changelog: string[];
+  autoApply: string[];
+  needsReview: string[];
+  skipped: string[];
+  breakingChanges: string[];
+}
+
+async function writeSyncReport(projectRoot: string, report: SyncReport): Promise<void> {
+  const reportPath = join(projectRoot, ".groot", "sync-report.json");
+  await writeFile(reportPath, JSON.stringify(report, null, 2) + "\n");
+}
+
+// ============================================================
 // MAIN SYNC FUNCTION
 // ============================================================
 
@@ -224,6 +350,10 @@ interface SyncResult {
   skipped: string[];
   fromCommit: string;
   toCommit: string;
+  fromVersion: string | null;
+  toVersion: string | null;
+  changelog: string[];
+  breakingChanges: string[];
 }
 
 async function sync(projectRoot: string, command: "check" | "apply"): Promise<SyncResult> {
@@ -237,7 +367,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
   await mkdir(tempDir, { recursive: true });
 
   try {
-    // 3. Clone boilerplate (shallow for speed)
+    // 3. Clone boilerplate (with tags for version resolution)
     console.log(`Cloning ${config.boilerplate.repo}...`);
     await exec("git", [
       "clone",
@@ -245,11 +375,27 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
       "100",
       "--branch",
       "main",
+      "--tags",
       config.boilerplate.repo,
       tempDir,
     ]);
 
-    // 4. Get changed files (exclude delet)
+    // Also fetch all tags (shallow clone may miss some)
+    try {
+      await exec("git", ["-C", tempDir, "fetch", "--tags", "--force"]);
+    } catch {
+      // Non-fatal: continue without full tags
+    }
+
+    // Ensure last_sync commit is reachable; deepen if needed
+    try {
+      await exec("git", ["-C", tempDir, "cat-file", "-t", config.last_sync.commit]);
+    } catch {
+      console.log("Last sync commit not in shallow history, fetching full history...");
+      await exec("git", ["-C", tempDir, "fetch", "--unshallow"]);
+    }
+
+    // 4. Get changed files (exclude deletions)
     const { stdout: changedFiles } = await exec("git", [
       "-C",
       tempDir,
@@ -261,24 +407,52 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
 
     const files = changedFiles.split("\n").filter(Boolean);
 
+    // 5. Resolve version info
+    const latestVersion = await resolveLatestVersion(tempDir);
+    const { stdout: latestCommitRaw } = await exec("git", ["-C", tempDir, "rev-parse", "HEAD"]);
+    const latestCommit = latestCommitRaw.trim();
+
     if (files.length === 0) {
-      const { stdout: latestCommit } = await exec("git", ["-C", tempDir, "rev-parse", "HEAD"]);
       return {
         autoApply: [],
         needsReview: [],
         skipped: [],
         fromCommit: config.last_sync.commit,
-        toCommit: latestCommit.trim(),
+        toCommit: latestCommit,
+        fromVersion: config.last_sync.version ?? null,
+        toVersion: latestVersion?.version ?? null,
+        changelog: [],
+        breakingChanges: [],
       };
     }
 
-    // 5. Categorize files
+    // 6. Extract changelog between versions
+    const fromRef = config.last_sync.version
+      ? `v${config.last_sync.version}`
+      : config.last_sync.commit;
+    const toRef = latestVersion ? `v${latestVersion.version}` : "HEAD";
+    const changelog = await extractChangelog(tempDir, fromRef, toRef);
+
+    // Detect breaking changes from changelog
+    const breakingChanges = changelog.filter(
+      (line) =>
+        line.toLowerCase().includes("breaking") ||
+        line.toLowerCase().includes("migration") ||
+        line.startsWith("- feat!") ||
+        line.startsWith("- fix!"),
+    );
+
+    // 7. Categorize files
     const result: SyncResult = {
       autoApply: [],
       needsReview: [],
       skipped: [],
       fromCommit: config.last_sync.commit,
-      toCommit: "",
+      toCommit: latestCommit,
+      fromVersion: config.last_sync.version ?? null,
+      toVersion: latestVersion?.version ?? null,
+      changelog,
+      breakingChanges,
     };
 
     for (const file of files) {
@@ -308,11 +482,7 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
       }
     }
 
-    // 6. Get latest commit
-    const { stdout: latestCommit } = await exec("git", ["-C", tempDir, "rev-parse", "HEAD"]);
-    result.toCommit = latestCommit.trim();
-
-    // 7. Apply changes if requested
+    // 8. Apply changes if requested
     if (command === "apply" && result.autoApply.length > 0) {
       console.log(`\nApplying ${result.autoApply.length} files...`);
 
@@ -328,17 +498,32 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
         console.log(`  + ${file}`);
       }
 
-      // Update config
+      // Update config with version info
       const updatedConfig = {
         ...config,
         last_sync: {
-          commit: result.toCommit,
+          version: latestVersion?.version ?? config.last_sync.version,
+          commit: latestCommit,
           date: new Date().toISOString(),
         },
       };
       await writeFile(configPath, JSON.stringify(updatedConfig, null, 2) + "\n");
       console.log("\nUpdated .groot/boilerplate-sync.json");
     }
+
+    // 9. Write machine-readable sync report for CI
+    const report: SyncReport = {
+      fromVersion: result.fromVersion,
+      toVersion: result.toVersion,
+      fromCommit: result.fromCommit,
+      toCommit: result.toCommit,
+      changelog: result.changelog,
+      autoApply: result.autoApply,
+      needsReview: result.needsReview,
+      skipped: result.skipped,
+      breakingChanges: result.breakingChanges,
+    };
+    await writeSyncReport(projectRoot, report);
 
     return result;
   } finally {
@@ -366,14 +551,36 @@ async function main() {
 
   const projectRoot = process.cwd();
 
-  console.log("\n## Groot Sync v2\n");
+  console.log("\n## Groot Sync v3\n");
   console.log(`Mode: ${command === "check" ? "dry run" : "apply"}\n`);
 
   const result = await sync(projectRoot, command);
 
+  // Version-aware header
   console.log(`\n## Results\n`);
-  console.log(`From: ${result.fromCommit.slice(0, 7)}`);
-  console.log(`To:   ${result.toCommit.slice(0, 7)}\n`);
+  if (result.fromVersion || result.toVersion) {
+    const from = result.fromVersion ? `v${result.fromVersion}` : result.fromCommit.slice(0, 7);
+    const to = result.toVersion ? `v${result.toVersion}` : result.toCommit.slice(0, 7);
+    console.log(`Version: ${from} → ${to}`);
+  } else {
+    console.log(`From: ${result.fromCommit.slice(0, 7)}`);
+    console.log(`To:   ${result.toCommit.slice(0, 7)}`);
+  }
+  console.log();
+
+  // Show changelog if available
+  if (result.changelog.length > 0) {
+    console.log("### Changelog");
+    result.changelog.forEach((line) => console.log(`  ${line}`));
+    console.log();
+  }
+
+  // Show breaking changes prominently
+  if (result.breakingChanges.length > 0) {
+    console.log("### ⚠ Breaking Changes");
+    result.breakingChanges.forEach((line) => console.log(`  ${line}`));
+    console.log();
+  }
 
   if (result.autoApply.length > 0) {
     console.log("### Auto-Apply (Safe)");
@@ -412,6 +619,8 @@ async function main() {
   if (result.needsReview.length > 0) {
     console.log(`\n⚠ ${result.needsReview.length} files need manual review.`);
   }
+
+  console.log(`\n📄 Sync report written to .groot/sync-report.json`);
 }
 
 main().catch((err) => {

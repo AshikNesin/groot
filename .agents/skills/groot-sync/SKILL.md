@@ -1,13 +1,15 @@
 ---
 name: groot-sync
-description: Sync reusable core components and infrastructure from the groot boilerplate repo. Includes UI components, server core utilities, middlewares, shared hooks, docs, and infrastructure. Use when syncing from groot, pulling boilerplate updates, or keeping apps aligned with the source of truth. Triggers on "groot sync", "sync from groot", "pull boilerplate changes", "update from boilerplate".
+description: Sync reusable core components and infrastructure from the groot boilerplate repo. Includes UI components, server core utilities, middlewares, shared hooks, docs, and infrastructure. Also supports upstreaming child-repo fixes back to groot. Triggers on "groot sync", "sync from groot", "pull boilerplate changes", "update from boilerplate", "upstream to groot", "push fix to groot", "changeset", "add changeset".
 metadata:
-  tags: sync, boilerplate, groot, infrastructure, components, utilities
+  tags: sync, boilerplate, groot, infrastructure, components, utilities, upstream, versioning, changelog
 ---
 
-## Groot Sync v2
+## Groot Sync v3
 
-This skill references the deterministic TypeScript sync tool at `.groot/sync.ts`.
+This skill references the deterministic TypeScript sync tools at `.groot/sync.ts` and `.groot/upstream.ts`.
+
+Full documentation: [docs/sync-guide.md](../../docs/sync-guide.md)
 
 ## Quick Start
 
@@ -17,18 +19,45 @@ pnpm groot:check
 
 # Apply safe changes
 pnpm groot:sync
+
+# Push local fixes back to groot
+pnpm groot:upstream
+
+# Add a changeset (for groot repo changes)
+pnpm changeset
 ```
 
 ## How It Works
 
-The sync tool is now fully deterministic - no AI interpretation needed:
+### Sync (groot → child)
+
+The sync tool is fully deterministic - no AI interpretation needed:
 
 1. **Reads config** from `.groot/boilerplate-sync.json`
-2. **Clones boilerplate** to temp directory
+2. **Clones boilerplate** to temp directory (with tags for version resolution)
 3. **Categorizes files** using pattern matching (micromatch)
 4. **Detects conflicts** via git three-way comparison
-5. **Applies safe changes** automatically
-6. **Flags modified files** for manual review
+5. **Extracts changelog** between synced version and latest version
+6. **Applies safe changes** automatically
+7. **Flags modified files** for manual review
+8. **Writes sync report** (`sync-report.json`) for CI consumption
+
+### Upstream (child → groot)
+
+Push child-repo bug fixes back to the boilerplate:
+
+1. **Compares local files** against last synced version
+2. **Shows modified synced files** with diff stats
+3. **Interactive selection** of which files to upstream
+4. **Creates PR on groot** via GitHub CLI (`gh`)
+
+### Versioning (changesets)
+
+Groot uses [changesets](https://github.com/changesets/changesets) for automated versioning:
+
+1. **Add changeset**: `pnpm changeset` or create a file in `.changeset/`
+2. **On merge to main**: GitHub Action creates a "Version Packages" PR
+3. **On version PR merge**: Git tag + GitHub Release created automatically
 
 ## Sync Rules (Encoded in sync.ts)
 
@@ -86,29 +115,55 @@ Modified files are NOT automatically applied - they appear in the "Needs Review"
     "repo": "https://github.com/AshikNesin/groot"
   },
   "last_sync": {
+    "version": "1.3.0",
     "commit": "abc1234",
     "date": "2026-03-15T20:00:00Z"
   },
-  "exclude_patterns": []
+  "additional_exclusions": []
 }
 ```
 
 ## CI/CD Integration
 
-The `.github/workflows/groot-sync.yml` workflow:
+### Sync Workflow (`.github/workflows/groot-sync.yml`)
 
 - Runs twice daily (12PM and 12AM IST)
 - Uses the TypeScript tool (no external AI service)
-- Creates PR with changes for review
+- Creates PR with rich description from `sync-report.json`:
+  - Version diff (e.g., v1.3.0 → v1.5.0)
+  - Changelog entries between versions
+  - Breaking change warnings
+  - Auto-applied and needs-review file lists
 - Only auto-applies safe changes
+
+### Release Workflow (`.github/workflows/release.yml`)
+
+- Triggers on push to `main`
+- If changeset files exist → creates "Version Packages" PR
+- When version PR merges → creates git tag and GitHub Release
+
+## Writing Changesets (for AI Agents)
+
+When modifying groot's syncable code, create a changeset file:
+
+```bash
+# File: .changeset/<random-name>.md
+---
+"groot": patch
+---
+
+fix(core): handle null values in Boom error handler
+```
+
+Use `patch` for fixes, `minor` for new features, `major` for breaking changes.
 
 ## Manual Override
 
-To add project-specific exclusions, add patterns to `exclude_patterns` in the config:
+To add project-specific exclusions, add patterns to `additional_exclusions` in the config:
 
 ```json
 {
-  "exclude_patterns": ["server/src/special-service/**", "client/src/custom-component/**"]
+  "additional_exclusions": ["server/src/special-service/**", "client/src/custom-component/**"]
 }
 ```
 
