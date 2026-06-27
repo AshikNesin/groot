@@ -84,15 +84,3 @@ export {
   getMonthRange,
   formatDuration,
 } from "@/core/lib/date.utils";
-
-// Re-export design tokens for convenience
-export {
-  statusColors,
-  pageLayout,
-  sectionSpacing,
-  cardLayout,
-  iconSizes,
-  typography,
-  tableStyles,
-  formStyles,
-} from "@/core/lib/design-tokens";
