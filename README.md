@@ -38,25 +38,38 @@ pnpm dev                    # https://<appname>.localhost via portless
 
 ## Project Structure
 
+This is a **server-primary monolith**: one deployable process (`node dist/bundle.js`) that also serves the built client as static assets. The repo root _is_ the backend app's home — backend-owned files at root aren't leaked out of `server/`, they live where their tools expect to find them.
+
 ```
-├── server/src/
-│   ├── controllers/
-│   ├── routes/
-│   ├── services/
-│   ├── middlewares/
-│   ├── core/
-│   ├── models/
-│   ├── validations/
-│   └── utils/
-├── client/src/
-│   ├── components/
-│   ├── pages/
-│   ├── lib/
-│   ├── store/
-│   └── hooks/
+├── server/src/              # Backend application code
+│   ├── app/<feature>/        # Feature endpoints (per-feature thin shell)
+│   ├── shared/<feature>/     # Feature modules: controller + routes +
+│   │                         #   service + validation + model
+│   ├── core/                 # Cross-cutting infra (config, errors, job,
+│   │                         #   kv, logger, middlewares, storage, utils)
+│   └── generated/prisma/     # Prisma Client output (generated, not hand-edited)
+├── client/src/               # Frontend application code (Vite build)
+│   ├── app/<feature>/{pages,hooks}/
+│   ├── core/{components,hooks,lib,services,store,types}/
+│   └── ui/                   # shadcn primitives, exported via the `@/ui` barrel
 ├── docs/
-└── prisma/
+│
+├── prisma/                   # Schema + migrations + seed  ─┐
+├── prisma.config.ts          # Prisma CLI config            │  pinned to root
+├── config.yml                # Operator config (like .env)  │  by their tooling /
+├── Procfile                  # Deploy process definition   │  deploy expectations
+├── tsconfig.json             # Server tsconfig             ─┘
+└── vite.config.ts            # Client build config (root = Vite's CWD)
 ```
+
+**Why backend files live at root, not in `server/`:**
+
+- `prisma/` + `prisma.config.ts` — the Prisma CLI resolves schema/migration paths relative to CWD; `schema.prisma`'s `output: "../server/src/generated/prisma"` is relative to the schema file. Moving it breaks the CLI. The generated client _does_ land inside `server/src/generated/` — only the schema definition sits at root.
+- `config.yml` — operator-facing per-environment config, read by `server/src/core/config/config.loader.ts` via `resolve(process.cwd(), "config.yml")`. Same role as `.env`: belongs where the person deploying expects it.
+- `Procfile` — Railway/Heroku/nixpacks look for it at root.
+- `tsconfig.json` / `vite.config.ts` — each build tool runs from repo root.
+
+The asymmetry (server code at root **and** in `server/`; client code only in `client/`) mirrors the deployment asymmetry: the server is the process, the client is a static asset that process serves.
 
 ## Scripts
 
