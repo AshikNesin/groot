@@ -91,7 +91,6 @@ export {
   SelectContent,
   SelectItem,
 } from "./select";
-export { Separator } from "./separator";
 export { StatusBadge } from "./status-badge";
 export type { StatusVariant } from "./status-badge";
 export {
