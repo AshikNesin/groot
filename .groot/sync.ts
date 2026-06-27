@@ -215,6 +215,17 @@ function categorizeFile(
   return { action: "skip", reason: "Does not match any sync pattern" };
 }
 
+async function resolveDefaultBranch(repoUrl: string): Promise<string> {
+  try {
+    const { stdout } = await exec("git", ["ls-remote", "--symref", repoUrl, "HEAD"]);
+    // Output looks like: "ref: refs/heads/<branch>\tHEAD"
+    const match = stdout.match(/ref:\s+refs\/heads\/(\S+)/);
+    return match ? match[1] : "main";
+  } catch {
+    return "main";
+  }
+}
+
 // ============================================================
 // CHANGELOG EXTRACTION - Between versions or commits
 // ============================================================
@@ -225,8 +236,17 @@ async function extractChangelog(
   toRef: string,
 ): Promise<string[]> {
   try {
-    // Try to read CHANGELOG.md from the repo
     const changelogPath = join(tempDir, "CHANGELOG.md");
+
+    // If fromRef is a commit SHA (no semver version in config), there is no
+    // version string in CHANGELOG.md to anchor the stop boundary. Without this
+    // guard the loop below never breaks and the entire changelog is captured,
+    // so fall back to commit messages to capture only entries since the last
+    // sync.
+    if (/^[0-9a-f]{7,40}$/.test(fromRef)) {
+      return extractCommitMessages(tempDir, fromRef, toRef);
+    }
+
     try {
       await access(changelogPath);
     } catch {
@@ -368,13 +388,14 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
 
   try {
     // 3. Clone boilerplate (with tags for version resolution)
-    console.log(`Cloning ${config.boilerplate.repo}...`);
+    const defaultBranch = await resolveDefaultBranch(config.boilerplate.repo);
+    console.log(`Cloning ${config.boilerplate.repo} (branch: ${defaultBranch})...`);
     await exec("git", [
       "clone",
       "--depth",
       "100",
       "--branch",
-      "main",
+      defaultBranch,
       "--tags",
       config.boilerplate.repo,
       tempDir,
@@ -434,12 +455,12 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
     const changelog = await extractChangelog(tempDir, fromRef, toRef);
 
     // Detect breaking changes from changelog
+    const breakingCommitRe = /^(?:- )?(?:feat|fix)(?:\([\w.-]+\))?!:/i;
     const breakingChanges = changelog.filter(
       (line) =>
         line.toLowerCase().includes("breaking") ||
         line.toLowerCase().includes("migration") ||
-        line.startsWith("- feat!") ||
-        line.startsWith("- fix!"),
+        breakingCommitRe.test(line),
     );
 
     // 7. Categorize files

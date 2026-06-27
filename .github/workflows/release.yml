@@ -39,7 +39,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           title: "chore: version packages"
           commit: "chore: version packages"
@@ -63,8 +63,20 @@ jobs:
           git push origin "$TAG"
 
           # Create GitHub Release from CHANGELOG.md
-          # Extract the latest version's changelog section
-          CHANGELOG=$(awk "/^## ${VERSION}/,/^## [0-9]/" CHANGELOG.md | head -n -1)
+          # Extract only this version's section: start at the matching
+          # "## <VERSION>" header, print its body, and stop at the next
+          # version header. A range pattern (/start/,/end/) is unsafe here
+          # because the end pattern also matches the start line, so the range
+          # collapses to a single header line ("head -n -1" then strips it,
+          # always producing empty output).
+          CHANGELOG=$(awk -v ver="${VERSION}" '
+            /^## / {
+              hdr = $2; gsub(/[][]/, "", hdr)
+              if (capture) exit
+              if (hdr == ver) { capture = 1; next }
+            }
+            capture
+          ' CHANGELOG.md)
 
           if [ -n "$CHANGELOG" ]; then
             gh release create "$TAG" \

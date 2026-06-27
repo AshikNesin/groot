@@ -224,6 +224,43 @@ async function getDiffStats(
 }
 
 // ============================================================
+// REMOTE HELPERS - Default branch & repo slug resolution
+// ============================================================
+
+async function getDefaultBranch(repoUrl: string): Promise<string> {
+  try {
+    const { stdout } = await exec("git", ["ls-remote", "--symref", repoUrl, "HEAD"]);
+    // Output looks like: "ref: refs/heads/<branch>\tHEAD"
+    const match = stdout.match(/ref:\s+refs\/heads\/(\S+)/);
+    return match ? match[1] : "main";
+  } catch {
+    return "main";
+  }
+}
+
+/**
+ * Extract an "OWNER/REPO" slug from any GitHub URL form for `gh pr create`.
+ * Handles https://github.com/owner/repo(.git) and
+ * ssh://git@github.com/owner/repo(.git) (both pass Zod's url() validation),
+ * as well as the scheme-less SSH shorthand git@github.com:owner/repo(.git).
+ */
+function parseRepoSlug(repoUrl: string): string {
+  try {
+    const url = new URL(repoUrl);
+    const parts = url.pathname
+      .replace(/^\/+|\/+$/g, "")
+      .replace(/\.git$/, "")
+      .split("/");
+    if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+  } catch {
+    // SSH shorthand without a scheme: git@github.com:owner/repo(.git)
+    const match = repoUrl.match(/[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
+    if (match) return `${match[1]}/${match[2]}`;
+  }
+  throw new Error(`Could not parse GitHub owner/repo from URL: ${repoUrl}`);
+}
+
+// ============================================================
 // PREREQUISITES CHECK
 // ============================================================
 
@@ -333,19 +370,20 @@ async function promptSelection(candidates: UpstreamCandidate[]): Promise<Upstrea
 async function findModifiedSyncedFiles(
   projectRoot: string,
   config: SyncConfig,
+  defaultBranch: string,
 ): Promise<{ candidates: UpstreamCandidate[]; tempDir: string }> {
   const tempDir = join(tmpdir(), `groot-upstream-diff-${Date.now()}`);
   await mkdir(tempDir, { recursive: true });
 
   try {
     // Clone boilerplate (shallow for speed)
-    console.log(`Cloning ${config.boilerplate.repo}...`);
+    console.log(`Cloning ${config.boilerplate.repo} (branch: ${defaultBranch})...`);
     await exec("git", [
       "clone",
       "--depth",
       "100",
       "--branch",
-      "main",
+      defaultBranch,
       config.boilerplate.repo,
       tempDir,
     ]);
@@ -426,19 +464,20 @@ async function createUpstreamPR(
   config: SyncConfig,
   selected: UpstreamCandidate[],
   childAppName: string,
+  defaultBranch: string,
 ): Promise<string> {
   const tempDir = join(tmpdir(), `groot-upstream-pr-${Date.now()}`);
   await mkdir(tempDir, { recursive: true });
 
   try {
-    // Clone groot fresh to main
-    console.log(`\nCloning ${config.boilerplate.repo} for PR...`);
+    // Clone boilerplate fresh to its default branch
+    console.log(`\nCloning ${config.boilerplate.repo} for PR (branch: ${defaultBranch})...`);
     await exec("git", [
       "clone",
       "--depth",
       "1",
       "--branch",
-      "main",
+      defaultBranch,
       config.boilerplate.repo,
       tempDir,
     ]);
@@ -490,13 +529,13 @@ async function createUpstreamPR(
         "pr",
         "create",
         "--repo",
-        config.boilerplate.repo.replace("https://github.com/", ""),
+        parseRepoSlug(config.boilerplate.repo),
         "--title",
         `fix: upstream from ${childAppName}`,
         "--body",
         prBody,
         "--base",
-        "main",
+        defaultBranch,
         "--head",
         branchName,
       ],
@@ -546,12 +585,15 @@ async function main() {
   // 3. Get child app name
   const childAppName = await getChildAppName(projectRoot);
 
+  // Resolve the boilerplate's default branch (don't assume "main")
+  const defaultBranch = await getDefaultBranch(config.boilerplate.repo);
+
   // 4. Find modified synced files
   let diffTempDir: string | undefined;
   let candidates: UpstreamCandidate[];
 
   try {
-    const result = await findModifiedSyncedFiles(projectRoot, config);
+    const result = await findModifiedSyncedFiles(projectRoot, config, defaultBranch);
     candidates = result.candidates;
     diffTempDir = result.tempDir;
   } catch (err) {
@@ -600,7 +642,7 @@ async function main() {
   console.log();
 
   // 8. Create upstream PR
-  const prUrl = await createUpstreamPR(projectRoot, config, selected, childAppName);
+  const prUrl = await createUpstreamPR(projectRoot, config, selected, childAppName, defaultBranch);
 
   console.log(`✓ Created PR: ${prUrl}\n`);
 }
