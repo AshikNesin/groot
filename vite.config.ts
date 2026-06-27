@@ -26,6 +26,10 @@ export default defineConfig({
   // Git hooks configuration
   staged: {
     "*": "vp check --fix",
+    // Enforce the design-token invariant (no raw palette colors outside the
+    // token layer) whenever client source or styles change.
+    // See scripts/check-design-tokens.ts and PLAN.md.
+    "*.{ts,tsx,css}": "npm run check:tokens",
   },
 
   // Vite build configuration - build from client directory

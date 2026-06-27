@@ -19,7 +19,7 @@
  * Usage:  tsx scripts/check-design-tokens.ts
  * Exit:   0 = clean, 1 = violations found.
  */
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 
 const PALETTE =
   "(gray|slate|zinc|green|red|blue|yellow|orange|purple|pink|indigo|emerald|amber|rose|teal|cyan|sky|lime)";
@@ -27,27 +27,52 @@ const PREFIX = "(text|bg|border|border-t|ring|ring-offset|divide|fill|stroke|fro
 const PATTERN = new RegExp(`\\b${PREFIX}-${PALETTE}-\\d`);
 
 const ROOT = new URL("..", import.meta.url).pathname;
-// Search TS/TSX under client/src, excluding the allowlisted token layer.
-const SEARCH_CMD = `rg -n -g "*.ts" -g "*.tsx" "${PATTERN.source}" ${ROOT}client/src`;
 
 let violations: { file: string; line: string }[] = [];
-try {
-  const out = execSync(SEARCH_CMD, { encoding: "utf-8" }).trim();
-  if (out) {
-    violations = out
-      .split("\n")
-      .filter((line) => {
-        // Allowlist: token definitions live here.
-        return !line.includes("client/src/index.css");
-      })
-      .map((line) => {
-        const [file, ...rest] = line.split(":");
-        return { file, line: rest.join(":").trim() };
-      });
-  }
-} catch {
-  // rg exits non-zero when no matches → that's the clean (passing) case.
-  process.exit(0);
+// rg exit codes: 0 = matches found, 1 = no matches (clean), 2 = error.
+// spawnSync gives unambiguous status semantics (execSync's throwing on a
+// missing-binary is murkier to classify).
+const result = spawnSync(
+  "rg",
+  ["-n", "-g", "*.ts", "-g", "*.tsx", PATTERN.source, `${ROOT}client/src`],
+  {
+    encoding: "utf-8",
+  },
+);
+
+if (result.error) {
+  // rg binary unavailable (ENOENT) or failed to spawn — fail loudly so
+  // enforcement can't silently degrade to a false-pass.
+  console.error(
+    "❌ Design-token check could not run: ripgrep (rg) failed to start — " +
+      `${result.error.message}. Install rg before running this check.`,
+  );
+  process.exit(1);
+}
+
+const status = result.status;
+if (status === 2) {
+  console.error("❌ Design-token check failed: ripgrep reported an error:\n", result.stderr);
+  process.exit(1);
+}
+if (status !== 0 && status !== 1) {
+  console.error(`❌ Design-token check failed: unexpected ripgrep exit code ${status}.`);
+  process.exit(1);
+}
+
+// status === 1 (no matches) → clean. status === 0 → parse matches.
+if (status === 0 && result.stdout.trim()) {
+  violations = result.stdout
+    .trim()
+    .split("\n")
+    .filter((line) => {
+      // Allowlist: token definitions live here.
+      return !line.includes("client/src/index.css");
+    })
+    .map((line) => {
+      const [file, ...rest] = line.split(":");
+      return { file, line: rest.join(":").trim() };
+    });
 }
 
 if (violations.length > 0) {

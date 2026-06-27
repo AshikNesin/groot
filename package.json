@@ -24,6 +24,7 @@
     "lint": "vp lint",
     "format": "vp fmt",
     "check": "vp check",
+    "check:tokens": "tsx scripts/check-design-tokens.ts",
     "test": "varlock run -- vp test run --config vitest.config.server.ts",
     "test:watch": "varlock run -- vp test --config vitest.config.server.ts",
     "test:e2e": "PORTLESS=0 varlock run -- playwright test",

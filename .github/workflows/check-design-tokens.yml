@@ -1,0 +1,62 @@
+name: Check Design Tokens
+
+# Enforces the UI design-system invariant: no raw Tailwind palette colors
+# (gray-*, red-*, blue-*, …) outside the token layer (client/src/index.css,
+# tailwind.config.js). Pre-commit runs the same check via `vp staged`; this is
+# the non-bypassable CI layer (a `--no-verify` commit still gets caught here).
+#
+# See scripts/check-design-tokens.ts and PLAN.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/src/**"
+      - "scripts/check-design-tokens.ts"
+      - ".github/workflows/check-design-tokens.yml"
+  pull_request:
+    paths:
+      - "client/src/**"
+      - "scripts/check-design-tokens.ts"
+      - ".github/workflows/check-design-tokens.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-design-tokens-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-design-tokens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fe02b34af93d8c0a4a8ad450e2cb0831f2c6f56 # v4.0.0
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      # --ignore-scripts: skip the secret-gated postinstall (varlock/prisma).
+      # The token check needs no project runtime — only rg (preinstalled on
+      # ubuntu-latest) + tsx, which install as normal deps.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Verify ripgrep available
+        run: command -v rg || { echo "ripgrep not found on runner"; exit 1; }
+
+      - name: Check design tokens
+        run: pnpm check:tokens

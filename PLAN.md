@@ -138,7 +138,11 @@ Apply the contract to the pages that currently ignore it.
 ### Phase 4 — Sweep raw colors + enforcement ✅ DONE
 
 - [x] Replaced all `gray-*` / `red-*` / `blue-*` / `green-*` / `yellow-*` across `app/`, `core/components/`, `ui/` with semantic tokens. The 120 instances collapsed to ~7 token names. **0 raw palette colors remain** (verified).
-- [x] Enforcement: **oxlint has no string/className-pattern-banning rule**, so the "ESLint rule" from the original plan is infeasible in this toolchain. Replaced with `scripts/check-design-tokens.ts` — a grep-based check that exits non-zero on raw palette colors outside the allowlist (`index.css`, `tailwind.config.js`). Verified it passes clean and catches injected violations. Wire into CI / pre-commit alongside `vp check`.
+- [x] Enforcement (two layers):
+  - **Pre-commit:** wired into `vite.config.ts` `staged` block (`*.{ts,tsx,css}: npm run check:tokens`) → runs via the existing `.vite-hooks` → `vp staged` chain. Verified: a staged raw-color change returns exit 1 and blocks the commit (lint-staged auto-reverts).
+  - **CI:** `.github/workflows/check-design-tokens.yml` runs `pnpm check:tokens` on push + PR. Uses `--ignore-scripts` to skip the secret-gated postinstall (varlock/prisma) — the check needs only rg + tsx. This is the non-bypassable layer (a `git commit --no-verify` still gets caught here).
+  - **Why not an oxlint rule:** oxlint has no string/className-pattern-banning rule, so the "ESLint rule" from the original plan is infeasible in this toolchain. The grep-based script is the enforcement mechanism.
+  - `scripts/check-design-tokens.ts` hardened (spawnSync with explicit rg exit-code handling; fails loudly if rg is unavailable rather than false-passing).
 
 ### Phase 5 — Tokenize the remaining `ui/` stragglers ✅ DONE
 
