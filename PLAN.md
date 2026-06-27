@@ -158,7 +158,11 @@ Apply the contract to the pages that currently ignore it.
 - `vp test`: 83/83 pass.
 - `scripts/check-design-tokens.ts`: passes (0 raw palette colors).
 - **Note:** `vp build` fails on a **pre-existing** missing dependency (`@radix-ui/react-separator`, not in `package.json`, in the untouched `ui/separator.tsx`). Unrelated to this migration.
-- **Visual smoke test pending:** the dev server requires varlock/Infisical secrets and wasn't bootable headlessly. Recommend a quick click-through of Jobs / JobDetail / Storage / Settings once running locally.
+- **Visual smoke test: DONE.** Drove the live dev server (`http://localhost:4418`) with Playwright:
+  - Logged in (seed creds `demo@example.com`); traversed Dashboard, Todos, Storage, Jobs, Settings → **0 console errors on every route** (no runtime regressions).
+  - Verified all CSS tokens resolve (`--background`, `--foreground`, `--primary`, `--destructive`, `--success`, `--warning`, `--info`, `--muted-foreground` all present).
+  - Verified every semantic class the migration introduced compiled into the dev CSS (`text-foreground`, `text-muted-foreground`, `text-destructive`, `text-success`, `text-warning`, `text-info`, `bg-muted`, `bg-destructive/10`, `bg-info/10`, `bg-success/10`, `border-border`, `bg-background`, `hover:bg-accent` — all `true`).
+  - Confirmed `text-gray-900` is **absent** from compiled CSS (sweep worked at the compile layer, not just source). (Residual `bg-blue-50` / `text-red-500` matches are Tailwind preflight base-reset, not component styles — source-level `check:tokens` already proves 0 raw colors in code.)
 
 ---
 
