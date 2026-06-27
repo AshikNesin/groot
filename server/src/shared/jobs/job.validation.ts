@@ -43,8 +43,3 @@ export const getJobsSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
 });
-
-export const fetchAvailableJobsSchema = z.object({
-  queue: z.string().min(1, "Queue name is required"),
-  limit: z.coerce.number().optional(),
-});

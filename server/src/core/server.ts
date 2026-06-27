@@ -36,10 +36,6 @@ export interface StartServerOptions {
 
 let isShuttingDown = false;
 
-export function getIsShuttingDown(): boolean {
-  return isShuttingDown;
-}
-
 export async function createServer(options: ServerOptions): Promise<ServerInstance> {
   const { distPath, clientRoot } = options;
   const port = config.app.port;

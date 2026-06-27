@@ -73,6 +73,3 @@ main().catch((error) => {
   logger.error({ error }, "Failed to start server");
   process.exit(1);
 });
-
-// Re-export for backwards compatibility
-export { getIsShuttingDown } from "@/core/server";

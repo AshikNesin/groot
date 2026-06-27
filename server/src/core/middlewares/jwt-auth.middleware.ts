@@ -23,25 +23,3 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     next(error);
   }
 }
-
-export function optionalJwtAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-  try {
-    const token = extractAuthToken(req);
-
-    if (!token) {
-      next();
-      return;
-    }
-
-    const decoded = verifyToken(token);
-
-    req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-    };
-
-    next();
-  } catch {
-    next();
-  }
-}
