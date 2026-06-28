@@ -91,14 +91,12 @@ async function recordUsage(
 function getAvailableProviders(): string[] {
   const providers: string[] = [];
   if (env.OPENAI_API_KEY) providers.push("openai");
-  if (env.GEMINI_API_KEY) providers.push("google");
   return providers;
 }
 
 function getProviderModels(provider: string): string[] {
   const modelMap: Record<string, string[]> = {
     openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "o1", "o3-mini"],
-    google: ["gemini-2.0-flash", "gemini-2.5-pro"],
   };
   return modelMap[provider] ?? [];
 }
@@ -110,11 +108,6 @@ function getModelDisplayName(modelId: string): string {
     "gpt-4-turbo": "GPT-4 Turbo",
     o1: "o1",
     "o3-mini": "o3 Mini",
-    "claude-3-7-sonnet": "Claude 3.7 Sonnet",
-    "claude-sonnet-4-20250514": "Claude Sonnet 4",
-    "claude-3-5-haiku": "Claude 3.5 Haiku",
-    "gemini-2.0-flash": "Gemini 2.0 Flash",
-    "gemini-2.5-pro": "Gemini 2.5 Pro",
   };
   return nameMap[modelId] ?? modelId;
 }
@@ -128,10 +121,6 @@ function estimateCost(
   const costMap: Record<string, [number, number]> = {
     "gpt-4o-mini": [0.15, 0.6],
     "gpt-4o": [2.5, 10.0],
-    "claude-3-7-sonnet": [3.0, 15.0],
-    "claude-sonnet-4-20250514": [3.0, 15.0],
-    "claude-3-5-haiku": [0.8, 4.0],
-    "gemini-2.0-flash": [0.1, 0.4],
   };
 
   const [inputCost, outputCost] = costMap[model] ?? [0.5, 1.5];

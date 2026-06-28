@@ -33,7 +33,7 @@ export type { Static, TSchema } from "@mariozechner/pi-ai";
  * Configuration for creating an AI instance
  */
 export interface AIConfig {
-  /** Provider name (e.g., 'openai', 'anthropic', 'google') */
+  /** Provider name (e.g., 'openai') */
   provider: string;
   /** Model ID (e.g., 'gpt-4o-mini', 'claude-sonnet-4-20250514') */
   model: string;

@@ -135,7 +135,7 @@ await cache.set("user:123", userData);
 
 - `@mariozechner/pi-ai` integration
 - Zod schema conversion for structured output
-- Support for OpenAI, Anthropic, Google AI
+- Support for OpenAI
 
 ```typescript
 import { ai, schema } from "@/core/ai";
@@ -353,9 +353,8 @@ JOB_POLL_INTERVAL=2000
 SENTRY_DSN=https://...
 LOG_LEVEL=info
 
-# AI (at least one required)
+# AI (required for AI features)
 OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=...
 ```
 
 ---

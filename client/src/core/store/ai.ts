@@ -13,7 +13,6 @@ interface Message {
 // Default models for each provider
 const PROVIDER_DEFAULTS: Record<string, { model: string }> = {
   openai: { model: "gpt-4o-mini" },
-  google: { model: "gemini-2.0-flash" },
 };
 
 interface AIState {
