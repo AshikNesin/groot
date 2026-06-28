@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- `d9b038e` Rename admin auth header from `X-Admin-Auth` to `X-Admin-Auth-Key`
+
 ## 1.1.0
 
 ### Minor Changes
