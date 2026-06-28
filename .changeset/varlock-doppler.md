@@ -1,5 +1,5 @@
 ---
-"groot": major
+"groot": minor
 ---
 
 feat(env): upgrade varlock to 1.9.0, switch secrets plugin from Infisical to Doppler, and wire it into .env.schema
