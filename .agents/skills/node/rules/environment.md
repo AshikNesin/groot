@@ -7,9 +7,9 @@ metadata:
 
 # Environment Configuration in Node.js
 
-## Project Approach: Varlock + Infisical
+## Project Approach: Varlock + Doppler
 
-This project uses [Varlock](https://varlock.dev) with the [Infisical](https://infisical.com) plugin for secrets management:
+This project uses [Varlock](https://varlock.dev) with the [Doppler](https://www.doppler.com/) plugin for secrets management:
 
 ### .env.schema File
 
@@ -20,8 +20,8 @@ The `.env.schema` file is the single source of truth for environment variables. 
 
 # @defaultRequired=infer @defaultSensitive=true
 # @generateTypes(lang=ts, path=env.d.ts)
-# @plugin(@varlock/infisical-plugin)
-# @initInfisical(projectId=$INFISICAL_PROJECT_ID, environment=$INFISICAL_ENVIRONMENT, ...)
+# @plugin(@varlock/doppler-plugin)
+# @initDoppler(project=my-project, config=dev, serviceToken=$DOPPLER_TOKEN)
 
 # @type=enum(development, production, test)
 # @required @public
@@ -79,13 +79,13 @@ import "varlock/auto-load";
 ### Local Development
 
 1. Install Varlock CLI
-2. Run `pnpm dev` - varlock loads `.env.schema` and injects secrets from Infisical
-3. Secrets are synced with Infisical cloud (or self-hosted)
+2. Run `pnpm dev` - varlock loads `.env.schema` and injects secrets from Doppler
+3. Secrets are synced with Doppler
 
 ### Production
 
-1. Set `INFISICAL_PROJECT_ID`, `INFISICAL_ENVIRONMENT`, `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`
-2. Varlock fetches secrets from Infisical at runtime
+1. Set `DOPPLER_TOKEN` (a Doppler service token) via your hosting platform's env var management
+2. Varlock fetches secrets from Doppler at runtime
 3. No `.env` files needed in production
 
 ---
@@ -308,6 +308,8 @@ Never commit secrets to version control. Use a secrets management service:
 - [HashiCorp Vault](https://www.vaultproject.io/)
 - [Doppler](https://www.doppler.com/)
 - [Infisical](https://infisical.com/)
+
+See the [Varlock Doppler plugin docs](https://varlock.dev/plugins/doppler/) for setup.
 
 **Container Orchestration:**
 
