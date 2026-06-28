@@ -44,7 +44,7 @@ Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/e
 | Variable         | Description                                           |
 | ---------------- | ----------------------------------------------------- |
 | `JWT_SECRET_KEY` | Secret key for signing JWT tokens (min 32 characters) |
-| `ADMIN_AUTH_KEY` | Key for admin-only routes (X-Admin-Auth header)       |
+| `ADMIN_AUTH_KEY` | Key for admin-only routes (X-Admin-Auth-Key header)   |
 
 ### Passkey (WebAuthn) Variables
 

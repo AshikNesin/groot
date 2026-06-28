@@ -219,7 +219,7 @@ await cacheKv.set("user:123", userData);
    - Validated by `jwtAuthMiddleware`
 
 3. **Admin Routes**
-   - Additional `X-Admin-Auth` header
+   - Additional `X-Admin-Auth-Key` header
    - Validated by `adminAuthMiddleware`
 
 ## Route Registration

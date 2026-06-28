@@ -119,11 +119,11 @@ curl -X POST https://groot.localhost/api/v1/public/files/share-uuid-here/verify-
 # Create a new user (requires admin auth key)
 curl -X POST https://groot.localhost/api/v1/auth/users \
   -H "Content-Type: application/json" \
-  -H "X-Admin-Auth: your-admin-key" \
+  -H "X-Admin-Auth-Key: your-admin-key" \
   -d '{"email":"newuser@example.com","password":"secure-password"}'
 
 # List all users (requires admin auth key)
-curl -H "X-Admin-Auth: your-admin-key" \
+curl -H "X-Admin-Auth-Key: your-admin-key" \
   https://groot.localhost/api/v1/auth/users
 
 # Login

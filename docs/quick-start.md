@@ -96,7 +96,7 @@ pnpm dev
 # Create a user (admin endpoint)
 curl -X POST https://groot.localhost/api/v1/auth/users \
   -H "Content-Type: application/json" \
-  -H "X-Admin-Auth: your-admin-key" \
+  -H "X-Admin-Auth-Key: your-admin-key" \
   -d '{"email":"test@example.com","password":"demo@example.com"}'
 
 # Login
