@@ -13,12 +13,7 @@ interface Message {
 // Default models for each provider
 const PROVIDER_DEFAULTS: Record<string, { model: string }> = {
   openai: { model: "gpt-4o-mini" },
-  anthropic: { model: "claude-3-7-sonnet" },
   google: { model: "gemini-2.0-flash" },
-  mistral: { model: "mistral-large-latest" },
-  groq: { model: "llama-3.3-70b-versatile" },
-  xai: { model: "grok-2-1212" },
-  openrouter: { model: "anthropic/claude-sonnet-4" },
 };
 
 interface AIState {
@@ -52,8 +47,8 @@ interface AIState {
 export const useAIStore = create<AIState>((set, get) => ({
   // Initial state
   messages: [],
-  currentModel: "claude-3-7-sonnet",
-  currentProvider: "anthropic",
+  currentModel: "gpt-4o-mini",
+  currentProvider: "openai",
   systemPrompt: null,
   isLoading: false,
   error: null,

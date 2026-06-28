@@ -13,7 +13,7 @@ The core adapter is located in `server/src/core/ai/`. It provides an `AI` class 
 - **Unified API**: Switch providers and models without changing your application code.
 - **Streaming Support**: Stream responses chunk-by-chunk for better UX.
 - **Structured Output**: Extract typed, structured data from LLMs easily using Zod schemas. The adapter automatically handles converting the Zod schema to a tool definition and validating the response.
-- **Native Env Vars**: API keys are read automatically from environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). No extra configuration needed.
+- **Native Env Vars**: API keys are read automatically from environment variables (e.g., `OPENAI_API_KEY`, `GEMINI_API_KEY`). No extra configuration needed.
 - **Escape Hatch**: Full access to the underlying `pi-ai` primitives when you need advanced control.
 
 ## Basic Usage
@@ -135,12 +135,7 @@ Check `server/src/controllers/ai.controller.ts` and `server/src/services/ai.serv
 The adapter automatically picks up API keys from your environment using standard naming conventions:
 
 - `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
 - `GEMINI_API_KEY`
-- `MISTRAL_API_KEY`
-- `GROQ_API_KEY`
-- `XAI_API_KEY`
-- `OPENROUTER_API_KEY`
 
 You can also pass an `apiKey` explicitly when instantiating the `AI` class, which overrides the environment variable.
 

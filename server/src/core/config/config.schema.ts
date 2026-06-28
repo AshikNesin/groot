@@ -48,8 +48,8 @@ export const configSchema = z.object({
     .default({}),
   ai: z
     .object({
-      defaultProvider: z.string().default("anthropic"),
-      defaultModel: z.string().default("claude-sonnet-4-6"),
+      defaultProvider: z.string().default("openai"),
+      defaultModel: z.string().default("gpt-4o-mini"),
       enableStreaming: bool.default(true),
       trackUsage: bool.default(true),
     })

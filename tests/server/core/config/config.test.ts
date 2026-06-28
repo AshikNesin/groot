@@ -19,7 +19,7 @@ describe("configSchema", () => {
       app: { name: "Custom", isProduction: true },
       cors: { origins: ["https://example.com"] },
       jobs: { enabled: false, concurrency: 10 },
-      ai: { defaultProvider: "anthropic", defaultModel: "claude-3" },
+      ai: { defaultProvider: "openai", defaultModel: "gpt-4o-mini" },
       logging: { level: "warn", format: "text" },
       features: { enableNotifications: true },
     });

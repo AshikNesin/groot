@@ -91,24 +91,14 @@ async function recordUsage(
 function getAvailableProviders(): string[] {
   const providers: string[] = [];
   if (env.OPENAI_API_KEY) providers.push("openai");
-  if (env.ANTHROPIC_API_KEY) providers.push("anthropic");
   if (env.GEMINI_API_KEY) providers.push("google");
-  if (env.MISTRAL_API_KEY) providers.push("mistral");
-  if (env.GROQ_API_KEY) providers.push("groq");
-  if (env.XAI_API_KEY) providers.push("xai");
-  if (env.OPENROUTER_API_KEY) providers.push("openrouter");
   return providers;
 }
 
 function getProviderModels(provider: string): string[] {
   const modelMap: Record<string, string[]> = {
     openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "o1", "o3-mini"],
-    anthropic: ["claude-3-7-sonnet", "claude-sonnet-4-20250514", "claude-3-5-haiku"],
     google: ["gemini-2.0-flash", "gemini-2.5-pro"],
-    mistral: ["mistral-large-latest", "codestral-latest"],
-    groq: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"],
-    xai: ["grok-2-1212"],
-    openrouter: ["anthropic/claude-sonnet-4"],
   };
   return modelMap[provider] ?? [];
 }
