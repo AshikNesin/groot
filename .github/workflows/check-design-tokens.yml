@@ -51,13 +51,21 @@ jobs:
           cache: "pnpm"
 
       # --ignore-scripts: skip the secret-gated postinstall (varlock/prisma).
-      # The token check needs no project runtime — only rg (preinstalled on
-      # ubuntu-latest) + tsx, which install as normal deps.
+      # The token check needs no project runtime — only rg (installed below,
+      # since recent ubuntu-latest images no longer ship it) + tsx, which
+      # install as normal deps.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Verify ripgrep available
-        run: command -v rg || { echo "ripgrep not found on runner"; exit 1; }
+      - name: Ensure ripgrep available
+        # scripts/check-design-tokens.ts spawns rg at runtime. Older ubuntu-latest
+        # images preinstalled ripgrep; current ones don't, so install on demand.
+        run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ripgrep
+          fi
+          rg --version | head -n 1
 
       - name: Check design tokens
         run: pnpm check:tokens
