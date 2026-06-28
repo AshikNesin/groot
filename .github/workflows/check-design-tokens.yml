@@ -39,9 +39,10 @@ jobs:
           persist-credentials: false
 
       - name: Setup pnpm
+        # Let pnpm/action-setup read the version from package.json's
+        # `packageManager` field (pnpm@10.32.1). Pinning a different version
+        # here causes "Multiple versions of pnpm specified".
         uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
-        with:
-          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
