@@ -65,27 +65,29 @@ Groot uses [changesets](https://github.com/changesets/changesets) for automated 
 
 | Category            | Paths                                                                                                 |
 | ------------------- | ----------------------------------------------------------------------------------------------------- |
-| UI Components       | `client/src/components/ui/**`, `client/src/components/layout/**`                                      |
-| Client Lib          | `client/src/lib/utils.ts`, `client/src/lib/design-tokens.ts`                                          |
-| Client Hooks        | `client/src/hooks/use-toast.ts`                                                                       |
+| UI Components       | `client/src/ui/**` (design system primitives)                                                         |
+| Client Core         | `client/src/core/**` (layouts, api client, stores, hooks, lib, types, services)                       |
 | Client Styles       | `client/src/index.css`                                                                                |
 | Server Core         | `server/src/core/**` (drop-in infra: errors, middlewares, utils, logger, job, kv, storage, ai, types) |
 | Server Shared       | `server/src/shared/**` (reusable features: auth, passkey, storage, ai, jobs, settings, notification)  |
 | Server Test Helpers | `server/src/test-helpers.ts`                                                                          |
-| Infrastructure      | `*.config.*`, `tsconfig.json`, `.github/workflows/**`                                                 |
+| Tests (mirrors)     | `tests/server/{core,shared}/**`, `tests/{server,client}/setup.ts`, `tests/client/components/ui/**`    |
+| Infrastructure      | `*.config.*`, `tsconfig.json`, `.github/workflows/**`, `scripts/**`                                   |
+| Agent Skills        | `.agents/skills/**` (groot-sync, node, grill-me, improve-codebase-architecture)                       |
 | Documentation       | `docs/**`                                                                                             |
 | Env Template        | `.env.schema`                                                                                         |
 
 ### Never Sync (App-Specific)
 
-| Category           | Paths                                              |
-| ------------------ | -------------------------------------------------- |
-| App Features       | `server/src/app/**` (project-specific: todo, etc.) |
-| Route Registration | `server/src/routes.ts`                             |
-| App Entry          | `server/src/index.ts`                              |
-| Pages              | `client/src/pages/**`                              |
-| State              | `client/src/store/**`                              |
-| Client Services    | `client/src/services/**`                           |
+| Category            | Paths                                                           |
+| ------------------- | --------------------------------------------------------------- |
+| App Features        | `server/src/app/**` (project-specific: todo, etc.)              |
+| Route Registration  | `server/src/routes.ts`                                          |
+| App Entry           | `server/src/index.ts`                                           |
+| Client App Layer    | `client/src/app/**` (project features)                          |
+| Project-Local Tests | `tests/server/app/**`, `tests/server/routes/**`, `tests/e2e/**` |
+| Project Docs        | `README.md`                                                     |
+| Lockfile            | `pnpm-lock.yaml`                                                |
 
 ### Immutable Exclusions (Security - Cannot Override)
 

@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.3.1
+
+### Patch Changes
+
+- Fix boilerplate sync patterns to match the actual ui/core/app frontend layering.
+
+  The sync tool (`pnpm groot:sync`) and its docs referenced layout paths from
+  before the frontend was split into `ui/`, `core/`, and `app/` layers. As a
+  result, legitimate boilerplate files fell through to the default-skip branch
+  and were never synced into child repos:
+  - `client/src/core/**` (layouts, stores, hooks, lib, types, services) was
+    unmatched — e.g. `client/src/core/store/ai.ts` was wrongly skipped. The dead
+    patterns (`client/src/components/ui/**`, `client/src/lib/**`,
+    `client/src/hooks/**`, `client/src/store/**`, `client/src/pages/**`,
+    `client/src/services/**`) are removed and replaced with the real
+    `client/src/ui/**` + `client/src/core/**` sync patterns and
+    `client/src/app/**` skip pattern.
+  - `tests/**` had no coverage, so boilerplate-mirrored tests
+    (`tests/server/{core,shared}/**`, `tests/{server,client}/setup.ts`,
+    `tests/client/components/ui/**`) were skipped. Added; project-local tests
+    (`tests/server/app/**`, `tests/server/routes/**`, `tests/e2e/**`) are now
+    explicitly skipped.
+  - Only `.agents/skills/groot-sync/**` synced, so the `node`,
+    `grill-me`, and `improve-codebase-architecture` skills were skipped. Broadened
+    to `.agents/skills/**`.
+
+  Docs (`.agents/skills/groot-sync/SKILL.md`, `docs/sync-guide.md`) updated to
+  match. Verified via `pnpm groot:check`: all previously-skipped core/skill/test
+  files now resolve to autoApply or needsReview as expected.
+
 ## 1.3.0
 
 ### Minor Changes

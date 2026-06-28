@@ -75,13 +75,13 @@ const IMMUTABLE_EXCLUSIONS: readonly string[] = [
 // ============================================================
 
 const SYNC_PATTERNS: readonly string[] = [
-  // UI Components
-  "client/src/components/ui/**",
-  "client/src/components/layout/**",
-  "client/src/lib/utils.ts",
-  "client/src/lib/design-tokens.ts",
-  "client/src/hooks/use-toast.ts",
+  // UI Components (design system primitives). See AGENTS.md "Frontend Layering".
+  "client/src/ui/**",
   "client/src/index.css",
+
+  // Client Core (boilerplate infrastructure: layouts, api client, stores,
+  // hooks, lib, types, services). Mirrors server/src/core on the client.
+  "client/src/core/**",
 
   // Server Core (drop-in infrastructure)
   "server/src/core/**",
@@ -89,6 +89,14 @@ const SYNC_PATTERNS: readonly string[] = [
 
   // Server Shared (reusable features: auth, storage, etc.)
   "server/src/shared/**",
+
+  // Tests mirroring synced source (core/shared infra + ui primitives +
+  // shared test setup). App-specific and e2e tests stay project-local.
+  "tests/server/core/**",
+  "tests/server/shared/**",
+  "tests/server/setup.ts",
+  "tests/client/setup.ts",
+  "tests/client/components/ui/**",
 
   // Infrastructure
   "*.config.*",
@@ -103,7 +111,11 @@ const SYNC_PATTERNS: readonly string[] = [
   // docs (feature-request.md, repo-drift.md) are guarded by
   // IMMUTABLE_EXCLUSIONS so only the tool's _code_ syncs.
   ".groot/**",
-  ".agents/skills/groot-sync/**",
+
+  // Agent skills shipped with the boilerplate (groot-sync, node, grill-me,
+  // improve-codebase-architecture). Child repos can opt out of specific
+  // skills via additional_exclusions if they keep their own.
+  ".agents/skills/**",
 
   // Documentation
   "docs/**",
@@ -122,13 +134,17 @@ const SKIP_PATTERNS: readonly string[] = [
   "server/src/routes.ts",
   "server/src/index.ts",
 
-  // App-specific client code (never sync)
-  "client/src/pages/**",
-  "client/src/store/**",
-  "client/src/services/**",
-  "client/src/components/*.tsx",
+  // App-specific client code (never sync). The frontend app/ layer holds
+  // project features; ui/ and core/ are synced (see SYNC_PATTERNS).
+  "client/src/app/**",
 
-  // Other
+  // Project-local tests (app routes, end-to-end). Core/shared/ui tests are
+  // synced; these stay project-specific.
+  "tests/server/app/**",
+  "tests/server/routes/**",
+  "tests/e2e/**",
+
+  // Other (project-owned docs and lockfile)
   "README.md",
   "pnpm-lock.yaml",
 ] as const;

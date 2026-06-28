@@ -125,7 +125,7 @@ If your project has customized a synced component and you don't want it overwrit
 
 ```json
 {
-  "additional_exclusions": ["client/src/components/ui/button.tsx", "server/src/core/logger/**"]
+  "additional_exclusions": ["client/src/ui/button.tsx", "server/src/core/logger/**"]
 }
 ```
 
@@ -182,11 +182,11 @@ Only files matching the sync patterns can be upstreamed:
 
 - `server/src/core/**` — infrastructure fixes
 - `server/src/shared/**` — shared feature fixes
-- `client/src/components/ui/**` — UI component fixes
-- `client/src/components/layout/**` — layout fixes
+- `client/src/ui/**` — UI component fixes
+- `client/src/core/**` — client infrastructure fixes (layouts, api client, stores, hooks)
 - Config files, scripts, docs
 
-App-specific code (`server/src/app/**`, `client/src/pages/**`, etc.) is never eligible.
+App-specific code (`server/src/app/**`, `client/src/app/**`, etc.) is never eligible.
 
 ---
 
