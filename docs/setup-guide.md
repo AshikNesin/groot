@@ -86,7 +86,7 @@ Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/e
 
 ```bash
 pnpm install
-pnpm prisma:push          # sync schema to your database
+pnpm db:migrate          # apply baseline + pending migrations
 pnpm dev                  # runs server + Vite dev middleware
 ```
 
@@ -113,7 +113,7 @@ In production mode the server:
 ## Database & Prisma
 
 - Prisma client is generated automatically via `pnpm install` (`postinstall` runs `prisma generate`).
-- To re-sync schema changes: `pnpm prisma:push`.
+- To re-sync schema changes: `pnpm db:migrate:create` (then `pnpm prisma migrate dev` to apply locally).
 - The Prisma client emitted into `server/src/generated/prisma` feeds both HTTP handlers and job processors.
 
 ## Background Job Queue

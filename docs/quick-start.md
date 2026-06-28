@@ -66,8 +66,8 @@ pnpm install
 # Generate Prisma client
 pnpm prisma generate
 
-# Push database schema
-pnpm prisma:push
+# Apply database migrations
+pnpm db:migrate
 ```
 
 ### 3. Install Portless (One-Time)
@@ -285,7 +285,7 @@ pnpm dev:docker       # Start with Docker PostgreSQL
 
 # Database
 pnpm prisma generate  # Generate Prisma client
-pnpm prisma:push      # Push schema to database
+pnpm db:migrate        # Apply pending migrations (migrate deploy)
 
 # Build
 pnpm build            # Build for production

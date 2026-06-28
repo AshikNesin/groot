@@ -103,7 +103,7 @@ pnpm test             # Vitest unit tests
 pnpm test:e2e         # Playwright E2E tests
 pnpm check            # Lint + format (Vite+)
 pnpm prisma generate  # Generate Prisma client
-pnpm prisma:push      # Push schema to database
+pnpm db:migrate        # Apply pending migrations (migrate deploy)
 pnpm groot:check      # Dry-run boilerplate sync
 pnpm groot:sync       # Apply safe boilerplate changes
 ```
@@ -115,6 +115,7 @@ pnpm groot:sync       # Apply safe boilerplate changes
 - **Frontend data hooks**: use `apiClient` from `@/core/lib/api` (not raw axios).
 - **Routes**: `createRouter()`; **controllers**: simple async fns.
 - **Errors**: `Boom` factory methods from `@/core/errors`.
+- **Database migrations**: never use `prisma db push` for schema changes. Use `pnpm db:migrate:create` to generate a migration, then `pnpm prisma migrate dev` to apply locally; deploys auto-run `pnpm db:migrate` (migrate deploy) via the `prestart` hook. `db push` writes nothing to `prisma/migrations/` and silently drifts dev from prod.
 - **Validation**: Zod via `validate(schema, "body"|"params"|"query")`; read `req.validated.*`.
 - **Exports**: prefer named exports (use `* as` for controllers).
 - **Async**: always async/await, never raw Promises.

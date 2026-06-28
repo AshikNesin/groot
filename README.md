@@ -19,7 +19,7 @@ No framework churn. No over-abstraction. Just Express + React + Postgres — wir
 cp .env.schema .env         # configure secrets
 pnpm install
 pnpm prisma generate
-pnpm prisma db push
+pnpm db:migrate        # apply baseline + pending migrations
 pnpm dev                    # https://<appname>.localhost via portless
 ```
 

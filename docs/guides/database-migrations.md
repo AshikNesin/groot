@@ -107,7 +107,7 @@ This tells Prisma that the baseline migration has already been applied (since th
 - Edit applied migrations
 - Delete migration files
 - Skip reviewing generated SQL
-- Use `prisma db push` in production
+- Use `prisma db push` for schema changes (it bypasses migration history and drifts dev from prod)
 
 ## Troubleshooting
 

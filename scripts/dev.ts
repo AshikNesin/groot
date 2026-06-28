@@ -65,20 +65,16 @@ async function main() {
   console.log(`   Connection: ${connectionString}`);
   console.log();
 
-  // Push schema to the local DB
-  console.log("📦 Pushing Prisma schema...\n");
+  // Apply migrations to the local DB (no db push — that bypasses migration history)
+  console.log("📦 Applying Prisma migrations...\n");
   await new Promise<void>((resolvePromise, reject) => {
-    const push = spawn(
-      "pnpm",
-      ["exec", "varlock", "run", "--", "prisma", "db", "push", "--accept-data-loss"],
-      {
-        stdio: "inherit",
-        env: { ...process.env, DATABASE_URL: connectionString },
-      },
-    );
+    const push = spawn("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], {
+      stdio: "inherit",
+      env: { ...process.env, DATABASE_URL: connectionString },
+    });
     push.on("close", (code) => {
       if (code === 0) resolvePromise();
-      else reject(new Error(`prisma db push exited with code ${code}`));
+      else reject(new Error(`prisma migrate deploy exited with code ${code}`));
     });
     push.on("error", reject);
   });

@@ -17,7 +17,7 @@ Prisma helpers:
 
 ```bash
 pnpm prisma generate  # Explicit regeneration (also runs on postinstall)
-pnpm prisma:push      # Apply schema changes to the connected database
+pnpm db:migrate        # Apply pending migrations (migrate deploy)
 ```
 
 ## Coding Conventions

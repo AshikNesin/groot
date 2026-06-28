@@ -75,7 +75,7 @@ npx prisma migrate dev --name add_passkey_model
 Or push the schema to your database:
 
 ```bash
-npx prisma db push
+npx prisma migrate deploy
 ```
 
 ## Usage
