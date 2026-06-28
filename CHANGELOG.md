@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- `8483133` feat(env): upgrade varlock to 1.9.0, switch secrets plugin from Infisical to Doppler, and wire it into .env.schema
+
+### Patch Changes
+
+- `daa8ec6` refactor(ai): remove Gemini provider, leaving OpenAI as the sole built-in AI provider
+- `f001b66` refactor(ai): trim built-in AI providers to OpenAI and Google (Gemini)
+
 ## 1.2.0
 
 ### Minor Changes
