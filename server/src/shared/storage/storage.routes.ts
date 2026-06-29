@@ -9,8 +9,6 @@ import {
   getFileMetadataSchema,
   createFolderSchema,
   renameFileSchema,
-  createPublicShareSchema,
-  listSharesForFileSchema,
 } from "@/shared/storage/storage.validation";
 import { storageRateLimiter, uploadRateLimiter } from "@/core/middlewares/rate-limit.middleware";
 
@@ -56,11 +54,5 @@ router.post("/folders", validateBody(createFolderSchema), storageController.crea
 router.delete("/folders/:folderPath", storageController.deleteFolder);
 
 router.put("/files/rename", validateBody(renameFileSchema), storageController.renameFile);
-
-router.post("/shares", validateBody(createPublicShareSchema), storageController.createPublicShare);
-
-router.get("/shares", validateQuery(listSharesForFileSchema), storageController.listSharesForFile);
-
-router.delete("/shares/:shareId", storageController.revokeShare);
 
 export default router;

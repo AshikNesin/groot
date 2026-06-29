@@ -361,16 +361,14 @@ OPENAI_API_KEY=sk-...
 
 ## API Endpoints
 
-| Prefix                 | Purpose                   | Auth  |
-| ---------------------- | ------------------------- | ----- |
-| `/api/v1/auth`         | Login, logout, users      | Mixed |
-| `/api/v1/passkey`      | Passkey registration/auth | Mixed |
-| `/api/v1/todos`        | CRUD operations           | JWT   |
-| `/api/v1/jobs`         | Background job management | JWT   |
-| `/api/v1/storage`      | File operations           | JWT   |
-| `/api/v1/settings`     | App settings              | JWT   |
-| `/api/v1/ai`           | AI inference              | JWT   |
-| `/api/v1/public/files` | Public file sharing       | None  |
+| Prefix             | Purpose                   | Auth  |
+| ------------------ | ------------------------- | ----- |
+| `/api/v1/auth`     | Login, logout, users      | Mixed |
+| `/api/v1/passkey`  | Passkey registration/auth | Mixed |
+| `/api/v1/todos`    | CRUD operations           | JWT   |
+| `/api/v1/jobs`     | Background job management | JWT   |
+| `/api/v1/storage`  | File operations           | JWT   |
+| `/api/v1/settings` | App settings              | JWT   |
 
 ---
 

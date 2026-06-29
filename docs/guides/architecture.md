@@ -228,8 +228,7 @@ Centralized in `routes.ts`:
 
 ```typescript
 export function registerRoutes(app: Express): void {
-  // Public routes
-  app.use("/api/v1/public/files", publicFileRoutes);
+  // Public auth routes
   app.use("/api/v1/auth", authRoutes);
   app.use("/api/v1/passkey", passkeyRoutes);
 

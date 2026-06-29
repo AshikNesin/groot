@@ -12,6 +12,17 @@ export const registerJobHandler = <T>(name: string, handler: JobHandler<T>): voi
   logger.debug({ jobName: name }, "Job handler registered");
 };
 
+/**
+ * Start workers for every registered handler.
+ *
+ * CONTRACT: handlers must be registered first via `registerJobHandler()`
+ * (typically through a `registerJobHandlers()` call in `routes.ts`, invoked
+ * from `index.ts` before `startWorkers()`). With zero handlers this logs an
+ * error and returns without starting workers — intended only for enqueue-
+ * only processes (e.g. a web dyno whose workers run elsewhere). If this
+ * process is supposed to process jobs, an empty registry is a bug: you
+ * forgot to register handlers.
+ */
 export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   if (workersStarted) {
     logger.warn("Job workers already running");
@@ -21,8 +32,15 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
 
   if (jobHandlers.size === 0) {
-    logger.warn("No job handlers registered. Job queue running without workers.");
-    workersStarted = true;
+    // Enqueue-only processes legitimately register no handlers, so this is
+    // not a hard error — but it is almost always a misconfiguration, so log
+    // it loudly and do NOT claim workers are running.
+    logger.error(
+      "No job handlers registered — workers NOT started. Jobs will enqueue " +
+        "but never process. If this process should run workers, you forgot to " +
+        "call registerJobHandlers() (see docs/features/jobs.md) before " +
+        "startWorkers(). Safe to ignore only for enqueue-only processes.",
+    );
     return;
   }
 

@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from "react";
-import dayjs from "dayjs";
 import {
   ChevronRight,
   Download,
@@ -8,10 +7,8 @@ import {
   FolderPlus,
   Home,
   RefreshCw,
-  Share2,
   Trash2,
   Upload,
-  Link as LinkIcon,
   Edit3,
 } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
@@ -27,17 +24,13 @@ import {
 } from "@/ui/dialog";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
-import type { PublicShare } from "@/app/storage/hooks/useStorage";
 import {
   useBulkUpload,
   useCreateFolder,
-  useCreateShare,
   useDeleteFiles,
   useDeleteFolder,
   useRenameFile,
-  useRevokeShare,
   useStorageFiles,
-  useStorageShares,
   useUploadFile,
 } from "@/app/storage/hooks/useStorage";
 import { useToast } from "@/core/hooks/use-toast";
@@ -54,15 +47,6 @@ export function Storage() {
     name: string;
   } | null>(null);
   const [renameValue, setRenameValue] = useState("");
-  const [shareTarget, setShareTarget] = useState<{
-    key: string;
-    name: string;
-  } | null>(null);
-  const [shareForm, setShareForm] = useState({
-    expiresInHours: 24,
-    maxAccessCount: "",
-    password: "",
-  });
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkInputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
@@ -74,11 +58,6 @@ export function Storage() {
   const deleteFolder = useDeleteFolder();
   const createFolder = useCreateFolder();
   const renameFile = useRenameFile();
-  const createShare = useCreateShare();
-  const revokeShare = useRevokeShare();
-  const { data: shares = [], isFetching: sharesLoading } = useStorageShares(
-    shareTarget?.key ?? null,
-  );
 
   const breadcrumbs = useMemo(() => {
     if (!currentPath) return [];
@@ -292,65 +271,6 @@ export function Storage() {
       toast({
         title: "Rename failed",
         description: "Unable to rename file",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleShareSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!shareTarget) return;
-    try {
-      await createShare.mutateAsync({
-        filePath: shareTarget.key,
-        expiresInHours: shareForm.expiresInHours,
-        maxAccessCount: shareForm.maxAccessCount ? Number(shareForm.maxAccessCount) : undefined,
-        password: shareForm.password || undefined,
-      });
-      toast({ title: "Share created", description: "Public link ready" });
-      setShareForm({ expiresInHours: 24, maxAccessCount: "", password: "" });
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Share failed",
-        description: "Unable to create share",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const copyShareLink = (share: PublicShare) => {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const url = `${origin}/api/v1/public/files/${share.shareId}`;
-    void navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        toast({
-          title: "Copied",
-          description: "Share link copied to clipboard",
-        });
-      })
-      .catch(() => {
-        toast({
-          title: "Copy failed",
-          description: url,
-          variant: "destructive",
-        });
-      });
-  };
-
-  const handleRevokeShare = async (share: PublicShare) => {
-    try {
-      await revokeShare.mutateAsync({
-        shareId: share.shareId,
-        filePath: share.filePath,
-      });
-      toast({ title: "Share revoked" });
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Failed to revoke",
-        description: "Please try again",
         variant: "destructive",
       });
     }
@@ -624,18 +544,6 @@ export function Storage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() =>
-                                setShareTarget({
-                                  key: file.key,
-                                  name: file.name,
-                                })
-                              }
-                            >
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
                               onClick={() => handleDeleteFile(file.key)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -724,130 +632,6 @@ export function Storage() {
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Share Dialog */}
-      <Dialog open={Boolean(shareTarget)} onOpenChange={(open) => !open && setShareTarget(null)}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Share {shareTarget?.name}</DialogTitle>
-            <DialogDescription>Generate a time-limited public link</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <form className="space-y-4" onSubmit={handleShareSubmit}>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="expires">Expires in (hours)</Label>
-                  <Input
-                    id="expires"
-                    type="number"
-                    min={1}
-                    max={168}
-                    value={shareForm.expiresInHours}
-                    onChange={(event) =>
-                      setShareForm((prev) => ({
-                        ...prev,
-                        expiresInHours: Number(event.target.value),
-                      }))
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="max-access">Max accesses (optional)</Label>
-                  <Input
-                    id="max-access"
-                    type="number"
-                    min={1}
-                    value={shareForm.maxAccessCount}
-                    onChange={(event) =>
-                      setShareForm((prev) => ({
-                        ...prev,
-                        maxAccessCount: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password (optional)</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={shareForm.password}
-                  placeholder="Enter password (4-50 characters)"
-                  minLength={4}
-                  maxLength={50}
-                  onChange={(event) =>
-                    setShareForm((prev) => ({
-                      ...prev,
-                      password: event.target.value,
-                    }))
-                  }
-                />
-                <p className="text-xs text-muted-foreground">
-                  Users will need this password to access the file
-                </p>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShareTarget(null)}>
-                  Close
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    createShare.isPending ||
-                    (shareForm.password.length > 0 && shareForm.password.length < 4)
-                  }
-                >
-                  {createShare.isPending ? "Creating..." : "Create Link"}
-                </Button>
-              </DialogFooter>
-            </form>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Existing shares</h3>
-              {sharesLoading ? (
-                <p className="text-sm text-muted-foreground">Loading shares...</p>
-              ) : shares.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No shares yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {shares.map((share) => (
-                    <div
-                      key={share.shareId}
-                      className="flex flex-col gap-2 rounded-md border p-3 text-sm md:flex-row md:items-center md:justify-between"
-                    >
-                      <div>
-                        <p className="font-medium">{share.shareId}</p>
-                        <p className="text-muted-foreground">
-                          Expires {dayjs(share.expiresAt).format("LLL")} · Accesses{" "}
-                          {share.accessCount}
-                        </p>
-                        {share.isPasswordProtected && (
-                          <p className="text-muted-foreground">Password protected</p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => copyShareLink(share)}>
-                          <LinkIcon className="mr-2 h-4 w-4" /> Copy link
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive"
-                          onClick={() => handleRevokeShare(share)}
-                        >
-                          Revoke
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

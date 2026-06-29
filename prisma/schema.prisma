@@ -32,8 +32,6 @@ model User {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   passkeys       Passkey[]
-  aiUsage        AIUsage[]
-  aiConversations AIConversation[]
 
   @@map("users")
 }
@@ -57,27 +55,6 @@ model Passkey {
   @@map("passkeys")
 }
 
-model PublicFileShare {
-  id             Int      @id @default(autoincrement())
-  shareId        String   @unique @db.VarChar
-  bucketName     String   @db.VarChar
-  filePath       String   @db.VarChar
-  fileName       String   @db.VarChar
-  contentType    String?  @db.VarChar
-  fileSize       Int?
-  expiresAt      DateTime @db.Timestamptz(6)
-  accessCount    Int      @default(0)
-  maxAccessCount Int?
-  passwordHash   String?  @db.VarChar
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  isDeleted      Boolean  @default(false)
-
-  @@index([shareId], map: "public_file_share_share_id")
-  @@index([expiresAt], map: "public_file_share_expires_at")
-  @@index([bucketName], map: "public_file_share_bucket_name")
-  @@map("public_file_shares")
-}
 
 // Note: The keyv table is managed by @keyv/postgres package
 // The @@ignore attribute tells Prisma not to manage this table
@@ -104,42 +81,4 @@ model JobLog {
   @@map("job_logs")
 }
 
-// AI usage tracking
-model AIUsage {
-  id           Int      @id @default(autoincrement())
-  userId       Int?
-  provider     String   @db.VarChar
-  model        String   @db.VarChar
-  inputTokens  Int
-  outputTokens Int
-  totalCost    Decimal  @db.Decimal(10, 6)
-  stopReason   String   @db.VarChar
-  requestId    String   @unique @db.VarChar
-  createdAt    DateTime @default(now()) @db.Timestamptz(6)
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([provider, model])
-  @@index([createdAt])
-  @@map("ai_usage")
-}
-
-// Conversation persistence
-model AIConversation {
-  id           Int      @id @default(autoincrement())
-  userId       Int?
-  title        String?  @db.VarChar
-  context      Json
-  lastModel    String   @db.VarChar
-  messageCount Int      @default(0)
-  createdAt    DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([updatedAt])
-  @@map("ai_conversations")
-}
 

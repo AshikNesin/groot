@@ -11,7 +11,6 @@ export type { Config } from "@/core/config/config.schema";
  * @example
  * import { config } from "@/core/config";
  * config.app.name           // "Groot"
- * config.ai.defaultProvider // "openai"
- * config.features.enableNotifications // false
+ * config.logging.level      // "info"
  */
 export const config = loadConfig();

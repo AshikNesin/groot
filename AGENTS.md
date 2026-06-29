@@ -50,7 +50,7 @@ sync from via `pnpm groot:sync`.
 ```
 server/src/
 ├── app/        # App-specific feature modules (e.g. todo/) — NOT synced
-├── shared/     # Reusable features: auth, passkey, jobs, storage, settings, ai
+├── shared/     # Reusable features: auth, passkey, jobs, storage, settings
 ├── core/       # Core infrastructure: ai, errors, job, kv, logger, middlewares, storage, utils
 ├── routes.ts   # Central route registration
 └── index.ts    # Server entry point

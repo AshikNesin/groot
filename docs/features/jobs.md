@@ -44,6 +44,10 @@ export function registerJobHandlers(): void {
 }
 ```
 
+`registerJobHandlers()` **must** be called from `index.ts` before
+`startWorkers()`. `startWorkers()` with zero handlers logs an error and
+starts no workers — intended only for enqueue-only processes.
+
 ## Available Jobs
 
 | Job            | Handler                | Description                                                  |

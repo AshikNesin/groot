@@ -23,9 +23,6 @@ export const ErrorCode = {
   // ── Rate limiting ─────────────────────────────────────────────────────
   RATE_LIMIT_EXCEEDED: { code: "RATE_LIMIT_EXCEEDED", status: 429 },
   UPLOAD_RATE_LIMIT_EXCEEDED: { code: "UPLOAD_RATE_LIMIT_EXCEEDED", status: 429 },
-  PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED: { code: "PUBLIC_DOWNLOAD_RATE_LIMIT_EXCEEDED", status: 429 },
-  AI_RATE_LIMIT_EXCEEDED: { code: "AI_RATE_LIMIT_EXCEEDED", status: 429 },
-  AI_STREAM_RATE_LIMIT_EXCEEDED: { code: "AI_STREAM_RATE_LIMIT_EXCEEDED", status: 429 },
 
   // ── Job domain ────────────────────────────────────────────────────────
   JOB_NOT_FOUND: { code: "JOB_NOT_FOUND", status: 404 },
@@ -33,9 +30,6 @@ export const ErrorCode = {
   JOB_VALIDATION_ERROR: { code: "JOB_VALIDATION_ERROR", status: 400 },
   JOB_SCHEDULE_VALIDATION_ERROR: { code: "JOB_SCHEDULE_VALIDATION_ERROR", status: 400 },
   JOB_BULK_RERUN_VALIDATION_ERROR: { code: "JOB_BULK_RERUN_VALIDATION_ERROR", status: 400 },
-
-  // ── Storage / Share domain ───────────────────────────────────────────
-  SHARE_ACCESS_DENIED: { code: "SHARE_ACCESS_DENIED", status: 403 },
 } satisfies Record<string, { code: string; status: number }>;
 
 export type ErrorCodeKey = keyof typeof ErrorCode;

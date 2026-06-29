@@ -112,23 +112,23 @@ const response = await complete(model, {
 });
 ```
 
-## Example Endpoint
+## Example Usage
 
-A working example endpoint is provided at `POST /api/v1/ai/chat`.
+The core adapter is a library — instantiate it wherever you need AI in your app code:
 
-**Request Structure:**
+```typescript
+import { AI } from "@/core/ai";
 
-```json
-{
-  "message": "Hello, AI",
-  "stream": false,
-  "provider": "openai",
-  "model": "gpt-5.4",
-  "systemPrompt": "You are a helpful assistant."
-}
+const ai = new AI({ provider: "openai", model: "gpt-4o-mini" });
+const text = await ai.complete({ prompt: "Translate 'hello world' to French." });
+// Returns: "Bonjour le monde"
 ```
 
-Check `server/src/controllers/ai.controller.ts` and `server/src/services/ai.service.ts` to see how it's implemented.
+> **Note:** The boilerplate ships only the core adapter (`server/src/core/ai/`).
+> Chat endpoints, usage tracking, and conversation persistence are app-level
+> concerns — build them in `server/src/app/<your-feature>/` using the adapter.
+
+Check `server/src/core/ai/client.ts` to see the full adapter API.
 
 ## Environment Variables
 

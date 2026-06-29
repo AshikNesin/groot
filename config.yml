@@ -31,12 +31,6 @@ default:
     deleteArchivedAfterSeconds: 2592000
     monitorStateIntervalSeconds: 60
 
-  ai:
-    defaultProvider: "anthropic"
-    defaultModel: "claude-sonnet-4-6"
-    enableStreaming: true
-    trackUsage: true
-
   logging:
     level: "info"
     format: "json"
@@ -49,9 +43,6 @@ default:
   sentry:
     # TODO: Update your sentry DNS
     dsn: "https://52e040a585453b926b90c3cff35506d3@o223853.ingest.us.sentry.io/4511466064773120"
-
-  features:
-    enableNotifications: false
 
 development:
   logging:

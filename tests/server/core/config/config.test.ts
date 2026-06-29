@@ -11,7 +11,6 @@ describe("configSchema", () => {
     expect(result.app.isProduction).toBe(false);
     expect(result.jobs.enabled).toBe(true);
     expect(result.logging.level).toBe("info");
-    expect(result.features.enableNotifications).toBe(false);
   });
 
   it("accepts valid full config", () => {
@@ -19,9 +18,7 @@ describe("configSchema", () => {
       app: { name: "Custom", isProduction: true },
       cors: { origins: ["https://example.com"] },
       jobs: { enabled: false, concurrency: 10 },
-      ai: { defaultProvider: "openai", defaultModel: "gpt-4o-mini" },
       logging: { level: "warn", format: "text" },
-      features: { enableNotifications: true },
     });
     expect(result.app.name).toBe("Custom");
     expect(result.jobs.concurrency).toBe(10);
@@ -38,10 +35,10 @@ describe("configSchema", () => {
   it("coerces string booleans via z.coerce", () => {
     const result = configSchema.parse({
       app: { isProduction: "true" },
-      features: { enableNotifications: "false" },
+      jobs: { enabled: "false" },
     });
     expect(result.app.isProduction).toBe(true);
-    expect(result.features.enableNotifications).toBe(false);
+    expect(result.jobs.enabled).toBe(false);
   });
 
   it("rejects invalid boolean strings", () => {

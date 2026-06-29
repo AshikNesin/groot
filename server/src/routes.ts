@@ -7,9 +7,7 @@ import passkeyRoutes from "@/shared/passkey/passkey.routes";
 import todoRoutes from "@/app/todo/todo.routes";
 import jobRoutes from "@/shared/jobs/job.routes";
 import storageRoutes from "@/shared/storage/storage.routes";
-import publicFileRoutes from "@/shared/storage/public-file.routes";
 import appSettingsRoutes from "@/shared/settings/app-settings.routes";
-import aiRoutes from "@/shared/ai/ai.routes";
 
 // Feature job registrations
 import { registerTodoJobs } from "@/app/todo/todo.jobs";
@@ -24,9 +22,6 @@ export function registerJobHandlers(): void {
 }
 
 export function registerRoutes(app: Express): void {
-  // Public routes (no auth)
-  app.use("/api/v1/public/files", publicFileRoutes);
-
   // Public auth routes (no auth required)
   app.use("/api/v1/auth", authRoutes);
   app.use("/api/v1/passkey", passkeyRoutes);
@@ -37,7 +32,6 @@ export function registerRoutes(app: Express): void {
   protectedRouter.use("/jobs", jobRoutes);
   protectedRouter.use("/storage", storageRoutes);
   protectedRouter.use("/settings", appSettingsRoutes);
-  protectedRouter.use("/ai", aiRoutes);
 
   app.use("/api/v1", jwtAuthMiddleware, protectedRouter);
 }

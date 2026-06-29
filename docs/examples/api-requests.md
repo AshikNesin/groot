@@ -85,32 +85,6 @@ curl -u user:pass -X PUT https://groot.localhost/api/v1/storage/files/rename \
 curl -u user:pass -X DELETE https://groot.localhost/api/v1/storage/files \
   -H "Content-Type: application/json" \
   -d '{"filePaths":["docs/document.pdf"]}'
-
-# Create a public share link
-curl -u user:pass -X POST https://groot.localhost/api/v1/storage/shares \
-  -H "Content-Type: application/json" \
-  -d '{"filePath":"docs/document.pdf","expiresInHours":24,"password":"optional-password"}'
-
-# List shares for a file
-curl -u user:pass "https://groot.localhost/api/v1/storage/shares?filePath=docs/document.pdf"
-
-# Revoke a share
-curl -u user:pass -X DELETE https://groot.localhost/api/v1/storage/shares/share-uuid-here
-```
-
-## Public File Sharing
-
-```bash
-# Access a shared file (no auth required, rate-limited)
-curl https://groot.localhost/api/v1/public/files/share-uuid-here -o downloaded-file.pdf
-
-# Get share info/metadata
-curl https://groot.localhost/api/v1/public/files/share-uuid-here/info
-
-# Verify password for password-protected share
-curl -X POST https://groot.localhost/api/v1/public/files/share-uuid-here/verify-password \
-  -H "Content-Type: application/json" \
-  -d '{"password":"optional-password"}'
 ```
 
 ## Auth User Management (Admin)

@@ -46,12 +46,4 @@ export function verifyToken(token: string): JWTPayload {
   }
 }
 
-export function generateShareToken(shareId: string): string {
-  return jwt.sign({ shareId }, JWT_SECRET, { expiresIn: "1h" });
-}
-
-export function verifyShareToken(token: string): { shareId: string } {
-  return jwt.verify(token, JWT_SECRET) as { shareId: string };
-}
-
 export { jwt };

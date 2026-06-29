@@ -4,7 +4,6 @@ import { NuqsAdapter } from "nuqs/adapters/react-router";
 import { useAuthStore } from "@/core/store/auth";
 import { ProtectedRoute } from "@/core/components/ProtectedRoute";
 import { Layout } from "@/core/components/Layout";
-import { Dashboard } from "@/app/ai/pages/Dashboard";
 import { Todos } from "@/app/todo/pages/Todos";
 import { Storage } from "@/app/storage/pages/Storage";
 import { Jobs } from "@/app/jobs/pages/Jobs";
@@ -33,7 +32,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
+            <Route index element={<Navigate to="/todos" replace />} />
             <Route path="todos" element={<Todos />} />
             <Route path="storage" element={<Storage />} />
             <Route path="jobs" element={<Jobs />} />

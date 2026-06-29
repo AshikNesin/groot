@@ -34,21 +34,3 @@ export const renameFileSchema = z.object({
   newPath: z.string().min(1, "New file path is required"),
 });
 export type RenameFileDTO = z.infer<typeof renameFileSchema>;
-
-export const createPublicShareSchema = z.object({
-  filePath: z.string().min(1, "File path is required"),
-  expiresInHours: z.number().int().positive().optional().default(24),
-  maxAccessCount: z.number().int().positive().optional(),
-  password: z.string().min(4).max(50).optional(),
-});
-export type CreatePublicShareDTO = z.infer<typeof createPublicShareSchema>;
-
-export const listSharesForFileSchema = z.object({
-  filePath: z.string().min(1, "File path is required"),
-});
-export type ListSharesForFileDTO = z.infer<typeof listSharesForFileSchema>;
-
-export const verifySharePasswordSchema = z.object({
-  password: z.string().min(1, "Password is required"),
-});
-export type VerifySharePasswordDTO = z.infer<typeof verifySharePasswordSchema>;

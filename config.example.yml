@@ -31,12 +31,6 @@ default:
     deleteArchivedAfterSeconds: 2592000
     monitorStateIntervalSeconds: 60
 
-  ai:
-    defaultProvider: "anthropic"
-    defaultModel: "claude-sonnet-4-6"
-    enableStreaming: true
-    trackUsage: true
-
   logging:
     level: "info"
     format: "json"
@@ -49,24 +43,12 @@ default:
   sentry:
     dsn: ""
 
-  features:
-    enableNotifications: false
-
   rateLimits:
     storage:
       windowMs: 900000
       max: 100
     upload:
       windowMs: 900000
-      max: 50
-    publicFile:
-      windowMs: 900000
-      max: 200
-    ai:
-      windowMs: 3600000
-      max: 100
-    aiStream:
-      windowMs: 3600000
       max: 50
 
 development:

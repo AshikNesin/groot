@@ -9,27 +9,9 @@ export interface StorageFile {
   isDirectory: boolean;
 }
 
-export interface PublicShare {
-  id: number;
-  shareId: string;
-  bucketName: string;
-  filePath: string;
-  fileName: string;
-  contentType: string | null;
-  fileSize: number | null;
-  expiresAt: string;
-  accessCount: number;
-  maxAccessCount: number | null;
-  isPasswordProtected: boolean;
-  createdAt: string;
-  isExpired: boolean;
-  isAccessLimitReached: boolean;
-}
-
 export const storageKeys = {
   root: ["storage"] as const,
   files: (prefix: string) => [...storageKeys.root, "files", prefix] as const,
-  shares: (filePath: string) => [...storageKeys.root, "shares", filePath] as const,
 };
 
 export function useStorageFiles(prefix: string) {
@@ -152,54 +134,6 @@ export function useRenameFile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
-    },
-  });
-}
-
-export function useStorageShares(filePath: string | null) {
-  return useQuery({
-    queryKey: filePath ? storageKeys.shares(filePath) : ["storage", "shares", "none"],
-    enabled: Boolean(filePath),
-    queryFn: async () => {
-      const { data } = await api.get<{ data: PublicShare[] }>("/storage/shares", {
-        params: { filePath },
-      });
-      return data.data;
-    },
-  });
-}
-
-export function useCreateShare() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: {
-      filePath: string;
-      expiresInHours?: number;
-      maxAccessCount?: number;
-      password?: string;
-    }) => {
-      const { data } = await api.post<{ data: PublicShare }>("/storage/shares", input);
-      return data.data;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: storageKeys.shares(variables.filePath),
-      });
-    },
-  });
-}
-
-export function useRevokeShare() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: { shareId: string; filePath: string }) => {
-      await api.delete(`/storage/shares/${params.shareId}`);
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: storageKeys.root });
-      queryClient.invalidateQueries({
-        queryKey: storageKeys.shares(variables.filePath),
-      });
     },
   });
 }

@@ -61,17 +61,15 @@ This boilerplate ships a secure Express 5 + TypeScript server with a domain-driv
 
 ## API Surface
 
-| Prefix                 | Purpose                        | Auth                |
-| ---------------------- | ------------------------------ | ------------------- |
-| `/api/v1/todos`        | CRUD operations                | JWT                 |
-| `/api/v1/auth`         | Login, logout, user management | Mixed               |
-| `/api/v1/storage`      | File storage operations        | JWT                 |
-| `/api/v1/public/files` | Public file sharing            | None (rate-limited) |
-| `/api/v1/jobs`         | Background job management      | JWT                 |
-| `/api/v1/passkeys`     | Passkey registration/auth      | Public              |
-| `/api/v1/settings`     | App key-value settings         | JWT                 |
-| `/api/v1/ai`           | AI inference (chat, streaming) | JWT                 |
-| `GET /health`          | Health probe                   | None                |
+| Prefix             | Purpose                        | Auth   |
+| ------------------ | ------------------------------ | ------ |
+| `/api/v1/todos`    | CRUD operations                | JWT    |
+| `/api/v1/auth`     | Login, logout, user management | Mixed  |
+| `/api/v1/storage`  | File storage operations        | JWT    |
+| `/api/v1/jobs`     | Background job management      | JWT    |
+| `/api/v1/passkeys` | Passkey registration/auth      | Public |
+| `/api/v1/settings` | App key-value settings         | JWT    |
+| `GET /health`      | Health probe                   | None   |
 
 ## Quick Architecture Diagram
 

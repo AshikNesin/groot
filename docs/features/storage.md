@@ -1,6 +1,11 @@
 # Storage Feature
 
-The storage feature provides a lightweight AWS S3 file browser with folder navigation, uploads, downloads, deletions, and password-protected public sharing.
+The storage feature provides a lightweight AWS S3 file browser with folder navigation, uploads, downloads, deletions, and renames.
+
+> **Note:** The boilerplate ships S3 file management only. Password-protected,
+> time-limited public file sharing was removed as an opinionated feature —
+> build it in `server/src/app/<feature>/` if your app needs it, using the core
+> S3 service.
 
 ## Architecture Overview
 
@@ -11,21 +16,16 @@ Client (Storage page)
           ↳ Express routes (shared/storage/)
               ↳ Controllers → Services
                   ↳ Core S3 wrapper (core/storage)
-                  ↳ Prisma (PublicFileShare model)
-Public shares
-  ↳ `/api/v1/public/files/:shareId` (no auth, rate-limited)
 ```
 
 ## Module Structure
 
 ```
 server/src/shared/storage/
-├── storage.routes.ts        # Protected routes
+├── storage.routes.ts        # Routes
 ├── storage.controller.ts    # Request handlers
 ├── storage.service.ts       # Business logic
 ├── storage.validation.ts    # Zod schemas
-├── public-file.routes.ts    # Public routes
-├── public-file.controller.ts
 └── index.ts
 
 server/src/core/storage/
@@ -36,25 +36,19 @@ server/src/core/storage/
 
 ## API Surface
 
-All endpoints require JWT auth unless noted.
+All endpoints require JWT auth.
 
-| Method   | Path                                                        | Notes                                              |
-| -------- | ----------------------------------------------------------- | -------------------------------------------------- |
-| GET      | `/api/v1/storage/files?prefix=docs/&delimiter=/`            | List files + pseudo folders                        |
-| POST     | `/api/v1/storage/files/upload` _(multipart)_                | Single upload with optional `filePath`             |
-| POST     | `/api/v1/storage/files/bulk-upload` _(multipart)_           | Up to 50 files (`files` array)                     |
-| GET      | `/api/v1/storage/files/download?filePath=docs/invoice.pdf`  | Streams file contents                              |
-| DELETE   | `/api/v1/storage/files`                                     | Body: `{ "filePaths": ["docs/invoice.pdf"] }`      |
-| GET      | `/api/v1/storage/files/metadata?filePath=docs/invoice.pdf`  | Size + modified timestamp                          |
-| POST     | `/api/v1/storage/folders`                                   | Body: `{ "folderPath": "docs/2025/" }`             |
-| DELETE   | `/api/v1/storage/folders/:folderPath`                       | Removes folder recursively                         |
-| PUT      | `/api/v1/storage/files/rename`                              | Body: `{ "oldPath": "a.pdf", "newPath": "b.pdf" }` |
-| POST     | `/api/v1/storage/shares`                                    | Create public share (optional password, expiry)    |
-| GET      | `/api/v1/storage/shares?filePath=docs/a.pdf`                | List existing shares for a file                    |
-| DELETE   | `/api/v1/storage/shares/:shareId`                           | Soft-delete share                                  |
-| **GET**  | `/api/v1/public/files/:shareId` _(no auth)_                 | Stream shared file (rate limited)                  |
-| **GET**  | `/api/v1/public/files/:shareId/info` _(no auth)_            | Metadata for share preview                         |
-| **POST** | `/api/v1/public/files/:shareId/verify-password` _(no auth)_ | Body `{ password: "..." }` for protected shares    |
+| Method | Path                                                       | Notes                                              |
+| ------ | ---------------------------------------------------------- | -------------------------------------------------- |
+| GET    | `/api/v1/storage/files?prefix=docs/&delimiter=/`           | List files + pseudo folders                        |
+| POST   | `/api/v1/storage/files/upload` _(multipart)_               | Single upload with optional `filePath`             |
+| POST   | `/api/v1/storage/files/bulk-upload` _(multipart)_          | Up to 50 files (`files` array)                     |
+| GET    | `/api/v1/storage/files/download?filePath=docs/invoice.pdf` | Streams file contents                              |
+| DELETE | `/api/v1/storage/files`                                    | Body: `{ "filePaths": ["docs/invoice.pdf"] }`      |
+| GET    | `/api/v1/storage/files/metadata?filePath=docs/invoice.pdf` | Size + modified timestamp                          |
+| POST   | `/api/v1/storage/folders`                                  | Body: `{ "folderPath": "docs/2025/" }`             |
+| DELETE | `/api/v1/storage/folders/:folderPath`                      | Removes folder recursively                         |
+| PUT    | `/api/v1/storage/files/rename`                             | Body: `{ "oldPath": "a.pdf", "newPath": "b.pdf" }` |
 
 ### Example Requests
 
@@ -63,12 +57,6 @@ All endpoints require JWT auth unless noted.
 curl -H "Authorization: Bearer <token>" \
   -F "file=@statement.pdf" -F "filePath=docs/statement.pdf" \
   https://groot.localhost/api/v1/storage/files/upload
-
-# Create a public share
-curl -H "Authorization: Bearer <token>" \
-  -X POST https://groot.localhost/api/v1/storage/shares \
-  -H "Content-Type: application/json" \
-  -d '{"filePath":"docs/statement.pdf","expiresInHours":24,"password":"secure123"}'
 ```
 
 ## Environment Variables
@@ -98,29 +86,24 @@ export const storageService = {
 
 ## Frontend Integration
 
-`client/src/pages/Storage.tsx` provides:
+`client/src/app/storage/pages/Storage.tsx` provides:
 
 - Breadcrumb navigation + "Up" button
 - Inline uploads (single + bulk)
 - Folder creation dialog
 - File rename modal
-- Table UI with download, share, rename, delete actions
-- Share dialog with password options
+- Table UI with download, rename, delete actions
 
-React Query keys live in `client/src/hooks/api/useStorage.ts`.
+React Query keys live in `client/src/app/storage/hooks/useStorage.ts`.
 
 ## Security & Rate Limiting
 
 - Protected routes use `jwtAuthMiddleware`
 - `storageRateLimiter`: 100 requests / 15 min
 - `uploadRateLimiter`: 50 requests / 15 min
-- Public files use `publicFileRateLimiter`: 200 requests / 15 min
-- Password verification with bcryptjs hashing
-- `PublicFileShare` tracks access counters and expiry
 
 ## Troubleshooting
 
-- **403 from public share** – Link expired or max access reached. Check `/storage/shares`.
 - **Rate limit exceeded** – Throttle uploads/deletes. Defaults in `rate-limit.middleware.ts`.
 - **Local dev without AWS** – Use LocalStack or point to a real bucket.
 - **Download shows binary** – It streams raw bytes. Use `curl -o file` or the UI.

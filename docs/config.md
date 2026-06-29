@@ -18,7 +18,6 @@ Application settings live in `config.yml` — a YAML file at the project root. I
    import { config } from "@/core/config";
 
    config.app.name; // "Groot"
-   config.ai.defaultProvider; // "anthropic"
    config.logging.level; // "info"
    ```
 
@@ -107,17 +106,12 @@ This is useful for debugging without modifying the shared config.
 | `jobs.archiveCompletedAfterSeconds` | `number`   | `604800`                    | Archive completed jobs after (7 days)                 |
 | `jobs.deleteArchivedAfterSeconds`   | `number`   | `2592000`                   | Delete archived jobs after (30 days)                  |
 | `jobs.monitorStateIntervalSeconds`  | `number`   | `60`                        | Queue state monitor interval                          |
-| `ai.defaultProvider`                | `string`   | `"anthropic"`               | Default LLM provider                                  |
-| `ai.defaultModel`                   | `string`   | `"claude-sonnet-4-6"`       | Default model name                                    |
-| `ai.enableStreaming`                | `boolean`  | `true`                      | Enable streaming responses                            |
-| `ai.trackUsage`                     | `boolean`  | `true`                      | Track AI token usage                                  |
 | `logging.level`                     | `enum`     | `"info"`                    | Log level: `debug`, `info`, `warn`, `error`, `silent` |
 | `logging.format`                    | `enum`     | `"json"`                    | Log format: `json`, `text`                            |
 | `passkey.rpName`                    | `string`   | `"Groot"`                   | WebAuthn relying party name                           |
 | `passkey.rpId`                      | `string`   | `"localhost"`               | WebAuthn relying party ID                             |
 | `passkey.origin`                    | `string`   | `"https://groot.localhost"` | WebAuthn origin                                       |
 | `sentry.dsn`                        | `string`   | `""`                        | Sentry DSN for error tracking                         |
-| `features.enableNotifications`      | `boolean`  | `false`                     | Enable notifications                                  |
 
 ## Validation
 

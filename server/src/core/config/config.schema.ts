@@ -46,14 +46,6 @@ export const configSchema = z.object({
       monitorStateIntervalSeconds: z.coerce.number().int().min(0).default(60),
     })
     .default({}),
-  ai: z
-    .object({
-      defaultProvider: z.string().default("openai"),
-      defaultModel: z.string().default("gpt-4o-mini"),
-      enableStreaming: bool.default(true),
-      trackUsage: bool.default(true),
-    })
-    .default({}),
   logging: z
     .object({
       level: z.enum(["debug", "info", "warn", "error", "silent"]).default("info"),
@@ -72,11 +64,6 @@ export const configSchema = z.object({
       dsn: z.string().default(""),
     })
     .default({}),
-  features: z
-    .object({
-      enableNotifications: bool.default(false),
-    })
-    .default({}),
   rateLimits: z
     .object({
       storage: z
@@ -88,24 +75,6 @@ export const configSchema = z.object({
       upload: z
         .object({
           windowMs: z.coerce.number().int().positive().default(900000),
-          max: z.coerce.number().int().positive().default(50),
-        })
-        .default({}),
-      publicFile: z
-        .object({
-          windowMs: z.coerce.number().int().positive().default(900000),
-          max: z.coerce.number().int().positive().default(200),
-        })
-        .default({}),
-      ai: z
-        .object({
-          windowMs: z.coerce.number().int().positive().default(3600000),
-          max: z.coerce.number().int().positive().default(100),
-        })
-        .default({}),
-      aiStream: z
-        .object({
-          windowMs: z.coerce.number().int().positive().default(3600000),
           max: z.coerce.number().int().positive().default(50),
         })
         .default({}),

@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import * as StorageFileService from "@/shared/storage/storage.service";
-import * as PublicShareService from "@/shared/storage/public-share.service";
 import type {
   ListFilesDTO,
   DownloadFileDTO,
@@ -8,8 +7,6 @@ import type {
   GetFileMetadataDTO,
   CreateFolderDTO,
   RenameFileDTO,
-  CreatePublicShareDTO,
-  ListSharesForFileDTO,
 } from "@/shared/storage/storage.validation";
 import { Boom } from "@/core/errors";
 import { sanitizeFileName } from "@/shared/storage/storage.utils";
@@ -103,19 +100,4 @@ export async function bulkUpload(req: Request) {
   }));
 
   return await StorageFileService.bulkUpload({ files: payload });
-}
-
-export async function createPublicShare(req: Request) {
-  const body = req.body as CreatePublicShareDTO;
-  return await PublicShareService.createShare(body);
-}
-
-export async function listSharesForFile(req: Request) {
-  const query = (req.validated?.query ?? req.query) as ListSharesForFileDTO;
-  return await PublicShareService.listSharesForFile({ filePath: query.filePath });
-}
-
-export async function revokeShare(req: Request<{ shareId: string }>) {
-  const { shareId } = req.params;
-  await PublicShareService.revokeShare({ shareId });
 }
