@@ -5,9 +5,10 @@ metadata:
   tags: sync, boilerplate, groot, infrastructure, components, utilities, upstream, versioning, changelog
 ---
 
-## Groot Sync v3
+## Groot Sync v4
 
-This skill references the deterministic TypeScript sync tools at `.groot/sync.ts` and `.groot/upstream.ts`.
+This skill references the TypeScript sync tools at `.groot/sync.ts`,
+`.groot/resolve.ts`, and `.groot/upstream.ts`.
 
 Full documentation: [docs/sync-guide.md](../../docs/sync-guide.md)
 
@@ -17,8 +18,11 @@ Full documentation: [docs/sync-guide.md](../../docs/sync-guide.md)
 # Check for available changes (dry run)
 pnpm groot:check
 
-# Apply safe changes
+# Apply safe changes (auto-apply + clean 3-way merges) and write conflict markers
 pnpm groot:sync
+
+# Resolve any remaining conflicts with the pi coding agent
+pnpm groot:resolve
 
 # Push local fixes back to groot
 pnpm groot:upstream
@@ -31,16 +35,41 @@ pnpm changeset
 
 ### Sync (groot → child)
 
-The sync tool is fully deterministic - no AI interpretation needed:
+The sync tool merges deterministically and only escalates true conflicts:
 
 1. **Reads config** from `.groot/boilerplate-sync.json`
-2. **Acquires boilerplate** — reuses a clean `~/Code/groot` checkout (fast-forwarded to `main`) when available, otherwise clones to a temp directory (with tags for version resolution)
+2. **Acquires boilerplate** — reuses a clean `~/Code/groot` checkout (fast-forwarded to its default branch) when available, otherwise clones to a temp directory (with tags for version resolution)
 3. **Categorizes files** using pattern matching (micromatch)
-4. **Detects conflicts** via git three-way comparison
+4. **Three-way merges** every locally-modified synced file (base = last sync, ours = local, theirs = groot)
 5. **Extracts changelog** between synced version and latest version
-6. **Applies safe changes** automatically
-7. **Flags modified files** for manual review
+6. **Applies** auto-apply (unmodified) and clean 3-way merges automatically
+7. **Writes conflict markers** for files that genuinely conflict and records them in `.groot/needs-review/manifest.json`
 8. **Writes sync report** (`sync-report.json`) for CI consumption
+
+### Resolve conflicts (AI-assisted)
+
+After sync, resolve the residual conflicts with the [pi coding agent](https://pi.dev):
+
+```bash
+pnpm groot:resolve            # resolve every file in the manifest
+pnpm groot:resolve --dry-run  # list pending conflicts only
+pnpm groot:resolve --file path/to/file.ts   # resolve one file
+```
+
+`resolve.ts` reads `.groot/needs-review/manifest.json`, ensures each file has
+conflict markers (regenerating them from the recorded base/target commits when
+CI ran with `--skip-conflicts`), then invokes `pi -p` per file. pi merges both
+sides while preserving local customizations, removes the markers, and follows
+`AGENTS.md` conventions. Resolved entries are pruned from the manifest and
+`pnpm check` runs at the end to verify.
+
+> Requires `pi` installed (`npm i -g --ignore-scripts @earendil-works/pi-coding-agent`)
+> and authenticated (`pi` → `/login`, or an API key env var).
+
+When you are operating inside an agent session (e.g. Droid) you may instead
+resolve the manifest's files directly with your own editing tools — the
+manifest gives you each file, its conflict count, and the upstream commit
+messages explaining the change.
 
 ### Upstream (child → groot)
 
@@ -97,16 +126,22 @@ These files are NEVER synced, even if removed from config:
 - `prisma/schema.prisma`, `prisma/migrations/**`
 - `node_modules/**`, `dist/**`
 - `*.pem`, `*.key`, `secrets/**`
+- `.groot/boilerplate-sync.json`, `.groot/sync-report.json`, `.groot/needs-review/**`
 
-## Conflict Detection
+## Categorization (per changed file)
 
-The tool compares each local file against the last synced version from git:
+Each file changed in groot since the last sync lands in exactly one bucket:
 
-1. **New file in boilerplate** → Auto-apply (safe to add)
-2. **Unmodified locally** → Auto-apply (no conflict)
-3. **Modified locally** → Flag for review
+| Bucket          | Meaning                                                    | Action                                  |
+| --------------- | ---------------------------------------------------------- | --------------------------------------- |
+| **Auto-apply**  | New locally, or unmodified locally since last sync         | Copied automatically                    |
+| **Auto-merged** | Modified locally but the 3-way merge is clean (no overlap) | Merged result written automatically     |
+| **Conflict**    | Modified locally with overlapping changes                  | Markers written + recorded in manifest  |
+| **Drift**       | Changed in groot but matches no sync pattern (new surface) | Listed only — adopt manually if desired |
+| **Skipped**     | Immutable (security) or app-specific paths                 | Ignored (counts only in output)         |
 
-Modified files are NOT automatically applied - they appear in the "Needs Review" section for manual inspection.
+Only **Conflict** files need attention, and `pnpm groot:resolve` handles those
+with the pi coding agent. Clean 3-way merges no longer require manual review.
 
 ## Config Format
 
@@ -131,12 +166,15 @@ Modified files are NOT automatically applied - they appear in the "Needs Review"
 
 - Runs twice daily (12PM and 12AM IST)
 - Uses the TypeScript tool (no external AI service)
+- Runs `pnpm groot:sync --skip-conflicts` so the automated PR contains only
+  clean changes (auto-apply + clean 3-way merges) and stays compilable
 - Creates PR with rich description from `sync-report.json`:
   - Version diff (e.g., v1.3.0 → v1.5.0)
   - Changelog entries between versions
   - Breaking change warnings
-  - Auto-applied and needs-review file lists
-- Only auto-applies safe changes
+  - Auto-applied, auto-merged, conflict, and drift file lists
+- Conflicts are listed for the developer to resolve locally with
+  `pnpm groot:resolve` (AI resolution does not run in CI)
 
 ### Release Workflow (`.github/workflows/release.yml`)
 

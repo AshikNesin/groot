@@ -41,6 +41,7 @@
     "prepare": "vp config",
     "groot:check": "tsx .groot/sync.ts check",
     "groot:sync": "tsx .groot/sync.ts apply",
+    "groot:resolve": "tsx .groot/resolve.ts",
     "groot:upstream": "tsx .groot/upstream.ts",
     "changeset": "changeset",
     "changeset:version": "changeset version",

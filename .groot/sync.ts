@@ -1,12 +1,23 @@
 #!/usr/bin/env tsx
 /**
- * Groot Sync v3 - Deterministic, version-aware boilerplate sync tool
+ * Groot Sync v4 - Deterministic, version-aware boilerplate sync tool
+ *
+ * Performs a real three-way merge for every locally-modified synced file so
+ * non-overlapping upstream changes apply automatically instead of piling up in
+ * a manual review list. Files that still genuinely conflict are written with
+ * conflict markers and recorded in `.groot/needs-review/manifest.json` for the
+ * AI-assisted resolver (`pnpm groot:resolve`, powered by the pi coding agent).
  *
  * Usage:
- *   pnpm groot:check  - Check for available changes
- *   pnpm groot:sync   - Apply safe changes
+ *   pnpm groot:check            - Check for available changes (dry run)
+ *   pnpm groot:sync             - Apply safe changes + write conflict markers
+ *   pnpm groot:sync --skip-conflicts
+ *                               - Apply only clean changes (CI), record
+ *                                 conflicts in the manifest without writing
+ *                                 markers into the working tree
  */
-import { readFile, writeFile, mkdir, copyFile, access } from "node:fs/promises";
+import { readFile, writeFile, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join, dirname, normalize } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -68,6 +79,10 @@ const IMMUTABLE_EXCLUSIONS: readonly string[] = [
   ".groot/sync-report.json",
   ".groot/feature-request.md",
   ".groot/repo-drift.md",
+
+  // Conflict-resolution working state (manifest + any scratch files). This is
+  // generated per-project and must never be pulled from the boilerplate.
+  ".groot/needs-review/**",
 ] as const;
 
 // ============================================================
@@ -149,6 +164,10 @@ const SKIP_PATTERNS: readonly string[] = [
   "pnpm-lock.yaml",
 ] as const;
 
+// Files that don't match a sync pattern by glob but should still flow through
+// the three-way merge path (their content genuinely belongs to both repos).
+const FORCE_MERGE_FILES: readonly string[] = [".gitignore", "package.json"] as const;
+
 // ============================================================
 // PATH VALIDATION - Security against traversal attacks
 // ============================================================
@@ -178,73 +197,177 @@ function validateFilePath(filePath: string): { valid: boolean; reason?: string }
 }
 
 // ============================================================
-// CONFLICT DETECTION - Simple, git-based
+// CATEGORIZATION - Where does a changed file belong?
 // ============================================================
 
-async function needsReview(
-  filePath: string,
-  tempDir: string,
-  projectRoot: string,
-  lastSyncCommit: string,
-): Promise<boolean> {
-  // Get content from last synced version using git
-  try {
-    const { stdout: lastSyncedContent } = await exec(
-      "git",
-      ["show", `${lastSyncCommit}:${filePath}`],
-      { cwd: tempDir },
-    );
+type Action = "sync" | "skip-immutable" | "skip-app" | "drift";
 
-    // Read local content
-    const localPath = join(projectRoot, filePath);
-    let localContent: string;
-    try {
-      localContent = await readFile(localPath, "utf-8");
-    } catch {
-      return false; // File doesn't exist locally, safe to add
-    }
-
-    // If local differs from last synced, it was modified locally
-    return localContent !== lastSyncedContent;
-  } catch {
-    return false; // File is new in boilerplate, safe to add
+function categorizeFile(filePath: string, additionalExclusions: string[]): { action: Action } {
+  // 1. Immutable exclusions first (security)
+  if (micromatch.isMatch(filePath, IMMUTABLE_EXCLUSIONS as string[])) {
+    return { action: "skip-immutable" };
   }
+
+  // 2. App-specific skip patterns (incl. project-local exclusions)
+  const allSkipPatterns = [...SKIP_PATTERNS, ...additionalExclusions];
+  if (micromatch.isMatch(filePath, allSkipPatterns)) {
+    return { action: "skip-app" };
+  }
+
+  // 3. Files that always merge (content shared by both repos)
+  if (FORCE_MERGE_FILES.includes(filePath)) {
+    return { action: "sync" };
+  }
+
+  // 4. Sync patterns
+  if (micromatch.isMatch(filePath, SYNC_PATTERNS as string[])) {
+    return { action: "sync" };
+  }
+
+  // 5. Changed in groot, matches no sync pattern → drift (new boilerplate
+  //    surface the project may want to adopt manually).
+  return { action: "drift" };
 }
 
 // ============================================================
-// PATTERN MATCHING - Using micromatch for performance
+// THREE-WAY MERGE - The heart of the sync
 // ============================================================
 
-function categorizeFile(
-  filePath: string,
-  additionalExclusions: string[],
-): { action: "sync" | "skip" | "merge"; reason: string } {
-  // 1. Check immutable exclusions first (security)
-  if (micromatch.isMatch(filePath, IMMUTABLE_EXCLUSIONS as string[])) {
-    return { action: "skip", reason: "Immutable exclusion (security)" };
+type MergeOutcome =
+  | { kind: "auto-apply"; content: string }
+  | { kind: "identical" }
+  | { kind: "auto-merged"; content: string }
+  | { kind: "conflict"; content: string; conflicts: number };
+
+/**
+ * Run `git merge-file` over three temp files and capture the merged result.
+ * Exit code 0 → clean merge; >0 → that many conflict hunks (markers in stdout).
+ */
+async function gitMergeFile(
+  file: string,
+  ours: string,
+  base: string,
+  theirs: string,
+): Promise<{ clean: boolean; content: string; conflicts: number }> {
+  const dir = await mkdtemp(join(tmpdir(), "groot-merge-"));
+  try {
+    const oursPath = join(dir, "ours");
+    const basePath = join(dir, "base");
+    const theirsPath = join(dir, "theirs");
+    await writeFile(oursPath, ours);
+    await writeFile(basePath, base);
+    await writeFile(theirsPath, theirs);
+
+    try {
+      const { stdout } = await exec("git", [
+        "merge-file",
+        "-p",
+        "--diff3",
+        "-L",
+        `${file} (local)`,
+        "-L",
+        `${file} (base)`,
+        "-L",
+        `${file} (groot)`,
+        oursPath,
+        basePath,
+        theirsPath,
+      ]);
+      return { clean: true, content: stdout, conflicts: 0 };
+    } catch (err) {
+      const e = err as { code?: number; stdout?: string };
+      if (typeof e.code === "number" && e.code > 0 && typeof e.stdout === "string") {
+        return { clean: false, content: e.stdout, conflicts: e.code };
+      }
+      throw err;
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+/** Build a two-way conflict block when there is no common ancestor to merge. */
+export function twoWayConflictMarkers(file: string, ours: string, theirs: string): string {
+  return [
+    `<<<<<<< ${file} (local)`,
+    ours.replace(/\n$/, ""),
+    "=======",
+    theirs.replace(/\n$/, ""),
+    `>>>>>>> ${file} (groot)`,
+    "",
+  ].join("\n");
+}
+
+/**
+ * Decide what to do with a single synced file by comparing three versions:
+ *   base   = content at the last synced commit
+ *   ours   = current local content
+ *   theirs = new boilerplate content
+ */
+async function threeWayMerge(
+  file: string,
+  tempDir: string,
+  projectRoot: string,
+  lastSyncCommit: string,
+): Promise<MergeOutcome> {
+  const theirs = await readFile(join(tempDir, file), "utf-8");
+
+  let ours: string | null = null;
+  try {
+    ours = await readFile(join(projectRoot, file), "utf-8");
+  } catch {
+    ours = null;
   }
 
-  // 2. Check skip patterns
-  const allSkipPatterns = [...SKIP_PATTERNS, ...additionalExclusions];
-  if (micromatch.isMatch(filePath, allSkipPatterns)) {
-    return { action: "skip", reason: "Matches skip pattern" };
+  let base: string | null = null;
+  try {
+    const { stdout } = await exec("git", ["show", `${lastSyncCommit}:${file}`], { cwd: tempDir });
+    base = stdout;
+  } catch {
+    base = null;
   }
 
-  // 3. Check for special merge files
-  if (filePath === ".gitignore") {
-    return { action: "merge", reason: "Uses append_missing strategy" };
-  }
-  if (filePath === "package.json") {
-    return { action: "merge", reason: "Uses merge_deps strategy" };
+  // New file locally absent → just add it.
+  if (ours === null) return { kind: "auto-apply", content: theirs };
+
+  // Already in sync.
+  if (ours === theirs) return { kind: "identical" };
+
+  // Untouched locally since last sync → take theirs.
+  if (base !== null && ours === base) return { kind: "auto-apply", content: theirs };
+
+  // No common ancestor (file is new in groot but also exists locally) → cannot
+  // 3-way merge; surface both sides as a conflict.
+  if (base === null) {
+    return { kind: "conflict", content: twoWayConflictMarkers(file, ours, theirs), conflicts: 1 };
   }
 
-  // 4. Check sync patterns
-  if (micromatch.isMatch(filePath, SYNC_PATTERNS as string[])) {
-    return { action: "sync", reason: "Matches sync pattern" };
-  }
+  const merged = await gitMergeFile(file, ours, base, theirs);
+  return merged.clean
+    ? { kind: "auto-merged", content: merged.content }
+    : { kind: "conflict", content: merged.content, conflicts: merged.conflicts };
+}
 
-  // 5. Default: skip (conservative)
-  return { action: "skip", reason: "Does not match any sync pattern" };
+/** Upstream commits (oneline) that touched a file since the last sync. */
+async function fileCommits(
+  tempDir: string,
+  lastSyncCommit: string,
+  file: string,
+): Promise<string[]> {
+  try {
+    const { stdout } = await exec("git", [
+      "-C",
+      tempDir,
+      "log",
+      "--oneline",
+      `${lastSyncCommit}..HEAD`,
+      "--",
+      file,
+    ]);
+    return stdout.split("\n").filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 async function resolveDefaultBranch(repoUrl: string): Promise<string> {
@@ -280,7 +403,7 @@ async function extractChangelog(
     }
 
     try {
-      await access(changelogPath);
+      await readFile(changelogPath, "utf-8");
     } catch {
       // No CHANGELOG.md, fall back to commit messages
       return extractCommitMessages(tempDir, fromRef, toRef);
@@ -372,8 +495,34 @@ async function resolveLatestVersion(
 }
 
 // ============================================================
-// SYNC REPORT - Machine-readable output for CI
+// RESULT / REPORT / MANIFEST TYPES
 // ============================================================
+
+interface MergedFile {
+  file: string;
+  content: string;
+}
+
+interface ConflictFile {
+  file: string;
+  content: string;
+  conflicts: number;
+  commits: string[];
+}
+
+interface SyncResult {
+  autoApply: MergedFile[];
+  autoMerged: MergedFile[];
+  conflicts: ConflictFile[];
+  drift: string[];
+  skipped: { immutable: string[]; appSpecific: string[] };
+  fromCommit: string;
+  toCommit: string;
+  fromVersion: string | null;
+  toVersion: string | null;
+  changelog: string[];
+  breakingChanges: string[];
+}
 
 interface SyncReport {
   fromVersion: string | null;
@@ -381,10 +530,21 @@ interface SyncReport {
   fromCommit: string;
   toCommit: string;
   changelog: string[];
-  autoApply: string[];
-  needsReview: string[];
-  skipped: string[];
   breakingChanges: string[];
+  autoApply: string[];
+  autoMerged: string[];
+  conflicts: { file: string; conflicts: number; commits: string[] }[];
+  drift: string[];
+  skipped: { immutable: string[]; appSpecific: string[] };
+}
+
+interface ConflictManifest {
+  fromVersion: string | null;
+  toVersion: string | null;
+  fromCommit: string;
+  toCommit: string;
+  generatedAt: string;
+  conflicts: { file: string; conflicts: number; commits: string[] }[];
 }
 
 async function writeSyncReport(projectRoot: string, report: SyncReport): Promise<void> {
@@ -392,31 +552,27 @@ async function writeSyncReport(projectRoot: string, report: SyncReport): Promise
   await writeFile(reportPath, JSON.stringify(report, null, 2) + "\n");
 }
 
+async function writeManifest(projectRoot: string, manifest: ConflictManifest): Promise<void> {
+  const dir = join(projectRoot, ".groot", "needs-review");
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+}
+
 // ============================================================
 // MAIN SYNC FUNCTION
 // ============================================================
 
-interface SyncResult {
-  autoApply: string[];
-  needsReview: string[];
-  skipped: string[];
-  fromCommit: string;
-  toCommit: string;
-  fromVersion: string | null;
-  toVersion: string | null;
-  changelog: string[];
-  breakingChanges: string[];
-}
-
-async function sync(projectRoot: string, command: "check" | "apply"): Promise<SyncResult> {
+async function sync(
+  projectRoot: string,
+  command: "check" | "apply",
+  skipConflicts: boolean,
+): Promise<SyncResult> {
   // 1. Load and validate config
   const configPath = join(projectRoot, ".groot/boilerplate-sync.json");
   const rawConfig = JSON.parse(await readFile(configPath, "utf-8"));
   const config = SyncConfigSchema.parse(rawConfig);
 
-  // 2. Acquire the boilerplate checkout. Prefer a clean local clone at
-  //    ~/Code/<name> (fast-forwarded to the default branch) to avoid
-  //    re-cloning on every sync; fall back to a fresh clone otherwise.
+  // 2. Acquire the boilerplate checkout (reuse ~/Code/<name> when clean).
   const defaultBranch = await resolveDefaultBranch(config.boilerplate.repo);
   const repo = await acquireBoilerplate({
     repoUrl: config.boilerplate.repo,
@@ -446,122 +602,162 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
     const { stdout: latestCommitRaw } = await exec("git", ["-C", tempDir, "rev-parse", "HEAD"]);
     const latestCommit = latestCommitRaw.trim();
 
+    const result: SyncResult = {
+      autoApply: [],
+      autoMerged: [],
+      conflicts: [],
+      drift: [],
+      skipped: { immutable: [], appSpecific: [] },
+      fromCommit: config.last_sync.commit,
+      toCommit: latestCommit,
+      fromVersion: config.last_sync.version ?? null,
+      toVersion: latestVersion?.version ?? null,
+      changelog: [],
+      breakingChanges: [],
+    };
+
     if (files.length === 0) {
-      return {
-        autoApply: [],
-        needsReview: [],
-        skipped: [],
-        fromCommit: config.last_sync.commit,
-        toCommit: latestCommit,
-        fromVersion: config.last_sync.version ?? null,
-        toVersion: latestVersion?.version ?? null,
-        changelog: [],
-        breakingChanges: [],
-      };
+      return result;
     }
 
-    // 5. Extract changelog between versions
+    // 5. Extract changelog + breaking changes between versions
     const fromRef = config.last_sync.version
       ? `v${config.last_sync.version}`
       : config.last_sync.commit;
     const toRef = latestVersion ? `v${latestVersion.version}` : "HEAD";
-    const changelog = await extractChangelog(tempDir, fromRef, toRef);
+    result.changelog = await extractChangelog(tempDir, fromRef, toRef);
 
-    // Detect breaking changes from changelog
     const breakingCommitRe = /^(?:- )?(?:feat|fix)(?:\([\w.-]+\))?!:/i;
-    const breakingChanges = changelog.filter(
+    result.breakingChanges = result.changelog.filter(
       (line) =>
         line.toLowerCase().includes("breaking") ||
         line.toLowerCase().includes("migration") ||
         breakingCommitRe.test(line),
     );
 
-    // 6. Categorize files
-    const result: SyncResult = {
-      autoApply: [],
-      needsReview: [],
-      skipped: [],
-      fromCommit: config.last_sync.commit,
-      toCommit: latestCommit,
-      fromVersion: config.last_sync.version ?? null,
-      toVersion: latestVersion?.version ?? null,
-      changelog,
-      breakingChanges,
-    };
-
+    // 6. Categorize + merge each changed file
     for (const file of files) {
-      // Security: Validate path
       const validation = validateFilePath(file);
       if (!validation.valid) {
-        result.skipped.push(file);
+        result.skipped.immutable.push(file);
         console.error(`SECURITY: Skipped ${file} - ${validation.reason}`);
         continue;
       }
 
       const { action } = categorizeFile(file, config.additional_exclusions);
 
-      if (action === "skip") {
-        result.skipped.push(file);
-      } else if (action === "merge") {
-        // Merge files always need review
-        result.needsReview.push(file);
-      } else {
-        // Check if locally modified
-        const modified = await needsReview(file, tempDir, projectRoot, config.last_sync.commit);
-        if (modified) {
-          result.needsReview.push(file);
-        } else {
-          result.autoApply.push(file);
-        }
+      if (action === "skip-immutable") {
+        result.skipped.immutable.push(file);
+        continue;
+      }
+      if (action === "skip-app") {
+        result.skipped.appSpecific.push(file);
+        continue;
+      }
+      if (action === "drift") {
+        result.drift.push(file);
+        continue;
+      }
+
+      // action === "sync" → attempt a three-way merge
+      const outcome = await threeWayMerge(file, tempDir, projectRoot, config.last_sync.commit);
+      switch (outcome.kind) {
+        case "auto-apply":
+          result.autoApply.push({ file, content: outcome.content });
+          break;
+        case "auto-merged":
+          result.autoMerged.push({ file, content: outcome.content });
+          break;
+        case "conflict":
+          result.conflicts.push({
+            file,
+            content: outcome.content,
+            conflicts: outcome.conflicts,
+            commits: await fileCommits(tempDir, config.last_sync.commit, file),
+          });
+          break;
+        case "identical":
+          // Already in sync — drop silently to keep output clean.
+          break;
       }
     }
 
     // 7. Apply changes if requested
-    if (command === "apply" && result.autoApply.length > 0) {
-      console.log(`\nApplying ${result.autoApply.length} files...`);
-
-      for (const file of result.autoApply) {
-        const src = join(tempDir, file);
+    const writtenClean = result.autoApply.length + result.autoMerged.length;
+    if (command === "apply") {
+      for (const { file, content } of [...result.autoApply, ...result.autoMerged]) {
         const dest = join(projectRoot, file);
-
-        // Ensure directory exists
         await mkdir(dirname(dest), { recursive: true });
-
-        // Copy file
-        await copyFile(src, dest);
+        await writeFile(dest, content);
         console.log(`  + ${file}`);
       }
 
-      // Update config with version info
-      const updatedConfig = {
-        ...config,
-        last_sync: {
-          version: latestVersion?.version ?? config.last_sync.version,
-          commit: latestCommit,
-          date: new Date().toISOString(),
-        },
-      };
-      await writeFile(configPath, JSON.stringify(updatedConfig, null, 2) + "\n");
-      console.log("\nUpdated .groot/boilerplate-sync.json");
+      // Write conflict markers into the working tree (skipped in CI mode so the
+      // automated PR stays compilable; the manifest still records them).
+      if (!skipConflicts) {
+        for (const { file, content } of result.conflicts) {
+          const dest = join(projectRoot, file);
+          await mkdir(dirname(dest), { recursive: true });
+          await writeFile(dest, content);
+          console.log(`  ! ${file} (conflict markers)`);
+        }
+      }
+
+      // Always record conflicts in the manifest so `pnpm groot:resolve` can
+      // act on them regardless of whether markers were written to disk.
+      if (result.conflicts.length > 0) {
+        await writeManifest(projectRoot, {
+          fromVersion: result.fromVersion,
+          toVersion: result.toVersion,
+          fromCommit: result.fromCommit,
+          toCommit: result.toCommit,
+          generatedAt: new Date().toISOString(),
+          conflicts: result.conflicts.map((c) => ({
+            file: c.file,
+            conflicts: c.conflicts,
+            commits: c.commits,
+          })),
+        });
+      }
+
+      // Advance the baseline when anything was processed. The manifest carries
+      // the base/target commits for unresolved conflicts, so bumping here is
+      // safe and prevents re-detecting the same files on the next sync.
+      if (writtenClean + result.conflicts.length > 0) {
+        const updatedConfig = {
+          ...config,
+          last_sync: {
+            version: latestVersion?.version ?? config.last_sync.version,
+            commit: latestCommit,
+            date: new Date().toISOString(),
+          },
+        };
+        await writeFile(configPath, JSON.stringify(updatedConfig, null, 2) + "\n");
+        console.log("\nUpdated .groot/boilerplate-sync.json");
+      }
     }
 
     // 8. Write machine-readable sync report for CI
-    const report: SyncReport = {
+    await writeSyncReport(projectRoot, {
       fromVersion: result.fromVersion,
       toVersion: result.toVersion,
       fromCommit: result.fromCommit,
       toCommit: result.toCommit,
       changelog: result.changelog,
-      autoApply: result.autoApply,
-      needsReview: result.needsReview,
-      skipped: result.skipped,
       breakingChanges: result.breakingChanges,
-    };
-    await writeSyncReport(projectRoot, report);
+      autoApply: result.autoApply.map((f) => f.file),
+      autoMerged: result.autoMerged.map((f) => f.file),
+      conflicts: result.conflicts.map((c) => ({
+        file: c.file,
+        conflicts: c.conflicts,
+        commits: c.commits,
+      })),
+      drift: result.drift,
+      skipped: result.skipped,
+    });
 
     return result;
   } finally {
-    // Always cleanup — but only directories we created; never a reused local checkout.
     await releaseBoilerplate(repo);
   }
 }
@@ -573,22 +769,26 @@ async function sync(projectRoot: string, command: "check" | "apply"): Promise<Sy
 async function main() {
   const args = process.argv.slice(2);
   const command = args[0] as "check" | "apply";
+  const skipConflicts = args.includes("--skip-conflicts");
 
   if (!["check", "apply"].includes(command)) {
-    console.error("Usage: tsx sync.ts [check|apply]");
+    console.error("Usage: tsx sync.ts [check|apply] [--skip-conflicts]");
     console.error("");
     console.error("Commands:");
     console.error("  check  - Check for available changes (dry run)");
-    console.error("  apply  - Apply safe changes and update config");
+    console.error("  apply  - Apply safe changes, write conflict markers, update config");
+    console.error("");
+    console.error("Options:");
+    console.error("  --skip-conflicts  - Don't write conflict markers (CI); only record them");
     process.exit(1);
   }
 
   const projectRoot = process.cwd();
 
-  console.log("\n## Groot Sync v3\n");
+  console.log("\n## Groot Sync v4\n");
   console.log(`Mode: ${command === "check" ? "dry run" : "apply"}\n`);
 
-  const result = await sync(projectRoot, command);
+  const result = await sync(projectRoot, command, skipConflicts);
 
   // Version-aware header
   console.log(`\n## Results\n`);
@@ -602,14 +802,12 @@ async function main() {
   }
   console.log();
 
-  // Show changelog if available
   if (result.changelog.length > 0) {
     console.log("### Changelog");
     result.changelog.forEach((line) => console.log(`  ${line}`));
     console.log();
   }
 
-  // Show breaking changes prominently
   if (result.breakingChanges.length > 0) {
     console.log("### ⚠ Breaking Changes");
     result.breakingChanges.forEach((line) => console.log(`  ${line}`));
@@ -617,41 +815,62 @@ async function main() {
   }
 
   if (result.autoApply.length > 0) {
-    console.log("### Auto-Apply (Safe)");
-    result.autoApply.forEach((f) => console.log(`  ${f}`));
+    console.log(`### Auto-Apply — clean (${result.autoApply.length})`);
+    result.autoApply.forEach((f) => console.log(`  ${f.file}`));
     console.log();
   }
 
-  if (result.needsReview.length > 0) {
-    console.log("### Needs Review (Modified Locally)");
-    result.needsReview.forEach((f) => console.log(`  ${f}`));
+  if (result.autoMerged.length > 0) {
+    console.log(`### Auto-Merged — 3-way (${result.autoMerged.length})`);
+    result.autoMerged.forEach((f) => console.log(`  ${f.file}`));
     console.log();
   }
 
-  if (result.skipped.length > 0) {
-    console.log("### Skipped");
-    result.skipped.forEach((f) => console.log(`  ${f}`));
+  if (result.conflicts.length > 0) {
+    console.log(`### Conflicts — needs resolution (${result.conflicts.length})`);
+    result.conflicts.forEach((c) => {
+      const hunks = `${c.conflicts} conflict${c.conflicts === 1 ? "" : "s"}`;
+      console.log(`  ${c.file} (${hunks})`);
+    });
+    console.log();
+  }
+
+  if (result.drift.length > 0) {
+    console.log(`### Drift — new in groot, not synced (${result.drift.length})`);
+    result.drift.forEach((f) => console.log(`  ${f}`));
+    console.log();
+  }
+
+  const immCount = result.skipped.immutable.length;
+  const appCount = result.skipped.appSpecific.length;
+  if (immCount + appCount > 0) {
+    console.log(`### Skipped — immutable: ${immCount}, app-specific: ${appCount}`);
     console.log();
   }
 
   // Summary
-  const total = result.autoApply.length + result.needsReview.length + result.skipped.length;
   console.log(`### Summary`);
-  console.log(`Total: ${total} files`);
-  console.log(`  - Auto-apply: ${result.autoApply.length}`);
-  console.log(`  - Needs review: ${result.needsReview.length}`);
-  console.log(`  - Skipped: ${result.skipped.length}`);
+  console.log(`  - Auto-apply:    ${result.autoApply.length}`);
+  console.log(`  - Auto-merged:   ${result.autoMerged.length}`);
+  console.log(`  - Conflicts:     ${result.conflicts.length}`);
+  console.log(`  - Drift:         ${result.drift.length}`);
+  console.log(`  - Skipped:       ${immCount + appCount} (immutable ${immCount}, app ${appCount})`);
 
-  if (command === "apply" && result.autoApply.length > 0) {
-    console.log(`\n✓ Applied ${result.autoApply.length} files.`);
+  if (command === "check") {
+    const applicable = result.autoApply.length + result.autoMerged.length + result.conflicts.length;
+    if (applicable > 0) {
+      console.log(`\n→ Run 'pnpm groot:sync' to apply ${applicable} change(s).`);
+    }
+  } else {
+    const applied = result.autoApply.length + result.autoMerged.length;
+    if (applied > 0) console.log(`\n✓ Applied ${applied} file(s).`);
   }
 
-  if (command === "check" && result.autoApply.length > 0) {
-    console.log(`\n→ Run 'pnpm groot:sync' to apply ${result.autoApply.length} safe changes.`);
-  }
-
-  if (result.needsReview.length > 0) {
-    console.log(`\n⚠ ${result.needsReview.length} files need manual review.`);
+  if (result.conflicts.length > 0) {
+    console.log(
+      `\n⚠ ${result.conflicts.length} file(s) have conflicts. ` +
+        `Run 'pnpm groot:resolve' to resolve them with the pi coding agent.`,
+    );
   }
 
   console.log(`\n📄 Sync report written to .groot/sync-report.json`);
