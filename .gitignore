@@ -24,6 +24,9 @@ config.local.yml
 # Local storage (files-sdk fs adapter dev root)
 /local/
 
+# Scratch / generated SQL from scripts (e.g. pnpm db:baseline)
+/tmp/
+
 # Sensitive files
 *.pem
 *.key

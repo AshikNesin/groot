@@ -92,6 +92,55 @@ pnpm prisma migrate resolve --applied 20260315000000_baseline_user_models
 
 This tells Prisma that the baseline migration has already been applied (since the tables already existed).
 
+## Pooled Database Connections (Supabase / PgBouncer / RDS Proxy)
+
+The Prisma **migrate/introspection engine** (used by `migrate deploy`, `migrate
+status`, `migrate diff`, `db pull`) opens its own connection and relies on
+prepared statements + session-level features. This is **incompatible with
+transaction-mode poolers** — Supabase Supavisor (port 6543), PgBouncer in
+transaction mode, RDS Proxy, Cloud SQL — and fails with:
+
+```
+Error: prepared statement "s1" already exists
+```
+
+and can hang long enough to trip platform boot timeouts (on Heroku this is a
+guaranteed crash loop: `prestart` runs `migrate deploy`, it hangs past the 60s
+R10 boot limit, the dyno is SIGKILL'd, every request 503s).
+
+### The fix
+
+`prisma.config.ts` routes the migrate engine at **`DATABASE_URL_DIRECT`** when
+set, falling back to `DATABASE_URL`:
+
+```ts
+datasource: {
+  url: ENV.DATABASE_URL_DIRECT || ENV.DATABASE_URL,
+},
+```
+
+The **runtime client is unaffected** — it uses the pooled `DATABASE_URL`
+separately via `@prisma/adapter-pg` in `server/src/core/database.ts`.
+
+### When you need it
+
+| Environment                  | `DATABASE_URL_DIRECT`                              |
+| ---------------------------- | -------------------------------------------------- |
+| Local Postgres (dev)         | not needed (unset)                                 |
+| Direct Postgres (Coolify)    | not needed (unset)                                 |
+| Supabase / Supavisor pooled  | **set** — point at the session-mode port (`:5432`) |
+| PgBouncer (transaction mode) | **set** — point past the pooler                    |
+
+`DATABASE_URL_DIRECT` is optional and only needs to bypass the pooler. With it
+set, `prestart` → `prisma migrate deploy` connects directly and boots cleanly.
+
+### Manual migration check against a pooled DB
+
+```bash
+# Verify migrations apply cleanly via the direct connection:
+export DATABASE_URL="$DATABASE_URL_DIRECT"; pnpm db:migrate
+```
+
 ## Migration Best Practices
 
 ### DO
@@ -130,6 +179,19 @@ The database schema differs from expected state:
    ```bash
    pnpm prisma migrate reset
    ```
+
+If the database was previously managed with `prisma db push` (no
+`_prisma_migrations` table, or rows that don't match the migrations folder),
+bring it into the migrate workflow in one safe, idempotent step:
+
+```bash
+pnpm db:baseline            # diffs live DB → schema, applies additive SQL,
+                            # marks the baseline applied, verifies
+pnpm db:baseline -- --dry-run   # generate the SQL for review without applying
+```
+
+The script refuses to apply any non-additive SQL (DROP / RENAME / ALTER COLUMN)
+and writes the generated SQL to `tmp/db-baseline-sync.sql` for review first.
 
 ### "No migrations to apply"
 
