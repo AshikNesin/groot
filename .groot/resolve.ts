@@ -106,11 +106,11 @@ async function checkPi(): Promise<void> {
 
 function twoWayConflictMarkers(file: string, ours: string, theirs: string): string {
   return [
-    `<<<<<<< ${file} (local)`,
+    `<<<<<<< ${file} (current_repo)`,
     ours.replace(/\n$/, ""),
     "=======",
     theirs.replace(/\n$/, ""),
-    `>>>>>>> ${file} (groot)`,
+    `>>>>>>> ${file} (groot_boilerplate)`,
     "",
   ].join("\n");
 }
@@ -135,11 +135,11 @@ async function gitMergeFile(
         "-p",
         "--diff3",
         "-L",
-        `${file} (local)`,
+        `${file} (current_repo)`,
         "-L",
-        `${file} (base)`,
+        `${file} (last_sync)`,
         "-L",
-        `${file} (groot)`,
+        `${file} (groot_boilerplate)`,
         oursPath,
         basePath,
         theirsPath,
@@ -224,10 +224,10 @@ function buildPrompt(file: string, commits: string[]): string {
     `Resolve the git merge conflict in \`${file}\`.`,
     "",
     "The file currently contains diff3-style conflict markers:",
-    `  <<<<<<< ${file} (local)   — this project's local version (PRESERVE its customizations)`,
-    `  ||||||| ${file} (base)    — the common ancestor`,
+    `  <<<<<<< ${file} (current_repo)      — this repo's current version (PRESERVE its customizations)`,
+    `  ||||||| ${file} (last_sync)         — groot at the commit you last synced from (the common ancestor)`,
     `  =======`,
-    `  >>>>>>> ${file} (groot)   — the upstream groot boilerplate (ADOPT its improvements)`,
+    `  >>>>>>> ${file} (groot_boilerplate)  — the latest upstream groot boilerplate (ADOPT its improvements)`,
     "",
     "Upstream commits that changed this file:",
     commitList,

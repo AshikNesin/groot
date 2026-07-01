@@ -264,11 +264,11 @@ async function gitMergeFile(
         "-p",
         "--diff3",
         "-L",
-        `${file} (local)`,
+        `${file} (current_repo)`,
         "-L",
-        `${file} (base)`,
+        `${file} (last_sync)`,
         "-L",
-        `${file} (groot)`,
+        `${file} (groot_boilerplate)`,
         oursPath,
         basePath,
         theirsPath,
@@ -289,11 +289,11 @@ async function gitMergeFile(
 /** Build a two-way conflict block when there is no common ancestor to merge. */
 export function twoWayConflictMarkers(file: string, ours: string, theirs: string): string {
   return [
-    `<<<<<<< ${file} (local)`,
+    `<<<<<<< ${file} (current_repo)`,
     ours.replace(/\n$/, ""),
     "=======",
     theirs.replace(/\n$/, ""),
-    `>>>>>>> ${file} (groot)`,
+    `>>>>>>> ${file} (groot_boilerplate)`,
     "",
   ].join("\n");
 }
