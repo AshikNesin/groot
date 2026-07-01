@@ -24,6 +24,7 @@ import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { z } from "zod";
 import { acquireBoilerplate, releaseBoilerplate, type AcquiredRepo } from "./_acquire";
+import { PACKAGE_JSON_FILENAME, parseDiff3Markers, mergePackageJson } from "./package-json-merge";
 
 const exec = promisify(execFile);
 
@@ -274,6 +275,95 @@ function runCheck(projectRoot: string): Promise<number> {
 }
 
 // ============================================================
+// DETERMINISTIC PACKAGE.JSON RESOLUTION
+// ============================================================
+
+/**
+ * Resolve a `package.json` conflict deterministically, without the AI agent.
+ *
+ * Sources the three sides (ours/base/theirs) from the diff3 markers already in
+ * the file (no boilerplate checkout needed in the common case), falling back to
+ * the manifest's from/to commits when markers are absent or 2-way. Only
+ * `scripts` / `dependencies` / `devDependencies` are 3-way-merged; all other
+ * top-level keys are copied verbatim from the local file.
+ *
+ * Returns:
+ *   `"resolved"`      — file written, conflict gone
+ *   `"fallback"`      — could not merge cleanly; caller should use the AI flow
+ *   `"missing-local"` — local file does not exist
+ *   `"clean"`         — ours === theirs (no change needed)
+ */
+async function resolvePackageJson(
+  file: string,
+  projectRoot: string,
+  manifest: Manifest,
+  getRepo: () => Promise<AcquiredRepo>,
+): Promise<"resolved" | "fallback" | "missing-local" | "clean"> {
+  const localPath = join(projectRoot, file);
+  let content: string;
+  try {
+    content = await readFile(localPath, "utf-8");
+  } catch {
+    return "missing-local";
+  }
+
+  let oursText: string;
+  let baseText: string | null = null;
+  let theirsText: string | null = null;
+
+  const parsed = parseDiff3Markers(content);
+  if (parsed) {
+    // Common case: markers are already in the file (written by sync).
+    oursText = parsed.ours;
+    theirsText = parsed.theirs;
+    baseText = parsed.base; // null when 2-way (no base sections)
+  } else {
+    // No markers — e.g. sync ran with --skip-conflicts. Treat the local file
+    // as ours and source base/theirs from the recorded commits.
+    oursText = content;
+  }
+
+  // Fetch any missing side from the boilerplate checkout (lazy).
+  if (baseText === null || theirsText === null) {
+    let repo: AcquiredRepo;
+    try {
+      repo = await getRepo();
+    } catch {
+      return "fallback";
+    }
+    if (baseText === null) {
+      try {
+        const { stdout } = await exec("git", ["show", `${manifest.fromCommit}:${file}`], {
+          cwd: repo.dir,
+        });
+        baseText = stdout;
+      } catch {
+        return "fallback";
+      }
+    }
+    if (theirsText === null) {
+      try {
+        const { stdout } = await exec("git", ["show", `${manifest.toCommit}:${file}`], {
+          cwd: repo.dir,
+        });
+        theirsText = stdout;
+      } catch {
+        // File deleted upstream — nothing to merge.
+        return "clean";
+      }
+    }
+  }
+
+  if (oursText === theirsText) return "clean";
+
+  const merged = mergePackageJson(oursText, baseText!, theirsText!);
+  if (!merged.ok) return "fallback";
+
+  await writeFile(localPath, merged.text);
+  return "resolved";
+}
+
+// ============================================================
 // MAIN
 // ============================================================
 
@@ -346,28 +436,30 @@ async function main() {
     return;
   }
 
-  // 2. Ensure pi is available
-  await checkPi();
-
-  // 3. Acquire the boilerplate only if some file needs marker regeneration.
+  // 2. Lazy resources: the AI flow (`pi`) and the boilerplate checkout are
+  //    only acquired when actually needed. A package.json-only resolve merges
+  //    deterministically and completes with no clone and no `pi` dependency.
   let repo: AcquiredRepo | undefined;
-  for (const c of conflicts) {
-    try {
-      const content = await readFile(join(projectRoot, c.file), "utf-8");
-      if (!CONFLICT_MARKER_RE.test(content)) {
-        repo = await acquireBoilerplate({
-          repoUrl: config.boilerplate.repo,
-          name: config.boilerplate.name,
-          defaultBranch: await resolveDefaultBranch(config.boilerplate.repo),
-          purpose: "resolve",
-          ensureCommitReachable: manifest.fromCommit,
-        });
-        break;
-      }
-    } catch {
-      // missing local file — handled per-file below
+  const getRepo = async (): Promise<AcquiredRepo> => {
+    if (!repo) {
+      repo = await acquireBoilerplate({
+        repoUrl: config.boilerplate.repo,
+        name: config.boilerplate.name,
+        defaultBranch: await resolveDefaultBranch(config.boilerplate.repo),
+        purpose: "resolve",
+        ensureCommitReachable: manifest.fromCommit,
+      });
     }
-  }
+    return repo;
+  };
+
+  let piChecked = false;
+  const ensurePi = async (): Promise<void> => {
+    if (!piChecked) {
+      await checkPi();
+      piChecked = true;
+    }
+  };
 
   const resolved: string[] = [];
   const failed: string[] = [];
@@ -377,11 +469,38 @@ async function main() {
     for (const c of conflicts) {
       console.log(`\n── Resolving ${c.file} ──\n`);
 
-      const state = repo
-        ? await ensureMarkers(c.file, projectRoot, manifest, repo)
-        : (await fileHasMarkers(projectRoot, c.file))
-          ? "ready"
-          : "clean";
+      // package.json is merged deterministically (never via the AI agent) so the
+      // file can never be left in a malformed state by an LLM edit. Only falls
+      // back to the AI flow when the programmatic merge can't handle it.
+      if (c.file === PACKAGE_JSON_FILENAME) {
+        const outcome = await resolvePackageJson(c.file, projectRoot, manifest, getRepo);
+        if (outcome === "resolved") {
+          console.log(`  ✓ Resolved ${c.file} via deterministic package.json merge`);
+          resolved.push(c.file);
+          continue;
+        }
+        if (outcome === "clean") {
+          console.log(`  ✓ ${c.file} has no conflict markers — already resolved.`);
+          resolved.push(c.file);
+          continue;
+        }
+        if (outcome === "missing-local") {
+          console.log(`  ⚠ ${c.file} does not exist locally — skipping.`);
+          skipped.push(c.file);
+          continue;
+        }
+        console.log(`  → Deterministic merge unavailable for ${c.file}; falling back to AI.`);
+      }
+
+      // AI resolution path
+      await ensurePi();
+
+      let state: "ready" | "missing-local" | "clean";
+      if (await fileHasMarkers(projectRoot, c.file)) {
+        state = "ready";
+      } else {
+        state = await ensureMarkers(c.file, projectRoot, manifest, await getRepo());
+      }
 
       if (state === "missing-local") {
         console.log(`  ⚠ ${c.file} does not exist locally — skipping.`);

@@ -63,8 +63,19 @@ sides while preserving local customizations, removes the markers, and follows
 `AGENTS.md` conventions. Resolved entries are pruned from the manifest and
 `pnpm check` runs at the end to verify.
 
+**`package.json` is resolved deterministically, never by the AI agent.** It is
+the most conflict-prone file and the one where a malformed result (trailing
+comma, duplicate key) breaks the whole toolchain. `resolve.ts` instead merges
+only `scripts` / `dependencies` / `devDependencies` programmatically (3-way:
+unmodified-locally → adopt upstream; modified-locally → local wins); every
+other top-level key is copied verbatim from the local file. The pure merge
+logic lives in `.groot/package-json-merge.ts`. It falls back to `pi` only when
+the merge can't be handled programmatically (e.g. a side isn't valid JSON), so
+a package.json-only resolve needs neither `pi` nor a boilerplate checkout.
+
 > Requires `pi` installed (`npm i -g --ignore-scripts @earendil-works/pi-coding-agent`)
-> and authenticated (`pi` → `/login`, or an API key env var).
+> and authenticated (`pi` → `/login`, or an API key env var) — **only when a
+> non-`package.json` conflict is present**.
 
 When you are operating inside an agent session (e.g. Droid) you may instead
 resolve the manifest's files directly with your own editing tools — the
