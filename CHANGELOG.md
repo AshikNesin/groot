@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+### Minor Changes
+
+- `c92cfd5` feat(sync): resolve package.json conflicts deterministically (never via the AI agent)
+- `8c6fb5d` feat(sync): three-way merges + AI conflict resolution (groot sync v4)
+
 ## 1.5.0
 
 ### Minor Changes
