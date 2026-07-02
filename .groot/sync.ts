@@ -24,6 +24,7 @@ import { promisify } from "node:util";
 import { z } from "zod";
 import micromatch from "micromatch";
 import { acquireBoilerplate, releaseBoilerplate } from "./_acquire";
+import { mergePackageJson, PACKAGE_JSON_FILENAME } from "./package-json-merge";
 
 const exec = promisify(execFile);
 
@@ -332,6 +333,22 @@ async function threeWayMerge(
 
   // Already in sync.
   if (ours === theirs) return { kind: "identical" };
+
+  // package.json: merge deterministically instead of via `git merge-file` so
+  // non-managed keys (`name`, `version`, `description`, `packageManager`, …)
+  // never raise conflict markers. Only `scripts`/`dependencies`/`devDependencies`
+  // flow boilerplate → child; every other key is copied verbatim from ours.
+  // When the merge result equals ours (only non-managed keys differed) this is a
+  // no-op; otherwise the merged content is written cleanly as `auto-merged`. The
+  // marker-based path below is the fallback when JSON is unparseable.
+  if (file === PACKAGE_JSON_FILENAME && base !== null) {
+    const merged = mergePackageJson(ours, base, theirs);
+    if (merged.ok) {
+      return merged.text === ours
+        ? { kind: "identical" }
+        : { kind: "auto-merged", content: merged.text };
+    }
+  }
 
   // Untouched locally since last sync → take theirs.
   if (base !== null && ours === base) return { kind: "auto-apply", content: theirs };
