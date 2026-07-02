@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+### Patch Changes
+
+- `b7aa065` fix(groot): suppress package.json sync markers for non-managed keys
+
 ## 1.8.0
 
 ### Minor Changes
