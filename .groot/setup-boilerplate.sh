@@ -72,15 +72,29 @@ setup_portless() {
 }
 
 # ---------------------------------------------------------------
-# Step 2: Git hooks (Vite+ hooks, not Python pre-commit)
+# Step 2: Prerequisites — must be a git repo with deps installed
 # ---------------------------------------------------------------
 
-setup_git_hooks() {
-    print_info "Installing git hooks (Vite+)..."
-    # `pnpm prepare` runs `vp config`, which sets up .vite-hooks/ with
-    # lint-staged (vp check) + gitleaks + design-token checks.
-    pnpm prepare
-    print_success "Git hooks installed (vp check + gitleaks + design tokens)"
+check_git_repo() {
+    if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+        print_error "Not a git repository. Run this script from the project root."
+        exit 1
+    fi
+}
+
+install_dependencies() {
+    print_info "Installing dependencies..."
+    pnpm install
+    print_success "Dependencies installed"
+
+    # `pnpm install` auto-runs the `prepare` lifecycle script (`vp config`),
+    # which installs git hooks into .vite-hooks/ (lint-staged + gitleaks).
+    # Verify it took effect rather than assuming.
+    if git config core.hooksPath &> /dev/null; then
+        print_success "Git hooks installed via Vite+ (lint-staged + gitleaks)"
+    else
+        print_warning "Git hooks not detected. Run 'pnpm prepare' manually."
+    fi
 }
 
 # ---------------------------------------------------------------
@@ -151,15 +165,10 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 }
 
 # ---------------------------------------------------------------
-# Step 4: Dependencies + Prisma
+# Step 4: Prisma + next steps
 # ---------------------------------------------------------------
 
 final_steps() {
-    echo ""
-    print_info "Installing dependencies..."
-    pnpm install
-    print_success "Dependencies installed"
-
     print_info "Generating Prisma client..."
     pnpm generate
     print_success "Prisma client generated"
@@ -183,10 +192,11 @@ main() {
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
 
+    check_git_repo
     setup_varlock
     setup_portless
-    setup_git_hooks
     update_app_name
+    install_dependencies
     final_steps
 }
 
