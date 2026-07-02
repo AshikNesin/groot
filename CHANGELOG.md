@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.7.0
+
+### Minor Changes
+
+- [`8346573`](https://github.com/AshikNesin/groot/commit/83465738c05d3a541a72e51edc65d1764b41df18) Thanks [@AshikNesin](https://github.com/AshikNesin)! - fix: update stale boilerplate setup script + add `pnpm groot:setup`
+
+  The setup script had accumulated significant drift from the actual project
+  convention. Rewritten to match the current codebase:
+
+  - **Secrets**: Infisical references → Doppler (the project uses
+    `@plugin(@varlock/doppler-plugin)` in `.env.schema`).
+  - **Git hooks**: Python `pre-commit` tool → Vite+ hooks via `pnpm prepare`
+    (`vp config` sets up `.vite-hooks/` with lint-staged + gitleaks).
+  - **App name**: `RP_NAME` in `.env.schema` (gone) → `config.yml` where
+    `app.name` and `passkey.rpName` actually live. Also updates the
+    `@initDoppler(project=...)` reference in `.env.schema`.
+  - **Removed dead seds**: logger service name and Sentry release are now
+    derived dynamically from `config.app.name`, not hardcoded. `sentry.config.js`
+    doesn't exist. `DATABASE_URL` is auto-derived from `package.json` name.
+  - **`pnpm groot:setup`** added to `package.json` alongside the existing
+    `groot:*` script family.
+  - Updated `docs/quick-start.md` and `docs/setup-guide.md` to reference the
+    new command.
+
+### Patch Changes
+
+- [`a7e8d26`](https://github.com/AshikNesin/groot/commit/a7e8d26bc5b336e190f51ac3efbe232e42231d65) Thanks [@AshikNesin](https://github.com/AshikNesin)! - fix(setup): correct script ordering + add git repo guard
+
+  Two robustness fixes to the setup script:
+
+  - **Install dependencies before hooks**: the old order called `pnpm prepare`
+    (→ `vp config`) before `pnpm install`, so on a fresh clone with no
+    `node_modules` it would fail because `vp` wasn't installed yet. Now
+    `pnpm install` runs first and auto-triggers the `prepare` lifecycle
+    script, which installs hooks in one step.
+  - **Fail fast if not a git repo**: clear error instead of a cryptic
+    `vp config` failure when run outside a git repository.
+
 ## 1.6.0
 
 ### Minor Changes
