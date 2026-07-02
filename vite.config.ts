@@ -28,7 +28,7 @@ export default defineConfig({
     "*": "vp check --fix",
     // Enforce the design-token invariant (no raw palette colors outside the
     // token layer) whenever client source or styles change.
-    // See scripts/check-design-tokens.ts and PLAN.md.
+    // See scripts/check-design-tokens.ts.
     "*.{ts,tsx,css}": "npm run check:tokens",
   },
 

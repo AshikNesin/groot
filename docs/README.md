@@ -30,7 +30,6 @@ Welcome to the documentation hub for the Express + React boilerplate. This guide
 ### Examples & Reference
 
 - **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets
-- **[Boilerplate Enhancements](./boilerplate-enhancements.md)** – Complete reference of all added features
 - **[Changelog](./CHANGELOG.md)** – Documentation changes over time
 
 ## Project Overview

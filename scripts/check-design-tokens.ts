@@ -14,7 +14,7 @@
  *
  * Oxlint has no built-in rule for banning string patterns inside className
  * attributes, so this script is the enforcement mechanism. Wire it into CI or
- * a pre-commit hook alongside `vp check`. See PLAN.md §Principles.
+ * a pre-commit hook alongside `vp check`.
  *
  * Usage:  tsx scripts/check-design-tokens.ts
  * Exit:   0 = clean, 1 = violations found.
