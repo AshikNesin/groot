@@ -11,7 +11,7 @@ The groot sync system has four workflows:
 | Workflow     | Direction     | Command               | Purpose                                |
 | ------------ | ------------- | --------------------- | -------------------------------------- |
 | **Sync**     | groot → child | `pnpm groot:sync`     | Pull + 3-way merge boilerplate updates |
-| **Resolve**  | local         | `pnpm groot:resolve`  | AI-resolve conflicts (pi coding agent) |
+| **Resolve**  | local         | `pnpm groot:resolve`  | AI-resolve conflicts (Cline SDK + GLM) |
 | **Upstream** | child → groot | `pnpm groot:upstream` | Push bug fixes back to the boilerplate |
 | **Release**  | groot         | `pnpm changeset`      | Version and document changes in groot  |
 
@@ -72,7 +72,7 @@ pnpm groot:check
 # Apply safe changes (auto-apply + clean 3-way merges) and write conflict markers
 pnpm groot:sync
 
-# Resolve any remaining conflicts with the pi coding agent
+# Resolve any remaining conflicts with the Cline SDK (GLM Coding Plan)
 pnpm groot:resolve
 ```
 
@@ -99,30 +99,35 @@ review list.
 
 ### Resolving conflicts (`pnpm groot:resolve`)
 
-Conflicts are resolved with the [pi coding agent](https://pi.dev), so the flow
-works for any developer, not just inside an agent session.
+Conflicts are resolved with the [Cline SDK](https://docs.cline.bot/sdk) running
+in-process on the [GLM Coding Plan](https://docs.z.ai/devpack/tool/cline), so
+the flow works for any developer — no global CLI binary or agent session needed.
 
 ```bash
 pnpm groot:resolve                 # resolve every file in the manifest
 pnpm groot:resolve --dry-run       # list pending conflicts only
 pnpm groot:resolve --file path.ts  # resolve a single file (repeatable)
 pnpm groot:resolve --no-verify     # skip the post-resolution `pnpm check`
-pnpm groot:resolve --thinking high # raise pi's reasoning effort
+pnpm groot:resolve --model glm-5.2 # override the model id
 ```
 
 `resolve.ts` reads `.groot/needs-review/manifest.json`, ensures each file has
 conflict markers (regenerating them from the recorded base/target commits when
-sync ran with `--skip-conflicts`), then runs `pi -p` per file. pi merges both
-sides while preserving local customizations, removes the markers, and follows
-`AGENTS.md` conventions. Resolved entries are pruned from the manifest, and
-`pnpm check` runs at the end to verify.
+sync ran with `--skip-conflicts`), then runs the Cline agent per file. The agent
+merges both sides while preserving local customizations, removes the markers via
+a controlled `write_resolved_file` tool (which refuses to write content that
+still contains markers), and follows `AGENTS.md` conventions. Resolved entries
+are pruned from the manifest, and `pnpm check` runs at the end to verify.
 
-**Prerequisites:** `pi` installed and authenticated.
+**Prerequisites:** `@cline/sdk` is a `devDependency`, so `pnpm install` provides
+it. Set your Z.AI (GLM) API key:
 
 ```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-pi          # then /login (subscription) — or set an API key env var
+export ZAI_API_KEY=...            # or add to your shell profile / .env
 ```
+
+To point at a different provider/model, set `GROOT_RESOLVE_PROVIDER`,
+`GROOT_RESOLVE_BASE_URL`, and `GROOT_RESOLVE_MODEL` (see `.env.schema`).
 
 ### Boilerplate checkout reuse
 
@@ -244,7 +249,7 @@ The `last_sync.commit` in your config may reference a commit that's no longer in
 A conflict means the file was modified locally **and** groot changed the same
 lines, so the three-way merge could not resolve it automatically. Options:
 
-1. **AI-resolve (recommended)**: `pnpm groot:resolve` — the pi coding agent
+1. **AI-resolve (recommended)**: `pnpm groot:resolve` — the Cline agent (GLM)
    merges both sides and removes the conflict markers.
 2. **Resolve manually**: Open the file, reconcile the `<<<<<<<` / `=======` /
    `>>>>>>>` markers by hand.
@@ -253,11 +258,14 @@ lines, so the three-way merge could not resolve it automatically. Options:
 4. **Keep local version**: Add the file to `additional_exclusions` so future
    syncs leave it untouched.
 
-### `pi` not found during resolve
+### Missing `ZAI_API_KEY` during resolve
+
+`groot:resolve` runs the Cline SDK in-process (no global binary to install). It
+only needs a Z.AI (GLM) API key:
 
 ```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-pi   # then /login, or export an API key (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...)
+export ZAI_API_KEY=...
+pnpm install     # ensures @cline/sdk is present
 ```
 
 ### Changeset version not detected

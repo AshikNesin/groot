@@ -6,7 +6,7 @@
  * non-overlapping upstream changes apply automatically instead of piling up in
  * a manual review list. Files that still genuinely conflict are written with
  * conflict markers and recorded in `.groot/needs-review/manifest.json` for the
- * AI-assisted resolver (`pnpm groot:resolve`, powered by the pi coding agent).
+ * AI-assisted resolver (`pnpm groot:resolve`, powered by the Cline SDK / GLM Coding Plan).
  *
  * Usage:
  *   pnpm groot:check            - Check for available changes (dry run)
@@ -869,7 +869,7 @@ async function main() {
   if (result.conflicts.length > 0) {
     console.log(
       `\n⚠ ${result.conflicts.length} file(s) have conflicts. ` +
-        `Run 'pnpm groot:resolve' to resolve them with the pi coding agent.`,
+        `Run 'pnpm groot:resolve' to resolve them with the Cline SDK (GLM).`,
     );
   }
 

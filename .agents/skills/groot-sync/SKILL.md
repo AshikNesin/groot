@@ -21,7 +21,7 @@ pnpm groot:check
 # Apply safe changes (auto-apply + clean 3-way merges) and write conflict markers
 pnpm groot:sync
 
-# Resolve any remaining conflicts with the pi coding agent
+# Resolve any remaining conflicts with the Cline SDK (GLM Coding Plan)
 pnpm groot:resolve
 
 # Push local fixes back to groot
@@ -48,7 +48,7 @@ The sync tool merges deterministically and only escalates true conflicts:
 
 ### Resolve conflicts (AI-assisted)
 
-After sync, resolve the residual conflicts with the [pi coding agent](https://pi.dev):
+After sync, resolve the residual conflicts with the [Cline SDK](https://docs.cline.bot/sdk) on the [GLM Coding Plan](https://docs.z.ai/devpack/tool/cline):
 
 ```bash
 pnpm groot:resolve            # resolve every file in the manifest
@@ -58,10 +58,12 @@ pnpm groot:resolve --file path/to/file.ts   # resolve one file
 
 `resolve.ts` reads `.groot/needs-review/manifest.json`, ensures each file has
 conflict markers (regenerating them from the recorded base/target commits when
-CI ran with `--skip-conflicts`), then invokes `pi -p` per file. pi merges both
-sides while preserving local customizations, removes the markers, and follows
-`AGENTS.md` conventions. Resolved entries are pruned from the manifest and
-`pnpm check` runs at the end to verify.
+CI ran with `--skip-conflicts`), then runs the Cline agent per file. The agent
+merges both sides while preserving local customizations and writes the resolved
+file back through a controlled `write_resolved_file` tool that refuses to leave
+conflict markers behind. It follows `AGENTS.md` conventions (fed in as the
+system prompt). Resolved entries are pruned from the manifest and `pnpm check`
+runs at the end to verify.
 
 **`package.json` is resolved deterministically, never by the AI agent.** It is
 the most conflict-prone file and the one where a malformed result (trailing
@@ -69,12 +71,13 @@ comma, duplicate key) breaks the whole toolchain. `resolve.ts` instead merges
 only `scripts` / `dependencies` / `devDependencies` programmatically (3-way:
 unmodified-locally → adopt upstream; modified-locally → local wins); every
 other top-level key is copied verbatim from the local file. The pure merge
-logic lives in `.groot/package-json-merge.ts`. It falls back to `pi` only when
-the merge can't be handled programmatically (e.g. a side isn't valid JSON), so
-a package.json-only resolve needs neither `pi` nor a boilerplate checkout.
+logic lives in `.groot/package-json-merge.ts`. It falls back to the Cline agent
+only when the merge can't be handled programmatically (e.g. a side isn't valid
+JSON), so a package.json-only resolve needs neither the API key nor a boilerplate
+checkout.
 
-> Requires `pi` installed (`npm i -g --ignore-scripts @earendil-works/pi-coding-agent`)
-> and authenticated (`pi` → `/login`, or an API key env var) — **only when a
+> Requires `@cline/sdk` (a `devDependency` — present after `pnpm install`) and a
+> Z.AI (GLM) API key (`export ZAI_API_KEY=...`) — **only when a
 > non-`package.json` conflict is present**.
 
 When you are operating inside an agent session (e.g. Droid) you may instead
@@ -152,7 +155,7 @@ Each file changed in groot since the last sync lands in exactly one bucket:
 | **Skipped**     | Immutable (security) or app-specific paths                 | Ignored (counts only in output)         |
 
 Only **Conflict** files need attention, and `pnpm groot:resolve` handles those
-with the pi coding agent. Clean 3-way merges no longer require manual review.
+with the Cline SDK (GLM). Clean 3-way merges no longer require manual review.
 
 ## Config Format
 
