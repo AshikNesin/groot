@@ -14,19 +14,20 @@ Follow these steps to boot the Express API, job queue, and React client locally 
 
 ### Automated Setup (Recommended)
 
-Run the setup script to automatically configure your environment:
+Run the setup script to configure your project:
 
 ```bash
-./setup-boilerplate.sh
+pnpm groot:setup
 ```
 
 This script will:
 
-- Copy `.env.schema` to `.env`
-- Generate secure `JWT_SECRET_KEY` (64 characters)
-- Generate secure `ADMIN_AUTH_KEY` (48 characters)
-- Prompt for your app name and update `RP_NAME`
-- Optionally update package.json and code references
+- Install global CLIs (varlock, portless)
+- Set up git hooks (lint-staged + gitleaks via Vite+)
+- Prompt for your app name and update `config.yml`, `package.json`, and `.env.schema` (Doppler project)
+- Install dependencies and generate the Prisma client
+
+Secrets are managed via varlock + Doppler — no local `.env` file needed in development.
 
 ### Manual Setup
 

@@ -1,15 +1,17 @@
 #!/bin/bash
 
 # Boilerplate Setup Script
-# This script sets up your new project by:
-# 1. Verifying .env.schema exists (for varlock)
-# 2. Installing pre-commit hooks (gitleaks + vite-plus)
-# 3. Asking for app name and updating it across the project
-# 4. Updating package.json, DATABASE_URL, and code references with the new app name
 #
-# Note: Secrets are managed via Varlock + Infisical, not local .env files
+# Run after cloning groot to customize it for your project:
+#   1. Verify / install global CLIs (varlock, portless)
+#   2. Install git hooks (Vite+ hooks via `pnpm prepare`)
+#   3. Ask for app name and propagate it across config.yml, package.json,
+#      and .env.schema (Doppler project)
+#   4. Install dependencies + generate Prisma client
+#
+# Usage:  pnpm groot:setup
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,251 +20,174 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Print colored output
-print_info() {
-    echo -e "${BLUE}ℹ ${NC}$1"
-}
-
-print_success() {
-    echo -e "${GREEN}✓${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}✗${NC} $1"
-}
-
-# Setup environment - verify .env.schema exists for varlock
-setup_env() {
-    print_info "Checking environment configuration..."
-
-    if ! command -v varlock &> /dev/null; then
-        print_info "varlock is not installed. Installing it now..."
-        curl -sSfL https://varlock.dev/install.sh | sh -s
-        print_success "varlock installed successfully"
-    else
-        print_success "varlock is already installed"
-    fi
-
-    if [ ! -f ".env.schema" ]; then
-        print_error ".env.schema not found!"
-        print_info "This file is required for varlock to manage secrets."
-        exit 1
-    fi
-
-    print_success "Found .env.schema (varlock will handle secrets via Infisical)"
-    print_info "Make sure to configure your Infisical credentials:"
-    print_info "  - INFISICAL_PROJECT_ID"
-    print_info "  - INFISICAL_CLIENT_ID"
-    print_info "  - INFISICAL_CLIENT_SECRET"
-    print_info ""
-    print_info "Secrets like JWT_SECRET_KEY and ADMIN_AUTH_KEY are managed in Infisical."
-}
-
-# Setup portless
-setup_portless() {
-    print_info "Checking portless installation..."
-
-    if ! command -v portless &> /dev/null; then
-        print_info "portless is not installed. We recommend installing it for local development."
-        read -p "Install portless globally via npm? (y/N): " -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            npm install -g portless || { print_warning "Failed to install portless. You may need to run 'npm install -g portless' manually."; true; }
-            if command -v portless &> /dev/null; then
-                print_success "portless installed successfully"
-            fi
-        else
-            print_warning "Skipped portless installation. You may need to run 'npm install -g portless' manually."
-        fi
-    else
-        print_success "portless is already installed"
-    fi
-}
-
-# Setup pre-commit hooks (includes gitleaks)
-setup_pre_commit() {
-    print_info "Setting up pre-commit hooks..."
-
-    # Check if pre-commit is installed
-    if ! command -v pre-commit &> /dev/null; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            print_info "Installing pre-commit via Homebrew..."
-            brew install pre-commit
-        else
-            print_error "pre-commit not found. Please install it:"
-            echo "  pip install pre-commit"
-            echo "  Then run: pre-commit install"
-            return 1
-        fi
-    fi
-
-    pre-commit install
-    print_success "Pre-commit hooks installed (gitleaks + biome format)"
-}
+print_info()  { echo -e "${BLUE}ℹ ${NC}$1"; }
+print_success() { echo -e "${GREEN}✓${NC} $1"; }
+print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
+print_error()  { echo -e "${RED}✗${NC} $1"; }
 
 # Convert app name to slug format (lowercase, hyphenated)
-# e.g., "Gandalf App" -> "gandalf-app"
+# e.g., "My Cool App" -> "my-cool-app"
 to_slug() {
     echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-'
 }
 
-# Ask for app name and update RP_NAME
+# Cross-platform sed in-place edit
+sed_inplace() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
+# ---------------------------------------------------------------
+# Step 1: Global CLI tools
+# ---------------------------------------------------------------
+
+setup_varlock() {
+    print_info "Checking varlock..."
+    if command -v varlock &> /dev/null; then
+        print_success "varlock is installed"
+    else
+        print_info "Installing varlock..."
+        curl -sSfL https://varlock.dev/install.sh | sh -s
+        print_success "varlock installed"
+    fi
+}
+
+setup_portless() {
+    print_info "Checking portless..."
+    if command -v portless &> /dev/null; then
+        print_success "portless is installed"
+        return
+    fi
+    read -rp "Install portless globally via npm? (y/N): " -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        npm install -g portless || { print_warning "Failed — run 'npm install -g portless' manually."; return; }
+        command -v portless &> /dev/null && print_success "portless installed" || print_warning "Installation may have failed"
+    else
+        print_warning "Skipped. Install later with: npm install -g portless"
+    fi
+}
+
+# ---------------------------------------------------------------
+# Step 2: Git hooks (Vite+ hooks, not Python pre-commit)
+# ---------------------------------------------------------------
+
+setup_git_hooks() {
+    print_info "Installing git hooks (Vite+)..."
+    # `pnpm prepare` runs `vp config`, which sets up .vite-hooks/ with
+    # lint-staged (vp check) + gitleaks + design-token checks.
+    pnpm prepare
+    print_success "Git hooks installed (vp check + gitleaks + design tokens)"
+}
+
+# ---------------------------------------------------------------
+# Step 3: App name — propagate to config.yml, package.json, .env.schema
+# ---------------------------------------------------------------
+
+ensure_config_yml() {
+    if [ ! -f "config.yml" ]; then
+        if [ -f "config.example.yml" ]; then
+            cp config.example.yml config.yml
+            print_info "Created config.yml from config.example.yml"
+        else
+            print_error "config.yml not found and no config.example.yml to copy from!"
+            exit 1
+        fi
+    fi
+}
+
 update_app_name() {
     print_info "Configure your application name..."
 
     local current_name
-    current_name=$(grep -E "^RP_NAME=" .env.schema | cut -d'=' -f2-)
-    print_info "Current app name: $current_name"
+    current_name=$(grep -E '^\s+name:\s*' config.yml | head -1 | sed 's/.*name:\s*"*//;s/"\s*$//')
+    print_info "Current app name: ${current_name:-groot}"
 
-    read -p "Enter your app name (e.g., 'My Cool App'): " app_name
-
+    read -rp "Enter your app name (e.g., 'My Cool App'): " app_name
     if [ -z "$app_name" ]; then
-        print_warning "No app name provided, keeping current name"
-        return
+        print_warning "No app name provided, keeping '$current_name'"
+        return 0
     fi
 
-    # Update RP_NAME in .env.schema with the human-readable name (e.g., "Gandalf App")
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|^RP_NAME=.*|RP_NAME=$app_name|" .env.schema
-    else
-        sed -i "s|^RP_NAME=.*|RP_NAME=$app_name|" .env.schema
-    fi
-    print_success "Updated RP_NAME in .env.schema to: $app_name"
-
-    # Generate slug for code references (e.g., "gandalf-app")
     local slug_name
     slug_name=$(to_slug "$app_name")
-    
-    # Ask if user wants to update package.json and code references
-    read -p "Also update package.json and code references from 'groot' to '$slug_name'? (y/N): " -n 1 -r
     echo
-    
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        update_code_references "$app_name" "$slug_name"
-    fi
-}
 
-# Update code references to new app name
-update_code_references() {
-    local app_name="$1"      # Human-readable name (e.g., "Gandalf App")
-    local slug_name="$2"     # Slug for code (e.g., "gandalf-app")
-    local old_name="groot"
-    
-    print_info "Updating code references from '$old_name' to '$slug_name'..."
-    print_info "RP_NAME will remain as '$app_name' (human-readable)"
-    
-    # Update package.json
-    if [ -f "package.json" ]; then
-        # Use node to update package.json properly (preserves formatting better)
-        if command -v node &> /dev/null; then
-            node -e "
+    # --- config.yml: app.name (human-readable) + passkey.rpName ---
+    # These are the user-facing labels shown in logs, Sentry, and passkey prompts.
+    ensure_config_yml
+    sed_inplace "s|^\([[:space:]]*\)name:[[:space:]]*\"[^\"]*\"|\1name: \"$app_name\"|" config.yml
+    sed_inplace "s|^\([[:space:]]*\)rpName:[[:space:]]*\"[^\"]*\"|\1rpName: \"$app_name\"|" config.yml
+    print_success "config.yml: app.name + passkey.rpName → '$app_name'"
+
+    # --- package.json: name (slug) ---
+    # The DB name is auto-derived from package.json name via
+    # scripts/get-local-db-connection-string.cjs, so updating it here
+    # automatically configures the local database name.
+    if command -v node &> /dev/null; then
+        node -e "
 const fs = require('fs');
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 pkg.name = '$slug_name';
-if (pkg.repository && pkg.repository.url) {
-    pkg.repository.url = pkg.repository.url.replace(/\\/groot\\.git$/, '/$slug_name.git');
+if (pkg.repository?.url) {
+    pkg.repository.url = pkg.repository.url.replace(/\\/[a-z0-9_-]+\\.git$/, '/$slug_name.git');
 }
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
-            print_success "Updated package.json name to: $slug_name"
-        else
-            print_warning "Node not found, skipping package.json update"
-        fi
-    fi
-    
-    # Update logger service name
-    local logger_file="server/src/core/logger/index.ts"
-    if [ -f "$logger_file" ]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/service: \"$old_name\"/service: \"$slug_name\"/g" "$logger_file"
-        else
-            sed -i "s/service: \"$old_name\"/service: \"$slug_name\"/g" "$logger_file"
-        fi
-        print_success "Updated logger service name to: $slug_name"
-    fi
-    
-    # Update instrument.ts (Sentry release)
-    local instrument_file="server/src/core/instrument.ts"
-    if [ -f "$instrument_file" ]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/return \`$old_name@\`/return \`$slug_name@\`/g" "$instrument_file"
-        else
-            sed -i "s/return \`$old_name@\`/return \`$slug_name@\`/g" "$instrument_file"
-        fi
-        print_success "Updated Sentry release name to: $slug_name"
-    fi
-    
-    # Update sentry.config.js if it exists
-    if [ -f "sentry.config.js" ]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/$old_name/$slug_name/g" sentry.config.js
-        else
-            sed -i "s/$old_name/$slug_name/g" sentry.config.js
-        fi
-        print_success "Updated sentry.config.js to: $slug_name"
+        print_success "package.json: name → '$slug_name'"
+    else
+        print_warning "Node not found — skipping package.json name update"
     fi
 
-    # Update DATABASE_URL in .env.schema with the slug name
+    # --- .env.schema: @initDoppler(project=...) ---
+    # The Doppler project name must match the project you created in Doppler.
     if [ -f ".env.schema" ]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|/dbname$|/$slug_name|" .env.schema
-        else
-            sed -i "s|/dbname$|/$slug_name|" .env.schema
-        fi
-        print_success "Updated DATABASE_URL database name to: $slug_name"
+        sed_inplace "s|@initDoppler(project=[^,]*,|@initDoppler(project=$slug_name,|" .env.schema
+        print_success ".env.schema: @initDoppler(project=$slug_name)"
     fi
 }
 
-# Final setup steps
+# ---------------------------------------------------------------
+# Step 4: Dependencies + Prisma
+# ---------------------------------------------------------------
+
 final_steps() {
     echo ""
     print_info "Installing dependencies..."
-
-    if command -v pnpm &> /dev/null; then
-        pnpm install
-        print_success "Dependencies installed"
-    else
-        print_error "pnpm not found. Please install pnpm first: npm install -g pnpm"
-        exit 1
-    fi
+    pnpm install
+    print_success "Dependencies installed"
 
     print_info "Generating Prisma client..."
-    pnpm run generate
+    pnpm generate
     print_success "Prisma client generated"
 
     echo ""
     print_info "Next steps:"
-    echo "  1. Configure Infisical credentials in your environment"
-    echo "  2. Run: pnpm dev (varlock will fetch secrets from Infisical)"
+    echo "  1. Set DOPPLER_TOKEN (or set secrets directly on your hosting platform)"
+    echo "  2. Run: pnpm dev"
     echo ""
-    print_success "Setup complete! Your environment is ready."
+    print_success "Setup complete!"
 }
 
-# Main execution
+# ---------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------
+
 main() {
     echo ""
     echo "╔════════════════════════════════════════════════════════════╗"
     echo "║          🚀 Groot Setup                                    ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
-    
-    # Check for required tools
-    if ! command -v openssl &> /dev/null; then
-        print_error "openssl is required but not installed. Please install it first."
-        exit 1
-    fi
-    
-    # Run setup steps
-    setup_env
+
+    setup_varlock
     setup_portless
-    setup_pre_commit
+    setup_git_hooks
     update_app_name
     final_steps
 }
 
-# Run main function
 main

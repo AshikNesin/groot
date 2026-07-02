@@ -31,27 +31,25 @@ Your boilerplate includes everything needed for a production-ready SaaS:
 #### Option A: Automated Setup (Recommended)
 
 ```bash
-./setup-boilerplate.sh
+pnpm groot:setup
 ```
 
 This will:
 
-- Copy `.env.schema` to `.env`
-- Generate secure `JWT_SECRET_KEY` (64 characters)
-- Generate secure `ADMIN_AUTH_KEY` (48 characters)
-- Prompt for your app name and update `RP_NAME`
-- Optionally update package.json and code references
+- Install global CLIs (varlock, portless)
+- Set up git hooks (lint-staged + gitleaks via Vite+)
+- Prompt for your app name and propagate it to `config.yml`, `package.json`, and `.env.schema` (Doppler project)
+- Install dependencies and generate the Prisma client
 
 #### Option B: Manual Setup
 
 ```bash
-# Copy environment file
-cp .env.schema .env
-
-# Edit .env and set these (IMPORTANT):
-# JWT_SECRET_KEY=your-super-secret-jwt-key-min-32-characters-long
-# ADMIN_AUTH_KEY=your-admin-auth-key
-# DATABASE_URL=your-database-url
+# Secrets are managed by varlock (Doppler). Set DOPPLER_TOKEN,
+# or set secrets directly on your hosting platform.
+# In development, varlock provides working defaults from .env.schema.
+#
+# Configure your app name in config.yml (app.name, passkey.rpName)
+# and update the Doppler project in .env.schema if using Doppler.
 ```
 
 > **Security Note**: Always use strong, randomly generated secrets in production!
@@ -308,9 +306,8 @@ pnpm test:e2e         # E2E tests
 
 Before deploying to production:
 
-- [ ] Run `./setup-boilerplate.sh` to generate secure secrets
-- [ ] Change `JWT_SECRET_KEY` to a strong random value (min 32 chars)
-- [ ] Change `ADMIN_AUTH_KEY` to a strong random value
+- [ ] Run `pnpm groot:setup` to configure your app
+- [ ] Set `DOPPLER_TOKEN` (or configure secrets on your hosting platform)
 - [ ] Set `DATABASE_URL` to your production database
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
 - [ ] Configure passkey environment (`RP_ID`, `RP_NAME`, `RP_ORIGIN`)

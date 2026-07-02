@@ -39,6 +39,7 @@
     "prestart": "varlock run -- prisma migrate deploy",
     "postinstall": "node scripts/varlock.js -- prisma generate",
     "prepare": "vp config",
+    "groot:setup": "bash .groot/setup-boilerplate.sh",
     "groot:check": "tsx .groot/sync.ts check",
     "groot:sync": "tsx .groot/sync.ts apply",
     "groot:resolve": "tsx .groot/resolve.ts",
