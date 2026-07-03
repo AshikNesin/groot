@@ -1,5 +1,5 @@
 ---
-"groot": major
+"groot": minor
 ---
 
 feat(groot): v5 snapshot reconciliation + pi CLI resolve
