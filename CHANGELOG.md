@@ -1,5 +1,59 @@
 # Changelog
 
+## 1.9.0
+
+### Minor Changes
+
+- [`2c894e6`](https://github.com/AshikNesin/groot/commit/2c894e6c7eaa8da61bafa6327540a0144c22be8e) Thanks [@AshikNesin](https://github.com/AshikNesin)! - feat(groot): v5 snapshot reconciliation + pi CLI resolve
+
+  Rewrites the boilerplate sync engine from commit-diff detection to full-tree
+  snapshot reconciliation, and replaces the in-process `@cline/sdk` agent with
+  the pi coding agent CLI for conflict resolution.
+
+  ### Sync engine (v5 snapshot reconciliation)
+
+  - **Git-tracked baseline.** A parentless snapshot commit of every synced file
+    at the last-sync state is stored as `refs/groot/baseline`. The baseline is
+    rebuilt from the boilerplate checkout when missing or stale, making sync
+    self-healing — no more "Invalid commit SHA" errors from shallow clones or
+    rebased upstream history.
+  - **Full-tree reconciliation.** Every synced file is classified across three
+    trees (ours / base / theirs) in a single pass via a pure decision table
+    (`.groot/lib/reconcile.ts`), replacing the old per-commit diff walk.
+  - **Safe deletion sync.** Files removed upstream are deleted locally only when
+    unmodified since the last sync; locally-modified deletions are flagged for
+    review instead of silently dropped.
+  - **Clean-tree precondition + crash-safe apply.** Sync refuses to overwrite
+    files with uncommitted git changes unless `--force` is passed. The baseline
+    ref and `boilerplate-sync.json` are advanced last, so a crash mid-apply never
+    loses state or marks conflicts as resolved.
+  - **Shared modules.** Sync logic extracted into `.groot/lib/` (patterns,
+    config, git, acquire, baseline, reconcile, changelog, engine) to prevent
+    drift between `sync.ts`, `resolve.ts`, and `upstream.ts`.
+
+  ### Resolve (pi CLI)
+
+  - **Replaces `@cline/sdk`.** Conflict resolution now shells out to the
+    [pi](https://pi.dev) coding agent CLI (`pi -p`) in a locked-down single-shot
+    mode: no session, no tools, no extensions, no skills, no prompt templates,
+    no context files.
+  - **Validated output.** The model's response is checked (non-empty, no conflict
+    markers) before anything is written to disk. On failure it retries once with
+    feedback, so a malformed response never reaches the working tree.
+  - **Prerequisite change.** Install pi globally
+    (`npm install -g --ignore-scripts @earendil-works/pi-coding-agent`) and
+    authenticate with any pi-supported provider key (e.g. `ZAI_API_KEY`) or
+    `pi` + `/login`. `@cline/sdk` is no longer a dependency.
+
+  ### Tests
+
+  - 22 unit tests for the reconciliation decision table
+    (`tests/server/groot/reconcile.test.ts`).
+  - 7 integration tests with fixture git repos covering check mode, apply +
+    deletion sync, 3-way merge conflicts, `--skip-conflicts`, `--force`
+    precondition, modified-file-deleted-upstream, and baseline self-healing
+    (`tests/server/groot/sync-engine.test.ts`).
+
 ## 1.8.1
 
 ### Patch Changes
@@ -22,6 +76,7 @@
   authenticate it; `pnpm install` alone provides everything, version-pinned.
 
   Migration for `groot:resolve` users:
+
   - Set your Z.AI (GLM) API key: `export ZAI_API_KEY=...` (documented in
     `.env.schema`). The old `pi` global install + `/login` is no longer used.
   - The `--thinking` flag is removed (no GLM equivalent); `--model` is kept and
@@ -43,6 +98,7 @@
 
   The setup script had accumulated significant drift from the actual project
   convention. Rewritten to match the current codebase:
+
   - **Secrets**: Infisical references → Doppler (the project uses
     `@plugin(@varlock/doppler-plugin)` in `.env.schema`).
   - **Git hooks**: Python `pre-commit` tool → Vite+ hooks via `pnpm prepare`
@@ -63,6 +119,7 @@
 - [`a7e8d26`](https://github.com/AshikNesin/groot/commit/a7e8d26bc5b336e190f51ac3efbe232e42231d65) Thanks [@AshikNesin](https://github.com/AshikNesin)! - fix(setup): correct script ordering + add git repo guard
 
   Two robustness fixes to the setup script:
+
   - **Install dependencies before hooks**: the old order called `pnpm prepare`
     (→ `vp config`) before `pnpm install`, so on a fresh clone with no
     `node_modules` it would fail because `vp` wasn't installed yet. Now
@@ -85,6 +142,7 @@
 - [`ad97754`](https://github.com/AshikNesin/groot/commit/ad9775432513caa316b47c8f88d366bfff2d5847) Thanks [@AshikNesin](https://github.com/AshikNesin)! - feat: pooled DB support, db:baseline recovery, and SNS body-parsing
 
   Three production hardening changes, each closing a silent-failure gap:
+
   - **Pooled database connections (`DATABASE_URL_DIRECT`)**: `prisma.config.ts`
     now routes the migrate/introspection engine at `DATABASE_URL_DIRECT` when set,
     falling back to `DATABASE_URL`. The migrate engine uses prepared statements
@@ -130,6 +188,7 @@
   in `server/src/app/<feature>/` for apps that actually want it.
 
   Removed (was forcing a sharing product into the boilerplate):
+
   - `server/src/shared/storage/public-share.service.ts` — share create/revoke,
     JWT share tokens, bcrypt password verification, access-count incrementing,
     expiry cleanup (~250 lines).
@@ -155,6 +214,7 @@
   - Stale `/api/v1/public/files` + `/storage/shares` references across `docs/`.
 
   Kept (the S3 core):
+
   - `storage.service.ts` / `storage.controller.ts` / `storage.routes.ts` —
     plain S3 upload / download / list / delete / rename / folder ops.
   - `storage.utils.ts` (`sanitizeFileName`, `getContentType` — used by the
@@ -184,6 +244,7 @@
   using the adapter, exactly like any other feature.
 
   Removed (was forcing AI into the boilerplate):
+
   - `server/src/shared/ai/**` — chat routes, usage + conversation
     models/services/controllers, validation.
   - `client/src/core/{lib/ai-client,store/ai,types/ai}.ts` — synced "core" files
@@ -201,6 +262,7 @@
     comment in `AGENTS.md` (no longer lists `ai` — it lives only in `core/`).
 
   Kept:
+
   - `server/src/core/ai/**` — the `AIClient` adapter over `@mariozechner/pi-ai`
     (complete / stream / generateObject / embed).
   - `OPENAI_API_KEY` in `.env.schema`.
@@ -233,6 +295,7 @@
   and prod's `findUnique()` hit `P2022: Database column does not exist`.
 
   Changes:
+
   - `package.json`: remove `prisma:push`. `db push` remains reachable via the raw
     passthrough (`pnpm prisma db push`) for rare legitimate cases (throwaway
     prototyping), but it is no longer a one-word npm script a developer types by
@@ -260,6 +323,7 @@
   Dead config lies to readers — removed it.
 
   Changes:
+
   - `server/src/core/config/config.schema.ts`: drop the `features` block.
   - `config.yml` / `config.example.yml`: remove the `features:` section.
   - `server/src/core/config/index.ts`: drop the stale doc-comment example.
@@ -279,6 +343,7 @@
   before the frontend was split into `ui/`, `core/`, and `app/` layers. As a
   result, legitimate boilerplate files fell through to the default-skip branch
   and were never synced into child repos:
+
   - `client/src/core/**` (layouts, stores, hooks, lib, types, services) was
     unmatched — e.g. `client/src/core/store/ai.ts` was wrongly skipped. The dead
     patterns (`client/src/components/ui/**`, `client/src/lib/**`,
