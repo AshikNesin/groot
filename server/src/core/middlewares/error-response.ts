@@ -1,7 +1,6 @@
 import type { Response } from "express";
-import { ErrorCode, isPrismaError, handlePrismaError, Boom } from "@/core/errors";
+import { ErrorCode, handlePrismaError, Boom } from "@/core/errors";
 import { env } from "@/core/env";
-import { logBusinessEvent } from "@/core/logger";
 
 export function formatPrismaResponse(res: Response, error: unknown): void {
   try {

@@ -33,8 +33,8 @@ import {
   useStorageFiles,
   useUploadFile,
 } from "@/app/storage/hooks/useStorage";
-import { useToast } from "@/core/hooks/use-toast";
 import { api } from "@/core/lib/api";
+import { toast } from "sonner";
 import { formatBytes, formatDate } from "@/core/lib/utils";
 
 export function Storage() {
@@ -49,7 +49,6 @@ export function Storage() {
   const [renameValue, setRenameValue] = useState("");
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkInputRef = useRef<HTMLInputElement | null>(null);
-  const { toast } = useToast();
 
   const { data: files = [], isLoading, refetch: refetchFiles } = useStorageFiles(currentPath);
   const uploadFile = useUploadFile();
@@ -98,17 +97,14 @@ export function Storage() {
     uploadFile
       .mutateAsync({ file, filePath: `${currentPath}${file.name}` })
       .then(() => {
-        toast({
-          title: "Upload complete",
+        toast.success("Upload complete", {
           description: `${file.name} uploaded successfully`,
         });
       })
       .catch((error) => {
         console.error(error);
-        toast({
-          title: "Upload failed",
+        toast.error("Upload failed", {
           description: "Unable to upload file",
-          variant: "destructive",
         });
       })
       .finally(() => {
@@ -124,18 +120,17 @@ export function Storage() {
       .then((result) => {
         const successCount = result.uploadedFiles.length;
         const failureCount = result.failedFiles.length;
-        toast({
-          title: "Bulk upload complete",
-          description: `${successCount} uploaded${failureCount ? `, ${failureCount} failed` : ""}`,
-          variant: failureCount ? "destructive" : "default",
-        });
+        const description = `${successCount} uploaded${failureCount ? `, ${failureCount} failed` : ""}`;
+        if (failureCount) {
+          toast.error("Bulk upload complete", { description });
+        } else {
+          toast.success("Bulk upload complete", { description });
+        }
       })
       .catch((error) => {
         console.error(error);
-        toast({
-          title: "Bulk upload failed",
+        toast.error("Bulk upload failed", {
           description: "Unable to upload files",
-          variant: "destructive",
         });
       })
       .finally(() => {
@@ -146,13 +141,11 @@ export function Storage() {
   const handleDeleteFile = async (key: string) => {
     try {
       await deleteFiles.mutateAsync([key]);
-      toast({ title: "Deleted", description: "File removed" });
+      toast.success("Deleted", { description: "File removed" });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Delete failed",
+      toast.error("Delete failed", {
         description: "Unable to delete file",
-        variant: "destructive",
       });
     }
   };
@@ -163,17 +156,14 @@ export function Storage() {
 
     try {
       await deleteFiles.mutateAsync(Array.from(selectedFiles));
-      toast({
-        title: "Deleted",
+      toast.success("Deleted", {
         description: `${selectedFiles.size} file(s) removed`,
       });
       clearSelection();
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Delete failed",
+      toast.error("Delete failed", {
         description: "Unable to delete files",
-        variant: "destructive",
       });
     }
   };
@@ -182,13 +172,11 @@ export function Storage() {
     if (!confirm(`Delete folder "${folderKey}" and all its contents?`)) return;
     try {
       await deleteFolder.mutateAsync(folderKey);
-      toast({ title: "Folder deleted", description: folderKey });
+      toast.success("Folder deleted", { description: folderKey });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Delete failed",
+      toast.error("Delete failed", {
         description: "Unable to delete folder",
-        variant: "destructive",
       });
     }
   };
@@ -205,13 +193,11 @@ export function Storage() {
       link.download = name;
       link.click();
       window.URL.revokeObjectURL(blobUrl);
-      toast({ title: "Success", description: "File downloaded successfully" });
+      toast.success("Success", { description: "File downloaded successfully" });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Download failed",
+      toast.error("Download failed", {
         description: "Unable to download file",
-        variant: "destructive",
       });
     }
   };
@@ -226,10 +212,8 @@ export function Storage() {
       window.open(blobUrl, "_blank");
     } catch (error) {
       console.error(error);
-      toast({
-        title: "View failed",
+      toast.error("View failed", {
         description: "Unable to view file",
-        variant: "destructive",
       });
     }
   };
@@ -240,15 +224,13 @@ export function Storage() {
     const path = `${currentPath}${folderName.trim().replace(/\/+$/u, "")}/`;
     try {
       await createFolder.mutateAsync(path);
-      toast({ title: "Folder created", description: path });
+      toast.success("Folder created", { description: path });
       setFolderDialogOpen(false);
       setFolderName("");
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Failed to create folder",
+      toast.error("Failed to create folder", {
         description: "Please try again",
-        variant: "destructive",
       });
     }
   };
@@ -259,8 +241,7 @@ export function Storage() {
     const newPath = `${currentPath}${renameValue.trim()}`;
     try {
       await renameFile.mutateAsync({ oldPath: renameTarget.key, newPath });
-      toast({
-        title: "File renamed",
+      toast.success("File renamed", {
         description: `${renameTarget.name} → ${renameValue}`,
       });
       setRenameTarget(null);
@@ -268,10 +249,8 @@ export function Storage() {
       clearSelection();
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Rename failed",
+      toast.error("Rename failed", {
         description: "Unable to rename file",
-        variant: "destructive",
       });
     }
   };

@@ -41,6 +41,6 @@ export async function createUser(req: Request) {
 /**
  * Get all users (admin only)
  */
-export async function getAllUsers(req: Request) {
+export async function getAllUsers() {
   return await AuthService.getAllUsers();
 }

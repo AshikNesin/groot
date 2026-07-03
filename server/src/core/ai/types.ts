@@ -1,4 +1,6 @@
-// Re-export key types from @mariozechner/pi-ai for convenience
+// Re-export key types from @earendil-works/pi-ai for convenience
+import type { ThinkingLevel } from "@earendil-works/pi-ai/compat";
+
 export type {
   Api,
   AssistantMessage,
@@ -20,14 +22,14 @@ export type {
   ToolResultMessage,
   Usage,
   UserMessage,
-} from "@mariozechner/pi-ai";
+} from "@earendil-works/pi-ai/compat";
 
 // ThinkingLevel is a type union, re-export separately for use in interfaces
-export type { ThinkingLevel } from "@mariozechner/pi-ai";
+export type { ThinkingLevel };
 
 // Re-export TypeBox helpers (used for pi-ai tool definitions)
-export { Type } from "@mariozechner/pi-ai";
-export type { Static, TSchema } from "@mariozechner/pi-ai";
+export { Type } from "@earendil-works/pi-ai/compat";
+export type { Static, TSchema } from "@earendil-works/pi-ai/compat";
 
 /**
  * Configuration for creating an AI instance

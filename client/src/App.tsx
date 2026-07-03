@@ -10,7 +10,7 @@ import { Jobs } from "@/app/jobs/pages/Jobs";
 import { JobDetail } from "@/app/jobs/pages/JobDetail";
 import { Settings } from "@/app/settings/pages/Settings";
 import { Login } from "@/app/auth/pages/Login";
-import { Toaster } from "@/ui/toaster";
+import { Toaster } from "@/ui/sonner";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);

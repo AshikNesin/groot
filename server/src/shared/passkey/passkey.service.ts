@@ -168,7 +168,6 @@ export async function generateAuthenticationOptions({
 
 export async function verifyAuthentication({
   response,
-  email,
 }: {
   response: AuthenticationResponseJSON;
   email?: string;

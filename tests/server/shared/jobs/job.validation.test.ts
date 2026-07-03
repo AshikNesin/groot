@@ -3,7 +3,6 @@ import {
   createJobSchema,
   scheduleJobSchema,
   bulkRerunSchema,
-  getJobsByStateSchema,
   getJobsSchema,
 } from "@/shared/jobs/job.validation";
 

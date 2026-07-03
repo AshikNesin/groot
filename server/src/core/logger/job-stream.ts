@@ -85,6 +85,8 @@ export class JobLogStream extends Writable {
       };
 
       const createData: Prisma.JobLogCreateManyInput[] = batch.map((log) => {
+        // jobId is intentionally destructured to strip it from `rest` (kept out of `data`); this.jobId overrides.
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { level, time, msg, message, jobId, jobName, ...rest } = log;
         const levelStr = typeof level === "number" ? levelMap[level] || "info" : (level as string);
 

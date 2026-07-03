@@ -133,7 +133,7 @@ export function PasskeyManager() {
         <CardContent className="space-y-4">
           {/* Error/Success Messages */}
           {error && <Alert variant="destructive">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
+          {success && <Alert>{success}</Alert>}
 
           {/* Add New Passkey */}
           <div className="flex items-end gap-4">

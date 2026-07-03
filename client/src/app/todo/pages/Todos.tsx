@@ -1,11 +1,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/ui/dialog";
-import { useToast } from "@/core/hooks/use-toast";
 import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "@/app/todo/hooks/useTodos";
 import { PageLayout } from "@/core/components/layout/PageLayout";
 
@@ -20,7 +20,6 @@ export function Todos() {
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
-  const { toast } = useToast();
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoSchema),
@@ -32,14 +31,12 @@ export function Todos() {
   const onSubmit = async (values: TodoFormValues) => {
     try {
       await createTodo.mutateAsync({ title: values.title });
-      toast({ title: "Success", description: "Todo created" });
+      toast.success("Success", { description: "Todo created" });
       form.reset();
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Unable to create todo",
-        variant: "destructive",
       });
     }
   };
@@ -47,13 +44,11 @@ export function Todos() {
   const toggleTodo = async (id: number, completed: boolean) => {
     try {
       await updateTodo.mutateAsync({ id, data: { completed } });
-      toast({ title: "Updated", description: "Todo status updated" });
+      toast.success("Updated", { description: "Todo status updated" });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Unable to update todo",
-        variant: "destructive",
       });
     }
   };
@@ -61,13 +56,11 @@ export function Todos() {
   const removeTodo = async (id: number) => {
     try {
       await deleteTodo.mutateAsync(id);
-      toast({ title: "Deleted", description: "Todo removed" });
+      toast.success("Deleted", { description: "Todo removed" });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Unable to delete todo",
-        variant: "destructive",
       });
     }
   };

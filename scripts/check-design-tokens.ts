@@ -3,9 +3,8 @@
  * Design-token enforcement check.
  *
  * Bans raw Tailwind palette colors (gray-*, red-*, blue-*, green-*, …) outside
- * the token layer. The token layer is:
- *   - client/src/index.css          (CSS variable definitions)
- *   - tailwind.config.js            (Tailwind theme wiring)
+ * the token layer. The token layer is client/src/index.css (Tailwind v4
+ * CSS-first: oklch `@theme inline` variable definitions).
  *
  * Everywhere else, colors must come from semantic classes:
  *   bg-primary, text-foreground, text-destructive, text-success,
@@ -83,7 +82,7 @@ if (violations.length > 0) {
   for (const v of violations) {
     console.error(`   ${v.file}: ${v.line}`);
   }
-  console.error(`\nAllowed raw colors ONLY in: client/src/index.css, tailwind.config.js\n`);
+  console.error(`\nAllowed raw colors ONLY in: client/src/index.css\n`);
   process.exit(1);
 }
 
