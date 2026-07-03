@@ -5,7 +5,7 @@ import {
   streamSimple as piStreamSimple,
   completeSimple as piCompleteSimple,
   validateToolCall,
-} from "@mariozechner/pi-ai";
+} from "@earendil-works/pi-ai/compat";
 import type { z } from "zod";
 import OpenAI from "openai";
 import type {
@@ -35,7 +35,7 @@ export type StreamParams = CompletionOptions & {
 };
 
 /**
- * AI adapter wrapping @mariozechner/pi-ai with a simplified developer experience.
+ * AI adapter wrapping @earendil-works/pi-ai/compat with a simplified developer experience.
  */
 export class AIClient {
   private config: AIConfig;

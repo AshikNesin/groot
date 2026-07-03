@@ -56,7 +56,7 @@ This boilerplate ships a secure Express 5 + TypeScript server with a domain-driv
 | Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry, Boom           |
 | Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
 | Tooling | TypeScript 5.9, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
-| AI      | @mariozechner/pi-ai (unified LLM API with Zod structured output)   |
+| AI      | @earendil-works/pi-ai (unified LLM API with Zod structured output) |
 
 ## API Surface
 

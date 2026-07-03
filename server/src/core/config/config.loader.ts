@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import mergeWith from "lodash.mergewith";
-import jsYaml from "js-yaml";
+import { load as yamlLoad } from "js-yaml";
 import { ZodError } from "zod";
 import { env } from "@/core/env";
 import { Boom } from "@/core/errors";
@@ -21,7 +21,7 @@ export function loadConfig(): Config {
 
   let raw: Record<string, unknown>;
   try {
-    const parsed = jsYaml.load(readFileSync(CONFIG_PATH, "utf-8"));
+    const parsed = yamlLoad(readFileSync(CONFIG_PATH, "utf-8"));
     if (parsed === undefined || parsed === null) {
       throw Boom.internal("config.yml is empty or contains no valid YAML");
     }
@@ -40,7 +40,7 @@ export function loadConfig(): Config {
   // 3. Layer config.local.yml if it exists
   if (existsSync(LOCAL_CONFIG_PATH)) {
     try {
-      const localParsed = jsYaml.load(readFileSync(LOCAL_CONFIG_PATH, "utf-8"));
+      const localParsed = yamlLoad(readFileSync(LOCAL_CONFIG_PATH, "utf-8"));
       const localRaw = (localParsed ?? {}) as Record<string, unknown>;
       const localDefaults = (localRaw.default ?? {}) as Record<string, unknown>;
       const localEnv = (localRaw[env.NODE_ENV] ?? {}) as Record<string, unknown>;

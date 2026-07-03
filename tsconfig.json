@@ -8,9 +8,8 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "rootDir": "./server/src",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["server/src/*"]
+      "@/*": ["./server/src/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,

@@ -1,4 +1,4 @@
-import { Type, type TSchema } from "@mariozechner/pi-ai";
+import { Type, type TSchema } from "@earendil-works/pi-ai/compat";
 import type { z } from "zod";
 
 /**
