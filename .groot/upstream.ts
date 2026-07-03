@@ -9,186 +9,32 @@
  */
 import { readFile, mkdir, rm, copyFile, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, dirname, normalize } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { join, dirname } from "node:path";
 import { createInterface } from "node:readline";
-import { z } from "zod";
-import micromatch from "micromatch";
-import { acquireBoilerplate, releaseBoilerplate, type AcquiredRepo } from "./_acquire";
-
-const exec = promisify(execFile);
-
-// ============================================================
-// ZOD SCHEMAS - Single source of truth with runtime validation
-// ============================================================
-
-const SyncConfigSchema = z.object({
-  boilerplate: z.object({
-    name: z.string().min(1, "Boilerplate name is required"),
-    repo: z.string().url("Invalid repository URL"),
-  }),
-  last_sync: z.object({
-    version: z.string().optional().describe("Semver version tag of last sync (e.g. '1.3.0')"),
-    commit: z.string().regex(/^[a-f0-9]{7,40}$/, "Invalid commit SHA"),
-    date: z.string(),
-  }),
-  additional_exclusions: z
-    .array(z.string())
-    .default([])
-    .describe(
-      "Project-specific patterns to exclude from sync (e.g., custom components, experimental features)",
-    ),
-});
-
-type SyncConfig = z.infer<typeof SyncConfigSchema>;
+import { loadConfig, type SyncConfig } from "./lib/config";
+import { categorizeFile, validateFilePath } from "./lib/patterns";
+import { exec, resolveDefaultBranch } from "./lib/git";
+import { acquireBoilerplate, releaseBoilerplate, type AcquiredRepo } from "./lib/acquire";
 
 // ============================================================
-// IMMUTABLE EXCLUSIONS - Cannot be overridden by config
-// Security-critical files that must NEVER be synced/upstreamed
-// ============================================================
-
-const IMMUTABLE_EXCLUSIONS: readonly string[] = [
-  ".env",
-  ".env.local",
-  ".env.development",
-  ".env.production",
-  ".env.*.local",
-  "prisma/schema.prisma",
-  "prisma/migrations/**",
-  "node_modules/**",
-  "dist/**",
-  ".git/**",
-  "*.pem",
-  "*.key",
-  "secrets/**",
-
-  // Sync tooling state — must NEVER be overwritten with the boilerplate's
-  // own values (would corrupt this project's last_sync baseline).
-  // Project-only docs live here too and must not be clobbered by the
-  // boilerplate's copies.
-  ".groot/boilerplate-sync.json",
-  ".groot/sync-report.json",
-  ".groot/feature-request.md",
-  ".groot/repo-drift.md",
-] as const;
-
-// ============================================================
-// SYNC PATTERNS - Files that should be synced (and upstreamed)
-// ============================================================
-
-const SYNC_PATTERNS: readonly string[] = [
-  // UI Components
-  "client/src/components/ui/**",
-  "client/src/components/layout/**",
-  "client/src/lib/utils.ts",
-  "client/src/lib/design-tokens.ts",
-  "client/src/hooks/use-toast.ts",
-  "client/src/index.css",
-
-  // Server Core (drop-in infrastructure)
-  "server/src/core/**",
-  "server/src/test-helpers.ts",
-
-  // Server Shared (reusable features: auth, storage, etc.)
-  "server/src/shared/**",
-
-  // Infrastructure
-  "*.config.*",
-  "tsconfig.json",
-  ".github/workflows/**",
-  ".vite-hooks/**",
-  ".gitleaks.toml",
-  "scripts/**",
-
-  // Sync tooling — keep the sync tool itself up to date.
-  // State files are guarded by IMMUTABLE_EXCLUSIONS so only the tool's
-  // _code_ is eligible to upstream.
-  ".groot/**",
-  ".agents/skills/groot-sync/**",
-
-  // Documentation
-  "docs/**",
-
-  // Environment template (not actual secrets)
-  ".env.schema",
-] as const;
-
-// ============================================================
-// SKIP PATTERNS - App-specific code to never sync/upstream
-// ============================================================
-
-const SKIP_PATTERNS: readonly string[] = [
-  // App-specific server code (never sync)
-  "server/src/app/**",
-  "server/src/routes.ts",
-  "server/src/index.ts",
-
-  // App-specific client code (never sync)
-  "client/src/pages/**",
-  "client/src/store/**",
-  "client/src/services/**",
-  "client/src/components/*.tsx",
-
-  // Other
-  "README.md",
-  "pnpm-lock.yaml",
-] as const;
-
-// ============================================================
-// PATH VALIDATION - Security against traversal attacks
-// ============================================================
-
-const FORBIDDEN_PATTERNS: readonly RegExp[] = [
-  /\.\./, // Path traversal
-  /~/, // Home directory
-  /\\0/, // Null byte (escaped for lint)
-  /^\//, // Absolute path
-  /\$\(/, // Command substitution
-  /`/, // Backtick
-] as const;
-
-function validateFilePath(filePath: string): { valid: boolean; reason?: string } {
-  for (const pattern of FORBIDDEN_PATTERNS) {
-    if (pattern.test(filePath)) {
-      return { valid: false, reason: "Forbidden pattern detected" };
-    }
-  }
-
-  const normalized = normalize(filePath);
-  if (normalized.startsWith("..") || normalized.startsWith("/")) {
-    return { valid: false, reason: "Path traversal attempt" };
-  }
-
-  return { valid: true };
-}
-
-// ============================================================
-// PATTERN MATCHING - Using micromatch for performance
+// PATTERN MATCHING - shared with sync.ts via lib/patterns
 // ============================================================
 
 function isUpstreamCandidate(
   filePath: string,
   additionalExclusions: string[],
 ): { eligible: boolean; reason: string } {
-  // 1. Check immutable exclusions first (security)
-  if (micromatch.isMatch(filePath, IMMUTABLE_EXCLUSIONS as string[])) {
-    return { eligible: false, reason: "Immutable exclusion (security)" };
+  const { action } = categorizeFile(filePath, additionalExclusions);
+  switch (action) {
+    case "sync":
+      return { eligible: true, reason: "Matches sync pattern" };
+    case "skip-immutable":
+      return { eligible: false, reason: "Immutable exclusion (security)" };
+    case "skip-app":
+      return { eligible: false, reason: "Matches skip pattern" };
+    default:
+      return { eligible: false, reason: "Does not match any sync pattern" };
   }
-
-  // 2. Check skip patterns
-  const allSkipPatterns = [...SKIP_PATTERNS, ...additionalExclusions];
-  if (micromatch.isMatch(filePath, allSkipPatterns)) {
-    return { eligible: false, reason: "Matches skip pattern" };
-  }
-
-  // 3. Check sync patterns — only synced files can be upstreamed
-  if (micromatch.isMatch(filePath, SYNC_PATTERNS as string[])) {
-    return { eligible: true, reason: "Matches sync pattern" };
-  }
-
-  // 4. Default: not eligible (conservative)
-  return { eligible: false, reason: "Does not match any sync pattern" };
 }
 
 // ============================================================
@@ -240,19 +86,8 @@ async function getDiffStats(
 }
 
 // ============================================================
-// REMOTE HELPERS - Default branch & repo slug resolution
+// REMOTE HELPERS - Repo slug resolution
 // ============================================================
-
-async function getDefaultBranch(repoUrl: string): Promise<string> {
-  try {
-    const { stdout } = await exec("git", ["ls-remote", "--symref", repoUrl, "HEAD"]);
-    // Output looks like: "ref: refs/heads/<branch>\tHEAD"
-    const match = stdout.match(/ref:\s+refs\/heads\/(\S+)/);
-    return match ? match[1] : "main";
-  } catch {
-    return "main";
-  }
-}
 
 /**
  * Extract an "OWNER/REPO" slug from any GitHub URL form for `gh pr create`.
@@ -572,15 +407,7 @@ async function main() {
   console.log(`Mode: ${mode}\n`);
 
   // 1. Load and validate config
-  const configPath = join(projectRoot, ".groot/boilerplate-sync.json");
-  let rawConfig: unknown;
-  try {
-    rawConfig = JSON.parse(await readFile(configPath, "utf-8"));
-  } catch {
-    throw new Error(`Config file not found at ${configPath}. Is this a groot-synced project?`);
-  }
-
-  const config = SyncConfigSchema.parse(rawConfig);
+  const config = await loadConfig(projectRoot);
 
   // 2. Check prerequisites (skip for dry-run)
   if (!dryRun) {
@@ -591,7 +418,7 @@ async function main() {
   const childAppName = await getChildAppName(projectRoot);
 
   // Resolve the boilerplate's default branch (don't assume "main")
-  const defaultBranch = await getDefaultBranch(config.boilerplate.repo);
+  const defaultBranch = await resolveDefaultBranch(config.boilerplate.repo);
 
   // 4. Find modified synced files
   let diffRepo: AcquiredRepo | undefined;

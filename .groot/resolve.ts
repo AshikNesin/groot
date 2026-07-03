@@ -4,50 +4,55 @@
  *
  * After `pnpm groot:sync` records conflicts in
  * `.groot/needs-review/manifest.json`, this tool resolves each conflicting
- * file using the Cline SDK (https://docs.cline.bot/sdk) in-process, powered by
- * the GLM Coding Plan (https://docs.z.ai/devpack/tool/cline). The agent reads
- * the conflict markers, merges both sides intelligently while preserving local
- * customizations, removes the markers, and writes the resolved file back. The
- * repo's AGENTS.md conventions are fed to the agent as its system prompt.
+ * file using the pi coding agent CLI (https://pi.dev). The model reads the
+ * conflict markers, merges both sides intelligently while preserving local
+ * customizations, and returns the fully resolved file; this tool validates the
+ * output (no markers, non-empty) before writing anything, so a malformed model
+ * response is never written to disk. The repo's AGENTS.md conventions are fed
+ * to the model as part of its system prompt.
  *
- * The model runs entirely in-process via the `@cline/sdk` devDependency — no
- * global CLI binary or separate auth step is required. Set `ZAI_API_KEY`.
+ * The source of truth is the working tree plus local git state: files that
+ * already contain markers are resolved directly with no boilerplate checkout,
+ * and the merge base comes from the local baseline snapshot
+ * (`refs/groot/baseline`) whenever it matches the manifest. A boilerplate
+ * checkout is only acquired when markers must be regenerated (sync ran with
+ * `--skip-conflicts`, e.g. CI) and a side is missing locally.
+ *
+ * Prerequisite: the pi CLI must be installed and authenticated
+ * (`npm install -g --ignore-scripts @earendil-works/pi-coding-agent`, then an
+ * API key env var such as `ZAI_API_KEY`, or `pi` + `/login`). Resolution runs
+ * on whatever provider/model pi is configured with, unless overridden via
+ * `--model` / `GROOT_RESOLVE_MODEL` / `GROOT_RESOLVE_PROVIDER`.
  *
  * Usage:
  *   pnpm groot:resolve                  - Resolve every conflict in the manifest
  *   pnpm groot:resolve --dry-run        - List pending conflicts, run nothing
  *   pnpm groot:resolve --file <path>    - Resolve a single file (repeatable)
  *   pnpm groot:resolve --no-verify      - Skip the post-resolution `pnpm check`
- *   pnpm groot:resolve --model <m>      - Override model id (default: glm-5.2)
+ *   pnpm groot:resolve --model <m>      - Model pattern or `provider/id`
+ *                                         (default: pi's configured model)
  */
-import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readFile, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { execFile, spawn } from "node:child_process";
-import { promisify } from "node:util";
+import { spawn } from "node:child_process";
 import { z } from "zod";
-import { Agent, createTool } from "@cline/sdk";
-import { acquireBoilerplate, releaseBoilerplate, type AcquiredRepo } from "./_acquire";
+import { loadConfig } from "./lib/config";
+import {
+  exec,
+  gitMergeFile,
+  twoWayConflictMarkers,
+  resolveDefaultBranch,
+  shaMatches,
+  showBlob,
+  CONFLICT_MARKER_RE,
+} from "./lib/git";
+import { acquireBoilerplate, releaseBoilerplate, type AcquiredRepo } from "./lib/acquire";
+import { readBaselineInfo, BASELINE_REF } from "./lib/baseline";
 import { PACKAGE_JSON_FILENAME, parseDiff3Markers, mergePackageJson } from "./package-json-merge";
-
-const exec = promisify(execFile);
 
 // ============================================================
 // SCHEMAS
 // ============================================================
-
-const SyncConfigSchema = z.object({
-  boilerplate: z.object({
-    name: z.string().min(1, "Boilerplate name is required"),
-    repo: z.string().url("Invalid repository URL"),
-  }),
-  last_sync: z.object({
-    version: z.string().optional(),
-    commit: z.string().regex(/^[a-f0-9]{7,40}$/, "Invalid commit SHA"),
-    date: z.string(),
-  }),
-  additional_exclusions: z.array(z.string()).default([]),
-});
 
 const ManifestSchema = z.object({
   fromVersion: z.string().nullable(),
@@ -66,132 +71,97 @@ const ManifestSchema = z.object({
 
 type Manifest = z.infer<typeof ManifestSchema>;
 
-const CONFLICT_MARKER_RE = /^<{7} /m;
-
 // ============================================================
-// PROVIDER CONFIG (GLM Coding Plan via Cline SDK)
+// PI CLI - prerequisite check and model selection
 // ============================================================
 
-// Defaults target the GLM Coding Plan (Z.AI) over Cline's `openai-compatible`
-// provider. Override any of these with env vars (or --model for the model).
-const GLM_DEFAULTS = {
-  providerId: "openai-compatible",
-  baseUrl: "https://api.z.ai/api/coding/paas/v4",
-  modelId: "glm-5.2",
-  apiKeyEnv: "ZAI_API_KEY",
-} as const;
+const PI_INSTALL_CMD = "npm install -g --ignore-scripts @earendil-works/pi-coding-agent";
 
-function resolveProviderConfig(opts: { model?: string }) {
-  return {
-    providerId: process.env.GROOT_RESOLVE_PROVIDER ?? GLM_DEFAULTS.providerId,
-    baseUrl: process.env.GROOT_RESOLVE_BASE_URL ?? GLM_DEFAULTS.baseUrl,
-    modelId: opts.model ?? process.env.GROOT_RESOLVE_MODEL ?? GLM_DEFAULTS.modelId,
-    apiKey: process.env[GLM_DEFAULTS.apiKeyEnv] ?? process.env.GROOT_RESOLVE_API_KEY ?? undefined,
-  };
-}
-
-function checkResolveConfig(): void {
-  const { apiKey } = resolveProviderConfig({});
-  if (!apiKey) {
+async function checkPiCli(): Promise<void> {
+  try {
+    await exec("pi", ["--version"]);
+  } catch {
     throw new Error(
       [
-        `No API key set for groot:resolve.`,
+        "`pi` CLI is not installed.",
         "",
-        `Set your GLM (Z.AI) API key:`,
-        `  export ${GLM_DEFAULTS.apiKeyEnv}=...`,
+        "groot:resolve uses the pi coding agent (https://pi.dev) for AI conflict",
+        "resolution. Install it with:",
+        `  ${PI_INSTALL_CMD}`,
         "",
-        "The Cline SDK devDependency is installed by `pnpm install` — no global",
-        "binary is needed. To point at a different provider/model, set",
-        "GROOT_RESOLVE_PROVIDER / GROOT_RESOLVE_BASE_URL / GROOT_RESOLVE_MODEL.",
-        "",
-        "See: https://docs.cline.bot/sdk  and  https://docs.z.ai/devpack/tool/cline",
+        "Then authenticate with your provider — either an API key env var (e.g.",
+        "`export ZAI_API_KEY=...` for the ZAI Coding Plan) or run `pi` and use /login.",
       ].join("\n"),
     );
   }
 }
 
-// ============================================================
-// PREREQUISITES
-// ============================================================
-
-async function resolveDefaultBranch(repoUrl: string): Promise<string> {
-  try {
-    const { stdout } = await exec("git", ["ls-remote", "--symref", repoUrl, "HEAD"]);
-    const match = stdout.match(/ref:\s+refs\/heads\/(\S+)/);
-    return match ? match[1] : "main";
-  } catch {
-    return "main";
-  }
+/**
+ * Provider/model CLI args for pi. When neither `--model` nor the env vars are
+ * set, pi uses whatever model the developer has configured/last used, which
+ * keeps resolution provider-agnostic (Anthropic, ZAI/GLM, Copilot, ...).
+ */
+function piModelArgs(opts: { model?: string }): string[] {
+  const args: string[] = [];
+  const provider = process.env.GROOT_RESOLVE_PROVIDER;
+  const model = opts.model ?? process.env.GROOT_RESOLVE_MODEL;
+  if (provider) args.push("--provider", provider);
+  if (model) args.push("--model", model);
+  return args;
 }
 
 // ============================================================
-// MARKER REGENERATION - rebuild conflict markers from the manifest
-// when sync ran with --skip-conflicts (e.g. in CI).
+// SIDE SOURCING - base from the local baseline ref when possible,
+// theirs from a boilerplate checkout only when actually needed.
 // ============================================================
 
-function twoWayConflictMarkers(file: string, ours: string, theirs: string): string {
-  return [
-    `<<<<<<< ${file} (current_repo)`,
-    ours.replace(/\n$/, ""),
-    "=======",
-    theirs.replace(/\n$/, ""),
-    `>>>>>>> ${file} (groot_boilerplate)`,
-    "",
-  ].join("\n");
-}
-
-async function gitMergeFile(
+/**
+ * Read the merge base for a file. Prefers the local baseline snapshot (no
+ * network, survives upstream history rewrites); falls back to the boilerplate
+ * checkout at the manifest's base commit.
+ */
+async function readBase(
+  projectRoot: string,
+  manifest: Manifest,
   file: string,
-  ours: string,
-  base: string,
-  theirs: string,
-): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "groot-merge-"));
-  try {
-    const oursPath = join(dir, "ours");
-    const basePath = join(dir, "base");
-    const theirsPath = join(dir, "theirs");
-    await writeFile(oursPath, ours);
-    await writeFile(basePath, base);
-    await writeFile(theirsPath, theirs);
-    try {
-      const { stdout } = await exec("git", [
-        "merge-file",
-        "-p",
-        "--diff3",
-        "-L",
-        `${file} (current_repo)`,
-        "-L",
-        `${file} (last_sync)`,
-        "-L",
-        `${file} (groot_boilerplate)`,
-        oursPath,
-        basePath,
-        theirsPath,
-      ]);
-      return stdout; // clean (shouldn't happen for a recorded conflict)
-    } catch (err) {
-      const e = err as { code?: number; stdout?: string };
-      if (typeof e.code === "number" && e.code > 0 && typeof e.stdout === "string") {
-        return e.stdout;
-      }
-      throw err;
-    }
-  } finally {
-    await rm(dir, { recursive: true, force: true });
+  getRepo: () => Promise<AcquiredRepo>,
+): Promise<string | null> {
+  const info = await readBaselineInfo(projectRoot);
+  if (info && shaMatches(info.boilerplateCommit, manifest.fromCommit)) {
+    const blob = await showBlob(projectRoot, BASELINE_REF, file);
+    if (blob !== null) return blob.toString("utf-8");
+    return null; // genuinely absent at base
   }
+  try {
+    const repo = await getRepo();
+    const blob = await showBlob(repo.dir, manifest.fromCommit, file);
+    return blob === null ? null : blob.toString("utf-8");
+  } catch {
+    return null;
+  }
+}
+
+/** Read the upstream side at the manifest's target commit, or null if deleted. */
+async function readTheirs(
+  manifest: Manifest,
+  file: string,
+  getRepo: () => Promise<AcquiredRepo>,
+): Promise<string | null> {
+  const repo = await getRepo();
+  const blob = await showBlob(repo.dir, manifest.toCommit, file);
+  return blob === null ? null : blob.toString("utf-8");
 }
 
 /**
  * Ensure the local file contains conflict markers for the agent to resolve. If
  * the file already has markers (sync wrote them), use as-is. Otherwise rebuild
- * them from the boilerplate base/target commits recorded in the manifest.
+ * them from the base/target commits recorded in the manifest.
  */
 async function ensureMarkers(
   file: string,
   projectRoot: string,
   manifest: Manifest,
-  repo: AcquiredRepo,
+  getRepo: () => Promise<AcquiredRepo>,
 ): Promise<"ready" | "missing-local" | "clean"> {
   const localPath = join(projectRoot, file);
   let ours: string;
@@ -203,41 +173,22 @@ async function ensureMarkers(
 
   if (CONFLICT_MARKER_RE.test(ours)) return "ready";
 
-  // Rebuild from manifest commits.
-  let base: string | null = null;
-  try {
-    const { stdout } = await exec("git", ["show", `${manifest.fromCommit}:${file}`], {
-      cwd: repo.dir,
-    });
-    base = stdout;
-  } catch {
-    base = null;
-  }
-
-  let theirs: string;
-  try {
-    const { stdout } = await exec("git", ["show", `${manifest.toCommit}:${file}`], {
-      cwd: repo.dir,
-    });
-    theirs = stdout;
-  } catch {
-    // File no longer exists in target — nothing to merge.
-    return "clean";
-  }
-
+  const theirs = await readTheirs(manifest, file, getRepo);
+  if (theirs === null) return "clean"; // deleted upstream — nothing to merge
   if (ours === theirs) return "clean";
 
+  const base = await readBase(projectRoot, manifest, file, getRepo);
   const markers =
     base === null
       ? twoWayConflictMarkers(file, ours, theirs)
-      : await gitMergeFile(file, ours, base, theirs);
+      : (await gitMergeFile(file, ours, base, theirs)).content;
 
   await writeFile(localPath, markers);
   return "ready";
 }
 
 // ============================================================
-// CLINE / GLM INVOCATION
+// PI INVOCATION - locked-down single-shot `pi -p` run
 // ============================================================
 
 const RESOLVE_SYSTEM_PROMPT = [
@@ -254,12 +205,13 @@ const RESOLVE_SYSTEM_PROMPT = [
   "while incorporating the upstream improvements, and follow the conventions in AGENTS.md",
   "(included below when present).",
   "",
-  "When you have the complete resolved file, call the `write_resolved_file` tool with the",
-  "full file content. The content MUST NOT contain any conflict markers",
-  "(<<<<<<<, |||||||, =======, >>>>>>>). Emit nothing else — the tool call is the answer.",
+  "Respond with the COMPLETE resolved file content and NOTHING else:",
+  "no commentary, no explanations, no markdown code fences. Your entire response",
+  "is written to disk verbatim as the file. It MUST NOT contain any conflict",
+  "markers (<<<<<<<, |||||||, =======, >>>>>>>).",
 ].join("\n");
 
-function buildUserPrompt(file: string, commits: string[], content: string): string {
+function buildUserPrompt(file: string, commits: string[]): string {
   const commitList =
     commits.length > 0
       ? commits.map((c) => `  - ${c}`).join("\n")
@@ -270,17 +222,14 @@ function buildUserPrompt(file: string, commits: string[], content: string): stri
     "Upstream commits that changed this file:",
     commitList,
     "",
-    "The file content with conflict markers:",
-    "```",
-    content,
-    "```",
-    "",
-    "Call `write_resolved_file` with the fully resolved content (markers removed).",
+    "The file content with conflict markers is provided as piped input below.",
+    "Respond with only the fully resolved file content (markers removed).",
   ].join("\n");
 }
 
-/** Build the system prompt, appending AGENTS.md when present (mirrors what the
- * old global agent loaded automatically). */
+/** Build the system prompt, appending AGENTS.md when present. Context-file
+ * discovery is disabled on the pi run, so this append is the only (and
+ * deterministic) way conventions reach the model. */
 async function buildSystemPrompt(projectRoot: string): Promise<string> {
   let agentsMd = "";
   try {
@@ -293,68 +242,95 @@ async function buildSystemPrompt(projectRoot: string): Promise<string> {
     : RESOLVE_SYSTEM_PROMPT;
 }
 
+/** Spawn `pi -p` with the conflicted content on stdin and capture stdout. */
+function spawnPi(
+  args: string[],
+  stdinContent: string,
+  cwd: string,
+): Promise<{ code: number; stdout: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn("pi", args, {
+      cwd,
+      env: { ...process.env, PI_SKIP_VERSION_CHECK: "1" },
+      stdio: ["pipe", "pipe", "inherit"],
+    });
+    let stdout = "";
+    child.stdout.on("data", (d) => (stdout += d));
+    child.on("error", reject);
+    child.on("close", (code) => resolve({ code: code ?? 1, stdout }));
+    child.stdin.on("error", () => {});
+    child.stdin.write(stdinContent);
+    child.stdin.end();
+  });
+}
+
 /**
- * Run the Cline agent (GLM Coding Plan) to resolve one conflicted file.
- *
- * The agent is given the conflicted file content and a single tool,
- * `write_resolved_file`, which it must call with the fully resolved content.
- * The tool refuses to write anything that still contains conflict markers, so
- * the file is never left in a malformed state. Returns 0 on a successful write,
- * 1 otherwise. (The caller still re-checks `fileHasMarkers` as the source of
- * truth.)
+ * Normalize a pi response into file content: reject empty output, unwrap a
+ * single wrapping markdown code fence if the model added one despite
+ * instructions, and ensure a trailing newline.
  */
-async function runCline(
+export function extractFileContent(raw: string): string | null {
+  let text = raw.replace(/^\s*\n/, "").replace(/\s+$/, "");
+  if (!text) return null;
+  const fenced = text.match(/^```[\w.+-]*\n([\s\S]*?)\n```$/);
+  if (fenced) text = fenced[1];
+  if (!text.trim()) return null;
+  return text + "\n";
+}
+
+/**
+ * Resolve one conflicted file via a locked-down, single-shot `pi -p` run: no
+ * session, no tools, no extensions/skills/context files — just the merge
+ * prompt in, the resolved file out. The output is validated (non-empty, no
+ * conflict markers) before the caller writes it; one retry with feedback is
+ * attempted when validation fails. Returns the resolved content, or null.
+ */
+async function runPi(
   file: string,
   projectRoot: string,
   conflictedContent: string,
   commits: string[],
   opts: { model?: string },
-): Promise<number> {
-  const cfg = resolveProviderConfig(opts);
-  let written = false;
+): Promise<string | null> {
+  const baseArgs = [
+    "-p",
+    "--no-session",
+    "--no-tools",
+    "--no-extensions",
+    "--no-skills",
+    "--no-prompt-templates",
+    "--no-context-files",
+    ...piModelArgs(opts),
+    "--system-prompt",
+    await buildSystemPrompt(projectRoot),
+  ];
 
-  const writeResolvedFile = createTool({
-    name: "write_resolved_file",
-    description: "Write the fully resolved file content. Must contain NO conflict markers.",
-    inputSchema: z.object({
-      content: z
-        .string()
-        .describe("The complete resolved file content with all conflict markers removed."),
-    }),
-    lifecycle: { completesRun: true },
-    async execute({ content }: { content: string }) {
-      if (CONFLICT_MARKER_RE.test(content)) {
-        throw new Error("Resolved content still contains conflict markers — refusing to write.");
-      }
-      await writeFile(join(projectRoot, file), content);
-      written = true;
-      return "Resolved content written.";
-    },
-  });
-
-  const agent = new Agent({
-    providerId: cfg.providerId,
-    modelId: cfg.modelId,
-    apiKey: cfg.apiKey,
-    baseUrl: cfg.baseUrl,
-    systemPrompt: await buildSystemPrompt(projectRoot),
-    tools: [writeResolvedFile],
-    maxIterations: 50,
-  });
-
-  agent.subscribe((event) => {
-    if (event.type === "assistant-text-delta") {
-      process.stdout.write(event.text ?? "");
+  let feedback = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const prompt = buildUserPrompt(file, commits) + feedback;
+    let result: { code: number; stdout: string };
+    try {
+      result = await spawnPi([...baseArgs, prompt], conflictedContent, projectRoot);
+    } catch (err) {
+      console.error(`  ✗ pi run error: ${(err as Error).message}`);
+      return null;
     }
-  });
+    if (result.code !== 0) {
+      console.error(`  ✗ pi exited with code ${result.code}`);
+      return null;
+    }
 
-  try {
-    await agent.run(buildUserPrompt(file, commits, conflictedContent));
-  } catch (err) {
-    console.error(`\n  ✗ Cline run error: ${(err as Error).message}`);
-    return 1;
+    const content = extractFileContent(result.stdout);
+    if (content !== null && !CONFLICT_MARKER_RE.test(content)) {
+      return content;
+    }
+    console.log(`  → attempt ${attempt} produced invalid output, retrying...`);
+    feedback =
+      "\n\nYour previous attempt was empty or still contained conflict markers. " +
+      "Respond with ONLY the complete resolved file content — no fences, no commentary, " +
+      "and absolutely no conflict markers.";
   }
-  return written ? 0 : 1;
+  return null;
 }
 
 function runCheck(projectRoot: string): Promise<number> {
@@ -374,7 +350,7 @@ function runCheck(projectRoot: string): Promise<number> {
  *
  * Sources the three sides (ours/base/theirs) from the diff3 markers already in
  * the file (no boilerplate checkout needed in the common case), falling back to
- * the manifest's from/to commits when markers are absent or 2-way. Only
+ * the baseline ref / manifest commits when markers are absent or 2-way. Only
  * `scripts` / `dependencies` / `devDependencies` are 3-way-merged; all other
  * top-level keys are copied verbatim from the local file.
  *
@@ -410,44 +386,26 @@ async function resolvePackageJson(
     baseText = parsed.base; // null when 2-way (no base sections)
   } else {
     // No markers — e.g. sync ran with --skip-conflicts. Treat the local file
-    // as ours and source base/theirs from the recorded commits.
+    // as ours and source base/theirs from local git state / the checkout.
     oursText = content;
   }
 
-  // Fetch any missing side from the boilerplate checkout (lazy).
-  if (baseText === null || theirsText === null) {
-    let repo: AcquiredRepo;
+  if (baseText === null) {
+    baseText = await readBase(projectRoot, manifest, file, getRepo);
+    if (baseText === null) return "fallback";
+  }
+  if (theirsText === null) {
     try {
-      repo = await getRepo();
+      theirsText = await readTheirs(manifest, file, getRepo);
     } catch {
       return "fallback";
     }
-    if (baseText === null) {
-      try {
-        const { stdout } = await exec("git", ["show", `${manifest.fromCommit}:${file}`], {
-          cwd: repo.dir,
-        });
-        baseText = stdout;
-      } catch {
-        return "fallback";
-      }
-    }
-    if (theirsText === null) {
-      try {
-        const { stdout } = await exec("git", ["show", `${manifest.toCommit}:${file}`], {
-          cwd: repo.dir,
-        });
-        theirsText = stdout;
-      } catch {
-        // File deleted upstream — nothing to merge.
-        return "clean";
-      }
-    }
+    if (theirsText === null) return "clean"; // deleted upstream — nothing to merge
   }
 
   if (oursText === theirsText) return "clean";
 
-  const merged = mergePackageJson(oursText, baseText!, theirsText!);
+  const merged = mergePackageJson(oursText, baseText, theirsText);
   if (!merged.ok) return "fallback";
 
   await writeFile(localPath, merged.text);
@@ -483,13 +441,7 @@ async function main() {
   console.log("\n## Groot Resolve\n");
 
   // 1. Load config (validates this is a groot-synced project) + manifest
-  const configPath = join(projectRoot, ".groot/boilerplate-sync.json");
-  let config: z.infer<typeof SyncConfigSchema>;
-  try {
-    config = SyncConfigSchema.parse(JSON.parse(await readFile(configPath, "utf-8")));
-  } catch {
-    throw new Error(`Config not found at ${configPath}. Is this a groot-synced project?`);
-  }
+  const config = await loadConfig(projectRoot);
 
   const manifestPath = join(projectRoot, ".groot/needs-review/manifest.json");
   let manifest: Manifest;
@@ -523,14 +475,14 @@ async function main() {
 
   if (dryRun) {
     console.log(
-      `${conflicts.length} file(s) pending. Run without --dry-run to resolve with the Cline SDK (GLM).\n`,
+      `${conflicts.length} file(s) pending. Run without --dry-run to resolve with the pi coding agent.\n`,
     );
     return;
   }
 
-  // 2. Lazy resources: the AI flow (Cline SDK) and the boilerplate checkout are
-  //    only acquired when actually needed. A package.json-only resolve merges
-  //    deterministically and completes with no clone and no API key.
+  // 2. Lazy resources: the pi CLI and the boilerplate checkout are only
+  //    required when actually needed. package.json resolves deterministically
+  //    with neither.
   let repo: AcquiredRepo | undefined;
   const getRepo = async (): Promise<AcquiredRepo> => {
     if (!repo) {
@@ -539,17 +491,17 @@ async function main() {
         name: config.boilerplate.name,
         defaultBranch: await resolveDefaultBranch(config.boilerplate.repo),
         purpose: "resolve",
-        ensureCommitReachable: manifest.fromCommit,
+        ensureCommitReachable: manifest.toCommit,
       });
     }
     return repo;
   };
 
-  let configChecked = false;
-  const ensureResolveConfig = (): void => {
-    if (!configChecked) {
-      checkResolveConfig();
-      configChecked = true;
+  let piChecked = false;
+  const ensurePiCli = async (): Promise<void> => {
+    if (!piChecked) {
+      await checkPiCli();
+      piChecked = true;
     }
   };
 
@@ -585,14 +537,9 @@ async function main() {
       }
 
       // AI resolution path
-      ensureResolveConfig();
+      await ensurePiCli();
 
-      let state: "ready" | "missing-local" | "clean";
-      if (await fileHasMarkers(projectRoot, c.file)) {
-        state = "ready";
-      } else {
-        state = await ensureMarkers(c.file, projectRoot, manifest, await getRepo());
-      }
+      const state = await ensureMarkers(c.file, projectRoot, manifest, getRepo);
 
       if (state === "missing-local") {
         console.log(`  ⚠ ${c.file} does not exist locally — skipping.`);
@@ -606,10 +553,15 @@ async function main() {
       }
 
       const conflictedContent = await readFile(join(projectRoot, c.file), "utf-8");
-      const code = await runCline(c.file, projectRoot, conflictedContent, c.commits, { model });
+      const resolvedContent = await runPi(c.file, projectRoot, conflictedContent, c.commits, {
+        model,
+      });
+      if (resolvedContent !== null) {
+        await writeFile(join(projectRoot, c.file), resolvedContent);
+      }
 
       const stillConflicted = await fileHasMarkers(projectRoot, c.file);
-      if (code === 0 && !stillConflicted) {
+      if (resolvedContent !== null && !stillConflicted) {
         console.log(`\n  ✓ Resolved ${c.file}`);
         resolved.push(c.file);
       } else {
@@ -621,10 +573,10 @@ async function main() {
     if (repo) await releaseBoilerplate(repo);
   }
 
-  // 4. Update the manifest: drop resolved entries, keep failures.
+  // 3. Update the manifest: drop resolved entries, keep failures.
   await pruneManifest(manifestPath, manifest, resolved);
 
-  // 5. Summary + verification
+  // 4. Summary + verification
   console.log(`\n## Summary\n`);
   console.log(`  - Resolved: ${resolved.length}`);
   console.log(`  - Failed:   ${failed.length}`);

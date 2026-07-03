@@ -1,18 +1,16 @@
 /**
  * Shared helpers for acquiring a ready-to-use checkout of the boilerplate repo.
  *
- * Used by `sync.ts` and `upstream.ts` to avoid re-cloning the boilerplate on
- * every invocation. When a clean local checkout exists at `~/Code/<name>` and
- * its origin matches the configured repo, we reuse it (fast-forwarding to the
- * default branch); otherwise we fall back to a fresh clone into a temp dir.
+ * Used by `sync.ts`, `resolve.ts`, and `upstream.ts` to avoid re-cloning the
+ * boilerplate on every invocation. When a clean local checkout exists at
+ * `~/Code/<name>` and its origin matches the configured repo, we reuse it
+ * (fast-forwarding to the default branch); otherwise we fall back to a fresh
+ * clone into a temp dir.
  */
 import { access, mkdir, rm } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
-const exec = promisify(execFile);
+import { exec, hasCommit } from "./git";
 
 export interface AcquiredRepo {
   /** Absolute path to a checkout of the boilerplate on its default branch. */
@@ -87,15 +85,6 @@ async function getOriginUrl(dir: string): Promise<string | null> {
 async function isClean(dir: string): Promise<boolean> {
   const { stdout } = await exec("git", ["-C", dir, "status", "--porcelain"]);
   return stdout.trim() === "";
-}
-
-async function hasCommit(dir: string, commit: string): Promise<boolean> {
-  try {
-    await exec("git", ["-C", dir, "cat-file", "-t", commit]);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**

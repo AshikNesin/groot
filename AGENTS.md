@@ -65,7 +65,7 @@ client/src/
 tests/          # Centralized unit tests (mirror server/src and client/src)
 docs/           # Documentation
 prisma/         # Database schema and migrations
-.groot/         # Boilerplate sync tooling (sync.ts, upstream.ts, _acquire.ts)
+.groot/         # Boilerplate sync tooling (sync.ts, resolve.ts, upstream.ts, lib/)
 ```
 
 ## Frontend Layering (HOW)
