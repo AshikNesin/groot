@@ -99,7 +99,7 @@ export default defineConfig({
                     ? 443
                     : 80,
               };
-            } catch (e) {
+            } catch {
               return undefined;
             }
           })()

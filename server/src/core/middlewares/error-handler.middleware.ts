@@ -11,8 +11,6 @@ import {
 } from "@/core/middlewares/error-response";
 import { isPrismaError } from "@/core/errors";
 
-import { env } from "@/core/env";
-
 import { ErrorCode } from "@/core/errors";
 
 /**
