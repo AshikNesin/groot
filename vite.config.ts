@@ -80,7 +80,7 @@ export default defineConfig({
       : process.env.VITE_HMR_URL
         ? [process.env.VITE_HMR_URL]
         : undefined,
-    hmr: process.env.VITE_HMR_URL
+    ws: process.env.VITE_HMR_URL
       ? {
           protocol: "wss",
           host: process.env.VITE_HMR_URL,
