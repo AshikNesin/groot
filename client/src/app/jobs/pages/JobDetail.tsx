@@ -1,7 +1,6 @@
 import { Button } from "@/ui/button";
 import { LoadingSpinner } from "@/ui/loading-spinner";
 import { StatusBadge } from "@/ui";
-import { useToast } from "@/core/hooks/use-toast";
 import { formatLocaleDateTime, formatRelativeTime } from "@/core/lib/utils";
 import { apiClient } from "@/core/lib/api";
 import type { Job, JobLog } from "@/core/types/jobs";
@@ -13,6 +12,7 @@ import dayjs from "dayjs";
 import { AlertCircle, ArrowLeft, ChevronRight, Play, RefreshCw, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export function JobDetail() {
   const { queueName, jobId } = useParams<{
@@ -20,7 +20,6 @@ export function JobDetail() {
     jobId: string;
   }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const jsonExtension = useMemo(() => json(), []);
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,9 +67,7 @@ export function JobDetail() {
       setJob(jobData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load job");
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: err instanceof Error ? err.message : "Failed to load job",
       });
     } finally {
@@ -83,15 +80,10 @@ export function JobDetail() {
 
     try {
       await apiClient.retryJob(job.name, job.id);
-      toast({
-        title: "Success",
-        description: "Job has been queued for retry",
-      });
+      toast.success("Success", { description: "Job has been queued for retry" });
       loadJob();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to retry job",
       });
     }
@@ -102,15 +94,10 @@ export function JobDetail() {
 
     try {
       await apiClient.cancelJob(job.name, job.id);
-      toast({
-        title: "Success",
-        description: "Job has been cancelled",
-      });
+      toast.success("Success", { description: "Job has been cancelled" });
       loadJob();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to cancel job",
       });
     }
@@ -121,15 +108,10 @@ export function JobDetail() {
 
     try {
       await apiClient.resumeJob(job.name, job.id);
-      toast({
-        title: "Success",
-        description: "Job has been resumed",
-      });
+      toast.success("Success", { description: "Job has been resumed" });
       loadJob();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to resume job",
       });
     }
@@ -146,15 +128,10 @@ export function JobDetail() {
 
     try {
       await apiClient.deleteJob(job.name, job.id);
-      toast({
-        title: "Success",
-        description: "Job has been deleted",
-      });
+      toast.success("Success", { description: "Job has been deleted" });
       navigate("/jobs");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to delete job",
       });
     }
@@ -165,8 +142,7 @@ export function JobDetail() {
 
     try {
       const result = await apiClient.rerunJob(job.name, job.id);
-      toast({
-        title: "Success",
+      toast.success("Success", {
         description: (
           <span>
             Job re-run created.{" "}
@@ -180,9 +156,7 @@ export function JobDetail() {
         ),
       });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to re-run job",
       });
     }

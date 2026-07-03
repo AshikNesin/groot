@@ -22,7 +22,6 @@ import { StatusBadge } from "@/ui";
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs";
 import { Checkbox } from "@/ui/checkbox";
 import { Textarea } from "@/ui/textarea";
-import { useToast } from "@/core/hooks/use-toast";
 import {
   endOfDay,
   formatDuration,
@@ -57,6 +56,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
+import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -114,7 +114,6 @@ function StatCard({
 }
 
 export function Jobs() {
-  const { toast } = useToast();
   const [stats, setStats] = useState<JobStats | null>(null);
   const [queryParams, setQueryParams] = useQueryStates({
     state: parseAsString.withDefault("all"),
@@ -230,9 +229,7 @@ export function Jobs() {
       setTotal(queryParams.search.trim() ? filteredJobs.length : totalCount);
       setLastRefreshed(new Date());
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to load jobs",
       });
     } finally {
@@ -294,12 +291,10 @@ export function Jobs() {
   const handleRetry = async (queueName: string, jobId: string) => {
     try {
       await apiClient.retryJob(queueName, jobId);
-      toast({ title: "Success", description: "Job has been queued for retry" });
+      toast.success("Success", { description: "Job has been queued for retry" });
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to retry job",
       });
     }
@@ -308,12 +303,10 @@ export function Jobs() {
   const handleCancel = async (queueName: string, jobId: string) => {
     try {
       await apiClient.cancelJob(queueName, jobId);
-      toast({ title: "Success", description: "Job has been cancelled" });
+      toast.success("Success", { description: "Job has been cancelled" });
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to cancel job",
       });
     }
@@ -322,12 +315,10 @@ export function Jobs() {
   const handleResume = async (queueName: string, jobId: string) => {
     try {
       await apiClient.resumeJob(queueName, jobId);
-      toast({ title: "Success", description: "Job has been resumed" });
+      toast.success("Success", { description: "Job has been resumed" });
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to resume job",
       });
     }
@@ -336,12 +327,10 @@ export function Jobs() {
   const handleDelete = async (queueName: string, jobId: string) => {
     try {
       await apiClient.deleteJob(queueName, jobId);
-      toast({ title: "Success", description: "Job has been deleted" });
+      toast.success("Success", { description: "Job has been deleted" });
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to delete job",
       });
     }
@@ -350,8 +339,7 @@ export function Jobs() {
   const handleRerun = async (queueName: string, jobId: string) => {
     try {
       const result = await apiClient.rerunJob(queueName, jobId);
-      toast({
-        title: "Success",
+      toast.success("Success", {
         description: (
           <span>
             Job re-run created.{" "}
@@ -366,9 +354,7 @@ export function Jobs() {
       });
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to re-run job",
       });
     }
@@ -390,17 +376,14 @@ export function Jobs() {
       const results = await apiClient.rerunJobs(jobsToRerun);
       const successCount = results.filter((r) => r.success).length;
 
-      toast({
-        title: "Bulk Action Completed",
+      toast.success("Bulk Action Completed", {
         description: `Successfully triggered re-run for ${successCount} of ${results.length} jobs.`,
       });
 
       setSelectedJobs(new Set());
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to re-run jobs",
       });
     }
@@ -458,15 +441,12 @@ export function Jobs() {
 
     try {
       const { deletedCount } = await apiClient.purgeJobsByState(state);
-      toast({
-        title: "Success",
+      toast.success("Success", {
         description: `Purged ${deletedCount} ${state} jobs`,
       });
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to purge jobs",
       });
     }
@@ -474,9 +454,7 @@ export function Jobs() {
 
   const handleAddJob = async () => {
     if (!newJobName) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: "Please select a job name",
       });
       return;
@@ -485,8 +463,7 @@ export function Jobs() {
     try {
       const data = JSON.parse(newJobData);
       const jobId = await apiClient.addJob(newJobName as JobName, data);
-      toast({
-        title: "Success",
+      toast.success("Success", {
         description: (
           <span>
             Job has been added to the queue.{" "}
@@ -504,9 +481,7 @@ export function Jobs() {
       setNewJobData("{}");
       loadData();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to add job",
       });
     }
@@ -516,9 +491,7 @@ export function Jobs() {
 
   const handleScheduleJob = async () => {
     if (!scheduledJobName || !scheduledJobCron) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: "Please select a job name and provide a cron expression",
       });
       return;
@@ -527,16 +500,14 @@ export function Jobs() {
     try {
       const data = JSON.parse(scheduledJobData);
       await apiClient.scheduleJob(scheduledJobName as JobName, scheduledJobCron, data);
-      toast({ title: "Success", description: "Job has been scheduled" });
+      toast.success("Success", { description: "Job has been scheduled" });
       setScheduleJobDialogOpen(false);
       setScheduledJobName("");
       setScheduledJobCron("");
       setScheduledJobData("{}");
       loadScheduledJobs();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to schedule job",
       });
     }
@@ -549,15 +520,12 @@ export function Jobs() {
 
     try {
       await apiClient.cancelScheduledJob(jobName, key);
-      toast({
-        title: "Success",
+      toast.success("Success", {
         description: "Scheduled job has been cancelled",
       });
       loadScheduledJobs();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to cancel scheduled job",
       });
     }
@@ -573,9 +541,7 @@ export function Jobs() {
 
   const handleEditScheduledJob = async () => {
     if (!editScheduledCron) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: "Please provide a cron expression",
       });
       return;
@@ -589,13 +555,11 @@ export function Jobs() {
         editScheduledCron,
         data,
       );
-      toast({ title: "Success", description: "Scheduled job has been updated" });
+      toast.success("Success", { description: "Scheduled job has been updated" });
       setEditScheduledDialogOpen(false);
       loadScheduledJobs();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to update scheduled job",
       });
     }

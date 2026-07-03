@@ -157,7 +157,7 @@ export function AppSettings() {
   return (
     <div className="space-y-4">
       {error && <Alert variant="destructive">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
+      {success && <Alert>{success}</Alert>}
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
