@@ -2,16 +2,27 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import mergeWith from "lodash.mergewith";
 import { load as yamlLoad } from "js-yaml";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { env } from "@/core/env";
 import { Boom } from "@/core/errors";
 import { deepFreeze, replaceArrays } from "@/core/utils/object.utils";
-import { configSchema, type Config } from "@/core/config/config.schema";
+import { configSchema } from "@/core/config/config.schema";
 
 const CONFIG_PATH = resolve(process.cwd(), "config.yml");
 const LOCAL_CONFIG_PATH = resolve(process.cwd(), "config.local.yml");
 
-export function loadConfig(): Config {
+/**
+ * Load and validate config.yml.
+ *
+ * @param schema Optional Zod schema to validate against. Defaults to the core
+ *   `configSchema` (so `loadConfig()` is unchanged). Pass an extended schema
+ *   from app-owned code to declare app-specific config sections without
+ *   forking this synced file: `loadConfig(extendedSchema)` returns the
+ *   widened type and keeps `config.yml` as the single source of truth.
+ */
+export function loadConfig<T extends z.ZodTypeAny = typeof configSchema>(
+  schema: T = configSchema as unknown as T,
+): z.infer<T> {
   // 1. Parse config.yml
   if (!existsSync(CONFIG_PATH)) {
     throw Boom.internal(
@@ -57,7 +68,7 @@ export function loadConfig(): Config {
 
   // 5. Validate with Zod, freeze for immutability
   try {
-    return deepFreeze(configSchema.parse(resolved));
+    return deepFreeze(schema.parse(resolved));
   } catch (err) {
     if (err instanceof ZodError) {
       const details = err.issues

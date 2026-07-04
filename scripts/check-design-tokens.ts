@@ -21,11 +21,15 @@
 import { spawnSync } from "node:child_process";
 
 const PALETTE =
-  "(gray|slate|zinc|green|red|blue|yellow|orange|purple|pink|indigo|emerald|amber|rose|teal|cyan|sky|lime)";
+  "(gray|slate|zinc|neutral|stone|green|red|blue|yellow|orange|purple|pink|indigo|emerald|amber|rose|teal|cyan|sky|lime)";
 const PREFIX = "(text|bg|border|border-t|ring|ring-offset|divide|fill|stroke|from|to|via)";
 const PATTERN = new RegExp(`\\b${PREFIX}-${PALETTE}-\\d`);
 
 const ROOT = new URL("..", import.meta.url).pathname;
+// Absolute path of the token layer, matching how rg emits file prefixes
+// ("<ROOT>client/src/index.css:..."). Compared exactly so a future file whose
+// path merely *contains* this fragment can't slip through the allowlist.
+const TOKEN_LAYER = `${ROOT}client/src/index.css`;
 
 let violations: { file: string; line: string }[] = [];
 // rg exit codes: 0 = matches found, 1 = no matches (clean), 2 = error.
@@ -64,10 +68,7 @@ if (status === 0 && result.stdout.trim()) {
   violations = result.stdout
     .trim()
     .split("\n")
-    .filter((line) => {
-      // Allowlist: token definitions live here.
-      return !line.includes("client/src/index.css");
-    })
+    .filter((line) => line.split(":")[0] !== TOKEN_LAYER)
     .map((line) => {
       const [file, ...rest] = line.split(":");
       return { file, line: rest.join(":").trim() };
