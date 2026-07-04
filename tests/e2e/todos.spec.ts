@@ -13,7 +13,8 @@ test.describe("Todos page (authenticated)", () => {
 
   test("can view todos page", async ({ page }) => {
     await page.goto("/todos");
-    await expect(page.getByRole("heading", { name: /todo/i })).toBeVisible();
+    // Match only the page <h1>, not todo card titles (<h3>) that may contain "todo"
+    await expect(page.getByRole("heading", { name: "Todos", level: 1 })).toBeVisible();
   });
 
   test("can create a new todo", async ({ page }) => {
