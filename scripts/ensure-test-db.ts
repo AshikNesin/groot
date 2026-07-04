@@ -37,12 +37,16 @@ async function main() {
 
   console.log("\n🧪 Ensuring test database...\n");
 
-  const result = await ensureTestDatabase({
-    projectName: pkg.name,
-    port: process.env.LOCAL_DB_DOCKER_PORT
-      ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
-      : undefined,
-  });
+  const port = process.env.LOCAL_DB_DOCKER_PORT
+    ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
+    : undefined;
+  if (port !== undefined && Number.isNaN(port)) {
+    throw new Error(
+      `LOCAL_DB_DOCKER_PORT is set to a non-numeric value "${process.env.LOCAL_DB_DOCKER_PORT}" — refusing to guess.`,
+    );
+  }
+
+  const result = await ensureTestDatabase({ projectName: pkg.name, port });
 
   console.log(`✅ Test database ready: ${result.databaseName}`);
   console.log(`   Container: ${result.containerName}`);
@@ -57,12 +61,16 @@ async function main() {
   // Apply migrations to the test DB. NODE_ENV=test makes varlock resolve
   // DATABASE_URL to the *_test DB (via the forEnv(test) branch in .env.schema),
   // and prisma.config.ts reads ENV.DATABASE_URL — so without NODE_ENV=test the
-  // migrate engine silently targets the dev DB instead.
+  // migrate engine silently targets the dev DB instead. DATABASE_URL_DIRECT is
+  // pinned too because prisma.config.ts prefers it over DATABASE_URL, and an
+  // ambient DIRECT value (e.g. a staging direct URL) would otherwise divert
+  // migrations away from the test DB.
   console.log("📦 Applying Prisma migrations to test database...\n");
   await runCommand("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], {
     ...process.env,
     NODE_ENV: "test",
     DATABASE_URL: result.connectionString,
+    DATABASE_URL_DIRECT: result.connectionString,
     TEST_DATABASE_URL: result.connectionString,
   });
 

@@ -81,7 +81,7 @@ class ApiClient {
    */
   async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
     const response = await this.client.get<ApiResponse<T>>(url, { params });
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error(response.data.error?.message || "No data returned");
     }
     return response.data.data;
@@ -92,7 +92,7 @@ class ApiClient {
    */
   async post<T>(url: string, data?: unknown): Promise<T> {
     const response = await this.client.post<ApiResponse<T>>(url, data);
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error(response.data.error?.message || "No data returned");
     }
     return response.data.data;
@@ -103,7 +103,7 @@ class ApiClient {
    */
   async put<T>(url: string, data?: unknown): Promise<T> {
     const response = await this.client.put<ApiResponse<T>>(url, data);
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error(response.data.error?.message || "No data returned");
     }
     return response.data.data;
@@ -114,7 +114,7 @@ class ApiClient {
    */
   async patch<T>(url: string, data?: unknown): Promise<T> {
     const response = await this.client.patch<ApiResponse<T>>(url, data);
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error(response.data.error?.message || "No data returned");
     }
     return response.data.data;
@@ -141,7 +141,7 @@ class ApiClient {
       password,
     });
 
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error(response.data.error?.message || "Login failed");
     }
 
@@ -188,7 +188,7 @@ class ApiClient {
   // Jobs API
   async getJobStats(): Promise<JobStats> {
     const response = await this.client.get<ApiResponse<JobStats>>("/jobs/stats");
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Failed to fetch job stats");
     }
     return response.data.data;
@@ -221,7 +221,7 @@ class ApiClient {
 
   async getJob(queueName: string, jobId: string): Promise<Job> {
     const response = await this.client.get<ApiResponse<Job>>(`/jobs/${queueName}/${jobId}`);
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Job not found");
     }
     return response.data.data;
@@ -264,7 +264,7 @@ class ApiClient {
         queueName: string;
       }>
     >(`/jobs/${queueName}/${jobId}/rerun`);
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Failed to re-run job");
     }
     return response.data.data;
@@ -290,7 +290,7 @@ class ApiClient {
         }>
       >
     >("/jobs/bulk-rerun", { jobs });
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Failed to re-run jobs");
     }
     return response.data.data;
@@ -300,7 +300,7 @@ class ApiClient {
     const response = await this.client.delete<ApiResponse<{ deletedCount: number; state: string }>>(
       `/jobs/state/${state}`,
     );
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Failed to purge jobs");
     }
     return { deletedCount: response.data.data.deletedCount };
@@ -316,7 +316,7 @@ class ApiClient {
       data,
       options,
     });
-    if (response.data.data === undefined) {
+    if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Failed to add job");
     }
     return response.data.data.jobId;

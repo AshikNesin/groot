@@ -250,6 +250,7 @@ async function waitForPostgres(port: number, maxAttempts = 60): Promise<void> {
  * Prisma Migrate rather than `db push`).
  */
 export async function databaseHasMigrationHistory(dbName: string): Promise<boolean> {
+  assertSafeDbName(dbName);
   try {
     const { stdout } = await execAsync(
       `docker exec ${CONTAINER_NAME} psql -U ${POSTGRES_USER} -d "${dbName}" -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '_prisma_migrations')"`,
@@ -264,6 +265,7 @@ export async function databaseHasMigrationHistory(dbName: string): Promise<boole
  * Check if a database has any tables in the public schema.
  */
 export async function databaseHasTables(dbName: string): Promise<boolean> {
+  assertSafeDbName(dbName);
   try {
     const { stdout } = await execAsync(
       `docker exec ${CONTAINER_NAME} psql -U ${POSTGRES_USER} -d "${dbName}" -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'"`,
@@ -407,6 +409,18 @@ export async function ensureTestDatabase(options: DockerDbOptions): Promise<Dock
  */
 function buildConnectionString(dbName: string, port: number): string {
   return `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${port}/${dbName}`;
+}
+
+/**
+ * Reject database names that aren't safe to interpolate into a shell `psql`
+ * command. `sanitizeDbName` already restricts names to [a-z0-9_], but these
+ * helpers are exported, so a caller passing anything else would reach the
+ * shell — assert at the boundary rather than trust every caller.
+ */
+function assertSafeDbName(dbName: string): void {
+  if (!/^[a-z0-9_]+$/.test(dbName)) {
+    throw new Error(`Unsafe database name "${dbName}" — expected only [a-z0-9_].`);
+  }
 }
 
 /**
