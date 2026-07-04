@@ -12,7 +12,12 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { ensurePostgresContainer } from "./lib/docker-db.js";
+import {
+  databaseHasMigrationHistory,
+  databaseHasTables,
+  dockerDb,
+  ensurePostgresContainer,
+} from "./lib/docker-db.js";
 
 const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
 
@@ -55,6 +60,21 @@ async function main() {
     });
     connectionString = docker.connectionString;
     console.log("🐳 Using Docker PostgreSQL\n");
+
+    // Detect a db-push-managed database (tables present but no _prisma_migrations
+    // table). `migrate deploy` would fail with P3005 on such a database, so reset
+    // it first. This is safe: it's a local Docker dev DB and the seed step
+    // re-creates the demo user.
+    const hasTables = await databaseHasTables(docker.databaseName);
+    const hasMigrations = await databaseHasMigrationHistory(docker.databaseName);
+    if (hasTables && !hasMigrations) {
+      console.log(
+        "⚠️  Database has tables but no Prisma migration history (was `db push` managed).",
+      );
+      console.log("   Resetting local dev database so migrations apply cleanly...\n");
+      await dockerDb.reset(docker.databaseName);
+      console.log("   ✅ Database reset.\n");
+    }
   } else {
     connectionString = process.env.DATABASE_URL!;
     const host = extractHost(connectionString);
