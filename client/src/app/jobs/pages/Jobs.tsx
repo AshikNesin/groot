@@ -33,8 +33,6 @@ import {
 } from "@/core/lib/utils";
 import { apiClient } from "@/core/lib/api";
 import type { Job, JobName, JobStats, ScheduledJob } from "@/core/types/jobs";
-import { json } from "@codemirror/lang-json";
-import CodeMirror from "@uiw/react-codemirror";
 import {
   Activity,
   Calendar as CalendarIcon,
@@ -57,7 +55,7 @@ import {
 } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { toast } from "sonner";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 type StateTab = "all" | "active" | "created" | "retry" | "failed" | "completed" | "cancelled";
@@ -122,6 +120,10 @@ function formatJobDuration(start: string | null, end: string | null): string {
   if (!start || !end) return "N/A";
   return formatDuration(start, end);
 }
+
+const CodeMirrorEditor = lazy(() =>
+  import("@/core/components/CodeMirrorEditor").then((m) => ({ default: m.CodeMirrorEditor })),
+);
 
 export function Jobs() {
   const [stats, setStats] = useState<JobStats | null>(null);
@@ -497,8 +499,6 @@ export function Jobs() {
     }
   };
 
-  const jsonExtension = useMemo(() => json(), []);
-
   const handleScheduleJob = async () => {
     if (!scheduledJobName || !scheduledJobCron) {
       toast.error("Error", {
@@ -655,11 +655,8 @@ export function Jobs() {
                         </div>
                         <DropdownMenuSeparator />
                         <div className="max-h-[180px] overflow-y-auto">
-                          {availableJobs
-                            .filter((job) =>
-                              job.toLowerCase().includes(scheduleJobTypeSearch.toLowerCase()),
-                            )
-                            .map((job) => (
+                          {availableJobs.map((job) =>
+                            job.toLowerCase().includes(scheduleJobTypeSearch.toLowerCase()) ? (
                               <DropdownMenuItem
                                 key={job}
                                 onSelect={() => setScheduledJobName(job as JobName)}
@@ -667,7 +664,8 @@ export function Jobs() {
                               >
                                 {job}
                               </DropdownMenuItem>
-                            ))}
+                            ) : null,
+                          )}
                         </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -755,11 +753,8 @@ export function Jobs() {
                         </div>
                         <DropdownMenuSeparator />
                         <div className="max-h-[180px] overflow-y-auto">
-                          {availableJobs
-                            .filter((job) =>
-                              job.toLowerCase().includes(addJobTypeSearch.toLowerCase()),
-                            )
-                            .map((job) => (
+                          {availableJobs.map((job) =>
+                            job.toLowerCase().includes(addJobTypeSearch.toLowerCase()) ? (
                               <DropdownMenuItem
                                 key={job}
                                 onSelect={() => setNewJobName(job as JobName)}
@@ -767,7 +762,8 @@ export function Jobs() {
                               >
                                 {job}
                               </DropdownMenuItem>
-                            ))}
+                            ) : null,
+                          )}
                         </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -775,12 +771,13 @@ export function Jobs() {
                   <div>
                     <Label htmlFor="job-data">Job Data (JSON)</Label>
                     <div className="mt-1 overflow-hidden rounded-md border">
-                      <CodeMirror
-                        value={newJobData}
-                        height="200px"
-                        extensions={[jsonExtension]}
-                        onChange={(value) => setNewJobData(value)}
-                      />
+                      <Suspense fallback={<div className="h-[200px]" />}>
+                        <CodeMirrorEditor
+                          value={newJobData}
+                          height="200px"
+                          onChange={(value) => setNewJobData(value)}
+                        />
+                      </Suspense>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
@@ -989,11 +986,8 @@ export function Jobs() {
                       >
                         All Queues
                       </DropdownMenuItem>
-                      {availableJobs
-                        .filter((jobName) =>
-                          jobName.toLowerCase().includes(queueSearch.toLowerCase()),
-                        )
-                        .map((jobName) => (
+                      {availableJobs.map((jobName) =>
+                        jobName.toLowerCase().includes(queueSearch.toLowerCase()) ? (
                           <DropdownMenuItem
                             key={jobName}
                             onSelect={() => setQueryParams({ queue: jobName, page: 0 })}
@@ -1001,7 +995,8 @@ export function Jobs() {
                           >
                             {jobName}
                           </DropdownMenuItem>
-                        ))}
+                        ) : null,
+                      )}
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1167,21 +1162,14 @@ export function Jobs() {
                       className="group grid grid-cols-12 items-center gap-4 py-3 text-sm hover:bg-accent/30 transition-colors"
                     >
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
-                        <div
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleJobSelection(job.name, job.id);
-                          }}
-                          onKeyDown={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            checked={selectedJobs.has(
-                              JSON.stringify({ queueName: job.name, jobId: job.id }),
-                            )}
-                            className="h-3.5 w-3.5"
-                          />
-                        </div>
+                        <Checkbox
+                          checked={selectedJobs.has(
+                            JSON.stringify({ queueName: job.name, jobId: job.id }),
+                          )}
+                          onCheckedChange={() => toggleJobSelection(job.name, job.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-3.5 w-3.5"
+                        />
                         <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <div className="min-w-0">
                           <div className="truncate font-medium">{job.name}</div>

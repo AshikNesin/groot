@@ -4,13 +4,10 @@ import { StatusBadge } from "@/ui";
 import { formatLocaleDateTime, formatRelativeTime } from "@/core/lib/utils";
 import { apiClient } from "@/core/lib/api";
 import type { Job, JobLog } from "@/core/types/jobs";
-import { json } from "@codemirror/lang-json";
-import { EditorView } from "@codemirror/view";
-import CodeMirror from "@uiw/react-codemirror";
 import { Console } from "console-feed";
 import dayjs from "dayjs";
 import { AlertCircle, ArrowLeft, ChevronRight, Play, RefreshCw, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -20,13 +17,16 @@ function formatDuration(start: string | null, end: string | null): string {
   return `${duration.toFixed(2)}s`;
 }
 
+const CodeMirrorEditor = lazy(() =>
+  import("@/core/components/CodeMirrorEditor").then((m) => ({ default: m.CodeMirrorEditor })),
+);
+
 export function JobDetail() {
   const { queueName, jobId } = useParams<{
     queueName: string;
     jobId: string;
   }>();
   const navigate = useNavigate();
-  const jsonExtension = useMemo(() => json(), []);
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -356,17 +356,19 @@ export function JobDetail() {
             Data
           </h2>
           <div className="border border-dashed overflow-hidden">
-            <CodeMirror
-              value={JSON.stringify(job.data, null, 2)}
-              extensions={[jsonExtension, EditorView.lineWrapping]}
-              editable={false}
-              basicSetup={{
-                lineNumbers: true,
-                foldGutter: true,
-                highlightActiveLineGutter: false,
-                highlightActiveLine: false,
-              }}
-            />
+            <Suspense fallback={<div className="h-48" />}>
+              <CodeMirrorEditor
+                value={JSON.stringify(job.data, null, 2)}
+                editable={false}
+                lineWrapping
+                basicSetup={{
+                  lineNumbers: true,
+                  foldGutter: true,
+                  highlightActiveLineGutter: false,
+                  highlightActiveLine: false,
+                }}
+              />
+            </Suspense>
           </div>
         </div>
 
@@ -377,17 +379,19 @@ export function JobDetail() {
               Output
             </h2>
             <div className="border border-dashed overflow-hidden">
-              <CodeMirror
-                value={JSON.stringify(job.output, null, 2)}
-                extensions={[jsonExtension, EditorView.lineWrapping]}
-                editable={false}
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: true,
-                  highlightActiveLineGutter: false,
-                  highlightActiveLine: false,
-                }}
-              />
+              <Suspense fallback={<div className="h-48" />}>
+                <CodeMirrorEditor
+                  value={JSON.stringify(job.output, null, 2)}
+                  editable={false}
+                  lineWrapping
+                  basicSetup={{
+                    lineNumbers: true,
+                    foldGutter: true,
+                    highlightActiveLineGutter: false,
+                    highlightActiveLine: false,
+                  }}
+                />
+              </Suspense>
             </div>
           </div>
         )}

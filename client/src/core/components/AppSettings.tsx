@@ -13,9 +13,11 @@ import { Label } from "@/ui/label";
 import { Alert } from "@/ui/alert";
 import { LoadingSpinner } from "@/ui/loading-spinner";
 import { type AppSetting, settingsService } from "@/core/services/settings";
-import { json } from "@codemirror/lang-json";
-import CodeMirror from "@uiw/react-codemirror";
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+
+const CodeMirrorEditor = lazy(() =>
+  import("@/core/components/CodeMirrorEditor").then((m) => ({ default: m.CodeMirrorEditor })),
+);
 
 export function AppSettings() {
   const [settings, setSettings] = useState<AppSetting[]>([]);
@@ -282,19 +284,19 @@ export function AppSettings() {
                     JSON Value
                   </Label>
                   <div className="mt-1.5 overflow-hidden rounded-md border">
-                    <CodeMirror
-                      value={jsonValue}
-                      height="400px"
-                      extensions={[json()]}
-                      onChange={(value) => setJsonValue(value)}
-                      theme="light"
-                      basicSetup={{
-                        lineNumbers: true,
-                        highlightActiveLineGutter: true,
-                        highlightActiveLine: true,
-                        foldGutter: true,
-                      }}
-                    />
+                    <Suspense fallback={<div className="h-[400px]" />}>
+                      <CodeMirrorEditor
+                        value={jsonValue}
+                        height="400px"
+                        onChange={(value) => setJsonValue(value)}
+                        basicSetup={{
+                          lineNumbers: true,
+                          highlightActiveLineGutter: true,
+                          highlightActiveLine: true,
+                          foldGutter: true,
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 </div>
               </div>
