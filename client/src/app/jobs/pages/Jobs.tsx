@@ -147,6 +147,7 @@ export function Jobs() {
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [scheduleJobTypeSearch, setScheduleJobTypeSearch] = useState("");
   const [addJobTypeSearch, setAddJobTypeSearch] = useState("");
+  const [queueSearch, setQueueSearch] = useState("");
 
   const pageSize = 50;
 
@@ -954,7 +955,11 @@ export function Jobs() {
                 />
               </div>
               {availableJobs.length > 0 && (
-                <DropdownMenu>
+                <DropdownMenu
+                  onOpenChange={(open) => {
+                    if (!open) setQueueSearch("");
+                  }}
+                >
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 text-xs">
                       <Filter className="w-3.5 h-3.5 md:mr-1.5" />
@@ -964,22 +969,40 @@ export function Jobs() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onSelect={() => setQueryParams({ queue: "all", page: 0 })}
-                      className="text-xs"
-                    >
-                      All Queues
-                    </DropdownMenuItem>
+                    <div className="px-2 pt-1">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                        <Input
+                          placeholder="Search queues..."
+                          value={queueSearch}
+                          onChange={(e) => setQueueSearch(e.target.value)}
+                          className="pl-7 h-7 text-xs border-0 bg-transparent focus-visible:ring-0"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
                     <div className="max-h-[200px] overflow-y-auto">
-                      {availableJobs.map((jobName) => (
-                        <DropdownMenuItem
-                          key={jobName}
-                          onSelect={() => setQueryParams({ queue: jobName, page: 0 })}
-                          className="text-xs"
-                        >
-                          {jobName}
-                        </DropdownMenuItem>
-                      ))}
+                      <DropdownMenuItem
+                        onSelect={() => setQueryParams({ queue: "all", page: 0 })}
+                        className="text-xs"
+                      >
+                        All Queues
+                      </DropdownMenuItem>
+                      {availableJobs
+                        .filter((jobName) =>
+                          jobName.toLowerCase().includes(queueSearch.toLowerCase()),
+                        )
+                        .map((jobName) => (
+                          <DropdownMenuItem
+                            key={jobName}
+                            onSelect={() => setQueryParams({ queue: jobName, page: 0 })}
+                            className="text-xs"
+                          >
+                            {jobName}
+                          </DropdownMenuItem>
+                        ))}
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
