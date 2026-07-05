@@ -96,6 +96,13 @@ async function build() {
       logLevel: "info",
     });
 
+    // The Sentry plugin uploads the source map then deletes it when configured;
+    // otherwise drop it here so the original source (which references env names
+    // like DATABASE_URL) doesn't sit in a dist/ that express.static may serve
+    // (react-doctor/artifact-env-leak). Idempotent — force:true is a no-op once
+    // Sentry has already removed it.
+    await fs.rm("dist/bundle.js.map", { force: true });
+
     // Write release.json for runtime release consistency
     if (release) {
       await fs.writeFile("dist/release.json", JSON.stringify({ release }));
