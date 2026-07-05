@@ -2,6 +2,7 @@ import type { PgBoss, WorkOptions } from "pg-boss";
 import { logger, createJobLogger } from "@/core/logger";
 import { jobConfig } from "@/core/job/config";
 import { withSentryErrorCapture, type JobHandler } from "@/core/job/error-handler";
+import { getBoss } from "@/core/job/client";
 
 const jobHandlers = new Map<string, JobHandler<unknown>>();
 let workersStarted = false;
@@ -43,44 +44,47 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     return;
   }
 
-  const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
+  const activeBoss = boss ?? getBoss();
 
   const workOptions: WorkOptions = {
     pollingIntervalSeconds: jobConfig.pollIntervalSeconds,
     teamSize: jobConfig.concurrency,
   };
 
-  // Create queues before starting workers (required in pg-boss v12+)
-  for (const name of jobHandlers.keys()) {
-    await activeBoss.createQueue(name);
-  }
+  // Create queues before starting workers (required in pg-boss v12+).
+  // Per-queue calls are independent — fan them out.
+  await Promise.all([...jobHandlers.keys()].map((name) => activeBoss.createQueue(name)));
 
-  for (const [name, handler] of jobHandlers.entries()) {
-    await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
-      for (const job of jobs) {
-        const jobLogger = createJobLogger({ jobId: job.id, jobName: name });
-        const startTime = Date.now();
+  await Promise.all(
+    [...jobHandlers.entries()].map(async ([name, handler]) => {
+      await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
+        // Process a delivered batch sequentially — handlers may not be
+        // concurrency-safe and failure semantics (throw after N) matter.
+        for (const job of jobs) {
+          const jobLogger = createJobLogger({ jobId: job.id, jobName: name });
+          const startTime = Date.now();
 
-        jobLogger.info({ data: job.data }, `Starting job ${name}`);
+          jobLogger.info({ data: job.data }, `Starting job ${name}`);
 
-        try {
-          await handler(job);
-          const duration = Date.now() - startTime;
-          jobLogger.info({ duration: `${duration}ms` }, `Job ${name} completed`);
-        } catch (error) {
-          const duration = Date.now() - startTime;
-          jobLogger.error(
-            {
-              duration: `${duration}ms`,
-              error: error instanceof Error ? error.message : String(error),
-            },
-            `Job ${name} failed`,
-          );
-          throw error;
+          try {
+            await handler(job);
+            const duration = Date.now() - startTime;
+            jobLogger.info({ duration: `${duration}ms` }, `Job ${name} completed`);
+          } catch (error) {
+            const duration = Date.now() - startTime;
+            jobLogger.error(
+              {
+                duration: `${duration}ms`,
+                error: error instanceof Error ? error.message : String(error),
+              },
+              `Job ${name} failed`,
+            );
+            throw error;
+          }
         }
-      }
-    });
-  }
+      });
+    }),
+  );
 
   workersStarted = true;
   logger.info({ workerCount: jobHandlers.size }, "Job workers started");
@@ -91,16 +95,18 @@ export const stopWorkers = async (): Promise<void> => {
     return;
   }
 
-  const boss = (await import("@/core/job/index")).getBoss();
+  const boss = getBoss();
 
-  for (const name of jobHandlers.keys()) {
-    try {
-      await boss.offWork(name);
-      logger.debug({ jobName: name }, "Workers stopped");
-    } catch (error) {
-      logger.error({ jobName: name, error }, "Failed to stop workers");
-    }
-  }
+  await Promise.all(
+    [...jobHandlers.keys()].map(async (name) => {
+      try {
+        await boss.offWork(name);
+        logger.debug({ jobName: name }, "Workers stopped");
+      } catch (error) {
+        logger.error({ jobName: name, error }, "Failed to stop workers");
+      }
+    }),
+  );
 
   workersStarted = false;
 };
