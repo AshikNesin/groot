@@ -1,3 +1,15 @@
+# Supply-chain hardening (react-doctor/require-pnpm-hardening).
+# minimumReleaseAge: 1440 = 1 day. Refuses versions published <24h ago, blocking
+#   same-day "publish-malware-then-unpublish" attacks (the highest-risk window).
+#   Intentionally shorter than the rule's 7-day default: groot tracks latest
+#   deps (e.g. tailwindcss platform binaries are often <7d old) and a 7-day gate
+#   blocks routine installs. Applies to *new* resolutions only; frozen-lockfile
+#   CI installs are unaffected.
+# trustPolicy: no-downgrade: refuses packages whose provenance/signature trust
+#   weakens between resolutions.
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.2
   vite-plus: 0.2.2
