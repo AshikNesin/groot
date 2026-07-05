@@ -37,4 +37,5 @@ service-account.json
 
 # Groot sync generated report
 .groot/sync-report.json
-.claude/settings.local.json
+
+settings.local.json
