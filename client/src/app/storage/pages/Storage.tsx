@@ -37,6 +37,43 @@ import { api } from "@/core/lib/api";
 import { toast } from "sonner";
 import { formatBytes, formatDate } from "@/core/lib/utils";
 
+async function handleDownload(filePath: string, name: string): Promise<void> {
+  try {
+    const response = await api.get("/storage/files/download", {
+      params: { filePath },
+      responseType: "blob",
+    });
+    const blobUrl = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = name;
+    link.click();
+    window.URL.revokeObjectURL(blobUrl);
+    toast.success("Success", { description: "File downloaded successfully" });
+  } catch (error) {
+    console.error(error);
+    toast.error("Download failed", {
+      description: "Unable to download file",
+    });
+  }
+}
+
+async function handleView(filePath: string): Promise<void> {
+  try {
+    const response = await api.get("/storage/files/download", {
+      params: { filePath },
+      responseType: "blob",
+    });
+    const blobUrl = window.URL.createObjectURL(response.data);
+    window.open(blobUrl, "_blank");
+  } catch (error) {
+    console.error(error);
+    toast.error("View failed", {
+      description: "Unable to view file",
+    });
+  }
+}
+
 export function Storage() {
   const [currentPath, setCurrentPath] = useQueryState("path", parseAsString.withDefault(""));
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -83,7 +120,7 @@ export function Storage() {
   };
 
   const selectAllFiles = () => {
-    const allFileKeys = files.filter((f) => !f.isDirectory).map((f) => f.key);
+    const allFileKeys = files.flatMap((f) => (f.isDirectory ? [] : [f.key]));
     setSelectedFiles(new Set(allFileKeys));
   };
 
@@ -177,43 +214,6 @@ export function Storage() {
       console.error(error);
       toast.error("Delete failed", {
         description: "Unable to delete folder",
-      });
-    }
-  };
-
-  const handleDownload = async (filePath: string, name: string) => {
-    try {
-      const response = await api.get("/storage/files/download", {
-        params: { filePath },
-        responseType: "blob",
-      });
-      const blobUrl = window.URL.createObjectURL(response.data);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = name;
-      link.click();
-      window.URL.revokeObjectURL(blobUrl);
-      toast.success("Success", { description: "File downloaded successfully" });
-    } catch (error) {
-      console.error(error);
-      toast.error("Download failed", {
-        description: "Unable to download file",
-      });
-    }
-  };
-
-  const handleView = async (filePath: string) => {
-    try {
-      const response = await api.get("/storage/files/download", {
-        params: { filePath },
-        responseType: "blob",
-      });
-      const blobUrl = window.URL.createObjectURL(response.data);
-      window.open(blobUrl, "_blank");
-    } catch (error) {
-      console.error(error);
-      toast.error("View failed", {
-        description: "Unable to view file",
       });
     }
   };
@@ -438,7 +438,7 @@ export function Storage() {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="w-12 px-4 py-3" />
+                    <th aria-label="Select file" className="w-12 px-4 py-3" />
                     <th className="px-4 py-3 text-left font-medium">Name</th>
                     <th className="px-4 py-3 text-left font-medium">Size</th>
                     <th className="px-4 py-3 text-left font-medium">Modified</th>

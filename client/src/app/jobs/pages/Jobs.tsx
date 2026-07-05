@@ -113,6 +113,16 @@ function StatCard({
   );
 }
 
+function formatDate(date: string | null): string {
+  if (!date) return "N/A";
+  return formatLocaleDateTime(date);
+}
+
+function formatJobDuration(start: string | null, end: string | null): string {
+  if (!start || !end) return "N/A";
+  return formatDuration(start, end);
+}
+
 export function Jobs() {
   const [stats, setStats] = useState<JobStats | null>(null);
   const [queryParams, setQueryParams] = useQueryStates({
@@ -141,7 +151,7 @@ export function Jobs() {
   const [scheduledJobData, setScheduledJobData] = useState("{}");
   const [editScheduledDialogOpen, setEditScheduledDialogOpen] = useState(false);
   const [editScheduledName, setEditScheduledName] = useState("");
-  const [editScheduledKey, setEditScheduledKey] = useState<string | undefined>(undefined);
+  const editScheduledKeyRef = useRef<string | undefined>(undefined);
   const [editScheduledCron, setEditScheduledCron] = useState("");
   const [editScheduledDataStr, setEditScheduledDataStr] = useState("{}");
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
@@ -243,7 +253,6 @@ export function Jobs() {
     queryParams.page,
     queryParams.startDate,
     queryParams.endDate,
-    toast,
   ]);
 
   const loadAvailableJobs = useCallback(async () => {
@@ -534,7 +543,7 @@ export function Jobs() {
 
   const openEditScheduledDialog = (job: ScheduledJob) => {
     setEditScheduledName(job.name);
-    setEditScheduledKey(job.key);
+    editScheduledKeyRef.current = job.key;
     setEditScheduledCron(job.cron);
     setEditScheduledDataStr(JSON.stringify(job.data ?? {}, null, 2));
     setEditScheduledDialogOpen(true);
@@ -552,7 +561,7 @@ export function Jobs() {
       const data = JSON.parse(editScheduledDataStr);
       await apiClient.editScheduledJob(
         editScheduledName,
-        editScheduledKey,
+        editScheduledKeyRef.current,
         editScheduledCron,
         data,
       );
@@ -564,16 +573,6 @@ export function Jobs() {
         description: error instanceof Error ? error.message : "Failed to update scheduled job",
       });
     }
-  };
-
-  const formatDate = (date: string | null) => {
-    if (!date) return "N/A";
-    return formatLocaleDateTime(date);
-  };
-
-  const formatJobDuration = (start: string | null, end: string | null) => {
-    if (!start || !end) return "N/A";
-    return formatDuration(start, end);
   };
 
   const activeSecondaryTab = secondaryOptions.find((t) => t.value === queryParams.state);

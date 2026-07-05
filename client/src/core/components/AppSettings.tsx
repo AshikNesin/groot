@@ -20,7 +20,8 @@ import { useCallback, useEffect, useState } from "react";
 export function AppSettings() {
   const [settings, setSettings] = useState<AppSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [userSelectedKey, setUserSelectedKey] = useState<string | null>(null);
+  const [draftKey, setDraftKey] = useState<string | null>(null);
   const [jsonValue, setJsonValue] = useState("");
   const [description, setDescription] = useState("");
   const [newSettingKey, setNewSettingKey] = useState("");
@@ -53,21 +54,19 @@ export function AppSettings() {
     setting.key.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  useEffect(() => {
-    if (settings.length > 0 && !selectedKey) {
-      setSelectedKey(settings[0].key);
-    }
-  }, [settings, selectedKey]);
+  // Selection: the user's explicit choice, else the first setting once loaded.
+  // Deriving this replaces the "auto-select first setting" syncing effect.
+  const selectedKey = userSelectedKey ?? settings[0]?.key ?? null;
 
-  useEffect(() => {
-    if (selectedKey) {
-      const setting = settings.find((s) => s.key === selectedKey);
-      if (setting) {
-        setJsonValue(JSON.stringify(setting.value, null, 2));
-        setDescription(setting.metadata?.description || "");
-      }
-    }
-  }, [selectedKey, settings]);
+  // The JSON editor + description are editable drafts, so they stay in state —
+  // but we reset them when the selection changes (initial load or picking
+  // another setting) instead of via a syncing effect chain.
+  if (selectedKey !== draftKey) {
+    setDraftKey(selectedKey);
+    const setting = selectedKey ? (settings.find((s) => s.key === selectedKey) ?? null) : null;
+    setJsonValue(setting ? JSON.stringify(setting.value, null, 2) : "");
+    setDescription(setting?.metadata?.description ?? "");
+  }
 
   const handleSave = async () => {
     if (!selectedKey) return;
@@ -109,7 +108,7 @@ export function AppSettings() {
     try {
       await settingsService.deleteSetting(selectedKey);
       setSuccess("Setting deleted successfully");
-      setSelectedKey(null);
+      setUserSelectedKey(null);
       setShowDeleteDialog(false);
       await loadSettings();
     } catch (err: unknown) {
@@ -134,7 +133,7 @@ export function AppSettings() {
         metadata: { description: "New setting" },
       });
       setSuccess(`"${newSettingKey}" has been created successfully`);
-      setSelectedKey(newSettingKey);
+      setUserSelectedKey(newSettingKey);
       setNewSettingKey("");
       setShowNewSettingForm(false);
       await loadSettings();
@@ -222,7 +221,7 @@ export function AppSettings() {
                   <button
                     type="button"
                     key={setting.key}
-                    onClick={() => setSelectedKey(setting.key)}
+                    onClick={() => setUserSelectedKey(setting.key)}
                     className={`w-full rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
                       selectedKey === setting.key
                         ? "bg-primary text-primary-foreground"

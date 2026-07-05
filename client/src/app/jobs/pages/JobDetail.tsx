@@ -14,6 +14,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
+function formatDuration(start: string | null, end: string | null): string {
+  if (!start || !end) return "N/A";
+  const duration = dayjs(end).diff(dayjs(start), "second", true);
+  return `${duration.toFixed(2)}s`;
+}
+
 export function JobDetail() {
   const { queueName, jobId } = useParams<{
     queueName: string;
@@ -160,12 +166,6 @@ export function JobDetail() {
         description: error instanceof Error ? error.message : "Failed to re-run job",
       });
     }
-  };
-
-  const formatDuration = (start: string | null, end: string | null) => {
-    if (!start || !end) return "N/A";
-    const duration = dayjs(end).diff(dayjs(start), "second", true);
-    return `${duration.toFixed(2)}s`;
   };
 
   if (loading) {
