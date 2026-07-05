@@ -15,7 +15,7 @@ export const CONFIG_RELATIVE_PATH = ".groot/boilerplate-sync.json";
 export const SyncConfigSchema = z.object({
   boilerplate: z.object({
     name: z.string().min(1, "Boilerplate name is required"),
-    repo: z.string().url("Invalid repository URL"),
+    repo: z.url("Invalid repository URL"),
   }),
   last_sync: z.object({
     version: z.string().optional().describe("Semver version tag of last sync (e.g. '1.3.0')"),
