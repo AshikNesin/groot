@@ -140,12 +140,15 @@ export async function runSync(projectRoot: string, opts: SyncOptions): Promise<S
 
   try {
     const cloneDir = repo.dir;
-    const targetCommit = await resolveCommit(cloneDir, "HEAD");
-    const latestVersion = await resolveLatestVersion(cloneDir);
+    // Independent reads on the clone — run concurrently.
+    const [targetCommit, latestVersion, lastSyncReachable] = await Promise.all([
+      resolveCommit(cloneDir, "HEAD"),
+      resolveLatestVersion(cloneDir),
+      hasCommit(cloneDir, config.last_sync.commit),
+    ]);
 
     // --- Resolve the base source: prefer the local baseline snapshot; fall
     // back to the boilerplate clone at the recorded last-sync commit.
-    const lastSyncReachable = await hasCommit(cloneDir, config.last_sync.commit);
     const lastSyncSha = lastSyncReachable
       ? await resolveCommit(cloneDir, config.last_sync.commit)
       : config.last_sync.commit;

@@ -29,12 +29,11 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     return;
   }
 
-  const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
-
   if (jobHandlers.size === 0) {
     // Enqueue-only processes legitimately register no handlers, so this is
     // not a hard error — but it is almost always a misconfiguration, so log
     // it loudly and do NOT claim workers are running.
+    // Checked before the dynamic import so the no-handler path pays nothing.
     logger.error(
       "No job handlers registered — workers NOT started. Jobs will enqueue " +
         "but never process. If this process should run workers, you forgot to " +
@@ -43,6 +42,8 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     );
     return;
   }
+
+  const activeBoss = boss ?? (await import("@/core/job/index")).getBoss();
 
   const workOptions: WorkOptions = {
     pollingIntervalSeconds: jobConfig.pollIntervalSeconds,

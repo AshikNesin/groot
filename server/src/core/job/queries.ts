@@ -35,15 +35,19 @@ const JOB_SELECT_COLUMNS = `SELECT
 export const getScheduledJobs = async (): Promise<ScheduledJobInfo[]> => {
   const boss = getBoss();
   const schedules = await boss.getSchedules();
-  return schedules
-    .filter((s) => !s.name.startsWith("__pgboss__"))
-    .map((s) => ({
-      name: s.name,
-      cron: s.cron,
-      timezone: s.timezone,
-      data: s.data,
-      key: s.key,
-    }));
+  return schedules.flatMap((s) =>
+    s.name.startsWith("__pgboss__")
+      ? []
+      : [
+          {
+            name: s.name,
+            cron: s.cron,
+            timezone: s.timezone,
+            data: s.data,
+            key: s.key,
+          },
+        ],
+  );
 };
 
 // Get job by ID
@@ -85,7 +89,7 @@ export const getQueueStats = async (): Promise<Record<string, number>> => {
 export const getAvailableQueues = async (): Promise<string[]> => {
   const boss = getBoss();
   const queues = await boss.getQueues();
-  return queues.map((q) => q.name).filter((name) => !name.startsWith("__pgboss__"));
+  return queues.flatMap((q) => (q.name.startsWith("__pgboss__") ? [] : [q.name]));
 };
 
 // Fetch jobs with filters (queue-based, for fetching from a specific queue)
