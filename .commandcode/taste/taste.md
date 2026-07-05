@@ -38,11 +38,8 @@
 
 - Configure portless to use non-privileged ports (8888) to avoid sudo requirements. Confidence: 0.85
 - When bumping package versions, update packages directly rather than adding pnpm overrides. Confidence: 0.85
-
-# Workflow
-
-- When user provides a reference GitHub repo URL for UI/code inspiration, clone it locally and analyze it rather than proceeding without it. Confidence: 0.65
-- Auto-start portless proxy without prompting when not running. Confidence: 0.80
+- Prefer in-process SDKs as devDependencies over global CLI binaries for dev tooling. Confidence: 0.65
+- Declare `engines.node` in package.json to specify the required Node.js version. Confidence: 0.70
 
 # UI
 
