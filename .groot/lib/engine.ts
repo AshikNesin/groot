@@ -237,62 +237,65 @@ export async function runSync(projectRoot: string, opts: SyncOptions): Promise<S
       }
     }
 
-    // --- Reconcile every candidate file.
-    for (const path of candidates) {
-      const theirsEntry = theirsEntries.get(path) ?? null;
-      const baseEntry = baseEntries.get(path) ?? null;
-      const localPath = join(projectRoot, path);
+    // --- Reconcile every candidate file. Each file is independent (unique
+    // path, stateless git merge via mkdtemp), so fan out concurrently.
+    await Promise.all(
+      candidates.map(async (path) => {
+        const theirsEntry = theirsEntries.get(path) ?? null;
+        const baseEntry = baseEntries.get(path) ?? null;
+        const localPath = join(projectRoot, path);
 
-      // Fast path: unchanged upstream since last sync (base blob == theirs
-      // blob). Local state wins in every branch of the decision table, so the
-      // only reportable outcome is a locally-deleted synced file.
-      if (theirsEntry && baseEntry && theirsEntry.sha === baseEntry.sha) {
-        const exists = await readFile(localPath)
-          .then(() => true)
-          .catch(() => false);
-        if (!exists) result.keptLocalDeletions.push(path);
-        continue;
-      }
+        // Fast path: unchanged upstream since last sync (base blob == theirs
+        // blob). Local state wins in every branch of the decision table, so the
+        // only reportable outcome is a locally-deleted synced file.
+        if (theirsEntry && baseEntry && theirsEntry.sha === baseEntry.sha) {
+          const exists = await readFile(localPath)
+            .then(() => true)
+            .catch(() => false);
+          if (!exists) result.keptLocalDeletions.push(path);
+          return;
+        }
 
-      const ours = await readFile(localPath).catch(() => null);
-      const base = baseEntry ? await baseSource.read(path) : null;
-      const theirs = theirsEntry ? await showBlob(cloneDir, targetCommit, path) : null;
+        const ours = await readFile(localPath).catch(() => null);
+        const base = baseEntry ? await baseSource.read(path) : null;
+        const theirs = theirsEntry ? await showBlob(cloneDir, targetCommit, path) : null;
 
-      const outcome = await reconcileFile({ path, ours, base, theirs }, gitMergeFile);
-      const executable = theirsEntry?.mode === "100755";
+        const outcome = await reconcileFile({ path, ours, base, theirs }, gitMergeFile);
+        const executable = theirsEntry?.mode === "100755";
 
-      switch (outcome.kind) {
-        case "identical":
-        case "ignore":
-          break;
-        case "auto-apply":
-          result.autoApply.push({ file: path, content: outcome.content, executable });
-          break;
-        case "auto-merged":
-          result.autoMerged.push({ file: path, content: outcome.content, executable });
-          break;
-        case "conflict":
-          result.conflicts.push({
-            file: path,
-            content: outcome.content,
-            conflicts: outcome.conflicts,
-            commits: lastSyncReachable ? await fileCommits(cloneDir, lastSyncSha, path) : [],
-          });
-          break;
-        case "binary-conflict":
-          result.binaryConflicts.push(path);
-          break;
-        case "delete":
-          result.deleted.push(path);
-          break;
-        case "review-delete":
-          result.reviewDeletions.push(path);
-          break;
-        case "kept-local-deletion":
-          result.keptLocalDeletions.push(path);
-          break;
-      }
-    }
+        switch (outcome.kind) {
+          case "identical":
+          case "ignore":
+            break;
+          case "auto-apply":
+            result.autoApply.push({ file: path, content: outcome.content, executable });
+            break;
+          case "auto-merged":
+            result.autoMerged.push({ file: path, content: outcome.content, executable });
+            break;
+          case "conflict":
+            result.conflicts.push({
+              file: path,
+              content: outcome.content,
+              conflicts: outcome.conflicts,
+              commits: lastSyncReachable ? await fileCommits(cloneDir, lastSyncSha, path) : [],
+            });
+            break;
+          case "binary-conflict":
+            result.binaryConflicts.push(path);
+            break;
+          case "delete":
+            result.deleted.push(path);
+            break;
+          case "review-delete":
+            result.reviewDeletions.push(path);
+            break;
+          case "kept-local-deletion":
+            result.keptLocalDeletions.push(path);
+            break;
+        }
+      }),
+    );
 
     // --- Apply phase. Everything is computed; now write, then advance state
     // last so a crash mid-apply never moves the baseline.
@@ -345,28 +348,35 @@ async function applyChanges(
     }
   }
 
-  for (const { file, content, executable } of writes) {
-    const dest = join(projectRoot, file);
-    await mkdir(dirname(dest), { recursive: true });
-    await writeFile(dest, content);
-    if (executable) await chmod(dest, 0o755);
-    console.log(`  + ${file}`);
-  }
+  // Each write/delete targets a unique path — fan out concurrently.
+  await Promise.all(
+    writes.map(async ({ file, content, executable }) => {
+      const dest = join(projectRoot, file);
+      await mkdir(dirname(dest), { recursive: true });
+      await writeFile(dest, content);
+      if (executable) await chmod(dest, 0o755);
+      console.log(`  + ${file}`);
+    }),
+  );
 
-  for (const file of result.deleted) {
-    await rm(join(projectRoot, file), { force: true });
-    console.log(`  - ${file}`);
-  }
+  await Promise.all(
+    result.deleted.map(async (file) => {
+      await rm(join(projectRoot, file), { force: true });
+      console.log(`  - ${file}`);
+    }),
+  );
 
   // Write conflict markers into the working tree (skipped in CI mode so the
   // automated PR stays compilable; the manifest still records them).
   if (!opts.skipConflicts) {
-    for (const { file, content } of result.conflicts) {
-      const dest = join(projectRoot, file);
-      await mkdir(dirname(dest), { recursive: true });
-      await writeFile(dest, content);
-      console.log(`  ! ${file} (conflict markers)`);
-    }
+    await Promise.all(
+      result.conflicts.map(async ({ file, content }) => {
+        const dest = join(projectRoot, file);
+        await mkdir(dirname(dest), { recursive: true });
+        await writeFile(dest, content);
+        console.log(`  ! ${file} (conflict markers)`);
+      }),
+    );
   }
 
   // Always record conflicts in the manifest so `pnpm groot:resolve` can act on
