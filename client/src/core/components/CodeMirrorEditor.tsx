@@ -1,6 +1,7 @@
 import { json } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
 import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
+import { useMemo } from "react";
 
 /**
  * JSON editor built on CodeMirror.
@@ -27,7 +28,12 @@ export function CodeMirrorEditor({
   lineWrapping = false,
   basicSetup,
 }: CodeMirrorEditorProps) {
-  const extensions = [json(), ...(lineWrapping ? [EditorView.lineWrapping] : [])];
+  // Keep the extension array referentially stable across renders that don't
+  // change lineWrapping — @uiw/react-codemirror reconfigures on reference change.
+  const extensions = useMemo(
+    () => [json(), ...(lineWrapping ? [EditorView.lineWrapping] : [])],
+    [lineWrapping],
+  );
   return (
     <CodeMirror
       value={value}

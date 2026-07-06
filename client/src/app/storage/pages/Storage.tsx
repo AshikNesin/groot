@@ -59,14 +59,25 @@ async function handleDownload(filePath: string, name: string): Promise<void> {
 }
 
 async function handleView(filePath: string): Promise<void> {
+  // Open the tab before the await so the browser ties it to this click's user
+  // activation — opening after an await is treated as a popup and blocked.
+  const win = window.open("", "_blank");
   try {
     const response = await api.get("/storage/files/download", {
       params: { filePath },
       responseType: "blob",
     });
     const blobUrl = window.URL.createObjectURL(response.data);
-    window.open(blobUrl, "_blank");
+    if (win) {
+      win.location.href = blobUrl;
+    } else {
+      window.location.href = blobUrl; // popup blocked — fall back to same tab
+    }
+    // The new tab has loaded the blob by the time this fires; release it so the
+    // blob data isn't pinned for the page's lifetime (matches handleDownload).
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
   } catch (error) {
+    win?.close();
     console.error(error);
     toast.error("View failed", {
       description: "Unable to view file",

@@ -59,15 +59,20 @@ export function AppSettings() {
   // Selection: the user's explicit choice, else the first setting once loaded.
   // Deriving this replaces the "auto-select first setting" syncing effect.
   const selectedKey = userSelectedKey ?? settings[0]?.key ?? null;
+  const selected = selectedKey ? (settings.find((s) => s.key === selectedKey) ?? null) : null;
 
   // The JSON editor + description are editable drafts, so they stay in state —
-  // but we reset them when the selection changes (initial load or picking
-  // another setting) instead of via a syncing effect chain.
-  if (selectedKey !== draftKey) {
-    setDraftKey(selectedKey);
-    const setting = selectedKey ? (settings.find((s) => s.key === selectedKey) ?? null) : null;
-    setJsonValue(setting ? JSON.stringify(setting.value, null, 2) : "");
-    setDescription(setting?.metadata?.description ?? "");
+  // but we reset them when the selection OR the selected setting's server value
+  // changes. That covers initial load, switching setting, and re-syncing the
+  // editor after a save/refresh when the server returns a normalized value.
+  // Replaces the old [selectedKey, settings] syncing effect.
+  const resetKey = `${selectedKey ?? ""}|${selected ? JSON.stringify(selected.value) : ""}|${
+    selected?.metadata?.description ?? ""
+  }`;
+  if (resetKey !== draftKey) {
+    setDraftKey(resetKey);
+    setJsonValue(selected ? JSON.stringify(selected.value, null, 2) : "");
+    setDescription(selected?.metadata?.description ?? "");
   }
 
   const handleSave = async () => {

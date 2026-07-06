@@ -55,36 +55,45 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
   // Per-queue calls are independent — fan them out.
   await Promise.all([...jobHandlers.keys()].map((name) => activeBoss.createQueue(name)));
 
-  await Promise.all(
-    [...jobHandlers.entries()].map(async ([name, handler]) => {
-      await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
-        // Process a delivered batch sequentially — handlers may not be
-        // concurrency-safe and failure semantics (throw after N) matter.
-        for (const job of jobs) {
-          const jobLogger = createJobLogger({ jobId: job.id, jobName: name });
-          const startTime = Date.now();
+  const started: string[] = [];
+  try {
+    await Promise.all(
+      [...jobHandlers.entries()].map(async ([name, handler]) => {
+        await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
+          // Process a delivered batch sequentially — handlers may not be
+          // concurrency-safe and failure semantics (throw after N) matter.
+          for (const job of jobs) {
+            const jobLogger = createJobLogger({ jobId: job.id, jobName: name });
+            const startTime = Date.now();
 
-          jobLogger.info({ data: job.data }, `Starting job ${name}`);
+            jobLogger.info({ data: job.data }, `Starting job ${name}`);
 
-          try {
-            await handler(job);
-            const duration = Date.now() - startTime;
-            jobLogger.info({ duration: `${duration}ms` }, `Job ${name} completed`);
-          } catch (error) {
-            const duration = Date.now() - startTime;
-            jobLogger.error(
-              {
-                duration: `${duration}ms`,
-                error: error instanceof Error ? error.message : String(error),
-              },
-              `Job ${name} failed`,
-            );
-            throw error;
+            try {
+              await handler(job);
+              const duration = Date.now() - startTime;
+              jobLogger.info({ duration: `${duration}ms` }, `Job ${name} completed`);
+            } catch (error) {
+              const duration = Date.now() - startTime;
+              jobLogger.error(
+                {
+                  duration: `${duration}ms`,
+                  error: error instanceof Error ? error.message : String(error),
+                },
+                `Job ${name} failed`,
+              );
+              throw error;
+            }
           }
-        }
-      });
-    }),
-  );
+        });
+        started.push(name);
+      }),
+    );
+  } catch (err) {
+    // Partial registration: stop any workers that registered before the failure
+    // so they don't keep running while workersStarted stays false.
+    await Promise.allSettled(started.map((name) => activeBoss.offWork(name)));
+    throw err;
+  }
 
   workersStarted = true;
   logger.info({ workerCount: jobHandlers.size }, "Job workers started");
