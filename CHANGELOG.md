@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.13.0
+
+### Minor Changes
+
+- [#55](https://github.com/AshikNesin/groot/pull/55) [`a468278`](https://github.com/AshikNesin/groot/commit/a46827823febc38373f20735af8c16b61902bb2f) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Performance, architecture, and accessibility pass driven by `react-doctor`. No
+  breaking API changes.
+
+  #### Performance
+
+  - Parallelize independent awaits in the boilerplate sync engine
+    (`.groot/lib/engine.ts`) — reconcile + apply phases now fan out per file.
+  - Code-split CodeMirror behind `React.lazy` so it lands in its own chunk
+    instead of the main bundle.
+  - Fan out pg-boss per-queue setup and break the job index↔worker cycle.
+  - Single-pass job filters and keyboard-toggle selection.
+
+  #### Architecture
+
+  - Split the four largest pages into focused components + custom hooks:
+    `Jobs` (1433 → 132), `Storage` (629 → 171), `JobDetail` (474 → 128),
+    `AppSettings` (339 → 206). Each sub-300 lines now.
+  - Fix two `react-hooks/exhaustive-deps` findings with correct `useCallback`
+    deps (no suppression comments).
+  - Hoist pure helpers to module scope; adopt Zod 4 top-level format factories;
+    make WebAuthn RP constants module-private.
+
+  #### Fixes
+
+  - Accessibility: breadcrumb current-page item now uses `aria-current="page"`
+    instead of an incorrect `role="link"`; keyboard parity for input-group.
+  - Remove derived-state syncing effects in favor of derived values.
+  - Drop unused UI variant exports (`buttonVariants`, `badgeVariants`,
+    `tabsListVariants`, `SkeletonVariants`) and the unused `TodoModel` class
+    export.
+
+  #### Tooling
+
+  - Add `react-doctor` CI workflow, triage skill, and `doctor` script.
+  - Drop redundant `@radix-ui/react-*` packages (covered by the `radix-ui`
+    meta-package) and unused `p-limit`.
+  - Delete the server bundle sourcemap after build; harden release install and
+    add pnpm supply-chain gating.
+
 ## 1.12.0
 
 ### Minor Changes
@@ -50,6 +93,7 @@
   and latent lint warnings cleaned up.
 
   ### Toolchain migrations
+
   - **Vite+ 0.1 → 0.2** via `vp migrate`. The catalog now pins real `vitest@4.1.9`
     — the `@voidzero-dev/vite-plus-test` wrapper is removed in 0.2.x, which fixes
     `vp test`: it previously could not resolve the `vitest` bin through the stale
@@ -63,6 +107,7 @@
   - **Vite 8.** `server.hmr.*` → `server.ws.*` for the HMR websocket config.
 
   ### Breaking dependency changes
+
   - `@mariozechner/pi-ai` → `@earendil-works/pi-ai@0.80` (the `@mariozechner`
     package is deprecated). Imports use the `/compat` shim, which preserves the
     existing `stream`/`complete`/`getModel` API surface.
@@ -73,12 +118,14 @@
     `@sentry/node` 10.63, `@tanstack/react-query` 5.101, and more.
 
   ### Code cleanup
+
   - Resolved 13 pre-existing oxlint `no-unused-vars` warnings: removed unused
     imports, an unused controller parameter, and switched to an optional catch
     binding.
   - Fixed a `ThinkingLevel` local-use bug in the AI module's type re-exports.
 
   ### Validation
+
   - `pnpm build` ✓, `pnpm test` (140/140) ✓, `pnpm lint` (0 warnings) ✓.
 
 ## 1.9.0
@@ -92,6 +139,7 @@
   the pi coding agent CLI for conflict resolution.
 
   ### Sync engine (v5 snapshot reconciliation)
+
   - **Git-tracked baseline.** A parentless snapshot commit of every synced file
     at the last-sync state is stored as `refs/groot/baseline`. The baseline is
     rebuilt from the boilerplate checkout when missing or stale, making sync
@@ -112,6 +160,7 @@
     drift between `sync.ts`, `resolve.ts`, and `upstream.ts`.
 
   ### Resolve (pi CLI)
+
   - **Replaces `@cline/sdk`.** Conflict resolution now shells out to the
     [pi](https://pi.dev) coding agent CLI (`pi -p`) in a locked-down single-shot
     mode: no session, no tools, no extensions, no skills, no prompt templates,
@@ -125,6 +174,7 @@
     `pi` + `/login`. `@cline/sdk` is no longer a dependency.
 
   ### Tests
+
   - 22 unit tests for the reconciliation decision table
     (`tests/server/groot/reconcile.test.ts`).
   - 7 integration tests with fixture git repos covering check mode, apply +
