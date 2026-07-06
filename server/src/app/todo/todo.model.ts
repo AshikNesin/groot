@@ -1,6 +1,6 @@
 import { prisma } from "@/core/database";
 
-export class TodoModel {
+class TodoModel {
   create(data: { title: string; completed?: boolean }) {
     return prisma.todo.create({ data });
   }

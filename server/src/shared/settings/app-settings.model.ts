@@ -35,16 +35,8 @@ class AppSettingsModel {
   async getAll(): Promise<AppSetting[]> {
     try {
       const keys = await this.getAllKeys();
-      const settings: AppSetting[] = [];
-
-      for (const key of keys) {
-        const setting = await this.get(key);
-        if (setting) {
-          settings.push(setting);
-        }
-      }
-
-      return settings;
+      const results = await Promise.all(keys.map((key) => this.get(key)));
+      return results.filter((s): s is AppSetting => s !== null);
     } catch (error) {
       logger.error({ error }, "Failed to get all app settings");
       throw error;

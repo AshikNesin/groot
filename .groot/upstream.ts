@@ -414,11 +414,12 @@ async function main() {
     await checkGhCli();
   }
 
-  // 3. Get child app name
-  const childAppName = await getChildAppName(projectRoot);
-
-  // Resolve the boilerplate's default branch (don't assume "main")
-  const defaultBranch = await resolveDefaultBranch(config.boilerplate.repo);
+  // 3. Get child app name + resolve the boilerplate's default branch in parallel
+  //    (independent reads — don't assume "main" for the branch).
+  const [childAppName, defaultBranch] = await Promise.all([
+    getChildAppName(projectRoot),
+    resolveDefaultBranch(config.boilerplate.repo),
+  ]);
 
   // 4. Find modified synced files
   let diffRepo: AcquiredRepo | undefined;

@@ -6,13 +6,22 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
-// Format currency with locale support
+// Format currency with locale support.
+// Intl.NumberFormat construction is expensive; cache per locale+currency so
+// repeated calls (the common case — same locale/currency) reuse one formatter.
+const currencyFormatters = new Map<string, Intl.NumberFormat>();
 export function formatCurrency(amount: number, currency = "USD", locale = "en-US"): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
+  const key = `${locale}:${currency}`;
+  let fmt = currencyFormatters.get(key);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+    });
+    currencyFormatters.set(key, fmt);
+  }
+  return fmt.format(amount);
 }
 
 // Format bytes to human readable format

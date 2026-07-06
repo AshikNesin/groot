@@ -17,6 +17,21 @@ import { LoadingSpinner } from "@/ui/loading-spinner";
 import { type Passkey, passkeyService } from "@/core/services/passkey";
 import { useCallback, useEffect, useState } from "react";
 
+function getPasskeyIcon(passkey: Passkey): string {
+  if (passkey.deviceType === "platform") {
+    return "📱";
+  }
+  if (passkey.transports.includes("usb")) {
+    return "🔑";
+  }
+  return "🛡️";
+}
+
+function formatDate(date: Date | null): string {
+  if (!date) return "Never";
+  return dayjs(date).format("MMM D, YYYY");
+}
+
 export function PasskeyManager() {
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,21 +103,6 @@ export function PasskeyManager() {
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Failed to update passkey name");
     }
-  };
-
-  const getPasskeyIcon = (passkey: Passkey) => {
-    if (passkey.deviceType === "platform") {
-      return "📱";
-    }
-    if (passkey.transports.includes("usb")) {
-      return "🔑";
-    }
-    return "🛡️";
-  };
-
-  const formatDate = (date: Date | null) => {
-    if (!date) return "Never";
-    return dayjs(date).format("MMM D, YYYY");
   };
 
   if (isLoading) {

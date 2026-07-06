@@ -15,10 +15,10 @@ import type {
 } from "@simplewebauthn/types";
 import { config } from "@/core/config";
 
-// Configuration for WebAuthn
-export const RP_NAME = config.passkey.rpName;
-export const RP_ID = config.passkey.rpId;
-export const ORIGIN = config.passkey.origin;
+// Configuration for WebAuthn (module-private — only used in this file)
+const RP_NAME = config.passkey.rpName;
+const RP_ID = config.passkey.rpId;
+const ORIGIN = config.passkey.origin;
 
 /**
  * Interface for passkey data stored in database

@@ -36,7 +36,14 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # --ignore-scripts blocks dependency lifecycle scripts (postinstall /
+        # prepare) during install. GITHUB_TOKEN is auto-injected into every
+        # step of this job, so a malicious postinstall could otherwise read it
+        # and exfiltrate it (supply-chain). This job only versions packages and
+        # tags/releases — it never builds or runs the app — so skipping prisma
+        # generate / vp config here is safe.
+        # react-doctor/build-pipeline-secret-boundary
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Create Release Pull Request or Publish
         id: changesets

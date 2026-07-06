@@ -37,13 +37,15 @@ async function main() {
     { id: 3, title: "Write tests", completed: false },
   ];
 
-  for (const todo of todos) {
-    await prisma.todo.upsert({
-      where: { id: todo.id },
-      update: {},
-      create: { title: todo.title, completed: todo.completed },
-    });
-  }
+  await Promise.all(
+    todos.map((todo) =>
+      prisma.todo.upsert({
+        where: { id: todo.id },
+        update: {},
+        create: { title: todo.title, completed: todo.completed },
+      }),
+    ),
+  );
 
   console.log(`   📝 Seeded ${todos.length} todos`);
 }

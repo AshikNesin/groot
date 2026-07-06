@@ -13,14 +13,14 @@ export const verifyRegistrationSchema = z.object({
  */
 export const verifyAuthenticationSchema = z.object({
   response: z.any(), // AuthenticationResponseJSON from @simplewebauthn/types
-  email: z.string().email().trim().toLowerCase().optional(),
+  email: z.email().trim().toLowerCase().optional(),
 });
 
 /**
  * Schema for generating authentication options
  */
 export const generateAuthenticationOptionsSchema = z.object({
-  email: z.string().email().trim().toLowerCase().optional(),
+  email: z.email().trim().toLowerCase().optional(),
 });
 
 /**

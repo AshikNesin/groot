@@ -22,7 +22,6 @@ export * from "./input";
 export * from "./input-group";
 export * from "./label";
 export { Skeleton, SkeletonList } from "./loading-skeleton";
-export type { SkeletonVariants } from "./loading-skeleton";
 export { LoadingSpinner, LoadingState } from "./loading-spinner";
 export * from "./pagination";
 export * from "./select";
