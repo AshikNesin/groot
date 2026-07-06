@@ -12,7 +12,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
 /**
  * Skeleton variants for common use cases
  */
-export const SkeletonVariants = {
+const SkeletonVariants = {
   /**
    * Table row skeleton
    */

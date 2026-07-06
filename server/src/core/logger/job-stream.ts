@@ -100,6 +100,13 @@ export class JobLogStream extends Writable {
         };
       });
 
+      // NOTE: importing prisma here creates a benign database → logger →
+      // job-stream → database cycle. It is safe because `prisma` is only read
+      // inside this async flush() (well after module init), so there is no
+      // partially-initialized-export risk. react-doctor still flags it because
+      // its cycle detector counts dynamic import() as an edge; fully removing
+      // the edge would require injecting prisma through createJobLogger, which
+      // is a downstream-breaking change to a synced-core public API.
       await prisma.jobLog.createMany({
         data: createData,
       });
