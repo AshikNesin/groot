@@ -41,7 +41,7 @@ export type ReconcileOutcome =
   | { kind: "binary-conflict" }
   | { kind: "delete" }
   | { kind: "review-delete" }
-  | { kind: "kept-local-deletion" };
+  | { kind: "kept-local-deletion"; theirs: Buffer };
 
 export type MergeFn = (
   path: string,
@@ -67,7 +67,7 @@ export async function reconcileFile(sides: FileSides, mergeFn: MergeFn): Promise
 
   if (ours === null) {
     if (base === null) return { kind: "auto-apply", content: theirs };
-    return { kind: "kept-local-deletion" };
+    return { kind: "kept-local-deletion", theirs };
   }
 
   if (ours.equals(theirs)) return { kind: "identical" };

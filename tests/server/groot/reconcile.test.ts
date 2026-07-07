@@ -67,6 +67,12 @@ describe("reconcileFile — additions and local deletions", () => {
   it("respects a local deletion of a synced file", async () => {
     const outcome = await reconcileFile(sides("a.ts", null, "old", "newer"), neverMerge);
     expect(outcome.kind).toBe("kept-local-deletion");
+    // The engine restores theirs when this turns out to be a phantom deletion
+    // (file never committed in the child repo), so the upstream content must
+    // ride along on the outcome rather than be re-derived by the caller.
+    if (outcome.kind === "kept-local-deletion") {
+      expect(outcome.theirs.toString()).toBe("newer");
+    }
   });
 });
 

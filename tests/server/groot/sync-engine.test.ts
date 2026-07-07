@@ -325,6 +325,67 @@ describe("groot sync engine (integration)", () => {
   );
 
   it(
+    "restores a synced file that was written but never committed then swept (phantom deletion)",
+    async () => {
+      // Upstream ships a new synced file.
+      const PHANTOM = "server/src/core/phantom.ts";
+      await write(fx.bp, PHANTOM, "export const phantom = true;\n");
+      await commitAll(fx.bp, "add phantom upstream");
+
+      // Sync lands it in the working tree (uncommitted) and advances the baseline.
+      await runSync(fx.child, { mode: "apply", skipConflicts: false, force: false });
+      expect(await exists(join(fx.child, PHANTOM))).toBe(true);
+
+      // Simulate the phantom: the file was never committed and gets swept away
+      // (e.g. a partial sync + `git clean -fd`). On the next run it must be
+      // restored, not silently treated as an intentional deletion.
+      await rm(join(fx.child, PHANTOM));
+
+      const result = await runSync(fx.child, {
+        mode: "apply",
+        skipConflicts: false,
+        force: false,
+      });
+      expect(result.autoApply.map((f) => f.file)).toContain(PHANTOM);
+      expect(result.keptLocalDeletions).not.toContain(PHANTOM);
+      expect(await exists(join(fx.child, PHANTOM))).toBe(true);
+      expect(await readFile(join(fx.child, PHANTOM), "utf-8")).toContain("phantom = true");
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "respects a committed deletion of a synced file (real deletion, not phantom)",
+    async () => {
+      // A committed deletion must NOT be restored. This guards against a naive
+      // `cat-file -e HEAD:path` check: a `git rm` + commit leaves the file absent
+      // from the HEAD tree just like a never-tracked file, so only the repo's
+      // history can tell a deliberate delete from a phantom.
+      const TARGET = "server/src/core/disposable.ts";
+      await write(fx.bp, TARGET, "export const disposable = true;\n");
+      await commitAll(fx.bp, "add disposable upstream");
+
+      // Sync lands it; commit it so it's tracked in the child repo.
+      await runSync(fx.child, { mode: "apply", skipConflicts: false, force: false });
+      await commitAll(fx.child, "adopt disposable");
+
+      // Deliberately delete it (committed removal).
+      await rm(join(fx.child, TARGET));
+      await commitAll(fx.child, "drop disposable");
+
+      const result = await runSync(fx.child, {
+        mode: "check",
+        skipConflicts: false,
+        force: false,
+      });
+      expect(result.keptLocalDeletions).toContain(TARGET);
+      expect(result.autoApply.map((f) => f.file)).not.toContain(TARGET);
+      expect(await exists(join(fx.child, TARGET))).toBe(false);
+    },
+    TIMEOUT,
+  );
+
+  it(
     "self-heals when the baseline ref is missing or stale",
     async () => {
       await write(fx.bp, CORE_FILE, coreContent("100", "2"));

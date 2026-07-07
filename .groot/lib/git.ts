@@ -184,6 +184,29 @@ export const CONFLICT_MARKER_RE = /^<{7} /m;
 // HISTORY HELPERS
 // ============================================================
 
+/**
+ * True iff `path` was ever committed in `dir` on the HEAD history.
+ *
+ * Used to tell a *real* local deletion (file was tracked at some point and is
+ * now gone) from a *phantom* one (a prior sync wrote it into the working tree
+ * but it was never committed, then swept — e.g. by `git clean -fd`). The two
+ * look identical to the baseline (which is a snapshot of groot's tree, not
+ * this repo's history); only this repo's own history distinguishes them.
+ *
+ * This is a history check (`git log -- <path>`), NOT a `cat-file -e HEAD:path`
+ * check: a committed `git rm` also leaves the file absent from the HEAD tree,
+ * so a HEAD-tree check would wrongly re-add deliberately-deleted files. A
+ * non-empty log means the path was tracked at some point → honor the deletion.
+ */
+export async function wasEverTracked(dir: string, path: string): Promise<boolean> {
+  try {
+    const out = await git(dir, "log", "-1", "--format=%H", "--", path);
+    return out.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** Upstream commits (oneline) that touched a file since the last sync. */
 export async function fileCommits(dir: string, fromRef: string, file: string): Promise<string[]> {
   try {

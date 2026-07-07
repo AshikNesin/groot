@@ -32,6 +32,7 @@ import {
   gitMergeFile,
   dirtyPaths,
   shaMatches,
+  wasEverTracked,
   type TreeEntry,
 } from "./git";
 import { acquireBoilerplate, releaseBoilerplate } from "./acquire";
@@ -246,14 +247,16 @@ export async function runSync(projectRoot: string, opts: SyncOptions): Promise<S
         const localPath = join(projectRoot, path);
 
         // Fast path: unchanged upstream since last sync (base blob == theirs
-        // blob). Local state wins in every branch of the decision table, so the
-        // only reportable outcome is a locally-deleted synced file.
+        // blob). When the file is present locally, every branch of the decision
+        // table is a no-op, so skip the reads/merge entirely. When it's MISSING
+        // locally we fall through to the reconcile path instead of classifying
+        // here, so the phantom-vs-real-deletion check lives in one place
+        // (the kept-local-deletion case below) instead of being duplicated.
         if (theirsEntry && baseEntry && theirsEntry.sha === baseEntry.sha) {
           const exists = await readFile(localPath)
             .then(() => true)
             .catch(() => false);
-          if (!exists) result.keptLocalDeletions.push(path);
-          return;
+          if (exists) return;
         }
 
         const ours = await readFile(localPath).catch(() => null);
@@ -290,9 +293,22 @@ export async function runSync(projectRoot: string, opts: SyncOptions): Promise<S
           case "review-delete":
             result.reviewDeletions.push(path);
             break;
-          case "kept-local-deletion":
-            result.keptLocalDeletions.push(path);
+          case "kept-local-deletion": {
+            // The baseline (a snapshot of groot's tree) says this file was synced
+            // but it's gone locally. That's usually an intentional delete, but
+            // the baseline is built from groot's tree, not this repo's history —
+            // a file a prior sync wrote into the working tree but never committed
+            // (then swept, e.g. by `git clean -fd`) is indistinguishable from a
+            // deliberate delete without consulting this repo's own history. Honor
+            // the deletion only when the file was ever tracked here; otherwise
+            // it's a phantom that never landed, so restore theirs.
+            if (await wasEverTracked(projectRoot, path)) {
+              result.keptLocalDeletions.push(path);
+            } else {
+              result.autoApply.push({ file: path, content: outcome.theirs, executable });
+            }
             break;
+          }
         }
       }),
     );
