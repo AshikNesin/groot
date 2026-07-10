@@ -5,7 +5,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vite-plus/test";
-import { Button } from "@/ui/button";
+import { Button } from "@groot/ui/button";
 
 describe("Button", () => {
   it("renders with text", () => {

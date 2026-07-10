@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
-import { withSentryErrorCapture } from "@/core/job/error-handler";
+import { withSentryErrorCapture } from "@groot/server/core/job/error-handler";
 import type { Job } from "pg-boss";
 
 const sentryMock = vi.hoisted(() => ({
   captureException: vi.fn(),
 }));
 
-vi.mock("../../../../server/src/core/instrument", () => ({
+vi.mock("@groot/server/core/instrument", () => ({
   Sentry: sentryMock,
 }));
 
-vi.mock("../../../../server/src/core/logger", () => ({
+vi.mock("@groot/server/core/logger", () => ({
   logger: { error: vi.fn() },
   createJobLogger: () => ({ error: vi.fn(), info: vi.fn() }),
 }));

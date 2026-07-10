@@ -24,12 +24,12 @@ function getSentryRelease() {
 }
 
 /**
- * Copy static assets from server/public to dist/public so they ship with
- * the production bundle and can be served via express.static(distPath).
- * No-op if server/public doesn't exist.
+ * Copy static assets from apps/web/src/server/public to dist/public so they
+ * ship with the production bundle and can be served via express.static.
+ * No-op if the dir doesn't exist.
  */
 async function copyPublicAssets() {
-  const sourceDir = path.join(process.cwd(), "server", "public");
+  const sourceDir = path.join(process.cwd(), "apps/web/src/server", "public");
   const destDir = path.join(process.cwd(), "dist", "public");
 
   try {
@@ -55,7 +55,7 @@ async function build() {
     }
 
     await esbuild.build({
-      entryPoints: ["server/src/index.ts"],
+      entryPoints: ["apps/web/src/server/index.ts"],
       outfile: "dist/bundle.js",
       bundle: true,
       platform: "node",
@@ -63,6 +63,7 @@ async function build() {
       target: "node18",
       external: [
         ...externals,
+        "@groot/database",
         "@prisma/client",
         ".prisma/client",
         "@sentry/profiling-node",
@@ -85,7 +86,9 @@ async function build() {
             ]
           : []),
         alias({
-          "@": path.resolve(process.cwd(), "server/src"),
+          "@groot/server/core": path.resolve(process.cwd(), "packages/server/src/core"),
+          "@groot/server/shared": path.resolve(process.cwd(), "packages/server/src/shared"),
+          "@groot/database": path.resolve(process.cwd(), "packages/database/src/index.ts"),
         }),
       ],
       banner: {

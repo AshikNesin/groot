@@ -11,7 +11,7 @@ registerJobHandlerMock.mockImplementation((name: string, handler: Function) => {
   registeredHandlers.set(name, handler);
 });
 
-vi.mock("../../../../server/src/core/database", () => ({
+vi.mock("@groot/server/core/database", () => ({
   prisma: {
     todo: {
       deleteMany: deleteManyMock,
@@ -20,7 +20,7 @@ vi.mock("../../../../server/src/core/database", () => ({
   },
 }));
 
-vi.mock("../../../../server/src/core/logger", () => ({
+vi.mock("@groot/server/core/logger", () => ({
   logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn() },
   createJobLogger: () => ({
     info: vi.fn(),
@@ -29,7 +29,7 @@ vi.mock("../../../../server/src/core/logger", () => ({
   }),
 }));
 
-vi.mock("../../../../server/src/core/job/worker", () => ({
+vi.mock("@groot/server/core/job/worker", () => ({
   registerJobHandler: registerJobHandlerMock,
 }));
 
@@ -40,7 +40,7 @@ describe("Todo Jobs", () => {
   });
 
   it("registers both cleanup and summary handlers on registerTodoJobs()", async () => {
-    const { registerTodoJobs } = await import("@/app/todo/todo.jobs");
+    const { registerTodoJobs } = await import("../../../../apps/web/src/server/app/todo/todo.jobs");
     registerTodoJobs();
 
     expect(registerJobHandlerMock).toHaveBeenCalledWith("todo-cleanup", expect.any(Function));
@@ -49,7 +49,8 @@ describe("Todo Jobs", () => {
 
   describe("todo-cleanup handler", () => {
     it("deletes completed todos older than cutoff", async () => {
-      const { registerTodoJobs } = await import("@/app/todo/todo.jobs");
+      const { registerTodoJobs } =
+        await import("../../../../apps/web/src/server/app/todo/todo.jobs");
       registerTodoJobs();
 
       const handler = registeredHandlers.get("todo-cleanup")!;
@@ -67,7 +68,8 @@ describe("Todo Jobs", () => {
     });
 
     it("defaults to 30 days when daysToKeep is not provided", async () => {
-      const { registerTodoJobs } = await import("@/app/todo/todo.jobs");
+      const { registerTodoJobs } =
+        await import("../../../../apps/web/src/server/app/todo/todo.jobs");
       registerTodoJobs();
 
       const handler = registeredHandlers.get("todo-cleanup")!;
@@ -86,7 +88,8 @@ describe("Todo Jobs", () => {
     });
 
     it("handles empty data gracefully", async () => {
-      const { registerTodoJobs } = await import("@/app/todo/todo.jobs");
+      const { registerTodoJobs } =
+        await import("../../../../apps/web/src/server/app/todo/todo.jobs");
       registerTodoJobs();
 
       const handler = registeredHandlers.get("todo-cleanup")!;
@@ -101,7 +104,8 @@ describe("Todo Jobs", () => {
 
   describe("todo-summary handler", () => {
     it("queries total, completed, and pending counts", async () => {
-      const { registerTodoJobs } = await import("@/app/todo/todo.jobs");
+      const { registerTodoJobs } =
+        await import("../../../../apps/web/src/server/app/todo/todo.jobs");
       registerTodoJobs();
 
       const handler = registeredHandlers.get("todo-summary")!;
@@ -120,7 +124,8 @@ describe("Todo Jobs", () => {
     });
 
     it("works with default options", async () => {
-      const { registerTodoJobs } = await import("@/app/todo/todo.jobs");
+      const { registerTodoJobs } =
+        await import("../../../../apps/web/src/server/app/todo/todo.jobs");
       registerTodoJobs();
 
       const handler = registeredHandlers.get("todo-summary")!;
