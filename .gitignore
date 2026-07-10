@@ -39,3 +39,4 @@ service-account.json
 .groot/sync-report.json
 
 settings.local.json
+packages/database/generated/*/**
