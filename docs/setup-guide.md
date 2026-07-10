@@ -31,7 +31,7 @@ Secrets are managed via varlock + Doppler — no local `.env` file needed in dev
 
 ### Manual Setup
 
-Copy `.env.schema` to `.env` and populate these keys (validated in `server/src/env.ts`):
+Copy `.env.schema` to `.env` and populate these keys (validated in `packages/server/src/core/env.ts`):
 
 | Variable                                      | Description                                                            |
 | --------------------------------------------- | ---------------------------------------------------------------------- |
@@ -115,12 +115,12 @@ In production mode the server:
 
 - Prisma client is generated automatically via `pnpm install` (`postinstall` runs `prisma generate`).
 - To re-sync schema changes: `pnpm db:migrate:create` (then `pnpm prisma migrate dev` to apply locally).
-- The Prisma client emitted into `server/src/generated/prisma` feeds both HTTP handlers and job processors.
+- The Prisma client emitted into `packages/database/generated/prisma` feeds both HTTP handlers and job processors.
 
 ## Background Job Queue
 
 - Configuration comes from `core/job/config.ts`.
-- Workers register when `startWorkers()` runs inside `server/src/index.ts`.
+- Workers register when `startWorkers()` runs inside `apps/web/src/server/index.ts`.
 - Ensure your PostgreSQL role can create the `pgboss` schema; run migrations or let pg-boss bootstrap tables at startup.
 
 ## Verifying the Stack

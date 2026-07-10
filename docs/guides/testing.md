@@ -19,7 +19,7 @@ tests/
 │   ├── core/            # Core utility tests
 │   │   ├── job/         # Job system tests
 │   │   └── utils/       # Utility tests
-│   └── app/             # Feature tests (mirror server/src/app)
+│   └── app/             # Feature tests (mirror apps/web/src/server/app)
 └── client/              # Client unit tests
     ├── setup.ts         # Client test setup
     └── components/      # Component tests
@@ -36,9 +36,9 @@ Test HTTP endpoints with Supertest:
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import express from "express";
-import todoRoutes from "@/app/todo/todo.routes";
+import todoRoutes from "./app/todo/todo.routes";
 
-vi.mock("@/app/todo/todo.service", () => ({
+vi.mock("./app/todo/todo.service", () => ({
   findAll: vi.fn().mockResolvedValue([{ id: 1, title: "Test" }]),
   create: vi.fn().mockResolvedValue({ id: 1, title: "New" }),
 }));
@@ -73,9 +73,9 @@ Test business logic directly:
 ```typescript
 // tests/server/app/todo/todo.service.test.ts
 import { describe, it, expect, vi } from "vitest";
-import * as TodoService from "@/app/todo/todo.service";
+import * as TodoService from "./app/todo/todo.service";
 
-vi.mock("@/app/todo/todo.model", () => ({
+vi.mock("./app/todo/todo.model", () => ({
   findAll: vi.fn().mockResolvedValue([]),
   create: vi.fn().mockResolvedValue({ id: 1 }),
 }));
@@ -95,9 +95,9 @@ Test job handlers with mock job objects:
 ```typescript
 // tests/server/app/todo/todo.jobs.test.ts
 import { describe, it, expect, vi } from "vitest";
-import { todoCleanupHandler } from "@/app/todo/todo.jobs";
+import { todoCleanupHandler } from "./app/todo/todo.jobs";
 
-vi.mock("@/core/logger", () => ({
+vi.mock("@groot/server/core/logger", () => ({
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn() }),
 }));
 
@@ -116,7 +116,7 @@ describe("Todo Jobs", () => {
 ```typescript
 import { vi } from "vitest";
 
-vi.mock("@/core/database", () => ({
+vi.mock("@groot/server/core/database", () => ({
   prisma: {
     todo: {
       findMany: vi.fn().mockResolvedValue([]),
@@ -130,7 +130,7 @@ vi.mock("@/core/database", () => ({
 ### Job System Mocking
 
 ```typescript
-vi.mock("@/core/job", () => ({
+vi.mock("@groot/server/core/job", () => ({
   addJob: vi.fn().mockResolvedValue("job-id"),
   scheduleJob: vi.fn().mockResolvedValue("scheduled-id"),
   getJobs: vi.fn().mockResolvedValue([]),
@@ -141,7 +141,7 @@ vi.mock("@/core/job", () => ({
 ### Logger Mocking
 
 ```typescript
-vi.mock("@/core/logger", () => ({
+vi.mock("@groot/server/core/logger", () => ({
   createRequestLogger: () => ({
     info: vi.fn(),
     error: vi.fn(),
@@ -171,7 +171,7 @@ Use Vitest + `@testing-library/react`:
 // tests/client/components/ui/Button.test.tsx
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@groot/ui/button";
 
 describe("Button", () => {
   it("renders with text", () => {
