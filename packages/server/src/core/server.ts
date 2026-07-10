@@ -62,12 +62,12 @@ export async function createServer(options: ServerOptions): Promise<ServerInstan
   if (!isProd) {
     const { createServer: createViteServer } = await import("vite-plus");
 
-    let hmrConfig: any = {
+    let wsConfig: any = {
       port: port + 1,
     };
 
     if (process.env.VITE_HMR_URL) {
-      hmrConfig = {
+      wsConfig = {
         server: httpServer,
         protocol: "wss" as const,
         host: process.env.VITE_HMR_URL,
@@ -76,7 +76,7 @@ export async function createServer(options: ServerOptions): Promise<ServerInstan
     } else if (process.env.PORTLESS_URL) {
       try {
         const url = new URL(process.env.PORTLESS_URL);
-        hmrConfig = {
+        wsConfig = {
           server: httpServer,
           protocol: url.protocol === "https:" ? "wss" : "ws",
           host: url.hostname,
@@ -94,7 +94,7 @@ export async function createServer(options: ServerOptions): Promise<ServerInstan
         middlewareMode: {
           server: httpServer,
         },
-        hmr: hmrConfig,
+        ws: wsConfig,
       },
       appType: "custom",
     });
