@@ -1,5 +1,42 @@
 # Changelog
 
+## 2.0.0
+
+### Major Changes
+
+- [`b9c4357`](https://github.com/AshikNesin/groot/commit/b9c435764904eb6094cff727bfbef2586217e5d2) Thanks [@AshikNesin](https://github.com/AshikNesin)! - # Breaking: pnpm workspace restructure
+
+  The repository is now a pnpm workspace with `packages/` (boilerplate, synced)
+  and `apps/web/` (app-owned, not synced).
+
+  ## What changed
+
+  - `client/src/ui` → `packages/ui` (`@groot/ui`)
+  - `client/src/core` → `packages/client` (`@groot/client`)
+  - `server/src/core` + `server/src/shared` → `packages/server` (`@groot/server`)
+  - New `packages/database` (`@groot/database`) wraps the Prisma client
+  - `server/src/app`, `server/src/index.ts`, `server/src/routes.ts` → `apps/web/src/server/`
+  - `client/src/app`, `client/src/App.tsx`, `client/src/main.tsx` → `apps/web/src/client/`
+  - `prisma/schema.prisma` generator output → `packages/database/generated/prisma`
+
+  ## Migration for downstream repos
+
+  Run the layout migration script:
+
+  ```bash
+  pnpm groot:sync              # get the new packages/ layout + migrate-layout.ts
+  pnpm tsx .groot/migrate-layout.ts  # move files, update schema path
+  pnpm install
+  pnpm prisma generate
+  pnpm groot:sync              # get updated import paths
+  ```
+
+  ## Why
+
+  This restructure provides clear physical separation between boilerplate and
+  app code. `packages/**` is always synced, `apps/**` is never synced. The sync
+  pattern rules collapse to these two simple rules.
+
 ## 1.13.1
 
 ### Patch Changes
@@ -32,6 +69,7 @@
   breaking API changes.
 
   #### Performance
+
   - Parallelize independent awaits in the boilerplate sync engine
     (`.groot/lib/engine.ts`) — reconcile + apply phases now fan out per file.
   - Code-split CodeMirror behind `React.lazy` so it lands in its own chunk
@@ -40,6 +78,7 @@
   - Single-pass job filters and keyboard-toggle selection.
 
   #### Architecture
+
   - Split the four largest pages into focused components + custom hooks:
     `Jobs` (1433 → 132), `Storage` (629 → 171), `JobDetail` (474 → 128),
     `AppSettings` (339 → 206). Each sub-300 lines now.
@@ -49,6 +88,7 @@
     make WebAuthn RP constants module-private.
 
   #### Fixes
+
   - Accessibility: breadcrumb current-page item now uses `aria-current="page"`
     instead of an incorrect `role="link"`; keyboard parity for input-group.
   - Remove derived-state syncing effects in favor of derived values.
@@ -57,6 +97,7 @@
     export.
 
   #### Tooling
+
   - Add `react-doctor` CI workflow, triage skill, and `doctor` script.
   - Drop redundant `@radix-ui/react-*` packages (covered by the `radix-ui`
     meta-package) and unused `p-limit`.
@@ -113,6 +154,7 @@
   and latent lint warnings cleaned up.
 
   ### Toolchain migrations
+
   - **Vite+ 0.1 → 0.2** via `vp migrate`. The catalog now pins real `vitest@4.1.9`
     — the `@voidzero-dev/vite-plus-test` wrapper is removed in 0.2.x, which fixes
     `vp test`: it previously could not resolve the `vitest` bin through the stale
@@ -126,6 +168,7 @@
   - **Vite 8.** `server.hmr.*` → `server.ws.*` for the HMR websocket config.
 
   ### Breaking dependency changes
+
   - `@mariozechner/pi-ai` → `@earendil-works/pi-ai@0.80` (the `@mariozechner`
     package is deprecated). Imports use the `/compat` shim, which preserves the
     existing `stream`/`complete`/`getModel` API surface.
@@ -136,12 +179,14 @@
     `@sentry/node` 10.63, `@tanstack/react-query` 5.101, and more.
 
   ### Code cleanup
+
   - Resolved 13 pre-existing oxlint `no-unused-vars` warnings: removed unused
     imports, an unused controller parameter, and switched to an optional catch
     binding.
   - Fixed a `ThinkingLevel` local-use bug in the AI module's type re-exports.
 
   ### Validation
+
   - `pnpm build` ✓, `pnpm test` (140/140) ✓, `pnpm lint` (0 warnings) ✓.
 
 ## 1.9.0
@@ -155,6 +200,7 @@
   the pi coding agent CLI for conflict resolution.
 
   ### Sync engine (v5 snapshot reconciliation)
+
   - **Git-tracked baseline.** A parentless snapshot commit of every synced file
     at the last-sync state is stored as `refs/groot/baseline`. The baseline is
     rebuilt from the boilerplate checkout when missing or stale, making sync
@@ -175,6 +221,7 @@
     drift between `sync.ts`, `resolve.ts`, and `upstream.ts`.
 
   ### Resolve (pi CLI)
+
   - **Replaces `@cline/sdk`.** Conflict resolution now shells out to the
     [pi](https://pi.dev) coding agent CLI (`pi -p`) in a locked-down single-shot
     mode: no session, no tools, no extensions, no skills, no prompt templates,
@@ -188,6 +235,7 @@
     `pi` + `/login`. `@cline/sdk` is no longer a dependency.
 
   ### Tests
+
   - 22 unit tests for the reconciliation decision table
     (`tests/server/groot/reconcile.test.ts`).
   - 7 integration tests with fixture git repos covering check mode, apply +
