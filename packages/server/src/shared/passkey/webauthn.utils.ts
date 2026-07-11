@@ -1,6 +1,9 @@
 import {
+  type AuthenticationResponseJSON,
+  type AuthenticatorTransportFuture,
   type GenerateAuthenticationOptionsOpts,
   type GenerateRegistrationOptionsOpts,
+  type RegistrationResponseJSON,
   type VerifyAuthenticationResponseOpts,
   type VerifyRegistrationResponseOpts,
   generateAuthenticationOptions,
@@ -8,11 +11,6 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
-import type {
-  AuthenticationResponseJSON,
-  AuthenticatorTransportFuture,
-  RegistrationResponseJSON,
-} from "@simplewebauthn/types";
 import { config } from "../../core/config";
 
 // Configuration for WebAuthn (module-private — only used in this file)
@@ -27,7 +25,7 @@ export interface PasskeyData {
   id: number;
   userId: number;
   credentialId: string;
-  publicKey: Buffer;
+  publicKey: Uint8Array<ArrayBuffer>;
   counter: bigint;
   deviceType: string | null;
   backedUp: boolean;

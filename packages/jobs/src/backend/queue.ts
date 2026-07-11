@@ -13,7 +13,7 @@ export const addJob = async (
 ): Promise<string | null> => {
   const boss = getBoss();
   const jobOpts = { ...defaultJobOptions, ...options } as SendOptions;
-  const jobId = await boss.send(name, data, jobOpts);
+  const jobId = await boss.send(name, data as object, jobOpts);
   logger.info({ jobId, name }, "Job queued");
   return jobId;
 };
@@ -26,7 +26,7 @@ export const scheduleJob = async (
   options?: ScheduleOptions,
 ): Promise<void> => {
   const boss = getBoss();
-  await boss.schedule(name, cron, data, options);
+  await boss.schedule(name, cron, data as object, options);
   logger.info({ name, cron }, "Job scheduled");
 };
 
@@ -50,7 +50,7 @@ export const editScheduledJob = async (
 
   const boss = getBoss();
   await boss.unschedule(name, key);
-  await boss.schedule(name, cron, data, options);
+  await boss.schedule(name, cron, data as object, options);
   logger.info({ name, key, cron }, "Job schedule updated");
 };
 
@@ -99,7 +99,7 @@ export const rerunJob = async (
   if (!job) {
     throw Boom.notFound(`Job not found: ${options.queueName}/${options.jobId}`);
   }
-  return boss.send(job.name, job.data, { ...defaultJobOptions } as SendOptions);
+  return boss.send(job.name, job.data as object, { ...defaultJobOptions } as SendOptions);
 };
 
 // Bulk re-run jobs

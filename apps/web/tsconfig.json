@@ -25,5 +25,6 @@
     "types": ["vite/client"]
   },
   "include": ["src"],
+  "exclude": ["src/server"],
   "references": []
 }

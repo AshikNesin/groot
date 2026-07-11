@@ -4,7 +4,7 @@ import * as queries from "./queries";
 import { prisma } from "@groot/server/core/database";
 import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "./types";
 import { Boom } from "@groot/server/core/errors";
-import { parseLimit } from "@groot/server/core/utils/controller.utils";
+import { parseLimit, parseStringParam } from "@groot/server/core/utils/controller.utils";
 
 /**
  * Queue a job for immediate execution
@@ -43,7 +43,7 @@ export async function getScheduled() {
  * Cancel a scheduled job
  */
 export async function cancelScheduled(req: Request) {
-  const { jobName } = req.params;
+  const jobName = parseStringParam(req.params.jobName, "jobName");
   const { key } = req.body ?? {};
   await queue.cancelScheduledJob(jobName, key);
   return { success: true };
@@ -53,7 +53,7 @@ export async function cancelScheduled(req: Request) {
  * Edit a scheduled job
  */
 export async function editScheduled(req: Request) {
-  const { jobName } = req.params;
+  const jobName = parseStringParam(req.params.jobName, "jobName");
   const { key, cron, data, options } = req.body;
   await queue.editScheduledJob(jobName, key, cron, data, options);
   return { success: true };
@@ -78,7 +78,7 @@ export async function getAvailable() {
  * Purge jobs by state
  */
 export async function purgeByState(req: Request) {
-  const { state } = req.params;
+  const state = parseStringParam(req.params.state, "state");
   const count = await queries.purgeJobsByState({ state });
   return { count };
 }
@@ -95,8 +95,8 @@ export async function getFailed(req: Request) {
  * Get jobs by state
  */
 export async function getByState(req: Request) {
-  const { state } = req.params;
-  const limit = parseLimit(req.query.limit as string);
+  const state = parseStringParam(req.params.state, "state");
+  const limit = parseLimit(req.query.limit);
   const offset = Math.max(0, Number.parseInt(req.query.offset as string, 10) || 0);
   return await queries.getJobsByState({ state, limit, offset } as GetJobsByStateOptions);
 }
@@ -113,7 +113,8 @@ export async function getAll(req: Request) {
  * Get job by ID
  */
 export async function getById(req: Request) {
-  const { queueName, jobId } = req.params;
+  const queueName = parseStringParam(req.params.queueName, "queueName");
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   const job = await queries.getJobById({ queueName, jobId });
   if (!job) {
     throw Boom.notFound("Job not found");
@@ -125,7 +126,8 @@ export async function getById(req: Request) {
  * Retry a failed job
  */
 export async function retry(req: Request) {
-  const { queueName, jobId } = req.params;
+  const queueName = parseStringParam(req.params.queueName, "queueName");
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   await queue.retryJob({ queueName, jobId });
   return { success: true };
 }
@@ -134,7 +136,8 @@ export async function retry(req: Request) {
  * Cancel a job
  */
 export async function cancel(req: Request) {
-  const { queueName, jobId } = req.params;
+  const queueName = parseStringParam(req.params.queueName, "queueName");
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   await queue.cancelJob({ queueName, jobId });
   return { success: true };
 }
@@ -143,7 +146,8 @@ export async function cancel(req: Request) {
  * Resume a job
  */
 export async function resume(req: Request) {
-  const { queueName, jobId } = req.params;
+  const queueName = parseStringParam(req.params.queueName, "queueName");
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   await queue.resumeJob({ queueName, jobId });
   return { success: true };
 }
@@ -152,7 +156,8 @@ export async function resume(req: Request) {
  * Re-run a job
  */
 export async function rerun(req: Request) {
-  const { queueName, jobId } = req.params;
+  const queueName = parseStringParam(req.params.queueName, "queueName");
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   const newJobId = await queue.rerunJob({ queueName, jobId });
   return { newJobId, queueName };
 }
@@ -161,7 +166,8 @@ export async function rerun(req: Request) {
  * Delete a job (for handler compatibility)
  */
 export async function deleteJobHandler(req: Request) {
-  const { queueName, jobId } = req.params;
+  const queueName = parseStringParam(req.params.queueName, "queueName");
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   await queue.deleteJob({ queueName, jobId });
   return { success: true };
 }
@@ -170,7 +176,7 @@ export async function deleteJobHandler(req: Request) {
  * Get job logs
  */
 export async function getLogs(req: Request) {
-  const { jobId } = req.params;
+  const jobId = parseStringParam(req.params.jobId, "jobId");
   const afterId = req.query.afterId ? Number.parseInt(req.query.afterId as string, 10) : 0;
 
   const logs = await prisma.jobLog.findMany({

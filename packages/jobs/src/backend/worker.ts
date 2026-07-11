@@ -49,7 +49,7 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
 
   const workOptions: WorkOptions = {
     pollingIntervalSeconds: jobConfig.pollIntervalSeconds,
-    teamSize: jobConfig.concurrency,
+    batchSize: jobConfig.concurrency,
   };
 
   // Create queues before starting workers (required in pg-boss v12+).

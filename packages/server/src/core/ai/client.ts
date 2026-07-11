@@ -138,7 +138,9 @@ export class AIClient {
         })
       : await piComplete(this._model, context, streamOptions);
 
-    const errorBlocks = response.content.filter((block) => block.type === "error");
+    const errorBlocks = response.content.filter(
+      (block) => (block as { type: string }).type === "error",
+    );
     if (errorBlocks.length > 0) {
       const errorBlock = errorBlocks[0] as any;
       throw new Error(
@@ -225,7 +227,9 @@ export class AIClient {
   }
 
   private extractText(response: AssistantMessage): string {
-    const errorBlocks = response.content.filter((block) => block.type === "error");
+    const errorBlocks = response.content.filter(
+      (block) => (block as { type: string }).type === "error",
+    );
     if (errorBlocks.length > 0) {
       const errorBlock = errorBlocks[0] as any;
       throw new Error(errorBlock.error?.errorMessage || "AI completion error");

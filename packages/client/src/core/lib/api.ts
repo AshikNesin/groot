@@ -24,7 +24,7 @@ export interface ApiResponse<T = unknown> {
  * API Client class for making authenticated requests
  */
 class ApiClient {
-  private client: AxiosInstance;
+  public client: AxiosInstance;
   private isLoggedIn = false;
   private cachedUserEmail: string | null = null;
 

@@ -83,7 +83,7 @@ export async function createServer(options: ServerOptions): Promise<ServerInstan
           clientPort: url.port ? parseInt(url.port, 10) : url.protocol === "https:" ? 443 : 80,
         };
       } catch (e) {
-        logger.warn("Failed to parse PORTLESS_URL for HMR config", e);
+        logger.warn({ err: e }, "Failed to parse PORTLESS_URL for HMR config");
       }
     }
 

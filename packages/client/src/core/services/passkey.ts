@@ -5,7 +5,7 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
   AuthenticationResponseJSON,
-} from "@simplewebauthn/types";
+} from "@simplewebauthn/browser";
 
 interface Passkey {
   id: number;
@@ -41,7 +41,9 @@ class PasskeyService {
       }
 
       // 2. Start WebAuthn registration
-      const registrationResponse: RegistrationResponseJSON = await startRegistration(options);
+      const registrationResponse: RegistrationResponseJSON = await startRegistration({
+        optionsJSON: options,
+      });
 
       // 3. Verify registration with server
       const passkey = await apiClient.post<Passkey>("/passkey/register/verify", {
@@ -85,7 +87,9 @@ class PasskeyService {
       }
 
       // 2. Start WebAuthn authentication
-      const authenticationResponse: AuthenticationResponseJSON = await startAuthentication(options);
+      const authenticationResponse: AuthenticationResponseJSON = await startAuthentication({
+        optionsJSON: options,
+      });
 
       // 3. Verify authentication with server
       const result = await apiClient.post<{ token: string; user: User }>("/passkey/login/verify", {
