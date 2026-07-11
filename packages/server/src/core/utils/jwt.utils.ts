@@ -26,7 +26,7 @@ if (!JWT_EXPIRES_IN_MS) {
  */
 export function generateToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: Math.round(JWT_EXPIRES_IN_MS / 1000),
+    expiresIn: JWT_EXPIRES_IN as ms.StringValue,
   });
 }
 

@@ -57,7 +57,9 @@ export function parseStringParam(value: ParamValue, paramName = "param"): string
  */
 export function parseLimit(value: ParamValue, defaultValue = 50, maxLimit = 100): number {
   const resolved = firstString(value);
-  if (resolved === undefined) return defaultValue;
+  // Reject anything that isn't a bare run of digits (e.g. "10junk", "1.5")
+  // rather than letting parseInt silently truncate — consistent with parseId.
+  if (resolved === undefined || !/^\d+$/.test(resolved)) return defaultValue;
   const parsed = Number.parseInt(resolved, 10);
   if (Number.isNaN(parsed) || parsed < 1) return defaultValue;
   return Math.min(parsed, maxLimit);
