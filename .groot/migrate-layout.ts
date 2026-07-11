@@ -62,11 +62,29 @@ function gitUpdateIndex(indexInput: string, env: NodeJS.ProcessEnv): void {
 }
 
 /**
+ * Check if a tracked file has uncommitted modifications.
+ */
+function isDirty(filePath: string): boolean {
+  try {
+    const status = execSync(`git status --porcelain -- ${JSON.stringify(filePath)}`, {
+      encoding: "utf-8",
+      cwd: CWD,
+    }).trim();
+    return status.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Move a directory via `git mv`, merging contents if the destination already
  * exists (e.g. when the first sync already created packages/ui/src).
- * Individual file collisions are resolved by keeping the synced (destination)
- * version and removing the old source — the local edits are preserved in git
- * history and will be reconciled by the subsequent three-way sync.
+ *
+ * File collisions are resolved safely:
+ * - If the source file is clean (no local edits), remove it in favor of the
+ *   synced destination.
+ * - If the source file has local modifications, abort the migration rather
+ *   than risk losing uncommitted work.
  */
 function gitMv(oldPath: string, newPath: string): void {
   if (!existsSync(join(CWD, oldPath))) return;
@@ -79,9 +97,15 @@ function gitMv(oldPath: string, newPath: string): void {
       const srcFile = `${oldPath}/${entry}`;
       const destFile = `${newPath}/${entry}`;
       if (existsSync(join(CWD, destFile))) {
-        // File exists at destination (synced version) — remove the old copy
-        // so the synced version wins. The local version is in git history and
-        // will be reconciled by the next `groot:sync` three-way merge.
+        // Collision: both source and destination exist.
+        if (isDirty(srcFile)) {
+          throw new Error(
+            `File collision with uncommitted local edits: ${srcFile} has modifications` +
+              ` but ${destFile} already exists (synced). Commit or stash changes` +
+              ` before running migration.`,
+          );
+        }
+        // Source is clean — safe to remove in favor of the synced version.
         git(["rm", "-f", srcFile]);
         console.log(`  resolve: ${srcFile} (kept synced ${destFile})`);
       } else {
@@ -289,8 +313,15 @@ if (!baselineExists) {
     if (!dryRun) rmSync(scratchDir, { recursive: true, force: true });
   } catch (err) {
     console.error(`  Error rebasing baseline: ${err instanceof Error ? err.message : String(err)}`);
-    console.error("  The baseline ref was NOT updated. The next groot:sync will");
-    console.error("  rebuild it from the boilerplate clone automatically.");
+    console.error("  Deleting stale baseline ref so the next groot:sync rebuilds");
+    console.error("  it cleanly from the boilerplate clone.");
+    if (!dryRun) {
+      try {
+        execSync("git update-ref -d refs/groot/baseline", { stdio: "pipe", cwd: CWD });
+      } catch {
+        // ref may already be gone
+      }
+    }
   }
 }
 
