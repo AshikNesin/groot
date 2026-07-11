@@ -4,7 +4,7 @@ import {
   scheduleJobSchema,
   bulkRerunSchema,
   getJobsSchema,
-} from "@groot/server/shared/jobs/job.validation";
+} from "@groot/jobs/backend/validation";
 
 describe("Job Validation Schemas", () => {
   describe("createJobSchema", () => {

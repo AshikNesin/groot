@@ -2,11 +2,11 @@ import { Button } from "@groot/ui/button";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { StatusBadge } from "@groot/ui";
 import { formatLocaleDateTime, formatRelativeTime } from "@groot/client/lib/utils";
-import { JobActions } from "../components/JobActions";
-import { JobJsonBlock } from "../components/JobJsonBlock";
-import { JobLogs } from "../components/JobLogs";
-import { JobOverview } from "../components/JobOverview";
-import { useJobDetail } from "../hooks/useJobDetail";
+import { JobActions } from "./components/JobActions";
+import { JobJsonBlock } from "./components/JobJsonBlock";
+import { JobLogs } from "./components/JobLogs";
+import { JobOverview } from "./components/JobOverview";
+import { useJobDetail } from "./useJobDetail";
 import { AlertCircle, ArrowLeft, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 

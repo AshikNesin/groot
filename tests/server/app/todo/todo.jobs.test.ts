@@ -20,17 +20,16 @@ vi.mock("@groot/server/core/database", () => ({
   },
 }));
 
-vi.mock("@groot/server/core/logger", () => ({
-  logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn() },
+vi.mock("@groot/jobs/backend/worker", () => ({
+  registerJobHandler: registerJobHandlerMock,
+}));
+
+vi.mock("@groot/jobs/backend/logger", () => ({
   createJobLogger: () => ({
     info: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
   }),
-}));
-
-vi.mock("@groot/server/core/job/worker", () => ({
-  registerJobHandler: registerJobHandlerMock,
 }));
 
 describe("Todo Jobs", () => {

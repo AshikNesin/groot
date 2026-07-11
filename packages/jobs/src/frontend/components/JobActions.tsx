@@ -1,5 +1,5 @@
 import { Button } from "@groot/ui/button";
-import type { Job } from "@groot/client/types/jobs";
+import type { Job } from "../types";
 import { Play, RefreshCw, Trash2, X } from "lucide-react";
 
 type Actions = {

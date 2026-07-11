@@ -1,6 +1,6 @@
 import type { SendOptions, ScheduleOptions } from "pg-boss";
-import { logger } from "../logger";
-import { Boom } from "../errors";
+import { logger } from "@groot/server/core/logger";
+import { Boom } from "@groot/server/core/errors";
 import { defaultJobOptions } from "./config";
 import { getBoss } from "./client";
 import type { BulkRerunResult, RerunJobOptions } from "./types";

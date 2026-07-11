@@ -11,7 +11,8 @@ import { config } from "@groot/server/core/config";
 import { logger } from "@groot/server/core/logger";
 import { registerRoutes, registerJobHandlers } from "./routes";
 import { notificationService } from "@groot/server/shared/notification/notification.service";
-import { initJobQueue, startWorkers, stopJobQueue } from "@groot/server/core/job";
+import { initJobQueue, stopJobQueue } from "@groot/jobs/backend/client";
+import { startWorkers } from "@groot/jobs/backend/worker";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

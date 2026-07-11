@@ -5,7 +5,7 @@ import { jwtAuthMiddleware } from "@groot/server/core/middlewares/jwt-auth.middl
 import authRoutes from "@groot/server/shared/auth/auth.routes";
 import passkeyRoutes from "@groot/server/shared/passkey/passkey.routes";
 import todoRoutes from "./app/todo/todo.routes";
-import jobRoutes from "@groot/server/shared/jobs/job.routes";
+import { jobRoutes } from "@groot/jobs/backend/routes";
 import storageRoutes from "@groot/server/shared/storage/storage.routes";
 import appSettingsRoutes from "@groot/server/shared/settings/app-settings.routes";
 

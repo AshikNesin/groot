@@ -9,6 +9,8 @@
       "@groot/client/index.css": ["./packages/client/src/index.css"],
       "@groot/server/core/*": ["./packages/server/src/core/*"],
       "@groot/server/shared/*": ["./packages/server/src/shared/*"],
+      "@groot/jobs/backend": ["./packages/jobs/src/backend/index.ts"],
+      "@groot/jobs/backend/*": ["./packages/jobs/src/backend/*"],
       "@groot/database": ["./packages/database/src/index.ts"],
       "@groot/database/client": ["./packages/database/src/client.ts"],
       "@groot/database/types": ["./packages/database/src/types.ts"]
@@ -17,6 +19,7 @@
   "include": [
     "apps/web/src/server/**/*",
     "packages/server/src/**/*",
+    "packages/jobs/src/backend/**/*",
     "packages/database/src/**/*",
     "env.d.ts"
   ],

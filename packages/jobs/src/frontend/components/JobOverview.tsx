@@ -1,5 +1,5 @@
 import { formatLocaleDateTime, formatRelativeTime } from "@groot/client/lib/utils";
-import type { Job } from "@groot/client/types/jobs";
+import type { Job } from "../types";
 import dayjs from "dayjs";
 
 function formatDuration(start: string | null, end: string | null): string {

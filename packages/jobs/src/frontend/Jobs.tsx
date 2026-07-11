@@ -1,13 +1,13 @@
 import { Button } from "@groot/ui/button";
 import { formatRelativeTime } from "@groot/client/lib/utils";
-import { AddJobDialog } from "../components/AddJobDialog";
-import { EditScheduledJobDialog } from "../components/EditScheduledJobDialog";
-import { ScheduleJobDialog } from "../components/ScheduleJobDialog";
-import { JobsFilters } from "../components/JobsFilters";
-import { JobsStats } from "../components/JobsStats";
-import { JobsTable } from "../components/JobsTable";
-import { ScheduledJobsPanel } from "../components/ScheduledJobsPanel";
-import { useJobs } from "../hooks/useJobs";
+import { AddJobDialog } from "./components/AddJobDialog";
+import { EditScheduledJobDialog } from "./components/EditScheduledJobDialog";
+import { ScheduleJobDialog } from "./components/ScheduleJobDialog";
+import { JobsFilters } from "./components/JobsFilters";
+import { JobsStats } from "./components/JobsStats";
+import { JobsTable } from "./components/JobsTable";
+import { ScheduledJobsPanel } from "./components/ScheduledJobsPanel";
+import { useJobs } from "./useJobs";
 import { RefreshCw } from "lucide-react";
 
 export function Jobs() {

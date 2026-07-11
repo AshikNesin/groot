@@ -3,7 +3,7 @@
  * files only export components (react-doctor/only-export-components).
  */
 
-import type { JobName } from "@groot/client/types/jobs";
+import type { JobName } from "./types";
 
 export type StateTab =
   | "all"

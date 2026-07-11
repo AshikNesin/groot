@@ -1,9 +1,9 @@
 import type { Job as BossJob } from "pg-boss";
 import dayjs from "dayjs";
-import { prisma } from "../database";
+import { prisma } from "@groot/server/core/database";
 import { VALID_JOB_STATES, isValidJobState } from "./constants";
 import { getBoss } from "./client";
-import { Boom } from "../errors";
+import { Boom } from "@groot/server/core/errors";
 import type {
   ScheduledJobInfo,
   FetchJobsOptions,

@@ -1,16 +1,17 @@
 import type { Request } from "express";
-import { JobSystem } from "../../core/job";
-import { prisma } from "../../core/database";
-import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "../../core/job/types";
-import { Boom } from "../../core/errors";
-import { parseLimit } from "../../core/utils/controller.utils";
+import * as queue from "./queue";
+import * as queries from "./queries";
+import { prisma } from "@groot/server/core/database";
+import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "./types";
+import { Boom } from "@groot/server/core/errors";
+import { parseLimit } from "@groot/server/core/utils/controller.utils";
 
 /**
  * Queue a job for immediate execution
  */
 export async function create(req: Request) {
   const { jobName, data, options } = req.body;
-  const jobId = await JobSystem.queue.addJob(jobName, data, options);
+  const jobId = await queue.addJob(jobName, data, options);
   return { jobId, jobName, data };
 }
 
@@ -19,7 +20,7 @@ export async function create(req: Request) {
  */
 export async function schedule(req: Request) {
   const { jobName, data, cron, options } = req.body;
-  await JobSystem.queue.scheduleJob(jobName, data, cron, options);
+  await queue.scheduleJob(jobName, data, cron, options);
   return { success: true };
 }
 
@@ -28,14 +29,14 @@ export async function schedule(req: Request) {
  */
 export async function bulkRerun(req: Request) {
   const { jobs } = req.body as { jobs: RerunJobOptions[] };
-  return await JobSystem.queue.rerunJobs(jobs);
+  return await queue.rerunJobs(jobs);
 }
 
 /**
  * Get all scheduled jobs
  */
 export async function getScheduled() {
-  return await JobSystem.queries.getScheduledJobs();
+  return await queries.getScheduledJobs();
 }
 
 /**
@@ -44,7 +45,7 @@ export async function getScheduled() {
 export async function cancelScheduled(req: Request) {
   const { jobName } = req.params;
   const { key } = req.body ?? {};
-  await JobSystem.queue.cancelScheduledJob(jobName, key);
+  await queue.cancelScheduledJob(jobName, key);
   return { success: true };
 }
 
@@ -54,7 +55,7 @@ export async function cancelScheduled(req: Request) {
 export async function editScheduled(req: Request) {
   const { jobName } = req.params;
   const { key, cron, data, options } = req.body;
-  await JobSystem.queue.editScheduledJob(jobName, key, cron, data, options);
+  await queue.editScheduledJob(jobName, key, cron, data, options);
   return { success: true };
 }
 
@@ -62,14 +63,14 @@ export async function editScheduled(req: Request) {
  * Get queue statistics
  */
 export async function getStats() {
-  return await JobSystem.queries.getQueueStats();
+  return await queries.getQueueStats();
 }
 
 /**
  * Get available job/queue names
  */
 export async function getAvailable() {
-  const queues = await JobSystem.queries.getAvailableQueues();
+  const queues = await queries.getAvailableQueues();
   return { jobs: queues };
 }
 
@@ -78,7 +79,7 @@ export async function getAvailable() {
  */
 export async function purgeByState(req: Request) {
   const { state } = req.params;
-  const count = await JobSystem.queries.purgeJobsByState({ state });
+  const count = await queries.purgeJobsByState({ state });
   return { count };
 }
 
@@ -87,7 +88,7 @@ export async function purgeByState(req: Request) {
  */
 export async function getFailed(req: Request) {
   const limit = parseLimit(req.query.limit as string);
-  return await JobSystem.queries.getFailedJobs({ limit });
+  return await queries.getFailedJobs({ limit });
 }
 
 /**
@@ -97,7 +98,7 @@ export async function getByState(req: Request) {
   const { state } = req.params;
   const limit = parseLimit(req.query.limit as string);
   const offset = Math.max(0, Number.parseInt(req.query.offset as string, 10) || 0);
-  return await JobSystem.queries.getJobsByState({ state, limit, offset } as GetJobsByStateOptions);
+  return await queries.getJobsByState({ state, limit, offset } as GetJobsByStateOptions);
 }
 
 /**
@@ -105,7 +106,7 @@ export async function getByState(req: Request) {
  */
 export async function getAll(req: Request) {
   const query = (req.validated?.query ?? req.query) as GetJobsOptions;
-  return await JobSystem.queries.getJobs(query);
+  return await queries.getJobs(query);
 }
 
 /**
@@ -113,7 +114,7 @@ export async function getAll(req: Request) {
  */
 export async function getById(req: Request) {
   const { queueName, jobId } = req.params;
-  const job = await JobSystem.queries.getJobById({ queueName, jobId });
+  const job = await queries.getJobById({ queueName, jobId });
   if (!job) {
     throw Boom.notFound("Job not found");
   }
@@ -125,7 +126,7 @@ export async function getById(req: Request) {
  */
 export async function retry(req: Request) {
   const { queueName, jobId } = req.params;
-  await JobSystem.queue.retryJob({ queueName, jobId });
+  await queue.retryJob({ queueName, jobId });
   return { success: true };
 }
 
@@ -134,7 +135,7 @@ export async function retry(req: Request) {
  */
 export async function cancel(req: Request) {
   const { queueName, jobId } = req.params;
-  await JobSystem.queue.cancelJob({ queueName, jobId });
+  await queue.cancelJob({ queueName, jobId });
   return { success: true };
 }
 
@@ -143,7 +144,7 @@ export async function cancel(req: Request) {
  */
 export async function resume(req: Request) {
   const { queueName, jobId } = req.params;
-  await JobSystem.queue.resumeJob({ queueName, jobId });
+  await queue.resumeJob({ queueName, jobId });
   return { success: true };
 }
 
@@ -152,7 +153,7 @@ export async function resume(req: Request) {
  */
 export async function rerun(req: Request) {
   const { queueName, jobId } = req.params;
-  const newJobId = await JobSystem.queue.rerunJob({ queueName, jobId });
+  const newJobId = await queue.rerunJob({ queueName, jobId });
   return { newJobId, queueName };
 }
 
@@ -161,7 +162,7 @@ export async function rerun(req: Request) {
  */
 export async function deleteJobHandler(req: Request) {
   const { queueName, jobId } = req.params;
-  await JobSystem.queue.deleteJob({ queueName, jobId });
+  await queue.deleteJob({ queueName, jobId });
   return { success: true };
 }
 

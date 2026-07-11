@@ -1,7 +1,8 @@
-export enum JobName {
-  TODO_SUMMARY = "todo-summary",
-  TODO_CLEANUP = "todo-cleanup",
-}
+/**
+ * A registered job/queue name. Generic string — project-specific job names
+ * live with their handlers (e.g. apps/web/src/server/app/todo/todo.jobs.ts).
+ */
+export type JobName = string;
 
 export enum JobState {
   CREATED = "created",

@@ -1,11 +1,11 @@
-import { apiClient } from "@groot/client/lib/api";
+import { jobsApi } from "./api";
 import { endOfDay, startOfDay, startOfMonth, subtractDays } from "@groot/client/lib/utils";
-import type { Job, JobName, JobStats, ScheduledJob } from "@groot/client/types/jobs";
+import type { Job, JobName, JobStats, ScheduledJob } from "./types";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { toast } from "sonner";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { secondaryOptions } from "../constants";
+import { secondaryOptions } from "./constants";
 
 const PAGE_SIZE = 50;
 
@@ -86,7 +86,7 @@ export function useJobs() {
     try {
       setLoading(true);
 
-      const statsData = await apiClient.getJobStats();
+      const statsData = await jobsApi.getJobStats();
       setStats(statsData);
 
       const filters: {
@@ -116,7 +116,7 @@ export function useJobs() {
         filters.endDate = queryParams.endDate;
       }
 
-      const { jobs: jobsData, total: totalCount } = await apiClient.getJobs(filters);
+      const { jobs: jobsData, total: totalCount } = await jobsApi.getJobs(filters);
 
       let filteredJobs = jobsData;
       if (queryParams.search.trim()) {
@@ -147,7 +147,7 @@ export function useJobs() {
 
   const loadAvailableJobs = useCallback(async () => {
     try {
-      const jobs = await apiClient.getAvailableJobs();
+      const jobs = await jobsApi.getAvailableJobs();
       setAvailableJobs(jobs);
     } catch (error) {
       console.error("Failed to load available jobs:", error);
@@ -156,7 +156,7 @@ export function useJobs() {
 
   const loadScheduledJobs = useCallback(async () => {
     try {
-      const scheduled = await apiClient.getScheduledJobs();
+      const scheduled = await jobsApi.getScheduledJobs();
       setScheduledJobs(scheduled);
     } catch (error) {
       console.error("Failed to load scheduled jobs:", error);
@@ -192,7 +192,7 @@ export function useJobs() {
 
   const handleRetry = async (queueName: string, jobId: string) => {
     try {
-      await apiClient.retryJob(queueName, jobId);
+      await jobsApi.retryJob(queueName, jobId);
       toast.success("Success", { description: "Job has been queued for retry" });
       loadData();
     } catch (error) {
@@ -204,7 +204,7 @@ export function useJobs() {
 
   const handleCancel = async (queueName: string, jobId: string) => {
     try {
-      await apiClient.cancelJob(queueName, jobId);
+      await jobsApi.cancelJob(queueName, jobId);
       toast.success("Success", { description: "Job has been cancelled" });
       loadData();
     } catch (error) {
@@ -216,7 +216,7 @@ export function useJobs() {
 
   const handleResume = async (queueName: string, jobId: string) => {
     try {
-      await apiClient.resumeJob(queueName, jobId);
+      await jobsApi.resumeJob(queueName, jobId);
       toast.success("Success", { description: "Job has been resumed" });
       loadData();
     } catch (error) {
@@ -228,7 +228,7 @@ export function useJobs() {
 
   const handleDelete = async (queueName: string, jobId: string) => {
     try {
-      await apiClient.deleteJob(queueName, jobId);
+      await jobsApi.deleteJob(queueName, jobId);
       toast.success("Success", { description: "Job has been deleted" });
       loadData();
     } catch (error) {
@@ -240,7 +240,7 @@ export function useJobs() {
 
   const handleRerun = async (queueName: string, jobId: string) => {
     try {
-      const result = await apiClient.rerunJob(queueName, jobId);
+      const result = await jobsApi.rerunJob(queueName, jobId);
       toast.success("Success", {
         description: (
           <span>
@@ -275,7 +275,7 @@ export function useJobs() {
         jobId: string;
       }[];
 
-      const results = await apiClient.rerunJobs(jobsToRerun);
+      const results = await jobsApi.rerunJobs(jobsToRerun);
       const successCount = results.filter((r) => r.success).length;
 
       toast.success("Bulk Action Completed", {
@@ -342,7 +342,7 @@ export function useJobs() {
     }
 
     try {
-      const { deletedCount } = await apiClient.purgeJobsByState(state);
+      const { deletedCount } = await jobsApi.purgeJobsByState(state);
       toast.success("Success", {
         description: `Purged ${deletedCount} ${state} jobs`,
       });
@@ -362,7 +362,7 @@ export function useJobs() {
 
     try {
       const data = JSON.parse(newJobData);
-      const jobId = await apiClient.addJob(newJobName as JobName, data);
+      const jobId = await jobsApi.addJob(newJobName as JobName, data);
       toast.success("Success", {
         description: (
           <span>
@@ -397,7 +397,7 @@ export function useJobs() {
 
     try {
       const data = JSON.parse(scheduledJobData);
-      await apiClient.scheduleJob(scheduledJobName as JobName, scheduledJobCron, data);
+      await jobsApi.scheduleJob(scheduledJobName as JobName, scheduledJobCron, data);
       toast.success("Success", { description: "Job has been scheduled" });
       setScheduleJobDialogOpen(false);
       setScheduledJobName("");
@@ -417,7 +417,7 @@ export function useJobs() {
     }
 
     try {
-      await apiClient.cancelScheduledJob(jobName, key);
+      await jobsApi.cancelScheduledJob(jobName, key);
       toast.success("Success", { description: "Scheduled job has been cancelled" });
       loadScheduledJobs();
     } catch (error) {
@@ -443,7 +443,7 @@ export function useJobs() {
 
     try {
       const data = JSON.parse(editScheduledDataStr);
-      await apiClient.editScheduledJob(
+      await jobsApi.editScheduledJob(
         editScheduledName,
         editScheduledKeyRef.current,
         editScheduledCron,
