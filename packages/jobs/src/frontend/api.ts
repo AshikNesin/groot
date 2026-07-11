@@ -76,10 +76,9 @@ export const jobsApi = {
   async rerunJob(
     queueName: string,
     jobId: string,
-  ): Promise<{ originalJobId: string; newJobId: string; queueName: string }> {
+  ): Promise<{ newJobId: string; queueName: string }> {
     const response = await api.post<
       ApiResponse<{
-        originalJobId: string;
         newJobId: string;
         queueName: string;
       }>
@@ -117,13 +116,11 @@ export const jobsApi = {
   },
 
   async purgeJobsByState(state: string): Promise<{ deletedCount: number }> {
-    const response = await api.delete<ApiResponse<{ deletedCount: number; state: string }>>(
-      `/jobs/state/${state}`,
-    );
+    const response = await api.delete<ApiResponse<{ count: number }>>(`/jobs/state/${state}`);
     if (response.data.data === undefined || response.data.data === null) {
       throw new Error("Failed to purge jobs");
     }
-    return { deletedCount: response.data.data.deletedCount };
+    return { deletedCount: response.data.data.count };
   },
 
   async addJob(

@@ -119,14 +119,14 @@ All endpoints require JWT authentication.
 
 Configured via `config.yml` `jobs:` section (read in `@groot/jobs/backend/config`):
 
-| Key                                 | Default  | Description                   |
-| ----------------------------------- | -------- | ----------------------------- |
-| `jobs.enabled`                      | `true`   | Enable/disable job processing |
-| `jobs.concurrency`                  | `5`      | Workers per job               |
-| `jobs.pollIntervalSeconds`          | `2`      | Worker poll interval          |
-| `jobs.archiveCompletedAfterSeconds` | `86400`  | Archive window                |
-| `jobs.deleteArchivedAfterSeconds`   | `604800` | Deletion window               |
-| `jobs.monitorStateIntervalSeconds`  | `30`     | Metrics interval              |
+| Key                                 | Default   | Description                   |
+| ----------------------------------- | --------- | ----------------------------- |
+| `jobs.enabled`                      | `true`    | Enable/disable job processing |
+| `jobs.concurrency`                  | `5`       | Workers per job               |
+| `jobs.pollIntervalSeconds`          | `5`       | Worker poll interval          |
+| `jobs.archiveCompletedAfterSeconds` | `604800`  | Archive window (7 days)       |
+| `jobs.deleteArchivedAfterSeconds`   | `2592000` | Deletion window (30 days)     |
+| `jobs.monitorStateIntervalSeconds`  | `60`      | Metrics interval              |
 
 ## Monitoring
 

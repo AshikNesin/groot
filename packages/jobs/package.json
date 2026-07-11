@@ -16,6 +16,7 @@
     "@groot/ui": "workspace:*",
     "console-feed": "^3.8.0",
     "dayjs": "^1.11.21",
+    "express": "^5.2.1",
     "lucide-react": "^1.23.0",
     "nuqs": "^2.9.0",
     "pg-boss": "^12.25.0",
@@ -26,5 +27,8 @@
     "react-router-dom": "^7.18.1",
     "sonner": "^2.0.7",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }

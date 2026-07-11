@@ -461,6 +461,9 @@ importers:
       dayjs:
         specifier: ^1.11.21
         version: 1.11.21
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
       lucide-react:
         specifier: ^1.23.0
         version: 1.23.0(react@19.2.7)
@@ -491,6 +494,10 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
 
   packages/server:
     dependencies:
