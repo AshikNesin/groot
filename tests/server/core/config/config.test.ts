@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
-import { configSchema } from "@/core/config/config.schema";
-import { resolveString } from "@/core/config/config.loader";
+import { configSchema } from "@groot/server/core/config/config.schema";
+import { resolveString } from "@groot/server/core/config/config.loader";
 
 // ─── Schema Validation ───────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ describe("configSchema", () => {
   });
 
   it("infers Config type from schema", () => {
-    type Config = import("@/core/config/config.schema").Config;
+    type Config = import("@groot/server/core/config/config.schema").Config;
     const cfg: Config = configSchema.parse({});
     expect(typeof cfg.app.name).toBe("string");
     expect(typeof cfg.app.isProduction).toBe("boolean");

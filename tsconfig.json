@@ -1,20 +1,24 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./server/src",
+    "rootDir": ".",
     "paths": {
-      "@/*": ["./server/src/*"]
-    },
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "verbatimModuleSyntax": true
+      "@groot/ui/*": ["./packages/ui/src/*"],
+      "@groot/client/*": ["./packages/client/src/core/*"],
+      "@groot/client/index.css": ["./packages/client/src/index.css"],
+      "@groot/server/core/*": ["./packages/server/src/core/*"],
+      "@groot/server/shared/*": ["./packages/server/src/shared/*"],
+      "@groot/database": ["./packages/database/src/index.ts"],
+      "@groot/database/client": ["./packages/database/src/client.ts"],
+      "@groot/database/types": ["./packages/database/src/types.ts"]
+    }
   },
-  "include": ["server/src/**/*", "server/src/types/**/*.d.ts", "env.d.ts"],
+  "include": [
+    "apps/web/src/server/**/*",
+    "packages/server/src/**/*",
+    "packages/database/src/**/*",
+    "env.d.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

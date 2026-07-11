@@ -34,7 +34,7 @@ Welcome to the documentation hub for the Express + React boilerplate. This guide
 
 ## Project Overview
 
-This boilerplate ships a secure Express 5 + TypeScript server with a domain-driven architecture inside `server/src` and a Vite-powered React 19 client inside `client/src`.
+This boilerplate ships a secure Express 5 + TypeScript server with a domain-driven architecture inside `packages/server` + `apps/web/src/server` and a Vite-powered React 19 client inside `packages/client` + `apps/web/src/client`.
 
 ### Architecture Highlights
 
@@ -93,16 +93,16 @@ Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
 
 ## Core Modules
 
-| Module      | Location            | Purpose                                             |
-| ----------- | ------------------- | --------------------------------------------------- |
-| AI          | `core/ai/`          | Unified LLM client with Zod schema conversion       |
-| Errors      | `core/errors/`      | Boom factory, error codes, Prisma error handler     |
-| Jobs        | `core/job/`         | Queue client, queries, worker, dynamic registration |
-| KV          | `core/kv/`          | Keyv key-value storage with PostgreSQL              |
-| Logger      | `core/logger/`      | Pino with AsyncLocalStorage context                 |
-| Storage     | `core/storage/`     | S3 file storage service                             |
-| Middlewares | `core/middlewares/` | Auth, validation, rate-limiting, error handling     |
-| Utils       | `core/utils/`       | `createRouter`, `parseId`, validation helpers       |
+| Module      | Location                          | Purpose                                             |
+| ----------- | --------------------------------- | --------------------------------------------------- |
+| AI          | `@groot/server/core/ai/`          | Unified LLM client with Zod schema conversion       |
+| Errors      | `@groot/server/core/errors/`      | Boom factory, error codes, Prisma error handler     |
+| Jobs        | `@groot/server/core/job/`         | Queue client, queries, worker, dynamic registration |
+| KV          | `@groot/server/core/kv/`          | Keyv key-value storage with PostgreSQL              |
+| Logger      | `@groot/server/core/logger/`      | Pino with AsyncLocalStorage context                 |
+| Storage     | `@groot/server/core/storage/`     | S3 file storage service                             |
+| Middlewares | `@groot/server/core/middlewares/` | Auth, validation, rate-limiting, error handling     |
+| Utils       | `@groot/server/core/utils/`       | `createRouter`, `parseId`, validation helpers       |
 
 ## Next Steps
 

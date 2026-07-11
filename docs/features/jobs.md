@@ -21,7 +21,7 @@ Jobs are registered dynamically in feature modules, not via static enums:
 
 ```typescript
 // shared/jobs/job.handlers.ts
-import { registerJobHandler, type JobHandler } from "@/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/server/core/job";
 import type { TodoCleanupPayload } from "./job.types";
 
 export const todoCleanupHandler: JobHandler<TodoCleanupPayload> = async ({ data }) => {
@@ -37,7 +37,7 @@ export function registerJobHandlers(): void {
 Then register in `routes.ts`:
 
 ```typescript
-import { registerJobHandlers } from "@/shared/jobs/job.handlers";
+import { registerJobHandlers } from "@groot/server/shared/jobs/job.handlers";
 
 export function registerJobHandlers(): void {
   registerJobHandlers();
@@ -62,7 +62,7 @@ Each handler receives `{ jobId, data }` from PgBoss.
 ### Via Code
 
 ```typescript
-import { addJob } from "@/core/job";
+import { addJob } from "@groot/server/core/job";
 
 await addJob("todo-cleanup", { daysToKeep: 60 });
 ```
@@ -135,7 +135,7 @@ export interface MyJobPayload {
 2. **Create handler** (in `feature.jobs.ts`):
 
 ```typescript
-import { registerJobHandler, type JobHandler } from "@/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/server/core/job";
 import type { MyJobPayload } from "./feature.types";
 
 export const myJobHandler: JobHandler<MyJobPayload> = async ({ data }) => {
@@ -150,7 +150,7 @@ export function registerFeatureJobs(): void {
 3. **Register in routes.ts**:
 
 ```typescript
-import { registerFeatureJobs } from "@/app/feature/feature.jobs";
+import { registerFeatureJobs } from "./app/feature/feature.jobs";
 
 export function registerJobHandlers(): void {
   registerFeatureJobs();

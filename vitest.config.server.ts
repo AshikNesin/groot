@@ -1,7 +1,9 @@
 import { defineConfig } from "vite-plus";
+import path from "node:path";
+
+const rootDir = path.resolve();
 
 export default defineConfig({
-  // Server test configuration
   root: ".",
   test: {
     include: ["tests/server/**/*.test.ts"],
@@ -10,7 +12,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": "./server/src",
+      "@groot/server/core": path.resolve(rootDir, "packages/server/src/core"),
+      "@groot/server/shared": path.resolve(rootDir, "packages/server/src/shared"),
+      "@groot/database": path.resolve(rootDir, "packages/database/src/index.ts"),
     },
   },
 });

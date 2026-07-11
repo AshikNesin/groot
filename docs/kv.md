@@ -14,7 +14,7 @@ The KV system uses these packages:
 ### Basic Usage
 
 ```typescript
-import kv from "@/core/kv";
+import kv from "@groot/server/core/kv";
 
 // Set a value
 await kv.set("user:123", { name: "John", age: 30 });
@@ -35,7 +35,7 @@ const hasKey = await kv.has("user:123");
 Namespaces help organize your data by prefixing keys with a namespace:
 
 ```typescript
-import { createNamespaceKv } from "@/core/kv";
+import { createNamespaceKv } from "@groot/server/core/kv";
 
 // Create a namespaced KV instance for sessions
 const sessionKv = createNamespaceKv("sessions");
@@ -55,7 +55,7 @@ await sessionKv.clear();
 For more advanced use cases, you can use the custom Prisma adapter directly:
 
 ```typescript
-import { KeyvPrismaAdapter } from "@/core/kv/keyv-prisma-adapter";
+import { KeyvPrismaAdapter } from "@groot/server/core/kv/keyv-prisma-adapter";
 import Keyv from "keyv";
 
 // Create a custom adapter with a namespace
@@ -76,7 +76,7 @@ const data = await cacheKv.get("api-data");
 ### 1. API Response Caching
 
 ```typescript
-import { createNamespaceKv } from "@/core/kv";
+import { createNamespaceKv } from "@groot/server/core/kv";
 
 const cacheKv = createNamespaceKv("api-cache");
 
@@ -96,7 +96,7 @@ async function getCachedData(key: string, fetchFn: () => Promise<any>) {
 ### 2. Session Storage
 
 ```typescript
-import { createNamespaceKv } from "@/core/kv";
+import { createNamespaceKv } from "@groot/server/core/kv";
 
 const sessionKv = createNamespaceKv("sessions");
 
@@ -121,7 +121,7 @@ async function destroySession(sessionId: string) {
 ### 3. Rate Limiting
 
 ```typescript
-import { createNamespaceKv } from "@/core/kv";
+import { createNamespaceKv } from "@groot/server/core/kv";
 
 const rateLimitKv = createNamespaceKv("rate-limit");
 
@@ -144,7 +144,7 @@ async function checkRateLimit(ip: string, limit: number, window: number) {
 The KV system logs errors automatically. If you need custom error handling:
 
 ```typescript
-import kv from "@/core/kv";
+import kv from "@groot/server/core/kv";
 
 // Listen for errors
 kv.on("error", (error) => {
@@ -158,7 +158,7 @@ kv.on("error", (error) => {
 While the Keyv interface supports TTL, our PostgreSQL implementation doesn't automatically expire keys. When you set a value with TTL, the value is stored but won't be automatically deleted when it expires. You'll need to implement TTL cleanup yourself if needed:
 
 ```typescript
-import kv from "@/core/kv";
+import kv from "@groot/server/core/kv";
 
 // Set a value with TTL (won't auto-expire in our implementation)
 await kv.set("temp-data", value, 3600000); // 1 hour

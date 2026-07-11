@@ -5,7 +5,7 @@ The todo domain demonstrates the recommended feature module pattern with self-co
 ## Module Structure
 
 ```
-server/src/app/todo/
+apps/web/src/server/app/todo/
 ├── todo.routes.ts       # Route definitions
 ├── todo.controller.ts   # Request handlers
 ├── todo.service.ts      # Business logic
@@ -82,9 +82,9 @@ Validation errors use Boom:
 
 ```typescript
 // todo.routes.ts
-import { createRouter } from "@/core/utils/router.utils";
+import { createRouter } from "@groot/server/core/utils/router.utils";
 import * as todoController from "./todo.controller";
-import { validate } from "@/core/middlewares/validation.middleware";
+import { validate } from "@groot/server/core/middlewares/validation.middleware";
 import { createTodoSchema, updateTodoSchema } from "./todo.validation";
 
 const router = createRouter();
@@ -104,7 +104,7 @@ export default router;
 // todo.controller.ts
 import type { Request, Response } from "express";
 import * as TodoService from "./todo.service";
-import { parseId } from "@/core/utils/controller.utils";
+import { parseId } from "@groot/server/core/utils/controller.utils";
 import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
 
 export async function getAll() {
@@ -129,7 +129,7 @@ export async function getById(req: Request) {
 // todo.service.ts
 import * as TodoModel from "./todo.model";
 import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
-import { Boom } from "@/core/errors";
+import { Boom } from "@groot/server/core/errors";
 
 export async function create({ data }: { data: CreateTodoDTO }) {
   return TodoModel.create(data);
@@ -155,7 +155,7 @@ Defined in `todo.jobs.ts`:
 
 ```typescript
 // todo.jobs.ts
-import { registerJobHandler, type JobHandler } from "@/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/server/core/job";
 
 export const cleanupHandler: JobHandler<CleanupPayload> = async ({ data }) => {
   const { daysToKeep = 30 } = data;
@@ -170,7 +170,7 @@ export function registerTodoJobs(): void {
 Jobs are registered in `routes.ts`:
 
 ```typescript
-import { registerTodoJobs } from "@/app/todo/todo.jobs";
+import { registerTodoJobs } from "./app/todo/todo.jobs";
 
 export function registerJobHandlers(): void {
   registerTodoJobs();
@@ -179,9 +179,9 @@ export function registerJobHandlers(): void {
 
 ## React Integration
 
-- `client/src/lib/api.ts` - API client with JWT auth
-- `client/src/hooks/api/useTodos.ts` - React Query hooks
-- `client/src/pages/Todos.tsx` - Todo page component
+- `@groot/client/lib/api` - API client with JWT auth
+- `apps/web/src/client/app/todo/hooks/useTodos.ts` - React Query hooks
+- `apps/web/src/client/app/todo/pages/Todos.tsx` - Todo page component
 
 The client automatically refetches the todo list after mutations via `queryClient.invalidateQueries`.
 

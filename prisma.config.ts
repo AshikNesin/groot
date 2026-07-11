@@ -2,9 +2,9 @@ import { defineConfig } from "prisma/config";
 import { ENV } from "varlock/env";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: "apps/web/prisma/schema.prisma",
   migrations: {
-    seed: "tsx prisma/seed.ts",
+    seed: "tsx apps/web/prisma/seed.ts",
   },
   datasource: {
     // The migrate/introspection engine needs a session-mode (direct) connection.

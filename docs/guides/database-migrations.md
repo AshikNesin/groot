@@ -17,11 +17,11 @@ This project uses Prisma Migrate for database schema management. This approach:
 
 1. **Edit the Prisma schema**
 
-   Modify `prisma/schema.prisma` with your changes:
+   Modify `apps/web/prisma/schema.prisma` with your changes:
 
    ```bash
    # Edit the schema file
-   vim prisma/schema.prisma
+   vim apps/web/prisma/schema.prisma
    ```
 
 2. **Create a migration**
@@ -40,7 +40,7 @@ This project uses Prisma Migrate for database schema management. This approach:
 
 3. **Review the generated SQL**
 
-   Open the new migration file in `prisma/migrations/<timestamp>_<name>/migration.sql` and verify the SQL looks correct.
+   Open the new migration file in `apps/web/prisma/migrations/<timestamp>_<name>/migration.sql` and verify the SQL looks correct.
 
 4. **Apply locally**
 
@@ -120,7 +120,7 @@ datasource: {
 ```
 
 The **runtime client is unaffected** — it uses the pooled `DATABASE_URL`
-separately via `@prisma/adapter-pg` in `server/src/core/database.ts`.
+separately via `@prisma/adapter-pg` in `packages/server/src/core/database.ts`.
 
 ### When you need it
 

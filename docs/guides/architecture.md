@@ -5,10 +5,12 @@ This project uses a domain-driven, feature-based architecture with clear separat
 ## High-Level Structure
 
 ```
-server/src/
-├── app/              # App-specific domain modules
+packages/server/src/          # Boilerplate (synced)
 ├── shared/           # Reusable feature modules
-├── core/             # Infrastructure and utilities
+└── core/             # Infrastructure and utilities
+
+apps/web/src/server/          # App-owned (not synced)
+├── app/              # App-specific domain modules
 ├── routes.ts         # Central route registration
 └── index.ts          # Server entry point
 ```
@@ -75,7 +77,7 @@ Response (auto-serialized by handle middleware)
 Routes use `createRouter()` which automatically wraps handlers:
 
 ```typescript
-import { createRouter } from "@/core/utils/router.utils";
+import { createRouter } from "@groot/server/core/utils/router.utils";
 import * as controller from "./todo.controller";
 
 const router = createRouter();
@@ -115,7 +117,7 @@ No base classes, no manual response handling - just return values.
 Zod schemas validate requests:
 
 ```typescript
-import { validate } from "@/core/middlewares/validation.middleware";
+import { validate } from "@groot/server/core/middlewares/validation.middleware";
 import { createTodoSchema } from "./todo.validation";
 
 router.post("/", validate(createTodoSchema, "body"), controller.create);
@@ -128,7 +130,7 @@ Validated data is available at `req.validated.body`.
 Use `Boom` for HTTP errors:
 
 ```typescript
-import { Boom } from "@/core/errors";
+import { Boom } from "@groot/server/core/errors";
 
 if (!todo) {
   throw Boom.notFound("Todo not found");
@@ -156,7 +158,7 @@ Jobs are registered in feature modules:
 
 ```typescript
 // todo.jobs.ts
-import { registerJobHandler, type JobHandler } from "@/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/server/core/job";
 
 export const cleanupHandler: JobHandler<CleanupPayload> = async ({ data }) => {
   // Job logic
@@ -181,7 +183,7 @@ export function registerJobHandlers(): void {
 Pino-based logging with context management:
 
 ```typescript
-import { logger, createContextLogger } from "@/core/logger";
+import { logger, createContextLogger } from "@groot/server/core/logger";
 
 // Basic logging
 logger.info("User logged in", { userId });
@@ -198,7 +200,7 @@ Uses AsyncLocalStorage for request tracing.
 Keyv with PostgreSQL adapter:
 
 ```typescript
-import kv, { createNamespaceKv } from "@/core/kv";
+import kv, { createNamespaceKv } from "@groot/server/core/kv";
 
 // Basic usage
 await kv.set("key", { data: "value" });
@@ -246,14 +248,14 @@ export function registerRoutes(app: Express): void {
 
 ## Client Architecture
 
-1. **Routing** – React Router 7 in `client/src/App.tsx`
-2. **State** – Zustand stores (`store/auth.ts`)
-3. **Data Fetching** – React Query + Axios (`lib/api.ts`)
-4. **UI** – Tailwind + Radix primitives (`components/ui/`)
+1. **Routing** – React Router 7 in `apps/web/src/client/App.tsx`
+2. **State** – Zustand stores (`@groot/client/store/auth`)
+3. **Data Fetching** – React Query + Axios (`@groot/client/lib/api`)
+4. **UI** – Tailwind + Radix primitives (`@groot/ui`)
 
 ## Adding a New Feature
 
-1. Create feature directory in `app/` or `shared/`
+1. Create feature directory in `apps/web/src/server/app/` (app-specific) or `packages/server/src/shared/` (reusable)
 2. Add files: routes, controller, service, validation, model
 3. Register routes in `routes.ts`
 4. Register jobs in `registerJobHandlers()` if needed

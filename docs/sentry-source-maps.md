@@ -60,7 +60,7 @@ After deploying:
 
 1. Check the build logs — you should see Sentry source map upload messages
 2. Go to **Sentry > Releases** — a new release (e.g. `groot@abc1234`) should appear with source map artifacts
-3. Trigger an error and check the stack trace — it should show original file paths like `server/src/shared/storage/...` instead of `dist/bundle.js:942:12`
+3. Trigger an error and check the stack trace — it should show original file paths like `packages/server/src/shared/storage/...` instead of `dist/bundle.js:942:12`
 
 ## How It Works
 

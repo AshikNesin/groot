@@ -18,14 +18,17 @@ export const IMMUTABLE_EXCLUSIONS: readonly string[] = [
   ".env.development",
   ".env.production",
   ".env.*.local",
-  "prisma/schema.prisma",
-  "prisma/migrations/**",
+  "apps/web/prisma/schema.prisma",
+  "apps/web/prisma/migrations/**",
   "node_modules/**",
   "dist/**",
   ".git/**",
   "*.pem",
   "*.key",
   "secrets/**",
+
+  // Generated Prisma client output (regenerated per-project).
+  "packages/database/generated/**",
 
   // Sync tooling state — must NEVER be overwritten with the boilerplate's
   // own values (would corrupt this project's last_sync baseline).
@@ -46,23 +49,16 @@ export const IMMUTABLE_EXCLUSIONS: readonly string[] = [
 // ============================================================
 
 export const SYNC_PATTERNS: readonly string[] = [
-  // UI Components (design system primitives). See AGENTS.md "Frontend Layering".
-  "client/src/ui/**",
-  "client/src/index.css",
+  // All workspace packages are boilerplate (ui, client, server, database).
+  // Child repos get the full packages/ tree; business logic lives in apps/.
+  "packages/**",
 
-  // Client Core (boilerplate infrastructure: layouts, api client, stores,
-  // hooks, lib, types, services). Mirrors server/src/core on the client.
-  "client/src/core/**",
+  // Workspace package manifests per package.
+  "apps/*/package.json",
+  "apps/*/tsconfig.json",
 
-  // Server Core (drop-in infrastructure)
-  "server/src/core/**",
-  "server/src/test-helpers.ts",
-
-  // Server Shared (reusable features: auth, storage, etc.)
-  "server/src/shared/**",
-
-  // Tests mirroring synced source (core/shared infra + ui primitives +
-  // shared test setup). App-specific and e2e tests stay project-local.
+  // Tests mirroring synced source (core/shared/ui infra + shared test setup).
+  // App-specific and e2e tests stay project-local.
   "tests/server/core/**",
   "tests/server/shared/**",
   "tests/server/groot/**",
@@ -73,10 +69,13 @@ export const SYNC_PATTERNS: readonly string[] = [
   // Infrastructure
   "*.config.*",
   "tsconfig.json",
+  "tsconfig.base.json",
   ".github/workflows/**",
   ".vite-hooks/**",
   ".gitleaks.toml",
   "scripts/**",
+  "postcss.config.js",
+  "components.json",
 
   // Sync tooling — keep the sync tool itself up to date.
   // State files (boilerplate-sync.json, sync-report.json) and project-only
@@ -84,9 +83,7 @@ export const SYNC_PATTERNS: readonly string[] = [
   // IMMUTABLE_EXCLUSIONS so only the tool's _code_ syncs.
   ".groot/**",
 
-  // Agent skills shipped with the boilerplate (groot-sync, node, grill-me,
-  // improve-codebase-architecture). Child repos can opt out of specific
-  // skills via additional_exclusions if they keep their own.
+  // Agent skills shipped with the boilerplate.
   ".agents/skills/**",
 
   // Documentation
@@ -101,17 +98,18 @@ export const SYNC_PATTERNS: readonly string[] = [
 // ============================================================
 
 export const SKIP_PATTERNS: readonly string[] = [
-  // App-specific server code (never sync)
-  "server/src/app/**",
-  "server/src/routes.ts",
-  "server/src/index.ts",
+  // App-owned source code (never synced).
+  // Business modules, route registration, server/client entry points.
+  "apps/web/src/**",
 
-  // App-specific client code (never sync). The frontend app/ layer holds
-  // project features; ui/ and core/ are synced (see SYNC_PATTERNS).
-  "client/src/app/**",
+  // App-owned prisma directory (schema, migrations, seed).
+  // Immutable exclusions still guard schema.prisma and migrations.
+  "apps/web/prisma/**",
 
-  // Project-local tests (app routes, end-to-end). Core/shared/ui tests are
-  // synced; these stay project-specific.
+  // App-owned entry file (downstream branding).
+  "apps/web/index.html",
+
+  // Project-local tests (app routes, end-to-end).
   "tests/server/app/**",
   "tests/server/routes/**",
   "tests/e2e/**",
@@ -123,7 +121,11 @@ export const SKIP_PATTERNS: readonly string[] = [
 
 // Files that don't match a sync pattern by glob but should still flow through
 // the three-way merge path (their content genuinely belongs to both repos).
-export const FORCE_MERGE_FILES: readonly string[] = [".gitignore", "package.json"] as const;
+export const FORCE_MERGE_FILES: readonly string[] = [
+  ".gitignore",
+  "package.json",
+  "pnpm-workspace.yaml",
+] as const;
 
 // ============================================================
 // PATH VALIDATION - Security against traversal attacks

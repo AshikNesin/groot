@@ -11,17 +11,17 @@ const mockPrisma = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../../../../server/src/core/database", () => ({
+vi.mock("@groot/server/core/database", () => ({
   prisma: mockPrisma,
 }));
 
-vi.mock("../../../../server/src/core/logger", () => ({
+vi.mock("@groot/server/core/logger", () => ({
   logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));
 
 // Import after mocking
-const { KeyvPrismaAdapter } = await import("@/core/kv/keyv-prisma-adapter");
+const { KeyvPrismaAdapter } = await import("@groot/server/core/kv/keyv-prisma-adapter");
 
 describe("KV System", () => {
   beforeEach(() => {
@@ -34,7 +34,7 @@ describe("KV System", () => {
 
   describe("Namespaced KV", () => {
     it("should create a namespaced KV instance", async () => {
-      const { createNamespaceKv } = await import("@/core/kv/store");
+      const { createNamespaceKv } = await import("@groot/server/core/kv/store");
       const nsKv = createNamespaceKv("test-namespace");
       expect(nsKv).toBeDefined();
       expect(nsKv.namespace).toBe("test-namespace");

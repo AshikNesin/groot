@@ -5,7 +5,9 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const clientSrc = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "client/src");
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
+const clientSrc = path.resolve(rootDir, "apps/web/src/client");
+const packagesDir = path.resolve(rootDir, "packages");
 
 function getSentryRelease() {
   if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE;
@@ -26,14 +28,11 @@ export default defineConfig({
   // Git hooks configuration
   staged: {
     "*": "vp check --fix",
-    // Enforce the design-token invariant (no raw palette colors outside the
-    // token layer) whenever client source or styles change.
-    // See scripts/check-design-tokens.ts.
     "*.{ts,tsx,css}": "npm run check:tokens",
   },
 
-  // Vite build configuration - build from client directory
-  root: "client",
+  // Vite build configuration - build from apps/web
+  root: "apps/web",
   plugins: [
     react(),
     ...(release && authToken && process.env.SENTRY_ORG
@@ -50,17 +49,22 @@ export default defineConfig({
       : []),
   ],
   resolve: {
-    alias: {
-      "@": clientSrc,
-    },
+    alias: [
+      {
+        find: "@groot/client/index.css",
+        replacement: path.resolve(packagesDir, "client/src/index.css"),
+      },
+      { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
+      { find: "@groot/client", replacement: path.resolve(packagesDir, "client/src/core") },
+      { find: "@", replacement: clientSrc },
+    ],
   },
   build: {
-    outDir: "../dist",
+    outDir: path.resolve(rootDir, "dist"),
     emptyOutDir: false,
     sourcemap: true,
     rollupOptions: {
       output: {
-        // Vite 8/Rolldown expects manualChunks as a function
         manualChunks(id) {
           if (
             id.includes("node_modules/react/") ||
@@ -107,6 +111,10 @@ export default defineConfig({
   },
   publicDir: "./public",
 
+  css: {
+    postcss: path.resolve(rootDir, "postcss.config.js"),
+  },
+
   // Linting configuration
   lint: {
     ignorePatterns: ["dist/**", "node_modules/**"],
@@ -121,12 +129,14 @@ export default defineConfig({
   // Test configuration - client tests only
   // Server tests run from vitest.config.server.ts
   test: {
-    include: ["../tests/client/**/*.test.{ts,tsx}"],
+    include: ["../../tests/client/**/*.test.{ts,tsx}"],
     exclude: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
-    setupFiles: ["../tests/client/setup.ts"],
-    alias: {
-      "@": clientSrc,
-    },
+    setupFiles: ["../../tests/client/setup.ts"],
+    alias: [
+      { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
+      { find: "@groot/client", replacement: path.resolve(packagesDir, "client/src/core") },
+      { find: "@", replacement: clientSrc },
+    ],
   },
 });

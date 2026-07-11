@@ -15,7 +15,7 @@ Application settings live in `config.yml` — a YAML file at the project root. I
 3. Access config in code:
 
    ```typescript
-   import { config } from "@/core/config";
+   import { config } from "@groot/server/core/config";
 
    config.app.name; // "Groot"
    config.logging.level; // "info"
@@ -115,7 +115,7 @@ This is useful for debugging without modifying the shared config.
 
 ## Validation
 
-The Zod schema (`server/src/core/config/config.schema.ts`) validates the merged config at startup. Invalid values throw a `Boom.internal` error with the exact path and message:
+The Zod schema (`packages/server/src/core/config/config.schema.ts`) validates the merged config at startup. Invalid values throw a `Boom.internal` error with the exact path and message:
 
 ```
 Invalid config.yml:
@@ -141,6 +141,6 @@ config.yml
 Key files:
 
 - `config.yml` / `config.example.yml` — YAML configuration
-- `server/src/core/config/config.schema.ts` — Zod schema with types and defaults
-- `server/src/core/config/config.loader.ts` — Loading, merging, resolution
-- `server/src/core/config/index.ts` — Exports the `config` singleton
+- `packages/server/src/core/config/config.schema.ts` — Zod schema with types and defaults
+- `packages/server/src/core/config/config.loader.ts` — Loading, merging, resolution
+- `packages/server/src/core/config/index.ts` — Exports the `config` singleton

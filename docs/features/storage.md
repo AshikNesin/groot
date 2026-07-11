@@ -4,7 +4,7 @@ The storage feature provides a lightweight AWS S3 file browser with folder navig
 
 > **Note:** The boilerplate ships S3 file management only. Password-protected,
 > time-limited public file sharing was removed as an opinionated feature —
-> build it in `server/src/app/<feature>/` if your app needs it, using the core
+> build it in `apps/web/src/server/app/<feature>/` if your app needs it, using the core
 > S3 service.
 
 ## Architecture Overview
@@ -21,14 +21,14 @@ Client (Storage page)
 ## Module Structure
 
 ```
-server/src/shared/storage/
+packages/server/src/shared/storage/
 ├── storage.routes.ts        # Routes
 ├── storage.controller.ts    # Request handlers
 ├── storage.service.ts       # Business logic
 ├── storage.validation.ts    # Zod schemas
 └── index.ts
 
-server/src/core/storage/
+packages/server/src/core/storage/
 ├── service.ts               # S3 wrapper
 ├── types.ts                 # Type definitions
 └── index.ts
@@ -86,7 +86,7 @@ export const storageService = {
 
 ## Frontend Integration
 
-`client/src/app/storage/pages/Storage.tsx` provides:
+`apps/web/src/client/app/storage/pages/Storage.tsx` provides:
 
 - Breadcrumb navigation + "Up" button
 - Inline uploads (single + bulk)
@@ -94,7 +94,7 @@ export const storageService = {
 - File rename modal
 - Table UI with download, rename, delete actions
 
-React Query keys live in `client/src/app/storage/hooks/useStorage.ts`.
+React Query keys live in `apps/web/src/client/app/storage/hooks/useStorage.ts`.
 
 ## Security & Rate Limiting
 

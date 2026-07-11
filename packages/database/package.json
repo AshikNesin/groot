@@ -1,0 +1,18 @@
+{
+  "name": "@groot/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./types": "./src/types.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "varlock": "^1.9.0"
+  },
+  "devDependencies": {
+    "@prisma/client": "^7.8.0"
+  }
+}

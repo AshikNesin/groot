@@ -4,7 +4,7 @@ import {
   JOB_STATES,
   isReservedQueueName,
   RESERVED_QUEUE_NAMES,
-} from "@/core/job/constants";
+} from "@groot/server/core/job/constants";
 
 describe("JOB_STATES", () => {
   it("contains all expected states", () => {

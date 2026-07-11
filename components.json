@@ -5,17 +5,17 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "client/src/index.css",
+    "css": "packages/client/src/index.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
   "aliases": {
-    "components": "@/core/components",
-    "utils": "@/core/lib/utils",
-    "ui": "@/ui",
-    "lib": "@/core/lib",
-    "hooks": "@/core/hooks"
+    "components": "@groot/client/components",
+    "utils": "@groot/client/lib/utils",
+    "ui": "@groot/ui",
+    "lib": "@groot/client/lib",
+    "hooks": "@groot/client/hooks"
   },
   "iconLibrary": "lucide",
   "rtl": false,

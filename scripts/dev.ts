@@ -102,7 +102,7 @@ async function main() {
   // Seed default user for local development
   console.log("\n👤 Seeding default user...");
   await new Promise<void>((resolvePromise, reject) => {
-    const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "prisma/seed.ts"], {
+    const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "apps/web/prisma/seed.ts"], {
       stdio: "inherit",
       env: { ...process.env, DATABASE_URL: connectionString },
     });
@@ -116,7 +116,7 @@ async function main() {
   console.log("\n🚀 Starting dev server...\n");
 
   // Spawn the actual dev server with the local DB URL
-  devServer = spawn("tsx", ["watch", "server/src/index.ts"], {
+  devServer = spawn("tsx", ["watch", "apps/web/src/server/index.ts"], {
     stdio: "inherit",
     env: {
       ...process.env,
