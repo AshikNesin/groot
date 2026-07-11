@@ -12,7 +12,9 @@ interface JWTPayload {
 const JWT_SECRET = env.JWT_SECRET_KEY;
 const JWT_EXPIRES_IN = config.auth.jwtExpiresIn;
 
-export const JWT_EXPIRES_IN_MS = ms(JWT_EXPIRES_IN);
+// `jwtExpiresIn` is a runtime-validated config string (e.g. "30d"); narrow it to
+// ms's `StringValue` template type (the guard below rejects anything invalid).
+export const JWT_EXPIRES_IN_MS = ms(JWT_EXPIRES_IN as ms.StringValue);
 if (!JWT_EXPIRES_IN_MS) {
   throw new Error(
     `Invalid JWT_EXPIRES_IN format: "${JWT_EXPIRES_IN}". Expected format like "30d", "24h", "60m", or "3600s".`,
@@ -24,7 +26,7 @@ if (!JWT_EXPIRES_IN_MS) {
  */
 export function generateToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: JWT_EXPIRES_IN as ms.StringValue,
   });
 }
 

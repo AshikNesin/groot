@@ -19,17 +19,10 @@ export const initJobQueue = async (): Promise<void> => {
 
   bossInstance = new PgBoss({
     connectionString: jobConfig.connectionString,
-    archiveCompletedAfterSeconds: jobConfig.archiveCompletedAfterSeconds,
-    deleteArchivedAfterSeconds: jobConfig.deleteArchivedAfterSeconds,
-    monitorStateIntervalSeconds: jobConfig.monitorStateIntervalSeconds,
   });
 
   bossInstance.on("error", (error) => {
     logger.error({ error }, "PgBoss error");
-  });
-
-  bossInstance.on("monitor-states", (states) => {
-    logger.debug({ states }, "PgBoss state monitor");
   });
 
   await bossInstance.start();

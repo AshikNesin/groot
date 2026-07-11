@@ -4,7 +4,8 @@ import { logger } from "@groot/logger";
 import { env } from "../env";
 
 // PostgreSQL store using @keyv/postgres
-export const store = new KeyvPostgres(env.DATABASE_URL, {
+export const store = new KeyvPostgres({
+  uri: env.DATABASE_URL,
   table: "keyv", // Use the Keyv table from Prisma schema
 });
 

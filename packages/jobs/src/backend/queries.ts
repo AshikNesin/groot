@@ -95,7 +95,7 @@ export const getAvailableQueues = async (): Promise<string[]> => {
 // Fetch jobs with filters (queue-based, for fetching from a specific queue)
 export const fetchJobs = async (options: FetchJobsOptions): Promise<BossJob[]> => {
   const boss = getBoss();
-  return boss.fetch(options.queueName, options.limit ?? 50);
+  return boss.fetch(options.queueName, { batchSize: options.limit ?? 50 });
 };
 
 // Get failed jobs (state-based query)

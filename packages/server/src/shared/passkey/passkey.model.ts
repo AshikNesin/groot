@@ -4,7 +4,7 @@ import type { Passkey } from "@groot/database";
 export type CreatePasskeyData = {
   userId: number;
   credentialId: string;
-  publicKey: Buffer;
+  publicKey: Uint8Array<ArrayBuffer>;
   counter: bigint;
   deviceType?: string | null;
   backedUp: boolean;

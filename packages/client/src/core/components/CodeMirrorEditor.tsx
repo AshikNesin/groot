@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
+import type { ReactCodeMirrorProps } from "@uiw/react-codemirror";
 
 /**
  * JSON editor built on CodeMirror.

@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import * as AppSettingsService from "./app-settings.service";
 import type { UpsertAppSettingDTO } from "./app-settings.validation";
+import { parseStringParam } from "@groot/server/core/utils/controller.utils";
 
 /**
  * Get all app settings
@@ -13,7 +14,7 @@ export async function getAll() {
  * Get a single app setting by key
  */
 export async function getByKey(req: Request) {
-  const { key } = req.params;
+  const key = parseStringParam(req.params.key, "key");
   return await AppSettingsService.get({ key });
 }
 
@@ -21,7 +22,7 @@ export async function getByKey(req: Request) {
  * Upsert an app setting
  */
 export async function upsert(req: Request) {
-  const { key } = req.params;
+  const key = parseStringParam(req.params.key, "key");
   const payload = req.body as UpsertAppSettingDTO;
   return await AppSettingsService.upsert({ key, data: payload });
 }
@@ -30,6 +31,6 @@ export async function upsert(req: Request) {
  * Delete an app setting
  */
 export async function deleteSetting(req: Request) {
-  const { key } = req.params;
+  const key = parseStringParam(req.params.key, "key");
   return await AppSettingsService.deleteSetting({ key });
 }

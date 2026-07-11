@@ -20,7 +20,7 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
-} from "@simplewebauthn/types";
+} from "@simplewebauthn/server";
 
 // ── Challenge store backed by KV with TTL ──────────────────────────────────
 
@@ -59,7 +59,7 @@ function extractChallengeFromResponse(response: { response: { clientDataJSON: st
     }
     return clientData.challenge;
   } catch (error) {
-    if (error instanceof Boom) throw error;
+    if (Boom.isHttpError(error)) throw error;
     throw Boom.badRequest("Invalid WebAuthn response: malformed clientDataJSON");
   }
 }
@@ -124,12 +124,12 @@ export async function verifyRegistration({
   const defaultName =
     credentialName || generateDeviceName(response.authenticatorAttachment, credential.transports);
 
-  const publicKeyBuffer = Buffer.from(credential.publicKey);
+  const publicKey = new Uint8Array(Buffer.from(credential.publicKey));
 
   const passkey = await passkeyModel.create({
     userId,
     credentialId: credentialIdBase64,
-    publicKey: publicKeyBuffer,
+    publicKey,
     counter: BigInt(credential.counter ?? 0),
     deviceType: credentialDeviceType || null,
     backedUp: !!credentialBackedUp,
@@ -217,11 +217,11 @@ export async function verifyAuthentication({
   };
 }
 
-export async function listPasskeys({
-  userId,
-}: {
-  userId: number;
-}): Promise<Omit<Passkey, "publicKey" | "credentialId">[]> {
+export async function listPasskeys({ userId }: { userId: number }): Promise<
+  (Omit<Passkey, "publicKey" | "credentialId" | "counter"> & {
+    counter: number;
+  })[]
+> {
   const passkeys = await passkeyModel.findByUserId(userId);
 
   return passkeys.map(({ publicKey: _, credentialId: __, counter, ...safePasskey }) => ({
