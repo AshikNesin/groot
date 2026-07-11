@@ -1,10 +1,10 @@
-import { createRouter } from "../../core/utils/router.utils";
-import * as jobController from "./job.controller";
+import { createRouter } from "@groot/server/core/utils/router.utils";
+import * as jobController from "./controller";
 import {
   validateBody,
   validateQuery,
   validateParams,
-} from "../../core/middlewares/validation.middleware";
+} from "@groot/server/core/middlewares/validation.middleware";
 import {
   createJobSchema,
   scheduleJobSchema,
@@ -12,7 +12,7 @@ import {
   bulkRerunSchema,
   getJobsByStateSchema,
   getJobsSchema,
-} from "./job.validation";
+} from "./validation";
 
 const router = createRouter();
 
@@ -49,4 +49,4 @@ router.post("/:queueName/:jobId/cancel", jobController.cancel);
 router.post("/:queueName/:jobId/resume", jobController.resume);
 router.post("/:queueName/:jobId/rerun", jobController.rerun);
 
-export default router;
+export const jobRoutes = router;

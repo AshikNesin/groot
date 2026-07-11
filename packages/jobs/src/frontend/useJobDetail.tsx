@@ -1,5 +1,5 @@
-import { apiClient } from "@groot/client/lib/api";
-import type { Job, JobLog } from "@groot/client/types/jobs";
+import { jobsApi } from "./api";
+import type { Job, JobLog } from "./types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ export function useJobDetail() {
     const jobKey = `${queueName}/${jobId}`;
     try {
       const currentLastId = lastLogIdRef.current;
-      const newLogs = await apiClient.getJobLogs(queueName, jobId, currentLastId);
+      const newLogs = await jobsApi.getJobLogs(queueName, jobId, currentLastId);
       if (activeJobRef.current !== jobKey) return;
       if (newLogs.length > 0) {
         setLogs((prevLogs) => [...prevLogs, ...newLogs]);
@@ -43,7 +43,7 @@ export function useJobDetail() {
     try {
       setLoading(true);
       setError(null);
-      const jobData = await apiClient.getJob(queueName, jobId);
+      const jobData = await jobsApi.getJob(queueName, jobId);
       setJob(jobData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load job");
@@ -70,7 +70,7 @@ export function useJobDetail() {
     if (!job) return;
 
     try {
-      await apiClient.retryJob(job.name, job.id);
+      await jobsApi.retryJob(job.name, job.id);
       toast.success("Success", { description: "Job has been queued for retry" });
       loadJob();
     } catch (error) {
@@ -84,7 +84,7 @@ export function useJobDetail() {
     if (!job) return;
 
     try {
-      await apiClient.cancelJob(job.name, job.id);
+      await jobsApi.cancelJob(job.name, job.id);
       toast.success("Success", { description: "Job has been cancelled" });
       loadJob();
     } catch (error) {
@@ -98,7 +98,7 @@ export function useJobDetail() {
     if (!job) return;
 
     try {
-      await apiClient.resumeJob(job.name, job.id);
+      await jobsApi.resumeJob(job.name, job.id);
       toast.success("Success", { description: "Job has been resumed" });
       loadJob();
     } catch (error) {
@@ -118,7 +118,7 @@ export function useJobDetail() {
     }
 
     try {
-      await apiClient.deleteJob(job.name, job.id);
+      await jobsApi.deleteJob(job.name, job.id);
       toast.success("Success", { description: "Job has been deleted" });
       navigate("/jobs");
     } catch (error) {
@@ -132,7 +132,7 @@ export function useJobDetail() {
     if (!job) return;
 
     try {
-      const result = await apiClient.rerunJob(job.name, job.id);
+      const result = await jobsApi.rerunJob(job.name, job.id);
       toast.success("Success", {
         description: (
           <span>

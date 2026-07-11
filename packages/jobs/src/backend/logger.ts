@@ -1,7 +1,16 @@
 import { Writable } from "node:stream";
 import dayjs from "dayjs";
-import { prisma } from "../database";
+import pino, { type Logger } from "pino";
+import pinoPretty from "pino-pretty";
+import { prisma } from "@groot/server/core/database";
 import { Prisma } from "@groot/database";
+import { loggerConfig, isDevelopment, logLevel } from "@groot/server/core/logger";
+
+export interface CreateJobLoggerOptions {
+  jobId: string;
+  jobName: string;
+  additionalContext?: Record<string, unknown>;
+}
 
 interface LogEntry {
   level: string;
@@ -100,13 +109,6 @@ export class JobLogStream extends Writable {
         };
       });
 
-      // NOTE: importing prisma here creates a benign database → logger →
-      // job-stream → database cycle. It is safe because `prisma` is only read
-      // inside this async flush() (well after module init), so there is no
-      // partially-initialized-export risk. react-doctor still flags it because
-      // its cycle detector counts dynamic import() as an edge; fully removing
-      // the edge would require injecting prisma through createJobLogger, which
-      // is a downstream-breaking change to a synced-core public API.
       await prisma.jobLog.createMany({
         data: createData,
       });
@@ -139,4 +141,41 @@ export class JobLogStream extends Writable {
 
 export function createJobLogStream(jobId: string, jobName?: string): JobLogStream {
   return new JobLogStream(jobId, jobName);
+}
+
+// Job-aware logger factory with DB persistence.
+export function createJobLogger(options: CreateJobLoggerOptions): Logger {
+  const { jobId, jobName, additionalContext = {} } = options;
+  const dbStream = createJobLogStream(jobId, jobName);
+
+  // biome-ignore lint/suspicious/noExplicitAny: streams array type is complex
+  let streams: any[];
+  if (isDevelopment) {
+    const pretty = pinoPretty({
+      colorize: true,
+      translateTime: "yyyy-mm-dd HH:MM:ss Z",
+      ignore: "pid,hostname",
+      singleLine: true,
+    });
+
+    streams = [{ stream: pretty }, { stream: dbStream }];
+  } else {
+    streams = [{ stream: process.stdout }, { stream: dbStream }];
+  }
+
+  // Create config without transport for multistream usage
+  const jobLoggerConfig = {
+    level: logLevel,
+    base: loggerConfig.base,
+    formatters: loggerConfig.formatters,
+    serializers: loggerConfig.serializers,
+  };
+
+  const jobLogger = pino(jobLoggerConfig, pino.multistream(streams));
+
+  return jobLogger.child({
+    jobId,
+    jobName,
+    ...additionalContext,
+  });
 }

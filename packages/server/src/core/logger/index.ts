@@ -3,7 +3,6 @@ import * as factories from "./factories";
 import * as context from "./context";
 import * as traceContext from "./trace-context";
 import * as breadcrumbs from "./breadcrumbs";
-import * as jobStream from "./job-stream";
 
 /**
  * Unified Logger System namespace
@@ -14,7 +13,6 @@ export const LoggerSystem = {
   context,
   traceContext,
   breadcrumbs,
-  jobStream,
 } as const;
 
 // Backwards compatibility core logger export
@@ -27,4 +25,3 @@ export * from "./factories";
 export * from "./context";
 export * from "./trace-context";
 export * from "./breadcrumbs";
-export * from "./job-stream";

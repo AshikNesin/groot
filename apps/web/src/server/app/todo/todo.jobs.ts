@@ -1,8 +1,8 @@
 import type { Job, SendOptions } from "pg-boss";
 import dayjs from "dayjs";
 import { prisma } from "@groot/server/core/database";
-import { createJobLogger } from "@groot/server/core/logger";
-import { registerJobHandler } from "@groot/server/core/job/worker";
+import { createJobLogger } from "@groot/jobs/backend/logger";
+import { registerJobHandler } from "@groot/jobs/backend/worker";
 
 // Job names
 export const TODO_JOB_NAMES = {

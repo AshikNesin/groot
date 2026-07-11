@@ -2,45 +2,57 @@
 
 Pg-boss powers asynchronous work with a modularized, dynamically-registered job system. Jobs are registered at boot time and executed by dedicated workers.
 
+The entire jobs vertical — backend infrastructure + HTTP admin API + job logger + the dashboard UI + client types/api — lives in the **`@groot/jobs`** package:
+
+- `@groot/jobs/backend/*` — server-side (pg-boss queue/worker/queries, HTTP routes, job logger)
+- `@groot/jobs/frontend/*` — client-side (dashboard UI, `jobsApi`, types)
+
+Project-specific job **handlers** (e.g. `todo.jobs.ts`) + bootstrap wiring stay in `apps/web/`.
+
 ## Architecture
 
-The job system is split into focused modules:
+The backend job system is split into focused modules, flat under `@groot/jobs/backend`:
 
-| Module        | File                        | Purpose                            |
-| ------------- | --------------------------- | ---------------------------------- |
-| Config        | `core/job/config.ts`        | Environment-based configuration    |
-| Client        | `core/job/client.ts`        | PgBoss singleton instance          |
-| Queue         | `core/job/queue.ts`         | Job queueing and scheduling        |
-| Queries       | `core/job/queries.ts`       | Job inspection and management      |
-| Worker        | `core/job/worker.ts`        | Handler registration and execution |
-| Error Handler | `core/job/error-handler.ts` | Sentry capture + logging           |
+| Module        | File (import path)                  | Purpose                            |
+| ------------- | ----------------------------------- | ---------------------------------- |
+| Config        | `@groot/jobs/backend/config`        | Configuration from `config.yml`    |
+| Client        | `@groot/jobs/backend/client`        | PgBoss singleton instance          |
+| Queue         | `@groot/jobs/backend/queue`         | Job queueing and scheduling        |
+| Queries       | `@groot/jobs/backend/queries`       | Job inspection and management      |
+| Worker        | `@groot/jobs/backend/worker`        | Handler registration and execution |
+| Error Handler | `@groot/jobs/backend/error-handler` | Sentry capture + logging           |
+| Logger        | `@groot/jobs/backend/logger`        | `createJobLogger` (DB-persisted)   |
+| Routes        | `@groot/jobs/backend/routes`        | HTTP admin API (`/api/v1/jobs`)    |
+
+The public API is also re-exported from the barrel `@groot/jobs/backend`.
 
 ## Job Registration
 
 Jobs are registered dynamically in feature modules, not via static enums:
 
 ```typescript
-// shared/jobs/job.handlers.ts
-import { registerJobHandler, type JobHandler } from "@groot/server/core/job";
-import type { TodoCleanupPayload } from "./job.types";
+// apps/web/src/server/app/<feature>/<feature>.jobs.ts
+import { registerJobHandler, type JobHandler } from "@groot/jobs/backend/worker";
+import type { TodoCleanupPayload } from "./todo.types";
 
 export const todoCleanupHandler: JobHandler<TodoCleanupPayload> = async ({ data }) => {
   const { daysToKeep } = data;
   // Cleanup logic...
 };
 
-export function registerJobHandlers(): void {
+export function registerTodoJobs(): void {
   registerJobHandler("todo-cleanup", todoCleanupHandler);
 }
 ```
 
-Then register in `routes.ts`:
+Then register in `apps/web/src/server/routes.ts`:
 
 ```typescript
-import { registerJobHandlers } from "@groot/server/shared/jobs/job.handlers";
+import { registerTodoJobs } from "./app/todo/todo.jobs";
 
 export function registerJobHandlers(): void {
-  registerJobHandlers();
+  registerTodoJobs();
+  // add future feature job registrations here
 }
 ```
 
@@ -50,19 +62,19 @@ starts no workers — intended only for enqueue-only processes.
 
 ## Available Jobs
 
-| Job            | Handler                | Description                                                  |
-| -------------- | ---------------------- | ------------------------------------------------------------ |
-| `todo-cleanup` | `jobs/todo-cleanup.ts` | Deletes completed todos older than `daysToKeep` (default 30) |
-| `todo-summary` | `jobs/todo-summary.ts` | Logs aggregate todo stats                                    |
+| Job            | Handler (app-owned)     | Description                                                  |
+| -------------- | ----------------------- | ------------------------------------------------------------ |
+| `todo-cleanup` | `app/todo/todo.jobs.ts` | Deletes completed todos older than `daysToKeep` (default 30) |
+| `todo-summary` | `app/todo/todo.jobs.ts` | Logs aggregate todo stats                                    |
 
-Each handler receives `{ jobId, data }` from PgBoss.
+Each handler receives `{ id, data }` from PgBoss.
 
 ## Queueing Jobs
 
 ### Via Code
 
 ```typescript
-import { addJob } from "@groot/server/core/job";
+import { addJob } from "@groot/jobs/backend/queue";
 
 await addJob("todo-cleanup", { daysToKeep: 60 });
 ```
@@ -105,26 +117,37 @@ All endpoints require JWT authentication.
 
 ## Configuration
 
-Environment variables (see `core/job/config.ts`):
+Configured via `config.yml` `jobs:` section (read in `@groot/jobs/backend/config`):
 
-| Variable                              | Default  | Description                   |
-| ------------------------------------- | -------- | ----------------------------- |
-| `ENABLE_JOB_QUEUE`                    | `true`   | Enable/disable job processing |
-| `JOB_CONCURRENCY`                     | `5`      | Workers per job               |
-| `JOB_POLL_INTERVAL`                   | `2000`   | Worker poll interval (ms)     |
-| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | `86400`  | Archive window                |
-| `JOB_DELETE_ARCHIVED_AFTER_SECONDS`   | `604800` | Deletion window               |
-| `JOB_MONITOR_STATE_INTERVAL`          | `30000`  | Metrics interval              |
+| Key                                 | Default  | Description                   |
+| ----------------------------------- | -------- | ----------------------------- |
+| `jobs.enabled`                      | `true`   | Enable/disable job processing |
+| `jobs.concurrency`                  | `5`      | Workers per job               |
+| `jobs.pollIntervalSeconds`          | `2`      | Worker poll interval          |
+| `jobs.archiveCompletedAfterSeconds` | `86400`  | Archive window                |
+| `jobs.deleteArchivedAfterSeconds`   | `604800` | Deletion window               |
+| `jobs.monitorStateIntervalSeconds`  | `30`     | Metrics interval              |
 
 ## Monitoring
 
-- **Logs**: Pino outputs job lifecycle events (queued, started, errors, completion)
+- **Logs**: Pino outputs job lifecycle events (queued, started, errors, completion); job logs persist to the `job_logs` table via `createJobLogger`
 - **Sentry**: Captures exceptions with tags (`component=job_queue`, `jobName`)
-- **Database**: Inspect directly via `SELECT * FROM pgboss.job`
+- **Database**: Inspect directly via `SELECT * FROM pgboss.job` (queue) or `job_logs` (persisted logs)
+
+## Dashboard UI
+
+The jobs dashboard (`/jobs`) lives in `@groot/jobs/frontend`:
+
+- `Jobs` / `JobDetail` — pages (mounted in `apps/web/.../App.tsx`)
+- `useJobs` / `useJobDetail` — page hooks (state + data)
+- `jobsApi` — client API methods (`@groot/jobs/frontend/api`)
+- `components/` — table, stats, filters, logs, dialogs
+
+The frontend consumes `jobsApi` (built on the shared `api` axios instance from `@groot/client/lib/api`).
 
 ## Adding a New Job
 
-1. **Define types** (in feature's validation or types file):
+1. **Define types** (in the feature's types file):
 
 ```typescript
 export interface MyJobPayload {
@@ -132,13 +155,15 @@ export interface MyJobPayload {
 }
 ```
 
-2. **Create handler** (in `feature.jobs.ts`):
+2. **Create handler** (in `apps/web/src/server/app/<feature>/<feature>.jobs.ts`):
 
 ```typescript
-import { registerJobHandler, type JobHandler } from "@groot/server/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/backend/worker";
+import { createJobLogger } from "@groot/jobs/backend/logger";
 import type { MyJobPayload } from "./feature.types";
 
-export const myJobHandler: JobHandler<MyJobPayload> = async ({ data }) => {
+export const myJobHandler: JobHandler<MyJobPayload> = async ({ id, data }) => {
+  const logger = createJobLogger({ jobId: id, jobName: "my-job" });
   // Implementation
 };
 
@@ -147,7 +172,7 @@ export function registerFeatureJobs(): void {
 }
 ```
 
-3. **Register in routes.ts**:
+3. **Register in `apps/web/src/server/routes.ts`**:
 
 ```typescript
 import { registerFeatureJobs } from "./app/feature/feature.jobs";

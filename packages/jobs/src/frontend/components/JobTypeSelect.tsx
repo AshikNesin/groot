@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@groot/ui/dropdown-menu";
 import { Input } from "@groot/ui/input";
-import type { JobName } from "@groot/client/types/jobs";
+import type { JobName } from "../types";
 import { ChevronDown, Search } from "lucide-react";
 
 type Props = {

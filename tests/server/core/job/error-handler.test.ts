@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
-import { withSentryErrorCapture } from "@groot/server/core/job/error-handler";
+import { withSentryErrorCapture } from "@groot/jobs/backend/error-handler";
 import type { Job } from "pg-boss";
 
 const sentryMock = vi.hoisted(() => ({

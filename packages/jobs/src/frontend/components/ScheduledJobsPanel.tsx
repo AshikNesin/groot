@@ -1,5 +1,5 @@
 import { Button } from "@groot/ui/button";
-import type { ScheduledJob } from "@groot/client/types/jobs";
+import type { ScheduledJob } from "../types";
 import { Pencil, Trash2 } from "lucide-react";
 
 type Props = {

@@ -9,7 +9,7 @@ import {
 import { Skeleton } from "@groot/ui/loading-skeleton";
 import { StatusBadge } from "@groot/ui";
 import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot/client/lib/utils";
-import type { Job } from "@groot/client/types/jobs";
+import type { Job } from "../types";
 import type { JobsQueryPatch } from "../constants";
 import { ChevronRight, FileText, MoreVertical, Play, RefreshCw, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";

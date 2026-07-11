@@ -1,5 +1,5 @@
-import { config } from "../config";
-import { env } from "../env";
+import { config } from "@groot/server/core/config";
+import { env } from "@groot/server/core/env";
 
 export const jobConfig = {
   connectionString: env.DATABASE_URL,

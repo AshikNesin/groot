@@ -1,5 +1,6 @@
 import type { PgBoss, WorkOptions } from "pg-boss";
-import { logger, createJobLogger } from "../logger";
+import { logger } from "@groot/server/core/logger";
+import { createJobLogger } from "./logger";
 import { jobConfig } from "./config";
 import { withSentryErrorCapture, type JobHandler } from "./error-handler";
 import { getBoss } from "./client";

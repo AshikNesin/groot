@@ -55,6 +55,7 @@ export default defineConfig({
         replacement: path.resolve(packagesDir, "client/src/index.css"),
       },
       { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
+      { find: "@groot/jobs/frontend", replacement: path.resolve(packagesDir, "jobs/src/frontend") },
       { find: "@groot/client", replacement: path.resolve(packagesDir, "client/src/core") },
       { find: "@", replacement: clientSrc },
     ],
@@ -135,6 +136,7 @@ export default defineConfig({
     setupFiles: ["../../tests/client/setup.ts"],
     alias: [
       { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
+      { find: "@groot/jobs/frontend", replacement: path.resolve(packagesDir, "jobs/src/frontend") },
       { find: "@groot/client", replacement: path.resolve(packagesDir, "client/src/core") },
       { find: "@", replacement: clientSrc },
     ],

@@ -1,5 +1,5 @@
 import { PgBoss } from "pg-boss";
-import { logger } from "../logger";
+import { logger } from "@groot/server/core/logger";
 import { jobConfig } from "./config";
 
 let bossInstance: PgBoss | null = null;

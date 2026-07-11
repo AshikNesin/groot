@@ -1,19 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { Request } from "express";
-import pino, { type Logger } from "pino";
-import pinoPretty from "pino-pretty";
+import type { Logger } from "pino";
 import dayjs from "dayjs";
-import { createJobLogStream } from "./job-stream";
-import { logger, loggerConfig, isDevelopment, logLevel } from "./core";
+import { logger } from "./core";
 
 export interface CreateRequestLoggerOptions {
   req: Request;
-  additionalContext?: Record<string, unknown>;
-}
-
-export interface CreateJobLoggerOptions {
-  jobId: string;
-  jobName: string;
   additionalContext?: Record<string, unknown>;
 }
 
@@ -48,43 +40,6 @@ export function createRequestLogger(options: CreateRequestLoggerOptions): Logger
     url: req.url,
     userAgent: req.headers["user-agent"],
     ip: req.ip || req.headers["x-forwarded-for"],
-    ...additionalContext,
-  });
-}
-
-// Job-aware logger factory with DB persistence
-export function createJobLogger(options: CreateJobLoggerOptions): Logger {
-  const { jobId, jobName, additionalContext = {} } = options;
-  const dbStream = createJobLogStream(jobId, jobName);
-
-  // biome-ignore lint/suspicious/noExplicitAny: streams array type is complex
-  let streams: any[];
-  if (isDevelopment) {
-    const pretty = pinoPretty({
-      colorize: true,
-      translateTime: "yyyy-mm-dd HH:MM:ss Z",
-      ignore: "pid,hostname",
-      singleLine: true,
-    });
-
-    streams = [{ stream: pretty }, { stream: dbStream }];
-  } else {
-    streams = [{ stream: process.stdout }, { stream: dbStream }];
-  }
-
-  // Create config without transport for multistream usage
-  const jobLoggerConfig = {
-    level: logLevel,
-    base: loggerConfig.base,
-    formatters: loggerConfig.formatters,
-    serializers: loggerConfig.serializers,
-  };
-
-  const jobLogger = pino(jobLoggerConfig, pino.multistream(streams));
-
-  return jobLogger.child({
-    jobId,
-    jobName,
     ...additionalContext,
   });
 }
