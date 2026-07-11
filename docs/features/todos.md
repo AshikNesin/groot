@@ -181,7 +181,7 @@ export function registerJobHandlers(): void {
 
 - `@groot/client/lib/api` - API client with JWT auth
 - `apps/web/src/client/app/todo/hooks/useTodos.ts` - React Query hooks
-- `apps/web/src/client/app/Todos.tsx` - Todo page component
+- `apps/web/src/client/app/todo/pages/Todos.tsx` - Todo page component
 
 The client automatically refetches the todo list after mutations via `queryClient.invalidateQueries`.
 

@@ -21,6 +21,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   renameSync,
   rmSync,
   rmdirSync,
@@ -41,8 +42,31 @@ function git(args: string[]): void {
 }
 
 /**
+ * Run `git update-index --index-info` with stdin piped from input.
+ * Uses spawnSync with error checking so a failed update-index never silently
+ * produces an empty tree.
+ */
+function gitUpdateIndex(indexInput: string, env: NodeJS.ProcessEnv): void {
+  const result = spawnSync("git", ["update-index", "--index-info"], {
+    input: indexInput,
+    env,
+    cwd: CWD,
+    encoding: "utf-8",
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      `git update-index --index-info failed (exit ${result.status}): ${result.stderr}`,
+    );
+  }
+}
+
+/**
  * Move a directory via `git mv`, merging contents if the destination already
  * exists (e.g. when the first sync already created packages/ui/src).
+ * Individual file collisions are resolved by keeping the synced (destination)
+ * version and removing the old source — the local edits are preserved in git
+ * history and will be reconciled by the subsequent three-way sync.
  */
 function gitMv(oldPath: string, newPath: string): void {
   if (!existsSync(join(CWD, oldPath))) return;
@@ -50,14 +74,20 @@ function gitMv(oldPath: string, newPath: string): void {
   if (destExists) {
     // Destination already exists (sync already created it) — move contents
     // individually, merging into the existing directory.
-    const entries = execSync(`ls -A ${JSON.stringify(join(CWD, oldPath))}`, {
-      encoding: "utf-8",
-    })
-      .trim()
-      .split("\n")
-      .filter(Boolean);
+    const entries = readdirSync(join(CWD, oldPath));
     for (const entry of entries) {
-      git(["mv", `${oldPath}/${entry}`, `${newPath}/${entry}`]);
+      const srcFile = `${oldPath}/${entry}`;
+      const destFile = `${newPath}/${entry}`;
+      if (existsSync(join(CWD, destFile))) {
+        // File exists at destination (synced version) — remove the old copy
+        // so the synced version wins. The local version is in git history and
+        // will be reconciled by the next `groot:sync` three-way merge.
+        git(["rm", "-f", srcFile]);
+        console.log(`  resolve: ${srcFile} (kept synced ${destFile})`);
+      } else {
+        git(["mv", srcFile, destFile]);
+        console.log(`  mv: ${srcFile} -> ${destFile}`);
+      }
     }
     console.log(`  merge: ${oldPath}/* -> ${newPath}/`);
   } else {
@@ -161,88 +191,107 @@ if (!dryRun) {
 // Rewrite each old path to its new location so the first post-migration
 // sync produces clean three-way merges instead of missing-base conflicts.
 console.log("\n### Step 5: Rebase sync baseline\n");
+
+// Separate the existence check from the rebase work so errors in the rebase
+// are not masked as "no baseline ref found."
+let baselineExists = false;
 try {
-  // Check if baseline ref exists
   execSync("git rev-parse --verify refs/groot/baseline", { stdio: "pipe", cwd: CWD });
-
-  const pathMap: Record<string, string> = {
-    "client/src/ui": "packages/ui/src",
-    "client/src/core": "packages/client/src/core",
-    "client/src/index.css": "packages/client/src/index.css",
-    "client/src/App.tsx": "apps/web/src/client/App.tsx",
-    "client/src/main.tsx": "apps/web/src/client/main.tsx",
-    "client/src/app": "apps/web/src/client/app",
-    "client/index.html": "apps/web/index.html",
-    "client/tsconfig.json": "apps/web/tsconfig.json",
-    "server/src/core": "packages/server/src/core",
-    "server/src/shared": "packages/server/src/shared",
-    "server/src/index.ts": "apps/web/src/server/index.ts",
-    "server/src/routes.ts": "apps/web/src/server/routes.ts",
-    "server/src/app": "apps/web/src/server/app",
-    prisma: "apps/web/prisma",
-  };
-
-  // Build a new index from the baseline tree, rewriting paths.
-  const scratchDir = join(CWD, ".git/groot-migrate-scratch");
-  if (!dryRun) mkdirSync(scratchDir, { recursive: true });
-
-  const env = { ...process.env, GIT_INDEX_FILE: join(scratchDir, "index") };
-  if (!dryRun) execSync("git read-tree --empty", { env, cwd: CWD });
-
-  // Read all blobs from baseline and re-index at new paths.
-  const treeOutput = execSync(
-    `git ls-tree -r --format='%(objectmode) %(objectname) %(path)' refs/groot/baseline`,
-    { encoding: "utf-8", cwd: CWD },
-  ).trim();
-
-  if (treeOutput) {
-    const indexLines: string[] = [];
-    for (const line of treeOutput.split("\n")) {
-      const match = line.match(/^(\S+) (\S+) (.+)$/);
-      if (!match) continue;
-      const [, mode, sha, path] = match;
-
-      let newPath = path;
-      for (const [oldPrefix, newPrefix] of Object.entries(pathMap)) {
-        if (path === oldPrefix || path.startsWith(oldPrefix + "/")) {
-          newPath = newPrefix + path.slice(oldPrefix.length);
-          break;
-        }
-      }
-      indexLines.push(`${mode} ${sha}\t${newPath}`);
-    }
-
-    if (!dryRun && indexLines.length > 0) {
-      // Write index entries and create a new tree + commit.
-      const indexInput = indexLines.join("\n") + "\n";
-      spawnSync("git", ["update-index", "--index-info"], {
-        input: indexInput,
-        env,
-        cwd: CWD,
-      });
-      const tree = execSync("git write-tree", { env, cwd: CWD, encoding: "utf-8" }).trim();
-
-      // Read the original commit message (preserves metadata).
-      const origMessage = execSync("git log -1 --format=%B refs/groot/baseline", {
-        encoding: "utf-8",
-        cwd: CWD,
-      });
-
-      const newCommit = execSync(
-        `git -c user.name=groot-sync -c user.email=groot-sync@localhost commit-tree ${tree} -m "${origMessage.replace(/"/g, '\\"').replace(/\n/g, '" -m "')}"`,
-        { encoding: "utf-8", cwd: CWD },
-      ).trim();
-
-      execSync(`git update-ref refs/groot/baseline ${newCommit}`, { cwd: CWD });
-    }
-    console.log(`  Rebased ${indexLines.length} baseline entries.`);
-  } else {
-    console.log("  Baseline tree is empty, nothing to rebase.");
-  }
-
-  if (!dryRun) rmSync(scratchDir, { recursive: true, force: true });
+  baselineExists = true;
 } catch {
+  baselineExists = false;
+}
+
+if (!baselineExists) {
   console.log("  No baseline ref found — skipping (first sync will create it).");
+} else {
+  try {
+    const pathMap: Record<string, string> = {
+      "client/src/ui": "packages/ui/src",
+      "client/src/core": "packages/client/src/core",
+      "client/src/index.css": "packages/client/src/index.css",
+      "client/src/App.tsx": "apps/web/src/client/App.tsx",
+      "client/src/main.tsx": "apps/web/src/client/main.tsx",
+      "client/src/app": "apps/web/src/client/app",
+      "client/index.html": "apps/web/index.html",
+      "client/tsconfig.json": "apps/web/tsconfig.json",
+      "server/src/core": "packages/server/src/core",
+      "server/src/shared": "packages/server/src/shared",
+      "server/src/index.ts": "apps/web/src/server/index.ts",
+      "server/src/routes.ts": "apps/web/src/server/routes.ts",
+      "server/src/app": "apps/web/src/server/app",
+      prisma: "apps/web/prisma",
+    };
+
+    // Build a new index from the baseline tree, rewriting paths.
+    const scratchDir = join(CWD, ".git/groot-migrate-scratch");
+    if (!dryRun) mkdirSync(scratchDir, { recursive: true });
+
+    const env = { ...process.env, GIT_INDEX_FILE: join(scratchDir, "index") };
+    if (!dryRun) execSync("git read-tree --empty", { env, cwd: CWD });
+
+    // Read all blobs from baseline and re-index at new paths.
+    const treeOutput = execSync(
+      `git ls-tree -r --format='%(objectmode) %(objectname) %(path)' refs/groot/baseline`,
+      { encoding: "utf-8", cwd: CWD },
+    ).trim();
+
+    if (treeOutput) {
+      const indexLines: string[] = [];
+      for (const line of treeOutput.split("\n")) {
+        const match = line.match(/^(\S+) (\S+) (.+)$/);
+        if (!match) continue;
+        const [, mode, sha, path] = match;
+
+        let newPath = path;
+        for (const [oldPrefix, newPrefix] of Object.entries(pathMap)) {
+          if (path === oldPrefix || path.startsWith(oldPrefix + "/")) {
+            newPath = newPrefix + path.slice(oldPrefix.length);
+            break;
+          }
+        }
+        indexLines.push(`${mode} ${sha}\t${newPath}`);
+      }
+
+      if (!dryRun && indexLines.length > 0) {
+        // Write index entries and create a new tree + commit.
+        const indexInput = indexLines.join("\n") + "\n";
+        gitUpdateIndex(indexInput, env);
+
+        const tree = execSync("git write-tree", { env, cwd: CWD, encoding: "utf-8" }).trim();
+
+        // Sanity check: reject the well-known empty tree hash.
+        const EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+        if (tree === EMPTY_TREE) {
+          throw new Error(
+            "Baseline rebase produced an empty tree — aborting to prevent data loss.",
+          );
+        }
+
+        // Read the original commit message (preserves metadata).
+        const origMessage = execSync("git log -1 --format=%B refs/groot/baseline", {
+          encoding: "utf-8",
+          cwd: CWD,
+        });
+
+        const newCommit = execSync(
+          `git -c user.name=groot-sync -c user.email=groot-sync@localhost commit-tree ${tree} -m "${origMessage.replace(/"/g, '\\"').replace(/\n/g, '" -m "')}"`,
+          { encoding: "utf-8", cwd: CWD },
+        ).trim();
+
+        execSync(`git update-ref refs/groot/baseline ${newCommit}`, { cwd: CWD });
+      }
+      console.log(`  Rebased ${indexLines.length} baseline entries.`);
+    } else {
+      console.log("  Baseline tree is empty, nothing to rebase.");
+    }
+
+    if (!dryRun) rmSync(scratchDir, { recursive: true, force: true });
+  } catch (err) {
+    console.error(`  Error rebasing baseline: ${err instanceof Error ? err.message : String(err)}`);
+    console.error("  The baseline ref was NOT updated. The next groot:sync will");
+    console.error("  rebuild it from the boilerplate clone automatically.");
+  }
 }
 
 console.log("\n### Next steps:");

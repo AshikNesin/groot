@@ -19,7 +19,12 @@ export function Storage() {
             Browse and manage your files and folders
           </p>
         </div>
-        <Button variant="outline" size="icon" onClick={() => s.refetchFiles()}>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => s.refetchFiles()}
+          aria-label="Refresh files"
+        >
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -30,6 +35,7 @@ export function Storage() {
           <button
             type="button"
             onClick={() => s.navigateToFolder("")}
+            aria-label="Go to root folder"
             className="flex items-center text-muted-foreground hover:text-foreground"
           >
             <Home className="h-4 w-4" />

@@ -1,7 +1,4 @@
-import { json } from "@codemirror/lang-json";
-import { EditorView } from "@codemirror/view";
-import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 
 /**
  * JSON editor built on CodeMirror.
@@ -10,6 +7,22 @@ import { useMemo } from "react";
  * can code-split them: import this via `React.lazy(() => …)` behind a
  * `<Suspense>` and CodeMirror lands in its own chunk instead of the main bundle.
  */
+
+// Dynamically load the heavy CodeMirror packages so they are excluded from
+// the main chunk. The promises resolve on first render; subsequent renders
+// reuse the cached modules.
+const editorPromise = Promise.all([
+  import("@uiw/react-codemirror"),
+  import("@codemirror/lang-json"),
+  import("@codemirror/view"),
+]).then(([cm, langJson, view]) => ({
+  CodeMirror: cm.default as ComponentType<Record<string, unknown>>,
+  json: langJson.json,
+  EditorView: view.EditorView,
+}));
+
+type EditorModules = Awaited<typeof editorPromise>;
+
 interface CodeMirrorEditorProps {
   value: string;
   onChange?: (value: string) => void;
@@ -28,12 +41,23 @@ export function CodeMirrorEditor({
   lineWrapping = false,
   basicSetup,
 }: CodeMirrorEditorProps) {
+  const [mods, setMods] = useState<EditorModules | null>(null);
+
+  useEffect(() => {
+    editorPromise.then(setMods);
+  }, []);
+
   // Keep the extension array referentially stable across renders that don't
   // change lineWrapping — @uiw/react-codemirror reconfigures on reference change.
-  const extensions = useMemo(
-    () => [json(), ...(lineWrapping ? [EditorView.lineWrapping] : [])],
-    [lineWrapping],
-  );
+  const extensions = useMemo(() => {
+    if (!mods) return [];
+    return [mods.json(), ...(lineWrapping ? [mods.EditorView.lineWrapping] : [])];
+  }, [mods, lineWrapping]);
+
+  if (!mods) return null;
+
+  const { CodeMirror } = mods;
+
   return (
     <CodeMirror
       value={value}

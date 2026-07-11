@@ -36,9 +36,9 @@ Test HTTP endpoints with Supertest:
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import express from "express";
-import todoRoutes from "./app/todo/todo.routes";
+import todoRoutes from "../../../../apps/web/src/server/app/todo/todo.routes";
 
-vi.mock("./app/todo/todo.service", () => ({
+vi.mock("../../../../apps/web/src/server/app/todo/todo.service", () => ({
   findAll: vi.fn().mockResolvedValue([{ id: 1, title: "Test" }]),
   create: vi.fn().mockResolvedValue({ id: 1, title: "New" }),
 }));
@@ -73,9 +73,9 @@ Test business logic directly:
 ```typescript
 // tests/server/app/todo/todo.service.test.ts
 import { describe, it, expect, vi } from "vitest";
-import * as TodoService from "./app/todo/todo.service";
+import * as TodoService from "../../../../apps/web/src/server/app/todo/todo.service";
 
-vi.mock("./app/todo/todo.model", () => ({
+vi.mock("../../../../apps/web/src/server/app/todo/todo.model", () => ({
   findAll: vi.fn().mockResolvedValue([]),
   create: vi.fn().mockResolvedValue({ id: 1 }),
 }));
@@ -95,7 +95,7 @@ Test job handlers with mock job objects:
 ```typescript
 // tests/server/app/todo/todo.jobs.test.ts
 import { describe, it, expect, vi } from "vitest";
-import { todoCleanupHandler } from "./app/todo/todo.jobs";
+import { todoCleanupHandler } from "../../../../apps/web/src/server/app/todo/todo.jobs";
 
 vi.mock("@groot/server/core/logger", () => ({
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn() }),
