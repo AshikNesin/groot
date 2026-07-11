@@ -9,7 +9,7 @@ import * as jobStream from "./job-stream";
  * Unified Logger System namespace
  */
 export const LoggerSystem = {
-  core: core.logger,
+  ...core,
   ...factories,
   context,
   traceContext,

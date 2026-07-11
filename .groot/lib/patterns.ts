@@ -56,7 +56,6 @@ export const SYNC_PATTERNS: readonly string[] = [
   // Workspace package manifests per package.
   "apps/*/package.json",
   "apps/*/tsconfig.json",
-  "apps/*/index.html",
 
   // Tests mirroring synced source (core/shared/ui infra + shared test setup).
   // App-specific and e2e tests stay project-local.
@@ -102,6 +101,13 @@ export const SKIP_PATTERNS: readonly string[] = [
   // App-owned source code (never synced).
   // Business modules, route registration, server/client entry points.
   "apps/web/src/**",
+
+  // App-owned prisma directory (schema, migrations, seed).
+  // Immutable exclusions still guard schema.prisma and migrations.
+  "apps/web/prisma/**",
+
+  // App-owned entry file (downstream branding).
+  "apps/web/index.html",
 
   // Project-local tests (app routes, end-to-end).
   "tests/server/app/**",
