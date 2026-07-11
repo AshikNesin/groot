@@ -11,6 +11,7 @@ minimumReleaseAge: 1440
 trustPolicy: no-downgrade
 
 packages:
+  - "."
   - "apps/*"
   - "packages/*"
 

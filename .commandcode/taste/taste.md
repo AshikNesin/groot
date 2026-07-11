@@ -23,6 +23,7 @@
 - Use /compound-engineering:workflows:review for code reviews. Confidence: 0.90
 - When user says "Plan approved (yolo mode)", implement immediately without confirmation. Confidence: 0.95
 - Address P1/P2/P3 review findings promptly. Confidence: 0.85
+- Do not commit or push changes without explicit user approval; wait for them to review and commit manually. Confidence: 0.70
 
 # Security
 
@@ -40,6 +41,10 @@
 - When bumping package versions, update packages directly rather than adding pnpm overrides. Confidence: 0.85
 - Prefer in-process SDKs as devDependencies over global CLI binaries for dev tooling. Confidence: 0.65
 - Declare `engines.node` in package.json to specify the required Node.js version. Confidence: 0.70
+
+# Release Workflow
+
+- When a stale changeset is blocking the release, first run `pnpm changeset` to create a proper version bump changeset before deleting the stale one. Confidence: 0.75
 
 # UI
 
