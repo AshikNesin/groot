@@ -26,7 +26,7 @@ pnpm db:migrate        # Apply pending migrations (migrate deploy)
 - **Validation first** – Use `validate(zodSchema, "body")` middleware on routes
 - **Return values** – Controllers return values directly, `createRouter` handles serialization
 - **Boom errors** – Use `Boom.notFound()`, `Boom.badRequest()`, etc. for HTTP errors
-- **Logging** – Use logger from `@groot/server/core/logger` for structured events; avoid `console.log`
+- **Logging** – Use logger from `@groot/logger` for structured events; avoid `console.log`
 - **Minimal comments** – Favor clear code over extensive documentation
 - **Auth guard** – Use `jwtAuthMiddleware` for protected routes
 

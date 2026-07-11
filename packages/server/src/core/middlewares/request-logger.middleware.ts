@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Logger } from "pino";
-import { createRequestLogger, runWithLoggerContext, createTraceContext } from "../logger";
+import { createRequestLogger, runWithLoggerContext, createTraceContext } from "@groot/logger";
 
 // Vite dev-server internal prefixes
 const NOISY_PREFIXES = ["/@fs/", "/@vite/", "/@react-refresh", "/node_modules/", "/src/"];

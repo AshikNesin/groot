@@ -1,5 +1,5 @@
 import { prisma } from "@groot/database";
-import { logger } from "./logger";
+import { logger } from "@groot/logger";
 import { env } from "./env";
 
 export { prisma };

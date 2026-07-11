@@ -99,7 +99,7 @@ Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
 | Errors      | `@groot/server/core/errors/`      | Boom factory, error codes, Prisma error handler     |
 | Jobs        | `@groot/server/core/job/`         | Queue client, queries, worker, dynamic registration |
 | KV          | `@groot/server/core/kv/`          | Keyv key-value storage with PostgreSQL              |
-| Logger      | `@groot/server/core/logger/`      | Pino with AsyncLocalStorage context                 |
+| Logger      | `@groot/logger/`                  | Pino with AsyncLocalStorage context                 |
 | Storage     | `@groot/server/core/storage/`     | S3 file storage service                             |
 | Middlewares | `@groot/server/core/middlewares/` | Auth, validation, rate-limiting, error handling     |
 | Utils       | `@groot/server/core/utils/`       | `createRouter`, `parseId`, validation helpers       |

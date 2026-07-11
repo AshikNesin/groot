@@ -7,6 +7,7 @@
     "@groot/client": "workspace:*",
     "@groot/database": "workspace:*",
     "@groot/jobs": "workspace:*",
+    "@groot/logger": "workspace:*",
     "@groot/server": "workspace:*",
     "@groot/ui": "workspace:*",
     "@hookform/resolvers": "^5.4.0",

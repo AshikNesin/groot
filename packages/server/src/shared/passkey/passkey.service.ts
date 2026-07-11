@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { Boom } from "../../core/errors";
-import { logger } from "../../core/logger";
+import { logger } from "@groot/logger";
 import type { Passkey, User } from "@groot/database";
 import { passkeyModel } from "./passkey.model";
 import { userModel } from "../auth/user.model";

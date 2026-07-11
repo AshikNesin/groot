@@ -89,6 +89,7 @@ async function build() {
           "@groot/server/core": path.resolve(process.cwd(), "packages/server/src/core"),
           "@groot/server/shared": path.resolve(process.cwd(), "packages/server/src/shared"),
           "@groot/jobs/backend": path.resolve(process.cwd(), "packages/jobs/src/backend"),
+          "@groot/logger": path.resolve(process.cwd(), "packages/logger/src/index.ts"),
           "@groot/database": path.resolve(process.cwd(), "packages/database/src/index.ts"),
         }),
       ],

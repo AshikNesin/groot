@@ -1,5 +1,5 @@
 import type { SendOptions, ScheduleOptions } from "pg-boss";
-import { logger } from "@groot/server/core/logger";
+import { logger } from "@groot/logger";
 import { Boom } from "@groot/server/core/errors";
 import { defaultJobOptions } from "./config";
 import { getBoss } from "./client";

@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { createNamespaceKv } from "../../core/kv";
-import { logger } from "../../core/logger";
+import { logger } from "@groot/logger";
 import { prisma } from "../../core/database";
 
 const KV_NAMESPACE = "APP_SETTING";

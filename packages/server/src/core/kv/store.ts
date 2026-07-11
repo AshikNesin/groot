@@ -1,6 +1,6 @@
 import Keyv from "keyv";
 import KeyvPostgres from "@keyv/postgres";
-import { logger } from "../logger";
+import { logger } from "@groot/logger";
 import { env } from "../env";
 
 // PostgreSQL store using @keyv/postgres

@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 import { Sentry } from "./instrument";
 import { env } from "./env";
 import { config } from "./config";
-import { logger } from "./logger";
+import { logger } from "@groot/logger";
 import corsMiddleware from "./middlewares/cors.middleware";
 import { requestLoggerMiddleware } from "./middlewares/request-logger.middleware";
 import { errorHandlerMiddleware, notFoundHandler } from "./middlewares/error-handler.middleware";

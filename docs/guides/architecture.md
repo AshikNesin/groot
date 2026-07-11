@@ -183,7 +183,7 @@ export function registerJobHandlers(): void {
 Pino-based logging with context management:
 
 ```typescript
-import { logger, createContextLogger } from "@groot/server/core/logger";
+import { logger, createContextLogger } from "@groot/logger";
 
 // Basic logging
 logger.info("User logged in", { userId });

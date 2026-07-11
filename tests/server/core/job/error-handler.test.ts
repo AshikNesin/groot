@@ -10,7 +10,7 @@ vi.mock("@groot/server/core/instrument", () => ({
   Sentry: sentryMock,
 }));
 
-vi.mock("@groot/server/core/logger", () => ({
+vi.mock("@groot/logger", () => ({
   logger: { error: vi.fn() },
   createJobLogger: () => ({ error: vi.fn(), info: vi.fn() }),
 }));

@@ -97,7 +97,7 @@ Test job handlers with mock job objects:
 import { describe, it, expect, vi } from "vitest";
 import { todoCleanupHandler } from "../../../../apps/web/src/server/app/todo/todo.jobs";
 
-vi.mock("@groot/server/core/logger", () => ({
+vi.mock("@groot/logger", () => ({
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn() }),
 }));
 
@@ -141,7 +141,7 @@ vi.mock("@groot/server/core/job", () => ({
 ### Logger Mocking
 
 ```typescript
-vi.mock("@groot/server/core/logger", () => ({
+vi.mock("@groot/logger", () => ({
   createRequestLogger: () => ({
     info: vi.fn(),
     error: vi.fn(),

@@ -1,5 +1,5 @@
 import { prisma } from "../database";
-import { logger } from "../logger";
+import { logger } from "@groot/logger";
 import type { PrismaClient } from "@groot/database";
 
 /**

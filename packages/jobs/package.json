@@ -12,6 +12,7 @@
   "dependencies": {
     "@groot/client": "workspace:*",
     "@groot/database": "workspace:*",
+    "@groot/logger": "workspace:*",
     "@groot/server": "workspace:*",
     "@groot/ui": "workspace:*",
     "console-feed": "^3.8.0",

@@ -25,3 +25,4 @@ export * from "./factories";
 export * from "./context";
 export * from "./trace-context";
 export * from "./breadcrumbs";
+export * from "./utils";

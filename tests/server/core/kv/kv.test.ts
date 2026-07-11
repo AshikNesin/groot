@@ -15,7 +15,7 @@ vi.mock("@groot/server/core/database", () => ({
   prisma: mockPrisma,
 }));
 
-vi.mock("@groot/server/core/logger", () => ({
+vi.mock("@groot/logger", () => ({
   logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));

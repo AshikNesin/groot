@@ -66,8 +66,10 @@ Also exports the Tailwind entry CSS: `@groot/client/index.css`.
 
 Server-side infrastructure with two subpath export surfaces:
 
-- `@groot/server/core/*` - logger, errors, job queue, KV store, AI client, middlewares, config, storage
-- `@groot/server/shared/*` - reusable features: auth, passkey, jobs, settings, storage
+- `@groot/server/core/*` - errors, KV store, AI client, middlewares, config, storage
+- `@groot/server/shared/*` - reusable features: auth, passkey, settings, storage
+- `@groot/logger` - Pino logger with AsyncLocalStorage context (leaf; configured via `configureLogger()` at bootstrap)
+- `@groot/jobs` - pg-boss job queue + dashboard (`backend/*` + `frontend/*`)
 
 ### @groot/database (`packages/database`)
 
@@ -103,7 +105,7 @@ shared features depend on them):
 
 - `User` - used by `@groot/server/shared/auth`
 - `Passkey` - used by `@groot/server/shared/passkey`
-- `JobLog` - used by `@groot/server/core/logger`
+- `JobLog` - used by `@groot/jobs/backend/logger`
 - `Keyv` (@@ignore) - used by `@groot/server/core/kv`
 
 Apps can freely add additional models.

@@ -8,7 +8,7 @@ import {
 } from "@groot/server/core/server";
 import { env } from "@groot/server/core/env";
 import { config } from "@groot/server/core/config";
-import { logger } from "@groot/server/core/logger";
+import { configureLogger, logger } from "@groot/logger";
 import { registerRoutes, registerJobHandlers } from "./routes";
 import { notificationService } from "@groot/server/shared/notification/notification.service";
 import { initJobQueue, stopJobQueue } from "@groot/jobs/backend/client";
@@ -22,6 +22,13 @@ const distPath = path.resolve(__dirname);
 const isProd = env.NODE_ENV === "production";
 
 async function main() {
+  // Configure the root logger from app config before any module uses it.
+  configureLogger({
+    level: config.logging.level,
+    service: config.app.name,
+    nodeEnv: env.NODE_ENV,
+  });
+
   const { app, httpServer, viteServer } = await createServer({
     distPath,
     clientRoot,
