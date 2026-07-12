@@ -1,5 +1,4 @@
 import esbuild from "esbuild";
-import alias from "esbuild-plugin-alias";
 import { sentryEsbuildPlugin } from "@sentry/esbuild-plugin";
 import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
@@ -63,7 +62,6 @@ async function build() {
       target: "node18",
       external: [
         ...externals,
-        "@groot/database",
         "@prisma/client",
         ".prisma/client",
         "@sentry/profiling-node",
@@ -71,8 +69,8 @@ async function build() {
         "lightningcss",
         "fsevents",
       ],
-      plugins: [
-        ...(release && authToken && process.env.SENTRY_ORG
+      plugins:
+        release && authToken && process.env.SENTRY_ORG
           ? [
               sentryEsbuildPlugin({
                 authToken,
@@ -84,15 +82,12 @@ async function build() {
                 },
               }),
             ]
-          : []),
-        alias({
-          "@groot/server/core": path.resolve(process.cwd(), "packages/server/src/core"),
-          "@groot/server/shared": path.resolve(process.cwd(), "packages/server/src/shared"),
-          "@groot/jobs/backend": path.resolve(process.cwd(), "packages/jobs/src/backend"),
-          "@groot/logger": path.resolve(process.cwd(), "packages/logger/src/index.ts"),
-          "@groot/database": path.resolve(process.cwd(), "packages/database/src/index.ts"),
-        }),
-      ],
+          : [],
+      alias: {
+        "@groot/core": path.resolve(process.cwd(), "packages/core/src"),
+        "@groot/jobs/server": path.resolve(process.cwd(), "packages/jobs/src/server"),
+        "@groot/logger": path.resolve(process.cwd(), "packages/logger/src/index.ts"),
+      },
       banner: {
         js: 'import { createRequire as __createRequire } from "node:module";const require = __createRequire(import.meta.url);',
       },

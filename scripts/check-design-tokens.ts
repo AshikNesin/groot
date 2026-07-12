@@ -3,7 +3,7 @@
  * Design-token enforcement check.
  *
  * Bans raw Tailwind palette colors (gray-*, red-*, blue-*, green-*, ...) outside
- * the token layer. The token layer is packages/client/src/index.css (Tailwind v4
+ * the token layer. The token layer is packages/shell/src/index.css (Tailwind v4
  * CSS-first: oklch `@theme inline` variable definitions).
  *
  * Everywhere else, colors must come from semantic classes:
@@ -28,10 +28,10 @@ const PATTERN = new RegExp(`\\b${PREFIX}-${PALETTE}-\\d`);
 const ROOT = new URL("..", import.meta.url).pathname;
 const SRC_DIRS = [
   `${ROOT}packages/ui/src`,
-  `${ROOT}packages/client/src`,
+  `${ROOT}packages/shell/src`,
   `${ROOT}apps/web/src/client`,
 ];
-const TOKEN_LAYER = `${ROOT}packages/client/src/index.css`;
+const TOKEN_LAYER = `${ROOT}packages/shell/src/index.css`;
 
 let violations: { file: string; line: string }[] = [];
 const result = spawnSync("rg", ["-n", "-g", "*.ts", "-g", "*.tsx", PATTERN.source, ...SRC_DIRS], {
@@ -75,7 +75,7 @@ if (violations.length > 0) {
   for (const v of violations) {
     console.error(`   ${v.file}: ${v.line}`);
   }
-  console.error(`\nAllowed raw colors ONLY in: packages/client/src/index.css\n`);
+  console.error(`\nAllowed raw colors ONLY in: packages/shell/src/index.css\n`);
   process.exit(1);
 }
 

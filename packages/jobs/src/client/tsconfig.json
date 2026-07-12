@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@groot/ui": ["../../../ui/src/index.ts"],
+      "@groot/ui/*": ["../../../ui/src/*"],
+      "@groot/shell/*": ["../../../shell/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

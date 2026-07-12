@@ -1,0 +1,51 @@
+{
+  "name": "@groot/core",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
+    "@aws-sdk/s3-presigned-post": "^3.1079.0",
+    "@aws-sdk/s3-request-presigner": "^3.1079.0",
+    "@earendil-works/pi-ai": "^0.80.3",
+    "@groot/logger": "workspace:*",
+    "@keyv/postgres": "^2.2.3",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@sentry/node": "^10.63.0",
+    "@sentry/profiling-node": "^10.63.0",
+    "@simplewebauthn/server": "^13.3.2",
+    "bcryptjs": "^3.0.3",
+    "close-with-grace": "^2.5.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dayjs": "^1.11.21",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "files-sdk": "^2.0.0",
+    "js-yaml": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "keyv": "^5.6.0",
+    "lodash.mergewith": "^4.6.2",
+    "ms": "2.1.3",
+    "multer": "^2.2.0",
+    "openai": "^6.45.0",
+    "pino": "^10.3.1",
+    "pino-pretty": "^13.1.3",
+    "send-push-notification": "^2.2.0",
+    "varlock": "^1.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^24.0.0"
+  }
+}

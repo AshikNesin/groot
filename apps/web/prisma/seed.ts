@@ -1,4 +1,4 @@
-import { prisma } from "@groot/database/client";
+import { prisma } from "@groot/core/database/client";
 import bcrypt from "bcryptjs";
 
 export const SEED_USER = {
