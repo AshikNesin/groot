@@ -4,7 +4,6 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "jsx": "react-jsx",
     "paths": {
-      "@groot/core/*": ["../core/src/*"],
       "@groot/ui": ["../ui/src/index.ts"],
       "@groot/ui/*": ["../ui/src/*"],
       "@groot/shell/*": ["./src/*"]

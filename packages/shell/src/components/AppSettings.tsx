@@ -17,7 +17,7 @@ import { z } from "zod";
 import { useAppSettings } from "../hooks/useAppSettings";
 
 const settingKeySchema = z.object({
-  key: z.string().min(1, "Key is required"),
+  key: z.string().trim().min(1, "Key is required"),
 });
 
 const CodeMirrorEditor = lazy(() =>

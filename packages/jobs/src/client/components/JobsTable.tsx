@@ -11,7 +11,16 @@ import { StatusBadge } from "@groot/ui";
 import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
 import type { Job } from "../types";
 import type { JobsQueryPatch } from "../constants";
-import { ChevronRight, FileText, MoreVertical, Play, RefreshCw, Trash2, X } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronRight,
+  FileText,
+  MoreVertical,
+  Play,
+  RefreshCw,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 function formatJobDuration(start: string | null, end: string | null): string {
@@ -36,6 +45,8 @@ type Props = {
   jobs: Job[];
   loading: boolean;
   total: number;
+  error?: string | null;
+  onErrorRetry?: () => void;
   queryParams: QueryParams;
   setQueryParams: (patch: JobsQueryPatch) => void;
   selectedJobs: Set<string>;
@@ -50,6 +61,8 @@ export function JobsTable({
   jobs,
   loading,
   total,
+  error,
+  onErrorRetry,
   queryParams,
   setQueryParams,
   selectedJobs,
@@ -98,7 +111,21 @@ export function JobsTable({
           </div>
         </div>
 
-        {loading && jobs.length === 0 ? (
+        {error && jobs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="bg-muted p-3 mb-3">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </div>
+            <h3 className="font-medium text-sm text-foreground">Couldn't load jobs</h3>
+            <p className="text-xs text-muted-foreground mt-1">{error}</p>
+            {onErrorRetry && (
+              <Button variant="outline" size="sm" className="mt-3" onClick={onErrorRetry}>
+                <RefreshCw className="w-3 h-3 md:mr-1.5" />
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : loading && jobs.length === 0 ? (
           <div className="divide-y divide-border/50">
             <div className="grid grid-cols-12 gap-4 border-b border-dashed py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground">
               <div className="col-span-5">Job</div>

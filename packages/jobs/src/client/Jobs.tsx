@@ -105,6 +105,8 @@ export function Jobs() {
         jobs={j.jobs}
         loading={j.loading}
         total={j.total}
+        error={j.error}
+        onErrorRetry={j.handleRefresh}
         queryParams={j.queryParams}
         setQueryParams={j.setQueryParams}
         selectedJobs={j.selectedJobs}

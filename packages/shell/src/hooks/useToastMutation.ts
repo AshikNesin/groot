@@ -17,7 +17,7 @@ interface ToastMutationConfig<TData, TVars> {
   /** Shown on error (the error is always `console.error`-logged too). */
   error?: ToastContent;
   /** Runs after a successful mutation, e.g. invalidate queries or reset UI. */
-  onSuccess?: (data: TData, vars: TVars) => void;
+  onSuccess?: (data: TData, vars: TVars) => void | Promise<void>;
 }
 
 /**
@@ -25,6 +25,9 @@ interface ToastMutationConfig<TData, TVars> {
  *   try { await fn(); toast.success(...) } catch (e) { console.error(e); toast.error(...) }
  * boilerplate. `mutateAsync` still rejects on error, so callers awaiting it
  * can run post-success code in a `try` with an empty catch.
+ *
+ * The `onSuccess` callback is awaited, so a returned invalidation Promise
+ * keeps `isPending`/`mutateAsync` in sync with the refetch.
  */
 export function useToastMutation<TData, TVars>(
   mutationFn: (vars: TVars) => Promise<TData>,
@@ -32,13 +35,13 @@ export function useToastMutation<TData, TVars>(
 ) {
   return useMutation<TData, Error, TVars>({
     mutationFn,
-    onSuccess: (data, vars) => {
+    onSuccess: async (data, vars) => {
       if (config.success) {
         const content =
           typeof config.success === "function" ? config.success(data, vars) : config.success;
         emitToast(content, "success");
       }
-      config.onSuccess?.(data, vars);
+      await config.onSuccess?.(data, vars);
     },
     onError: (error) => {
       console.error(error);

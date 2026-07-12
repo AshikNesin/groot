@@ -1,6 +1,13 @@
 import axios, { type AxiosError, type AxiosInstance } from "axios";
 import { useAuthStore } from "../store/auth";
 
+declare module "axios" {
+  interface InternalAxiosRequestConfig {
+    /** Auth-generation stamp, used to ignore stale 401s after re/login. */
+    authGeneration?: number;
+  }
+}
+
 /**
  * Standard API response envelope (mirrors the server's `api-response.utils`).
  */
@@ -43,10 +50,18 @@ class ApiClient {
       // for FormData — see `postForm`.
     });
 
+    // Stamp each request with the current auth generation so a delayed 401
+    // from a previous session (e.g. issued before a logout / re-login) can be
+    // ignored instead of clearing the freshly-authenticated session.
+    this.client.interceptors.request.use((config) => {
+      config.authGeneration = useAuthStore.getState().generation;
+      return config;
+    });
+
     // Response interceptor - on a real 401 (session expired mid-session),
     // clear auth so <ProtectedRoute> does an SPA navigate to /login instead
-    // of a full page reload. The initial auth probe (/auth/me) and login
-    // calls are handled by their callers, so they're skipped here.
+    // of a full page reload. Stale 401s (prior auth generation), the initial
+    // auth probe (/auth/me), and login calls are skipped.
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError<ApiResponse<unknown>>) => {
@@ -54,7 +69,9 @@ class ApiClient {
           const reqUrl = error.config?.url ?? "";
           const isAuthEndpoint = reqUrl.includes("/auth/me") || reqUrl.includes("/auth/login");
           const onLoginPage = window.location.pathname === "/login";
-          if (!isAuthEndpoint && !onLoginPage) {
+          const reqGen = error.config?.authGeneration;
+          const isStale = reqGen !== undefined && reqGen !== useAuthStore.getState().generation;
+          if (!isAuthEndpoint && !onLoginPage && !isStale) {
             useAuthStore.getState().clearAuth();
           }
         }
@@ -92,7 +109,10 @@ class ApiClient {
    * whatever data is present (typed by the caller) or `undefined`.
    */
   async delete<T = unknown>(url: string, data?: unknown): Promise<T> {
-    const response = await this.client.delete<ApiResponse<T>>(url, data ? { data } : undefined);
+    const response = await this.client.delete<ApiResponse<T>>(
+      url,
+      data !== undefined ? { data } : undefined,
+    );
     return response.data.data as T;
   }
 

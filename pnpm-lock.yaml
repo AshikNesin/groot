@@ -555,9 +555,6 @@ importers:
       '@codemirror/view':
         specifier: 6.43.4
         version: 6.43.4
-      '@groot/core':
-        specifier: workspace:*
-        version: link:../core
       '@groot/ui':
         specifier: workspace:*
         version: link:../ui

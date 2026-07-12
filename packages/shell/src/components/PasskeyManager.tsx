@@ -23,7 +23,7 @@ import { useToastMutation } from "../hooks/useToastMutation";
 const PASSKEYS_KEY = ["passkeys"] as const;
 
 const passkeyNameSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Name is required"),
 });
 
 function getPasskeyIcon(passkey: Passkey): string {
@@ -43,10 +43,12 @@ function formatDate(date: Date | null): string {
 
 export function PasskeyManager() {
   const queryClient = useQueryClient();
-  const { data: passkeys = [], isLoading } = useQuery({
+  const passkeysQuery = useQuery({
     queryKey: PASSKEYS_KEY,
     queryFn: () => passkeyService.listPasskeys(),
   });
+  const passkeys = passkeysQuery.data ?? [];
+  const isLoading = passkeysQuery.isLoading;
 
   const [newPasskeyName, setNewPasskeyName] = useState("");
   const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null);
@@ -147,7 +149,20 @@ export function PasskeyManager() {
           </div>
 
           {/* Passkey List */}
-          {passkeys.length === 0 ? (
+          {passkeysQuery.isError ? (
+            <div className="text-center py-8 text-muted-foreground space-y-3">
+              <div className="text-4xl">⚠️</div>
+              <p>Couldn't load passkeys.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => passkeysQuery.refetch()}
+                disabled={passkeysQuery.isFetching}
+              >
+                {passkeysQuery.isFetching ? "Retrying..." : "Retry"}
+              </Button>
+            </div>
+          ) : passkeys.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <div className="text-4xl mb-4">🔐</div>
               <p>No passkeys configured yet.</p>

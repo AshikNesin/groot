@@ -9,6 +9,9 @@ import { secondaryOptions } from "./constants";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 50;
+// Operational view: always refetch on revisit/focus rather than serving the
+// 5-minute-cached list (overrides the global QueryClient staleTime).
+const JOBS_STALE_TIME = 0;
 
 const STATS_KEY = ["jobs", "stats"] as const;
 const AVAILABLE_KEY = ["jobs", "available"] as const;
@@ -53,9 +56,21 @@ export function useJobs() {
   const [queueSearch, setQueueSearch] = useState("");
 
   // --- Queries ---
-  const statsQuery = useQuery({ queryKey: STATS_KEY, queryFn: jobsApi.getJobStats });
-  const availableQuery = useQuery({ queryKey: AVAILABLE_KEY, queryFn: jobsApi.getAvailableJobs });
-  const scheduledQuery = useQuery({ queryKey: SCHEDULED_KEY, queryFn: jobsApi.getScheduledJobs });
+  const statsQuery = useQuery({
+    queryKey: STATS_KEY,
+    queryFn: jobsApi.getJobStats,
+    staleTime: JOBS_STALE_TIME,
+  });
+  const availableQuery = useQuery({
+    queryKey: AVAILABLE_KEY,
+    queryFn: jobsApi.getAvailableJobs,
+    staleTime: JOBS_STALE_TIME,
+  });
+  const scheduledQuery = useQuery({
+    queryKey: SCHEDULED_KEY,
+    queryFn: jobsApi.getScheduledJobs,
+    staleTime: JOBS_STALE_TIME,
+  });
 
   const jobsQuery = useQuery({
     queryKey: [
@@ -82,6 +97,7 @@ export function useJobs() {
       return jobsApi.getJobs(filters);
     },
     placeholderData: keepPreviousData,
+    staleTime: JOBS_STALE_TIME,
   });
 
   // Derived view (search is a client-side filter on the fetched page)
@@ -430,6 +446,11 @@ export function useJobs() {
     selectedJobs,
     scheduledJobs: scheduledQuery.data ?? [],
     loading: jobsQuery.isLoading,
+    error: jobsQuery.error
+      ? jobsQuery.error instanceof Error
+        ? jobsQuery.error.message
+        : "Failed to load jobs"
+      : null,
     refreshing,
     total,
     availableJobs: availableQuery.data ?? [],

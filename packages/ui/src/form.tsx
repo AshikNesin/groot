@@ -6,6 +6,7 @@ import {
   useFormContext,
   type DefaultValues,
   type FieldValues,
+  type FieldPath,
   type Resolver,
   type SubmitHandler,
 } from "react-hook-form";
@@ -35,8 +36,8 @@ interface FormProps<TValues extends FieldValues> extends Omit<
  *     <Button type="submit">Log in</Button>
  *   </Form>
  *
- * A server-side Zod validation schema can be passed straight in (single source
- * of truth) — see `@groot/core/<feature>/<feature>.validation`.
+ * Pass any Zod schema (e.g. one mirroring a server validation schema) — the
+ * inferred value type flows through to `onSubmit`.
  */
 function FormRoot<TValues extends FieldValues>({
   schema,
@@ -63,8 +64,9 @@ function FormRoot<TValues extends FieldValues>({
   );
 }
 
-interface FormFieldProps {
-  name: string;
+interface FormFieldProps<TValues extends FieldValues> {
+  /** Typed field path — invalid names are caught at compile time. */
+  name: FieldPath<TValues>;
   label?: string;
   className?: string;
   /** A single controlled input (Input/Textarea/Select). Bound automatically. */
@@ -76,9 +78,17 @@ interface FormFieldProps {
  * change handling, and the validation error message). The child receives the
  * react-hook-form `field` props via clone — no manual `register`/`Controller`
  * wiring needed for the common single-input case.
+ *
+ * Generic over the form's values: leave untyped for a plain string name, or
+ * annotate as `<FormField<MyValues> name="...">` to validate the field path.
  */
-function FormField({ name, label, className, children }: FormFieldProps) {
-  const { control } = useFormContext();
+function FormField<TValues extends FieldValues = FieldValues>({
+  name,
+  label,
+  className,
+  children,
+}: FormFieldProps<TValues>) {
+  const { control } = useFormContext<TValues>();
   return (
     <Controller
       name={name}
