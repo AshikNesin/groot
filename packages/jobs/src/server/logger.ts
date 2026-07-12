@@ -4,7 +4,7 @@ import pino, { type Logger } from "pino";
 import pinoPretty from "pino-pretty";
 import { prisma } from "@groot/core/database";
 import { Prisma } from "@groot/core/database";
-import { loggerConfig, isDevelopment, logLevel } from "@groot/logger";
+import { loggerConfig, isDevelopment, logLevel } from "@groot/core/logger";
 
 export interface CreateJobLoggerOptions {
   jobId: string;

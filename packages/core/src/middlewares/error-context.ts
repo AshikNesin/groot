@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { Boom } from "../errors";
-import { getBreadcrumbs, getCurrentTraceContext, sanitizeRequestBody } from "@groot/logger";
+import { getBreadcrumbs, getCurrentTraceContext, sanitizeRequestBody } from "@groot/core/logger";
 
 export function buildErrorContext(
   error: Error,

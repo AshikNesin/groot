@@ -11,7 +11,6 @@
     "@aws-sdk/s3-presigned-post": "^3.1079.0",
     "@aws-sdk/s3-request-presigner": "^3.1079.0",
     "@earendil-works/pi-ai": "^0.80.3",
-    "@groot/logger": "workspace:*",
     "@keyv/postgres": "^2.2.3",
     "@prisma/adapter-pg": "^7.8.0",
     "@sentry/node": "^10.63.0",

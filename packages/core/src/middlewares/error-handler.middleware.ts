@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { Boom } from "../errors";
 import { Sentry } from "../instrument";
-import { logBusinessEvent } from "@groot/logger";
+import { logBusinessEvent } from "@groot/core/logger";
 import { getRequestLogger } from "./request-logger.middleware";
 import { buildErrorContext } from "./error-context";
 import {

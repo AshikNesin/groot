@@ -11,8 +11,7 @@
       "@groot/server/shared/*": ["./packages/server/src/shared/*"],
       "@groot/jobs/backend": ["./packages/jobs/src/backend/index.ts"],
       "@groot/jobs/backend/*": ["./packages/jobs/src/backend/*"],
-      "@groot/logger": ["./packages/logger/src/index.ts"],
-      "@groot/logger/*": ["./packages/logger/src/*"],
+
       "@groot/database": ["./packages/database/src/index.ts"],
       "@groot/database/client": ["./packages/database/src/client.ts"],
       "@groot/database/types": ["./packages/database/src/types.ts"]

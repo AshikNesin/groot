@@ -1,5 +1,5 @@
 import { prisma } from "./client";
-import { logger } from "@groot/logger";
+import { logger } from "@groot/core/logger";
 import { ENV } from "varlock/env";
 
 export { prisma };

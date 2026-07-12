@@ -86,7 +86,6 @@ async function build() {
       alias: {
         "@groot/core": path.resolve(process.cwd(), "packages/core/src"),
         "@groot/jobs/server": path.resolve(process.cwd(), "packages/jobs/src/server"),
-        "@groot/logger": path.resolve(process.cwd(), "packages/logger/src/index.ts"),
       },
       banner: {
         js: 'import { createRequire as __createRequire } from "node:module";const require = __createRequire(import.meta.url);',

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vite-plus/test";
 
-vi.mock("@groot/logger", () => ({
+vi.mock("@groot/core/logger", () => ({
   logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));

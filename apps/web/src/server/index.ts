@@ -8,7 +8,7 @@ import {
 } from "@groot/core/server";
 import { env } from "@groot/core/env";
 import { config } from "@groot/core/config";
-import { configureLogger, logger } from "@groot/logger";
+import { configureLogger, logger } from "@groot/core/logger";
 import { registerRoutes, registerJobHandlers } from "./routes";
 import { notificationService } from "@groot/core/notification/notification.service";
 import { initJobQueue, stopJobQueue } from "@groot/jobs/server/client";

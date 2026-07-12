@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { logger } from "@groot/logger";
+import { logger } from "@groot/core/logger";
 import { sendPushOverNotification } from "send-push-notification";
 import { env } from "../env";
 

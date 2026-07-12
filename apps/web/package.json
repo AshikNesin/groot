@@ -6,7 +6,6 @@
   "dependencies": {
     "@groot/core": "workspace:*",
     "@groot/jobs": "workspace:*",
-    "@groot/logger": "workspace:*",
     "@groot/shell": "workspace:*",
     "@groot/ui": "workspace:*",
     "@hookform/resolvers": "^5.4.0",

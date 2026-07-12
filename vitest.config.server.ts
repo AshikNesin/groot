@@ -14,7 +14,6 @@ export default defineConfig({
     alias: {
       "@groot/core": path.resolve(rootDir, "packages/core/src"),
       "@groot/jobs/server": path.resolve(rootDir, "packages/jobs/src/server"),
-      "@groot/logger": path.resolve(rootDir, "packages/logger/src"),
     },
   },
 });

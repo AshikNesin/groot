@@ -1,6 +1,6 @@
 import { Sentry } from "@groot/core/instrument";
 import type { Job } from "pg-boss";
-import { logger } from "@groot/logger";
+import { logger } from "@groot/core/logger";
 
 export type JobHandler<T = unknown> = (job: Job<T>) => Promise<void>;
 
