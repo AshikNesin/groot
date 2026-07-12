@@ -112,16 +112,16 @@ Features are self-contained modules with routes, controllers, services, and jobs
 ### 1. Create the Feature Directory
 
 ```bash
-mkdir -p apps/web/src/server/app/myfeature
+mkdir -p apps/web/src/server/api/myfeature
 ```
 
 ### 2. Define Routes
 
 ```typescript
-// apps/web/src/server/app/myfeature/myfeature.routes.ts
-import { createRouter } from "@groot/server/core/utils/router.utils";
+// apps/web/src/server/api/myfeature/myfeature.routes.ts
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as controller from "./myfeature.controller";
-import { validate } from "@groot/server/core/middlewares/validation.middleware";
+import { validate } from "@groot/core/middlewares/validation.middleware";
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
@@ -136,10 +136,10 @@ export default router;
 ### 3. Create Controller
 
 ```typescript
-// apps/web/src/server/app/myfeature/myfeature.controller.ts
+// apps/web/src/server/api/myfeature/myfeature.controller.ts
 import type { Request, Response } from "express";
 import * as Service from "./myfeature.service";
-import { parseId } from "@groot/server/core/utils/controller.utils";
+import { parseId } from "@groot/core/utils/controller.utils";
 
 export async function getAll() {
   return await Service.findAll();
@@ -161,7 +161,7 @@ export async function getById(req: Request) {
 
 ```typescript
 // apps/web/src/server/routes.ts
-import myFeatureRoutes from "./app/myfeature/myfeature.routes";
+import myFeatureRoutes from "./api/myfeature/myfeature.routes";
 
 export function registerRoutes(app: Express): void {
   // ... existing routes
@@ -174,9 +174,9 @@ export function registerRoutes(app: Express): void {
 ## Use the Auth System
 
 ```tsx
-// apps/web/src/client/app/Login.tsx
+// apps/web/src/client/pages/Login.tsx
 import { useState } from "react";
-import { useAuthStore } from "@groot/client/store/auth";
+import { useAuthStore } from "@groot/shell/store/auth";
 import { Button } from "@groot/ui/button";
 import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
@@ -226,7 +226,7 @@ export function Login() {
 ## Use the Enhanced API Client
 
 ```typescript
-import { apiClient } from "@groot/client/lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 
 // GET request
 const data = await apiClient.get<MyType>("/todos");

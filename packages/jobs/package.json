@@ -4,16 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./backend": "./src/backend/index.ts",
-    "./backend/*": "./src/backend/*",
-    "./frontend": "./src/frontend/index.ts",
-    "./frontend/*": "./src/frontend/*"
+    "./server": "./src/server/index.ts",
+    "./server/*": "./src/server/*",
+    "./client": "./src/client/index.ts",
+    "./client/*": "./src/client/*"
   },
   "dependencies": {
-    "@groot/client": "workspace:*",
-    "@groot/database": "workspace:*",
-    "@groot/logger": "workspace:*",
-    "@groot/server": "workspace:*",
+    "@groot/core": "workspace:*",
+    "@groot/shell": "workspace:*",
     "@groot/ui": "workspace:*",
     "console-feed": "^3.8.0",
     "dayjs": "^1.11.21",

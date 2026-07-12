@@ -6,7 +6,7 @@ The AI adapter simplifies the developer experience for common operations like te
 
 ## Overview
 
-The core adapter is located in `packages/server/src/core/ai/`. It provides an `AI` class that you can instantiate with a specific provider and model.
+The core adapter is located in `packages/core/src/ai/`. It provides an `AI` class that you can instantiate with a specific provider and model.
 
 ### Key Features
 
@@ -21,7 +21,7 @@ The core adapter is located in `packages/server/src/core/ai/`. It provides an `A
 First, instantiate the AI class with your desired provider and model:
 
 ```typescript
-import { AI } from "@groot/server/core/ai";
+import { AI } from "@groot/core/ai";
 
 const ai = new AI({ provider: "anthropic", model: "claude-sonnet-4-6" });
 ```
@@ -117,18 +117,18 @@ const response = await complete(model, {
 The core adapter is a library — instantiate it wherever you need AI in your app code:
 
 ```typescript
-import { AI } from "@groot/server/core/ai";
+import { AI } from "@groot/core/ai";
 
 const ai = new AI({ provider: "openai", model: "gpt-4o-mini" });
 const text = await ai.complete({ prompt: "Translate 'hello world' to French." });
 // Returns: "Bonjour le monde"
 ```
 
-> **Note:** The boilerplate ships only the core adapter (`packages/server/src/core/ai/`).
+> **Note:** The boilerplate ships only the core adapter (`packages/core/src/ai/`).
 > Chat endpoints, usage tracking, and conversation persistence are app-level
-> concerns — build them in `apps/web/src/server/app/<your-feature>/` using the adapter.
+> concerns — build them in `apps/web/src/server/api/<your-feature>/` using the adapter.
 
-Check `packages/server/src/core/ai/client.ts` to see the full adapter API.
+Check `packages/core/src/ai/client.ts` to see the full adapter API.
 
 ## Environment Variables
 

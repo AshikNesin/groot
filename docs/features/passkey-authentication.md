@@ -95,7 +95,7 @@ npx prisma migrate deploy
 #### Signing In with a Passkey
 
 ```typescript
-import { passkeyService } from "@groot/client/services/passkey";
+import { passkeyService } from "@groot/shell/services/passkey";
 
 // Login with passkey
 try {
@@ -109,7 +109,7 @@ try {
 #### Managing Passkeys
 
 ```typescript
-import { PasskeyManager } from '@groot/client/components/PasskeyManager';
+import { PasskeyManager } from '@groot/shell/components/PasskeyManager';
 
 // In your settings page
 <PasskeyManager />
@@ -142,7 +142,7 @@ All passkey endpoints are prefixed with `/api/v1/passkey`:
 **Using the Passkey Service**:
 
 ```typescript
-import { passkeyService } from "@groot/client/services/passkey";
+import { passkeyService } from "@groot/shell/services/passkey";
 
 // Check if passkeys are supported
 const isSupported = await passkeyService.isPlatformAuthenticatorAvailable();
@@ -166,7 +166,7 @@ await passkeyService.deletePasskey(passkeyId);
 **Using the PasskeyManager Component**:
 
 ```tsx
-import { PasskeyManager } from "@groot/client/components/PasskeyManager";
+import { PasskeyManager } from "@groot/shell/components/PasskeyManager";
 
 // In your settings/profile page
 export function SettingsPage() {

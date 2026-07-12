@@ -5,25 +5,18 @@
     "rootDir": ".",
     "paths": {
       "@groot/ui/*": ["./packages/ui/src/*"],
-      "@groot/client/*": ["./packages/client/src/core/*"],
-      "@groot/client/index.css": ["./packages/client/src/index.css"],
-      "@groot/server/core/*": ["./packages/server/src/core/*"],
-      "@groot/server/shared/*": ["./packages/server/src/shared/*"],
-      "@groot/jobs/backend": ["./packages/jobs/src/backend/index.ts"],
-      "@groot/jobs/backend/*": ["./packages/jobs/src/backend/*"],
-      "@groot/logger": ["./packages/logger/src/index.ts"],
-      "@groot/logger/*": ["./packages/logger/src/*"],
-      "@groot/database": ["./packages/database/src/index.ts"],
-      "@groot/database/client": ["./packages/database/src/client.ts"],
-      "@groot/database/types": ["./packages/database/src/types.ts"]
+      "@groot/shell/*": ["./packages/shell/src/*"],
+      "@groot/core/*": ["./packages/core/src/*"],
+      "@groot/jobs/server": ["./packages/jobs/src/server/index.ts"],
+      "@groot/jobs/server/*": ["./packages/jobs/src/server/*"],
+      "@groot/jobs/client": ["./packages/jobs/src/client/index.ts"],
+      "@groot/jobs/client/*": ["./packages/jobs/src/client/*"]
     }
   },
   "include": [
     "apps/web/src/server/**/*",
-    "packages/server/src/**/*",
-    "packages/jobs/src/backend/**/*",
-    "packages/logger/src/**/*",
-    "packages/database/src/**/*",
+    "packages/core/src/**/*",
+    "packages/jobs/src/server/**/*",
     "env.d.ts"
   ],
   "exclude": ["node_modules", "dist"]

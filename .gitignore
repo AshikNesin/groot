@@ -39,4 +39,5 @@ service-account.json
 .groot/sync-report.json
 
 settings.local.json
-packages/database/generated/*/**
+.claude/settings.local.json
+packages/core/generated

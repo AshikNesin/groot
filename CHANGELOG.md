@@ -11,12 +11,12 @@
 
   ## What changed
   - `client/src/ui` → `packages/ui` (`@groot/ui`)
-  - `client/src/core` → `packages/client` (`@groot/client`)
-  - `server/src/core` + `server/src/shared` → `packages/server` (`@groot/server`)
-  - New `packages/database` (`@groot/database`) wraps the Prisma client
+  - `client/src/core` → `packages/shell` (`@groot/shell`)
+  - `server/src/core` + `server/src/shared` → `packages/core` (`@groot/core`)
+  - New `packages/core` (`@groot/core/database`) wraps the Prisma client
   - `server/src/app`, `server/src/index.ts`, `server/src/routes.ts` → `apps/web/src/server/`
   - `client/src/app`, `client/src/App.tsx`, `client/src/main.tsx` → `apps/web/src/client/`
-  - `prisma/schema.prisma` generator output → `packages/database/generated/prisma`
+  - `prisma/schema.prisma` generator output → `packages/core/generated/prisma`
 
   ## Migration for downstream repos
 

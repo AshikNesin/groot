@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": ["WebFetch(domain:github.com)", "Bash(git pull *)"]
-  },
-  "sandbox": {
-    "enabled": false,
-    "autoAllowBashIfSandboxed": false
-  }
-}

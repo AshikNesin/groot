@@ -18,7 +18,7 @@ import { describe, it, expect } from "vite-plus/test";
  * This is expected — the test focuses on 400 vs non-400 status codes.
  */
 
-import { jobRoutes as jobRouter } from "@groot/jobs/backend/routes";
+import { jobRoutes as jobRouter } from "@groot/jobs/server/routes";
 
 const buildApp = () => {
   const app = express();

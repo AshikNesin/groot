@@ -182,7 +182,7 @@ If your project has customized a synced component and you don't want it overwrit
 
 ```json
 {
-  "additional_exclusions": ["packages/ui/src/button.tsx", "packages/server/src/core/logger/**"]
+  "additional_exclusions": ["packages/ui/src/button.tsx", "packages/core/src/logger/**"]
 }
 ```
 
@@ -239,13 +239,13 @@ pnpm groot:upstream --all
 
 Only files matching the sync patterns can be upstreamed:
 
-- `packages/server/src/core/**` — infrastructure fixes
-- `packages/server/src/shared/**` — shared feature fixes
+- `packages/core/src/**` — infrastructure fixes
+- `packages/core/src/**` — shared feature fixes
 - `packages/ui/src/**` — UI component fixes
-- `packages/client/src/core/**` — client infrastructure fixes (layouts, api client, stores, hooks)
+- `packages/shell/src/**` — client infrastructure fixes (layouts, api client, stores, hooks)
 - Config files, scripts, docs
 
-App-specific code (`apps/web/src/server/app/**`, `apps/web/src/client/app/**`, etc.) is never eligible.
+App-specific code (`apps/web/src/server/api/**`, `apps/web/src/client/pages/**`, etc.) is never eligible.
 
 ---
 

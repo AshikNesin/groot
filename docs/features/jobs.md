@@ -4,35 +4,35 @@ Pg-boss powers asynchronous work with a modularized, dynamically-registered job 
 
 The entire jobs vertical — backend infrastructure + HTTP admin API + job logger + the dashboard UI + client types/api — lives in the **`@groot/jobs`** package:
 
-- `@groot/jobs/backend/*` — server-side (pg-boss queue/worker/queries, HTTP routes, job logger)
-- `@groot/jobs/frontend/*` — client-side (dashboard UI, `jobsApi`, types)
+- `@groot/jobs/server/*` — server-side (pg-boss queue/worker/queries, HTTP routes, job logger)
+- `@groot/jobs/client/*` — client-side (dashboard UI, `jobsApi`, types)
 
 Project-specific job **handlers** (e.g. `todo.jobs.ts`) + bootstrap wiring stay in `apps/web/`.
 
 ## Architecture
 
-The backend job system is split into focused modules, flat under `@groot/jobs/backend`:
+The backend job system is split into focused modules, flat under `@groot/jobs/server`:
 
-| Module        | File (import path)                  | Purpose                            |
-| ------------- | ----------------------------------- | ---------------------------------- |
-| Config        | `@groot/jobs/backend/config`        | Configuration from `config.yml`    |
-| Client        | `@groot/jobs/backend/client`        | PgBoss singleton instance          |
-| Queue         | `@groot/jobs/backend/queue`         | Job queueing and scheduling        |
-| Queries       | `@groot/jobs/backend/queries`       | Job inspection and management      |
-| Worker        | `@groot/jobs/backend/worker`        | Handler registration and execution |
-| Error Handler | `@groot/jobs/backend/error-handler` | Sentry capture + logging           |
-| Logger        | `@groot/jobs/backend/logger`        | `createJobLogger` (DB-persisted)   |
-| Routes        | `@groot/jobs/backend/routes`        | HTTP admin API (`/api/v1/jobs`)    |
+| Module        | File (import path)                 | Purpose                            |
+| ------------- | ---------------------------------- | ---------------------------------- |
+| Config        | `@groot/jobs/server/config`        | Configuration from `config.yml`    |
+| Client        | `@groot/jobs/server/client`        | PgBoss singleton instance          |
+| Queue         | `@groot/jobs/server/queue`         | Job queueing and scheduling        |
+| Queries       | `@groot/jobs/server/queries`       | Job inspection and management      |
+| Worker        | `@groot/jobs/server/worker`        | Handler registration and execution |
+| Error Handler | `@groot/jobs/server/error-handler` | Sentry capture + logging           |
+| Logger        | `@groot/jobs/server/logger`        | `createJobLogger` (DB-persisted)   |
+| Routes        | `@groot/jobs/server/routes`        | HTTP admin API (`/api/v1/jobs`)    |
 
-The public API is also re-exported from the barrel `@groot/jobs/backend`.
+The public API is also re-exported from the barrel `@groot/jobs/server`.
 
 ## Job Registration
 
 Jobs are registered dynamically in feature modules, not via static enums:
 
 ```typescript
-// apps/web/src/server/app/<feature>/<feature>.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/jobs/backend/worker";
+// apps/web/src/server/api/<feature>/<feature>.jobs.ts
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
 import type { TodoCleanupPayload } from "./todo.types";
 
 export const todoCleanupHandler: JobHandler<TodoCleanupPayload> = async ({ data }) => {
@@ -48,7 +48,7 @@ export function registerTodoJobs(): void {
 Then register in `apps/web/src/server/routes.ts`:
 
 ```typescript
-import { registerTodoJobs } from "./app/todo/todo.jobs";
+import { registerTodoJobs } from "./api/todo/todo.jobs";
 
 export function registerJobHandlers(): void {
   registerTodoJobs();
@@ -74,7 +74,7 @@ Each handler receives `{ id, data }` from PgBoss.
 ### Via Code
 
 ```typescript
-import { addJob } from "@groot/jobs/backend/queue";
+import { addJob } from "@groot/jobs/server/queue";
 
 await addJob("todo-cleanup", { daysToKeep: 60 });
 ```
@@ -117,7 +117,7 @@ All endpoints require JWT authentication.
 
 ## Configuration
 
-Configured via `config.yml` `jobs:` section (read in `@groot/jobs/backend/config`):
+Configured via `config.yml` `jobs:` section (read in `@groot/jobs/server/config`):
 
 | Key                                 | Default   | Description                   |
 | ----------------------------------- | --------- | ----------------------------- |
@@ -136,14 +136,14 @@ Configured via `config.yml` `jobs:` section (read in `@groot/jobs/backend/config
 
 ## Dashboard UI
 
-The jobs dashboard (`/jobs`) lives in `@groot/jobs/frontend`:
+The jobs dashboard (`/jobs`) lives in `@groot/jobs/client`:
 
 - `Jobs` / `JobDetail` — pages (mounted in `apps/web/.../App.tsx`)
 - `useJobs` / `useJobDetail` — page hooks (state + data)
-- `jobsApi` — client API methods (`@groot/jobs/frontend/api`)
+- `jobsApi` — client API methods (`@groot/jobs/client/api`)
 - `components/` — table, stats, filters, logs, dialogs
 
-The frontend consumes `jobsApi` (built on the shared `api` axios instance from `@groot/client/lib/api`).
+The frontend consumes `jobsApi` (built on the shared `api` axios instance from `@groot/shell/lib/api`).
 
 ## Adding a New Job
 
@@ -155,11 +155,11 @@ export interface MyJobPayload {
 }
 ```
 
-2. **Create handler** (in `apps/web/src/server/app/<feature>/<feature>.jobs.ts`):
+2. **Create handler** (in `apps/web/src/server/api/<feature>/<feature>.jobs.ts`):
 
 ```typescript
-import { registerJobHandler, type JobHandler } from "@groot/jobs/backend/worker";
-import { createJobLogger } from "@groot/jobs/backend/logger";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
+import { createJobLogger } from "@groot/jobs/server/logger";
 import type { MyJobPayload } from "./feature.types";
 
 export const myJobHandler: JobHandler<MyJobPayload> = async ({ id, data }) => {
@@ -175,7 +175,7 @@ export function registerFeatureJobs(): void {
 3. **Register in `apps/web/src/server/routes.ts`**:
 
 ```typescript
-import { registerFeatureJobs } from "./app/feature/feature.jobs";
+import { registerFeatureJobs } from "./api/feature/feature.jobs";
 
 export function registerJobHandlers(): void {
   registerFeatureJobs();

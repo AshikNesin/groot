@@ -19,7 +19,7 @@ tests/
 │   ├── core/            # Core utility tests
 │   │   ├── job/         # Job system tests
 │   │   └── utils/       # Utility tests
-│   └── app/             # Feature tests (mirror apps/web/src/server/app)
+│   └── app/             # Feature tests (mirror apps/web/src/server/api)
 └── client/              # Client unit tests
     ├── setup.ts         # Client test setup
     └── components/      # Component tests
@@ -36,9 +36,9 @@ Test HTTP endpoints with Supertest:
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import express from "express";
-import todoRoutes from "../../../../apps/web/src/server/app/todo/todo.routes";
+import todoRoutes from "../../../../apps/web/src/server/api/todo/todo.routes";
 
-vi.mock("../../../../apps/web/src/server/app/todo/todo.service", () => ({
+vi.mock("../../../../apps/web/src/server/api/todo/todo.service", () => ({
   findAll: vi.fn().mockResolvedValue([{ id: 1, title: "Test" }]),
   create: vi.fn().mockResolvedValue({ id: 1, title: "New" }),
 }));
@@ -73,9 +73,9 @@ Test business logic directly:
 ```typescript
 // tests/server/app/todo/todo.service.test.ts
 import { describe, it, expect, vi } from "vitest";
-import * as TodoService from "../../../../apps/web/src/server/app/todo/todo.service";
+import * as TodoService from "../../../../apps/web/src/server/api/todo/todo.service";
 
-vi.mock("../../../../apps/web/src/server/app/todo/todo.model", () => ({
+vi.mock("../../../../apps/web/src/server/api/todo/todo.model", () => ({
   findAll: vi.fn().mockResolvedValue([]),
   create: vi.fn().mockResolvedValue({ id: 1 }),
 }));
@@ -95,9 +95,9 @@ Test job handlers with mock job objects:
 ```typescript
 // tests/server/app/todo/todo.jobs.test.ts
 import { describe, it, expect, vi } from "vitest";
-import { todoCleanupHandler } from "../../../../apps/web/src/server/app/todo/todo.jobs";
+import { todoCleanupHandler } from "../../../../apps/web/src/server/api/todo/todo.jobs";
 
-vi.mock("@groot/logger", () => ({
+vi.mock("@groot/core/logger", () => ({
   createJobLogger: () => ({ info: vi.fn(), error: vi.fn() }),
 }));
 
@@ -116,7 +116,7 @@ describe("Todo Jobs", () => {
 ```typescript
 import { vi } from "vitest";
 
-vi.mock("@groot/server/core/database", () => ({
+vi.mock("@groot/core/database", () => ({
   prisma: {
     todo: {
       findMany: vi.fn().mockResolvedValue([]),
@@ -130,10 +130,16 @@ vi.mock("@groot/server/core/database", () => ({
 ### Job System Mocking
 
 ```typescript
-vi.mock("@groot/server/core/job", () => ({
+vi.mock("@groot/jobs/server/queue", () => ({
   addJob: vi.fn().mockResolvedValue("job-id"),
   scheduleJob: vi.fn().mockResolvedValue("scheduled-id"),
+}));
+
+vi.mock("@groot/jobs/server/queries", () => ({
   getJobs: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@groot/jobs/server/worker", () => ({
   registerJobHandler: vi.fn(),
 }));
 ```
@@ -141,7 +147,7 @@ vi.mock("@groot/server/core/job", () => ({
 ### Logger Mocking
 
 ```typescript
-vi.mock("@groot/logger", () => ({
+vi.mock("@groot/core/logger", () => ({
   createRequestLogger: () => ({
     info: vi.fn(),
     error: vi.fn(),

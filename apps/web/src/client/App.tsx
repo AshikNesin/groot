@@ -1,14 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useEffect } from "react";
 import { NuqsAdapter } from "nuqs/adapters/react-router";
-import { useAuthStore } from "@groot/client/store/auth";
-import { ProtectedRoute } from "@groot/client/components/ProtectedRoute";
-import { Layout } from "@groot/client/components/Layout";
-import { Todos } from "./app/todo/pages/Todos";
-import { Storage } from "./app/storage/pages/Storage";
-import { Jobs, JobDetail } from "@groot/jobs/frontend";
-import { Settings } from "./app/settings/pages/Settings";
-import { Login } from "./app/auth/pages/Login";
+import { useAuthStore } from "@groot/shell/store/auth";
+import { ProtectedRoute } from "@groot/shell/components/ProtectedRoute";
+import { Layout } from "@groot/shell/components/Layout";
+import { Todos } from "./pages/todo/Todos";
+import { Storage } from "@groot/shell/pages/storage/Storage";
+import { Jobs, JobDetail } from "@groot/jobs/client";
+import { Settings } from "@groot/shell/pages/settings/Settings";
+import { Login } from "@groot/shell/pages/auth/Login";
 import { Toaster } from "@groot/ui/sonner";
 
 function App() {

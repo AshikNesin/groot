@@ -13,7 +13,7 @@ export default defineConfig({
     // hang past platform boot timeouts. When DATABASE_URL_DIRECT is set it
     // bypasses the pooler; when unset (dev with a plain local Postgres) it
     // falls back to DATABASE_URL. The runtime client uses the pooled URL
-    // separately via @prisma/adapter-pg in server/src/core/database.ts.
+    // separately via @prisma/adapter-pg in packages/core/src/database/client.ts.
     url: ENV.DATABASE_URL_DIRECT || ENV.DATABASE_URL,
   },
 });

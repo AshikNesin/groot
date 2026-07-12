@@ -57,9 +57,9 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-const CORE_FILE = "packages/server/src/core/util.ts";
+const CORE_FILE = "packages/core/src/util.ts";
 const DOC_FILE = "docs/guide.md";
-const APP_FILE = "apps/web/src/server/app/todo.ts";
+const APP_FILE = "apps/web/src/server/api/todo.ts";
 
 /**
  * Core fixture file with the two editable lines far apart, so single-line
@@ -134,7 +134,7 @@ describe("groot sync engine (integration)", () => {
     "check mode reports changes without touching the working tree",
     async () => {
       await write(fx.bp, CORE_FILE, coreContent("100", "2"));
-      await write(fx.bp, "packages/server/src/core/new.ts", "export const fresh = true;\n");
+      await write(fx.bp, "packages/core/src/new.ts", "export const fresh = true;\n");
       await rm(join(fx.bp, DOC_FILE));
       await write(fx.bp, APP_FILE, "export const todo = false;\n");
       await commitAll(fx.bp, "upstream changes");
@@ -146,7 +146,7 @@ describe("groot sync engine (integration)", () => {
       });
 
       expect(result.autoApply.map((f) => f.file).sort()).toEqual([
-        "packages/server/src/core/new.ts",
+        "packages/core/src/new.ts",
         CORE_FILE,
       ]);
       expect(result.deleted).toEqual([DOC_FILE]);
@@ -156,7 +156,7 @@ describe("groot sync engine (integration)", () => {
       // Working tree untouched in check mode
       expect(await readFile(join(fx.child, CORE_FILE), "utf-8")).toContain("const a = 1;");
       expect(await exists(join(fx.child, DOC_FILE))).toBe(true);
-      expect(await exists(join(fx.child, "packages/server/src/core/new.ts"))).toBe(false);
+      expect(await exists(join(fx.child, "packages/core/src/new.ts"))).toBe(false);
       expect(await readBaselineInfo(fx.child)).toBeNull();
 
       // Machine-readable report exists (CI depends on it)
@@ -171,7 +171,7 @@ describe("groot sync engine (integration)", () => {
     "apply updates files, syncs deletions, advances the baseline, and is idempotent",
     async () => {
       await write(fx.bp, CORE_FILE, coreContent("100", "2"));
-      await write(fx.bp, "packages/server/src/core/new.ts", "export const fresh = true;\n");
+      await write(fx.bp, "packages/core/src/new.ts", "export const fresh = true;\n");
       await rm(join(fx.bp, DOC_FILE));
       const target = await commitAll(fx.bp, "upstream changes");
 
@@ -184,7 +184,7 @@ describe("groot sync engine (integration)", () => {
       expect(result.deleted).toEqual([DOC_FILE]);
 
       expect(await readFile(join(fx.child, CORE_FILE), "utf-8")).toContain("const a = 100;");
-      expect(await exists(join(fx.child, "packages/server/src/core/new.ts"))).toBe(true);
+      expect(await exists(join(fx.child, "packages/core/src/new.ts"))).toBe(true);
       expect(await exists(join(fx.child, DOC_FILE))).toBe(false);
 
       const baseline = await readBaselineInfo(fx.child);
@@ -328,7 +328,7 @@ describe("groot sync engine (integration)", () => {
     "restores a synced file that was written but never committed then swept (phantom deletion)",
     async () => {
       // Upstream ships a new synced file.
-      const PHANTOM = "packages/server/src/core/phantom.ts";
+      const PHANTOM = "packages/core/src/phantom.ts";
       await write(fx.bp, PHANTOM, "export const phantom = true;\n");
       await commitAll(fx.bp, "add phantom upstream");
 
@@ -361,7 +361,7 @@ describe("groot sync engine (integration)", () => {
       // `cat-file -e HEAD:path` check: a `git rm` + commit leaves the file absent
       // from the HEAD tree just like a never-tracked file, so only the repo's
       // history can tell a deliberate delete from a phantom.
-      const TARGET = "packages/server/src/core/disposable.ts";
+      const TARGET = "packages/core/src/disposable.ts";
       await write(fx.bp, TARGET, "export const disposable = true;\n");
       await commitAll(fx.bp, "add disposable upstream");
 

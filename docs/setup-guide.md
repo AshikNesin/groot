@@ -31,7 +31,7 @@ Secrets are managed via varlock + Doppler — no local `.env` file needed in dev
 
 ### Manual Setup
 
-Copy `.env.schema` to `.env` and populate these keys (validated in `packages/server/src/core/env.ts`):
+Copy `.env.schema` to `.env` and populate these keys (validated in `packages/core/src/env.ts`):
 
 | Variable                                      | Description                                                            |
 | --------------------------------------------- | ---------------------------------------------------------------------- |
@@ -115,7 +115,7 @@ In production mode the server:
 
 - Prisma client is generated automatically via `pnpm install` (`postinstall` runs `prisma generate`).
 - To re-sync schema changes: `pnpm db:migrate:create` (then `pnpm prisma migrate dev` to apply locally).
-- The Prisma client emitted into `packages/database/generated/prisma` feeds both HTTP handlers and job processors.
+- The Prisma client emitted into `packages/core/generated/prisma` feeds both HTTP handlers and job processors.
 
 ## Background Job Queue
 
