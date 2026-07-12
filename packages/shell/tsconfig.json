@@ -5,7 +5,8 @@
     "jsx": "react-jsx",
     "paths": {
       "@groot/ui": ["../ui/src/index.ts"],
-      "@groot/ui/*": ["../ui/src/*"]
+      "@groot/ui/*": ["../ui/src/*"],
+      "@groot/shell/*": ["./src/*"]
     }
   },
   "include": ["src"]
