@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
 import { Boom } from "../errors";
-import { Sentry } from "../instrument";
 import { logBusinessEvent } from "@groot/core/logger";
 import { getRequestLogger } from "./request-logger.middleware";
 import { buildErrorContext } from "./error-context";
@@ -9,6 +8,7 @@ import {
   formatHttpErrorResponse,
   formatUnknownErrorResponse,
 } from "./error-response";
+import { sendError } from "../utils/api-response.utils";
 import { isPrismaError } from "../errors";
 
 import { ErrorCode } from "../errors";
@@ -49,18 +49,8 @@ export function errorHandlerMiddleware(
     });
   } else {
     requestLogger.error(errorContext, `System error: ${error.message}`);
-    Sentry.captureException(error, {
-      extra: {
-        traceId: errorContext.traceId,
-        parentTraceId: errorContext.parentTraceId,
-        breadcrumbs: errorContext.breadcrumbs,
-        performance: errorContext.performance,
-        request: errorContext.request,
-      },
-      tags: {
-        traceId: errorContext.traceId,
-      },
-    });
+    // Sentry capture is handled by `Sentry.setupExpressErrorHandler(app)` in
+    // server.ts (registered before this middleware) — don't double-report here.
     logBusinessEvent({
       event: "system_error",
       data: {
@@ -103,11 +93,9 @@ export function notFoundHandler(req: Request, res: Response): void {
     `Route not found: ${req.method} ${req.path}`,
   );
 
-  res.status(ErrorCode.NOT_FOUND.status).json({
-    success: false,
-    error: {
-      code: ErrorCode.NOT_FOUND.code,
-      message: `Cannot ${req.method} ${req.path}`,
-    },
-  });
+  sendError(
+    res,
+    { code: ErrorCode.NOT_FOUND.code, message: `Cannot ${req.method} ${req.path}` },
+    ErrorCode.NOT_FOUND.status,
+  );
 }

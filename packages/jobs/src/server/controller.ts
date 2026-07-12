@@ -3,14 +3,20 @@ import * as queue from "./queue";
 import * as queries from "./queries";
 import { prisma } from "@groot/core/database";
 import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "./types";
+import type { CreateJobDTO, ScheduleJobDTO, EditScheduledJobDTO } from "./validation";
 import { Boom } from "@groot/core/errors";
-import { parseLimit, parseStringParam } from "@groot/core/utils/controller.utils";
+import {
+  parseLimit,
+  parseStringParam,
+  validatedBody,
+  validatedQuery,
+} from "@groot/core/utils/controller.utils";
 
 /**
  * Queue a job for immediate execution
  */
 export async function create(req: Request) {
-  const { jobName, data, options } = req.body;
+  const { jobName, data, options } = validatedBody<CreateJobDTO>(req);
   const jobId = await queue.addJob(jobName, data, options);
   return { jobId, jobName, data };
 }
@@ -19,7 +25,7 @@ export async function create(req: Request) {
  * Schedule a recurring job
  */
 export async function schedule(req: Request) {
-  const { jobName, data, cron, options } = req.body;
+  const { jobName, data, cron, options } = validatedBody<ScheduleJobDTO>(req);
   await queue.scheduleJob(jobName, data, cron, options);
   return { success: true };
 }
@@ -28,7 +34,7 @@ export async function schedule(req: Request) {
  * Bulk re-run jobs
  */
 export async function bulkRerun(req: Request) {
-  const { jobs } = req.body as { jobs: RerunJobOptions[] };
+  const { jobs } = validatedBody<{ jobs: RerunJobOptions[] }>(req);
   return await queue.rerunJobs(jobs);
 }
 
@@ -54,7 +60,7 @@ export async function cancelScheduled(req: Request) {
  */
 export async function editScheduled(req: Request) {
   const jobName = parseStringParam(req.params.jobName, "jobName");
-  const { key, cron, data, options } = req.body;
+  const { key, cron, data, options } = validatedBody<EditScheduledJobDTO>(req);
   await queue.editScheduledJob(jobName, key, cron, data, options);
   return { success: true };
 }
@@ -105,7 +111,7 @@ export async function getByState(req: Request) {
  * Get all jobs with filters
  */
 export async function getAll(req: Request) {
-  const query = (req.validated?.query ?? req.query) as GetJobsOptions;
+  const query = validatedQuery<GetJobsOptions>(req);
   return await queries.getJobs(query);
 }
 

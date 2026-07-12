@@ -1,17 +1,13 @@
-import { api, type ApiResponse } from "@groot/shell/lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 import type { Job, JobLog, JobName, JobStats, ScheduledJob } from "./types";
 
 /**
- * Jobs API client. Reuses the shared axios instance (`api`) + 401 interceptor
- * from @groot/shell/lib/api — no duplicated axios setup.
+ * Jobs API client. Thin typed wrappers over the shared `apiClient` — the
+ * envelope unwrapping and 401 handling live in one place (@groot/shell/lib/api).
  */
 export const jobsApi = {
   async getJobStats(): Promise<JobStats> {
-    const response = await api.get<ApiResponse<JobStats>>("/jobs/stats");
-    if (response.data.data === undefined || response.data.data === null) {
-      throw new Error("Failed to fetch job stats");
-    }
-    return response.data.data;
+    return apiClient.get<JobStats>("/jobs/stats");
   },
 
   async getJobs(options?: {
@@ -22,71 +18,43 @@ export const jobsApi = {
     startDate?: string;
     endDate?: string;
   }): Promise<{ jobs: Job[]; total: number }> {
-    const params = new URLSearchParams();
-    if (options?.state) params.append("state", options.state);
-    if (options?.name) params.append("name", options.name);
-    if (options?.limit) params.append("limit", options.limit.toString());
-    if (options?.offset) params.append("offset", options.offset.toString());
-    if (options?.startDate) params.append("startDate", options.startDate);
-    if (options?.endDate) params.append("endDate", options.endDate);
-
-    const response = await api.get<ApiResponse<{ jobs: Job[]; total: number }>>(
-      `/jobs?${params.toString()}`,
-    );
-    return {
-      jobs: response.data.data?.jobs ?? [],
-      total: response.data.metadata?.total ?? response.data.data?.total ?? 0,
-    };
+    return apiClient.get<{ jobs: Job[]; total: number }>("/jobs", options);
   },
 
   async getJob(queueName: string, jobId: string): Promise<Job> {
-    const response = await api.get<ApiResponse<Job>>(`/jobs/${queueName}/${jobId}`);
-    if (response.data.data === undefined || response.data.data === null) {
-      throw new Error("Job not found");
-    }
-    return response.data.data;
+    return apiClient.get<Job>(`/jobs/${queueName}/${jobId}`);
   },
 
   async getJobLogs(queueName: string, jobId: string, afterId?: number): Promise<JobLog[]> {
-    const params = new URLSearchParams();
-    if (afterId) params.append("afterId", afterId.toString());
-
-    const response = await api.get<ApiResponse<JobLog[]>>(
-      `/jobs/${queueName}/${jobId}/logs?${params.toString()}`,
+    return apiClient.get<JobLog[]>(
+      `/jobs/${queueName}/${jobId}/logs`,
+      afterId ? { afterId } : undefined,
     );
-    return response.data.data ?? [];
   },
 
   async retryJob(queueName: string, jobId: string): Promise<void> {
-    await api.post(`/jobs/${queueName}/${jobId}/retry`);
+    await apiClient.post(`/jobs/${queueName}/${jobId}/retry`);
   },
 
   async cancelJob(queueName: string, jobId: string): Promise<void> {
-    await api.post(`/jobs/${queueName}/${jobId}/cancel`);
+    await apiClient.post(`/jobs/${queueName}/${jobId}/cancel`);
   },
 
   async resumeJob(queueName: string, jobId: string): Promise<void> {
-    await api.post(`/jobs/${queueName}/${jobId}/resume`);
+    await apiClient.post(`/jobs/${queueName}/${jobId}/resume`);
   },
 
   async deleteJob(queueName: string, jobId: string): Promise<void> {
-    await api.delete(`/jobs/${queueName}/${jobId}`);
+    await apiClient.delete(`/jobs/${queueName}/${jobId}`);
   },
 
   async rerunJob(
     queueName: string,
     jobId: string,
   ): Promise<{ newJobId: string; queueName: string }> {
-    const response = await api.post<
-      ApiResponse<{
-        newJobId: string;
-        queueName: string;
-      }>
-    >(`/jobs/${queueName}/${jobId}/rerun`);
-    if (response.data.data === undefined || response.data.data === null) {
-      throw new Error("Failed to re-run job");
-    }
-    return response.data.data;
+    return apiClient.post<{ newJobId: string; queueName: string }>(
+      `/jobs/${queueName}/${jobId}/rerun`,
+    );
   },
 
   async rerunJobs(jobs: { queueName: string; jobId: string }[]): Promise<
@@ -98,29 +66,20 @@ export const jobsApi = {
       error?: string;
     }>
   > {
-    const response = await api.post<
-      ApiResponse<
-        Array<{
-          queueName: string;
-          jobId: string;
-          success: boolean;
-          newJobId?: string | null;
-          error?: string;
-        }>
-      >
+    return apiClient.post<
+      Array<{
+        queueName: string;
+        jobId: string;
+        success: boolean;
+        newJobId?: string | null;
+        error?: string;
+      }>
     >("/jobs/bulk-rerun", { jobs });
-    if (response.data.data === undefined || response.data.data === null) {
-      throw new Error("Failed to re-run jobs");
-    }
-    return response.data.data;
   },
 
   async purgeJobsByState(state: string): Promise<{ deletedCount: number }> {
-    const response = await api.delete<ApiResponse<{ count: number }>>(`/jobs/state/${state}`);
-    if (response.data.data === undefined || response.data.data === null) {
-      throw new Error("Failed to purge jobs");
-    }
-    return { deletedCount: response.data.data.count };
+    const result = await apiClient.delete<{ count: number }>(`/jobs/state/${state}`);
+    return { deletedCount: result.count };
   },
 
   async addJob(
@@ -128,25 +87,17 @@ export const jobsApi = {
     data: Record<string, unknown>,
     options?: Record<string, unknown>,
   ): Promise<string> {
-    const response = await api.post<ApiResponse<{ jobId: string }>>("/jobs", {
-      jobName,
-      data,
-      options,
-    });
-    if (response.data.data === undefined || response.data.data === null) {
-      throw new Error("Failed to add job");
-    }
-    return response.data.data.jobId;
+    const result = await apiClient.post<{ jobId: string }>("/jobs", { jobName, data, options });
+    return result.jobId;
   },
 
   async getAvailableJobs(): Promise<string[]> {
-    const response = await api.get<ApiResponse<{ jobs: string[] }>>("/jobs/available");
-    return response.data.data?.jobs ?? [];
+    const result = await apiClient.get<{ jobs: string[] }>("/jobs/available");
+    return result.jobs;
   },
 
   async getScheduledJobs(): Promise<ScheduledJob[]> {
-    const response = await api.get<ApiResponse<ScheduledJob[]>>("/jobs/schedule");
-    return response.data.data ?? [];
+    return apiClient.get<ScheduledJob[]>("/jobs/schedule");
   },
 
   async scheduleJob(
@@ -155,11 +106,11 @@ export const jobsApi = {
     data: Record<string, unknown>,
     options?: Record<string, unknown>,
   ): Promise<void> {
-    await api.post("/jobs/schedule", { jobName, data, cron, options });
+    await apiClient.post("/jobs/schedule", { jobName, data, cron, options });
   },
 
   async cancelScheduledJob(jobName: string, key?: string): Promise<void> {
-    await api.delete(`/jobs/schedule/${jobName}`, { data: { key } });
+    await apiClient.delete(`/jobs/schedule/${jobName}`, { key });
   },
 
   async editScheduledJob(
@@ -169,6 +120,6 @@ export const jobsApi = {
     data: Record<string, unknown>,
     options?: Record<string, unknown>,
   ): Promise<void> {
-    await api.put(`/jobs/schedule/${jobName}`, { key, cron, data, options });
+    await apiClient.put(`/jobs/schedule/${jobName}`, { key, cron, data, options });
   },
-} as const;
+};

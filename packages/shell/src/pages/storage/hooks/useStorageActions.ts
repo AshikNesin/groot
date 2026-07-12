@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { parseAsString, useQueryState } from "nuqs";
-import { api } from "@groot/shell/lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 import { toast } from "sonner";
 import {
   useBulkUpload,
@@ -15,11 +15,8 @@ import {
 /** Download a file via a programmatic blob URL. */
 export async function handleDownload(filePath: string, name: string): Promise<void> {
   try {
-    const response = await api.get("/storage/files/download", {
-      params: { filePath },
-      responseType: "blob",
-    });
-    const blobUrl = window.URL.createObjectURL(response.data);
+    const blob = await apiClient.getBlob("/storage/files/download", { filePath });
+    const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = blobUrl;
     link.download = name;
@@ -37,11 +34,8 @@ export async function handleDownload(filePath: string, name: string): Promise<vo
 export async function handleView(filePath: string): Promise<void> {
   const win = window.open("", "_blank");
   try {
-    const response = await api.get("/storage/files/download", {
-      params: { filePath },
-      responseType: "blob",
-    });
-    const blobUrl = window.URL.createObjectURL(response.data);
+    const blob = await apiClient.getBlob("/storage/files/download", { filePath });
+    const blobUrl = window.URL.createObjectURL(blob);
     if (win) {
       win.location.href = blobUrl;
     } else {
@@ -62,9 +56,7 @@ export function useStorageActions() {
   const [currentPath, setCurrentPath] = useQueryState("path", parseAsString.withDefault(""));
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
-  const [folderName, setFolderName] = useState("");
   const [renameTarget, setRenameTarget] = useState<{ key: string; name: string } | null>(null);
-  const [renameValue, setRenameValue] = useState("");
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -187,32 +179,29 @@ export function useStorageActions() {
     }
   };
 
-  const handleCreateFolder = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!folderName.trim()) return;
-    const path = `${currentPath}${folderName.trim().replace(/\/+$/u, "")}/`;
+  const handleCreateFolder = async (name: string) => {
+    const trimmed = name.trim().replace(/\/+$/u, "");
+    if (!trimmed) return;
+    const path = `${currentPath}${trimmed}/`;
     try {
       await createFolder.mutateAsync(path);
       toast.success("Folder created", { description: path });
       setFolderDialogOpen(false);
-      setFolderName("");
     } catch (error) {
       console.error(error);
       toast.error("Failed to create folder", { description: "Please try again" });
     }
   };
 
-  const handleRename = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!renameTarget || !renameValue.trim()) return;
-    const newPath = `${currentPath}${renameValue.trim()}`;
+  const handleRename = async (newName: string) => {
+    if (!renameTarget || !newName.trim()) return;
+    const newPath = `${currentPath}${newName.trim()}`;
     try {
       await renameFile.mutateAsync({ oldPath: renameTarget.key, newPath });
       toast.success("File renamed", {
-        description: `${renameTarget.name} → ${renameValue}`,
+        description: `${renameTarget.name} → ${newName.trim()}`,
       });
       setRenameTarget(null);
-      setRenameValue("");
       clearSelection();
     } catch (error) {
       console.error(error);
@@ -222,7 +211,6 @@ export function useStorageActions() {
 
   const startRename = (key: string, name: string) => {
     setRenameTarget({ key, name });
-    setRenameValue(name);
   };
 
   return {
@@ -235,11 +223,7 @@ export function useStorageActions() {
     selectedFiles,
     folderDialogOpen,
     setFolderDialogOpen,
-    folderName,
-    setFolderName,
     renameTarget,
-    renameValue,
-    setRenameValue,
     setRenameTarget,
     uploadInputRef,
     bulkInputRef,

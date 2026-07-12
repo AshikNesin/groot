@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -7,28 +8,28 @@ import {
   DialogTitle,
 } from "@groot/ui/dialog";
 import { Button } from "@groot/ui/button";
+import { Form, FormField } from "@groot/ui/form";
 import { Input } from "@groot/ui/input";
-import { Label } from "@groot/ui/label";
+
+const folderSchema = z.object({
+  name: z.string().min(1, "Folder name is required"),
+});
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentPath: string;
-  folderName: string;
-  onFolderNameChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   isPending: boolean;
+  onCreate: (name: string) => void;
 };
 
-/** Modal form for creating a new folder. */
+/** Modal form for creating a new folder. Owns its own field state. */
 export function CreateFolderDialog({
   open,
   onOpenChange,
   currentPath,
-  folderName,
-  onFolderNameChange,
-  onSubmit,
   isPending,
+  onCreate,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,23 +40,15 @@ export function CreateFolderDialog({
             Enter a name for the new folder in {currentPath || "root"}
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="folder-name">Folder Name</Label>
-            <Input
-              id="folder-name"
-              placeholder="my-folder"
-              value={folderName}
-              onChange={(event) => onFolderNameChange(event.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
-                }
-              }}
-              required
-            />
-          </div>
+        <Form
+          schema={folderSchema}
+          defaultValues={{ name: "" }}
+          onSubmit={({ name }) => onCreate(name)}
+          className="space-y-4"
+        >
+          <FormField name="name" label="Folder Name">
+            <Input placeholder="my-folder" />
+          </FormField>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -64,7 +57,7 @@ export function CreateFolderDialog({
               {isPending ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
-        </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -14,11 +14,6 @@ import type { JobsQueryPatch } from "../constants";
 import { ChevronRight, FileText, MoreVertical, Play, RefreshCw, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
-function formatDate(date: string | null): string {
-  if (!date) return "N/A";
-  return formatLocaleDateTime(date);
-}
-
 function formatJobDuration(start: string | null, end: string | null): string {
   if (!start || !end) return "N/A";
   return formatDuration(start, end);
@@ -195,13 +190,13 @@ export function JobsTable({
                     </div>
                     <div
                       className="col-span-2 text-muted-foreground"
-                      title={formatDate(job.createdon)}
+                      title={job.createdon ? formatLocaleDateTime(job.createdon) : "N/A"}
                     >
                       {job.createdon ? formatRelativeTime(job.createdon) : "N/A"}
                     </div>
                     <div
                       className="col-span-2 text-muted-foreground"
-                      title={formatDate(job.startedon)}
+                      title={job.startedon ? formatLocaleDateTime(job.startedon) : "N/A"}
                     >
                       {job.startedon ? formatRelativeTime(job.startedon) : "—"}
                     </div>

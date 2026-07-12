@@ -12,6 +12,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -73,4 +74,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     }
   },
+
+  /**
+   * Clear auth state without a server call. Used by the API 401 interceptor
+   * when the session expires mid-session — <ProtectedRoute> reacts and
+   * navigates to /login.
+   */
+  clearAuth: () => set({ isAuthenticated: false, user: null, error: null }),
 }));

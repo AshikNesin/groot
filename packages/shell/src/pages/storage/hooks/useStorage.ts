@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@groot/shell/lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 
 export interface StorageFile {
   key: string;
@@ -17,12 +17,11 @@ export const storageKeys = {
 export function useStorageFiles(prefix: string) {
   return useQuery({
     queryKey: storageKeys.files(prefix),
-    queryFn: async () => {
-      const { data } = await api.get<{ data: StorageFile[] }>("/storage/files", {
-        params: { prefix: prefix || undefined, delimiter: "/" },
-      });
-      return data.data;
-    },
+    queryFn: () =>
+      apiClient.get<StorageFile[]>("/storage/files", {
+        prefix: prefix || undefined,
+        delimiter: "/",
+      }),
   });
 }
 
@@ -38,14 +37,7 @@ export function useUploadFile() {
       if (params.contentType) {
         formData.append("contentType", params.contentType);
       }
-      const { data } = await api.post<{ data: { filePath: string } }>(
-        "/storage/files/upload",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-      return data.data;
+      return apiClient.postForm<{ filePath: string }>("/storage/files/upload", formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
@@ -61,15 +53,10 @@ export function useBulkUpload() {
       for (const file of Array.from(files)) {
         formData.append("files", file);
       }
-      const { data } = await api.post<{
-        data: {
-          uploadedFiles: string[];
-          failedFiles: Array<{ filePath: string; error: string }>;
-        };
-      }>("/storage/files/bulk-upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return data.data;
+      return apiClient.postForm<{
+        uploadedFiles: string[];
+        failedFiles: Array<{ filePath: string; error: string }>;
+      }>("/storage/files/bulk-upload", formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
@@ -80,12 +67,8 @@ export function useBulkUpload() {
 export function useDeleteFiles() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (filePaths: string[]) => {
-      const { data } = await api.delete<{ data: { deletedCount: number } }>("/storage/files", {
-        data: { filePaths },
-      });
-      return data.data;
-    },
+    mutationFn: (filePaths: string[]) =>
+      apiClient.delete<{ deletedCount: number }>("/storage/files", { filePaths }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
     },
@@ -95,12 +78,8 @@ export function useDeleteFiles() {
 export function useCreateFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (folderPath: string) => {
-      const { data } = await api.post<{ data: { folderPath: string } }>("/storage/folders", {
-        folderPath,
-      });
-      return data.data;
-    },
+    mutationFn: (folderPath: string) =>
+      apiClient.post<{ folderPath: string }>("/storage/folders", { folderPath }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
     },
@@ -110,12 +89,10 @@ export function useCreateFolder() {
 export function useDeleteFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (folderPath: string) => {
-      const { data } = await api.delete<{ data: { deletedCount: number } }>(
+    mutationFn: (folderPath: string) =>
+      apiClient.delete<{ deletedCount: number }>(
         `/storage/folders/${encodeURIComponent(folderPath)}`,
-      );
-      return data.data;
-    },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
     },
@@ -125,13 +102,8 @@ export function useDeleteFolder() {
 export function useRenameFile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { oldPath: string; newPath: string }) => {
-      const { data } = await api.put<{ data: { newPath: string } }>(
-        "/storage/files/rename",
-        params,
-      );
-      return data.data;
-    },
+    mutationFn: (params: { oldPath: string; newPath: string }) =>
+      apiClient.put<{ newPath: string }>("/storage/files/rename", params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });
     },

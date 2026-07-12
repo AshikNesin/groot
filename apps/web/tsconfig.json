@@ -15,6 +15,7 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/client/*"],
+      "@groot/core/*": ["../../packages/core/src/*"],
       "@groot/ui/*": ["../../packages/ui/src/*"],
       "@groot/ui": ["../../packages/ui/src/index.ts"],
       "@groot/shell/*": ["../../packages/shell/src/*"],

@@ -9,9 +9,6 @@ function createValidator(target: "body" | "query" | "params") {
         const parsed = schema.parse(req[target] ?? {});
         req.validated = req.validated ?? {};
         req.validated[target] = parsed;
-        if (target === "body") {
-          req.body = parsed;
-        }
         next();
       } catch (error) {
         if (error instanceof z.ZodError) {

@@ -1,10 +1,5 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-// Class name utility for merging Tailwind classes
-export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs));
-}
+// Class name utility — reuse the single implementation from @groot/ui.
+export { cn } from "@groot/ui/lib/utils";
 
 // Format currency with locale support.
 // Intl.NumberFormat construction is expensive; cache per locale+currency so
