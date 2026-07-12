@@ -28,7 +28,7 @@ export const IMMUTABLE_EXCLUSIONS: readonly string[] = [
   "secrets/**",
 
   // Generated Prisma client output (regenerated per-project).
-  "packages/database/generated/**",
+  "packages/core/generated/**",
 
   // Sync tooling state — must NEVER be overwritten with the boilerplate's
   // own values (would corrupt this project's last_sync baseline).

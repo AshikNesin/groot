@@ -5,7 +5,7 @@ import { describe, it, expect } from "vite-plus/test";
 /**
  * Server body-parser regression tests.
  *
- * Mirrors the body-parser block in packages/server/src/core/server.ts. The express.text()
+ * Mirrors the body-parser block in packages/core/src/server.ts. The express.text()
  * middleware is load-bearing for AWS SNS webhooks (SES inbound email, S3 event
  * notifications, CloudWatch alarms): SNS posts notifications as
  * Content-Type: text/plain even when the body is JSON, and express.json()

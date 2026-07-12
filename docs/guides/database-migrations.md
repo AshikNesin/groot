@@ -120,7 +120,7 @@ datasource: {
 ```
 
 The **runtime client is unaffected** — it uses the pooled `DATABASE_URL`
-separately via `@prisma/adapter-pg` in `packages/server/src/core/database.ts`.
+separately via `@prisma/adapter-pg` in `packages/core/src/database.ts`.
 
 ### When you need it
 

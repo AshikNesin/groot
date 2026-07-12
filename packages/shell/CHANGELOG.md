@@ -1,4 +1,4 @@
-# @groot/client
+# @groot/shell
 
 ## 0.1.0
 
@@ -10,30 +10,30 @@
   job logger, the dashboard UI, client types, and API methods — now lives in a
   single `@groot/jobs` package with two flat entry points:
 
-  - `@groot/jobs/backend/*` — pg-boss queue/worker/queries, routes, job logger
-  - `@groot/jobs/frontend/*` — dashboard UI, `jobsApi`, types
+  - `@groot/jobs/server/*` — pg-boss queue/worker/queries, routes, job logger
+  - `@groot/jobs/client/*` — dashboard UI, `jobsApi`, types
 
   Business-specific handlers (`todo.jobs.ts`) and bootstrap wiring stay in
   `apps/web/`. This consolidates jobs code that was previously spread across
-  `@groot/server` (`core/job`, `shared/jobs`, `core/logger`), `@groot/client`
+  `@groot/core` (`core/job`, `shared/jobs`, `core/logger`), `@groot/shell`
   (`types/jobs`, apiClient methods), and `apps/web` (dashboard UI).
 
   **Breaking — migration required for downstream repos:**
 
   - `createJobLogger` / `JobLogStream` / `createJobLogStream` moved from
-    `@groot/server/core/logger` → `@groot/jobs/backend/logger`. The
-    `@groot/server/core/logger` re-exports are removed.
-  - The 17 job methods were removed from `apiClient` (`@groot/client/lib/api`).
-    Use `jobsApi` from `@groot/jobs/frontend` instead.
+    `@groot/core/core/logger` → `@groot/jobs/server/logger`. The
+    `@groot/core/core/logger` re-exports are removed.
+  - The 17 job methods were removed from `apiClient` (`@groot/shell/lib/api`).
+    Use `jobsApi` from `@groot/jobs/client` instead.
   - `JobName` changed from an enum (with hardcoded `TODO_*` values) to
     `type JobName = string`. App-specific job names live with their handlers.
   - Server-side imports of job infra must move from
-    `@groot/server/core/job/*` and `@groot/server/shared/jobs/*` to
-    `@groot/jobs/backend/*` (use explicit subpaths like `/worker`, `/logger`,
+    `@groot/core/core/job/*` and `@groot/core/shared/jobs/*` to
+    `@groot/jobs/server/*` (use explicit subpaths like `/worker`, `/logger`,
     `/routes` for the server bundle).
-  - The jobs dashboard UI moved from `apps/web/src/client/app/jobs/` to
-    `@groot/jobs/frontend`. Import pages via `@groot/jobs/frontend`.
+  - The jobs dashboard UI moved from `apps/web/src/client/pages/jobs/` to
+    `@groot/jobs/client`. Import pages via `@groot/jobs/client`.
 
   The `database → logger → job-stream → database` module cycle is resolved as
-  a side effect (job-stream left `@groot/server/core/logger`). `pg-boss` is no
-  longer a dependency of `@groot/server` (it now lives in `@groot/jobs`).
+  a side effect (job-stream left `@groot/core/core/logger`). `pg-boss` is no
+  longer a dependency of `@groot/core` (it now lives in `@groot/jobs`).
