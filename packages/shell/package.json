@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./*": "./src/*",
+    "./pages/*": "./src/pages/*",
     "./index.css": "./src/index.css"
   },
   "dependencies": {

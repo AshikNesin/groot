@@ -5,10 +5,10 @@ import { useAuthStore } from "@groot/shell/store/auth";
 import { ProtectedRoute } from "@groot/shell/components/ProtectedRoute";
 import { Layout } from "@groot/shell/components/Layout";
 import { Todos } from "./pages/todo/Todos";
-import { Storage } from "./pages/storage/Storage";
+import { Storage } from "@groot/shell/pages/storage/Storage";
 import { Jobs, JobDetail } from "@groot/jobs/client";
-import { Settings } from "./pages/settings/Settings";
-import { Login } from "./pages/auth/Login";
+import { Settings } from "@groot/shell/pages/settings/Settings";
+import { Login } from "@groot/shell/pages/auth/Login";
 import { Toaster } from "@groot/ui/sonner";
 
 function App() {
