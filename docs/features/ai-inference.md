@@ -21,7 +21,7 @@ The core adapter is located in `packages/core/src/ai/`. It provides an `AI` clas
 First, instantiate the AI class with your desired provider and model:
 
 ```typescript
-import { AI } from "@groot/core/core/ai";
+import { AI } from "@groot/core/ai";
 
 const ai = new AI({ provider: "anthropic", model: "claude-sonnet-4-6" });
 ```
@@ -117,7 +117,7 @@ const response = await complete(model, {
 The core adapter is a library — instantiate it wherever you need AI in your app code:
 
 ```typescript
-import { AI } from "@groot/core/core/ai";
+import { AI } from "@groot/core/ai";
 
 const ai = new AI({ provider: "openai", model: "gpt-4o-mini" });
 const text = await ai.complete({ prompt: "Translate 'hello world' to French." });

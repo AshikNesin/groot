@@ -1,5 +1,5 @@
 import { FilesError } from "files-sdk";
-import { files } from "../storage";
+import { files } from "./files";
 import { Boom } from "../errors";
 import { getContentType } from "./storage.utils";
 

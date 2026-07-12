@@ -56,7 +56,7 @@ export type CreateDTO = z.infer<typeof createSchema>;
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.model.ts
-import { prisma } from "@groot/core/core/database";
+import { prisma } from "@groot/core/database";
 import type { CreateDTO } from "./myfeature.validation";
 
 export async function create(data: CreateDTO) {
@@ -90,7 +90,7 @@ export async function findAll() {
 // apps/web/src/server/api/myfeature/myfeature.controller.ts
 import type { Request, Response } from "express";
 import * as Service from "./myfeature.service";
-import { parseId } from "@groot/core/core/utils/controller.utils";
+import { parseId } from "@groot/core/utils/controller.utils";
 
 export async function getAll() {
   return await Service.findAll();
@@ -112,9 +112,9 @@ export async function getById(req: Request) {
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.routes.ts
-import { createRouter } from "@groot/core/core/utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as controller from "./myfeature.controller";
-import { validate } from "@groot/core/core/middlewares/validation.middleware";
+import { validate } from "@groot/core/middlewares/validation.middleware";
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
@@ -130,7 +130,7 @@ export default router;
 
 ```typescript
 // apps/web/src/server/routes.ts
-import myFeatureRoutes from "./app/myfeature/myfeature.routes";
+import myFeatureRoutes from "./api/myfeature/myfeature.routes";
 
 export function registerRoutes(app: Express): void {
   // ... existing routes
@@ -141,14 +141,14 @@ export function registerRoutes(app: Express): void {
 ### 8. Add Tests
 
 ```typescript
-// tests/server/app/myfeature/myfeature.routes.test.ts
+// tests/server/api/myfeature/myfeature.routes.test.ts
 import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import express from "express";
-import myFeatureRoutes from "./app/myfeature/myfeature.routes";
+import myFeatureRoutes from "./api/myfeature/myfeature.routes";
 
 // Mock the service
-vi.mock("./app/myfeature/myfeature.service", () => ({
+vi.mock("./api/myfeature/myfeature.service", () => ({
   findAll: vi.fn().mockResolvedValue([]),
   create: vi.fn().mockResolvedValue({ id: 1 }),
 }));
@@ -181,7 +181,7 @@ export interface MyJobPayload {
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/core/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
 import type { MyJobPayload } from "./myfeature.validation";
 
 export const myJobHandler: JobHandler<MyJobPayload> = async ({ data }) => {
@@ -198,7 +198,7 @@ export function registerMyFeatureJobs(): void {
 
 ```typescript
 // apps/web/src/server/routes.ts
-import { registerMyFeatureJobs } from "./app/myfeature/myfeature.jobs";
+import { registerMyFeatureJobs } from "./api/myfeature/myfeature.jobs";
 
 export function registerJobHandlers(): void {
   registerMyFeatureJobs();

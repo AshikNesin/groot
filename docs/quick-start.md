@@ -119,9 +119,9 @@ mkdir -p apps/web/src/server/api/myfeature
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.routes.ts
-import { createRouter } from "@groot/core/core/utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as controller from "./myfeature.controller";
-import { validate } from "@groot/core/core/middlewares/validation.middleware";
+import { validate } from "@groot/core/middlewares/validation.middleware";
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
@@ -139,7 +139,7 @@ export default router;
 // apps/web/src/server/api/myfeature/myfeature.controller.ts
 import type { Request, Response } from "express";
 import * as Service from "./myfeature.service";
-import { parseId } from "@groot/core/core/utils/controller.utils";
+import { parseId } from "@groot/core/utils/controller.utils";
 
 export async function getAll() {
   return await Service.findAll();
@@ -161,7 +161,7 @@ export async function getById(req: Request) {
 
 ```typescript
 // apps/web/src/server/routes.ts
-import myFeatureRoutes from "./app/myfeature/myfeature.routes";
+import myFeatureRoutes from "./api/myfeature/myfeature.routes";
 
 export function registerRoutes(app: Express): void {
   // ... existing routes

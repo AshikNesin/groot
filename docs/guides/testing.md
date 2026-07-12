@@ -116,7 +116,7 @@ describe("Todo Jobs", () => {
 ```typescript
 import { vi } from "vitest";
 
-vi.mock("@groot/core/core/database", () => ({
+vi.mock("@groot/core/database", () => ({
   prisma: {
     todo: {
       findMany: vi.fn().mockResolvedValue([]),
@@ -130,10 +130,16 @@ vi.mock("@groot/core/core/database", () => ({
 ### Job System Mocking
 
 ```typescript
-vi.mock("@groot/core/core/job", () => ({
+vi.mock("@groot/jobs/server/queue", () => ({
   addJob: vi.fn().mockResolvedValue("job-id"),
   scheduleJob: vi.fn().mockResolvedValue("scheduled-id"),
+}));
+
+vi.mock("@groot/jobs/server/queries", () => ({
   getJobs: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@groot/jobs/server/worker", () => ({
   registerJobHandler: vi.fn(),
 }));
 ```

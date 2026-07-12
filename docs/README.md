@@ -93,16 +93,16 @@ Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
 
 ## Core Modules
 
-| Module      | Location                        | Purpose                                             |
-| ----------- | ------------------------------- | --------------------------------------------------- |
-| AI          | `@groot/core/core/ai/`          | Unified LLM client with Zod schema conversion       |
-| Errors      | `@groot/core/core/errors/`      | Boom factory, error codes, Prisma error handler     |
-| Jobs        | `@groot/core/core/job/`         | Queue client, queries, worker, dynamic registration |
-| KV          | `@groot/core/core/kv/`          | Keyv key-value storage with PostgreSQL              |
-| Logger      | `@groot/core/logger/`           | Pino with AsyncLocalStorage context                 |
-| Storage     | `@groot/core/core/storage/`     | S3 file storage service                             |
-| Middlewares | `@groot/core/core/middlewares/` | Auth, validation, rate-limiting, error handling     |
-| Utils       | `@groot/core/core/utils/`       | `createRouter`, `parseId`, validation helpers       |
+| Module      | Location                   | Purpose                                             |
+| ----------- | -------------------------- | --------------------------------------------------- |
+| AI          | `@groot/core/ai/`          | Unified LLM client with Zod schema conversion       |
+| Errors      | `@groot/core/errors/`      | Boom factory, error codes, Prisma error handler     |
+| Jobs        | `@groot/jobs/server/`      | Queue client, queries, worker, dynamic registration |
+| KV          | `@groot/core/kv/`          | Keyv key-value storage with PostgreSQL              |
+| Logger      | `@groot/core/logger/`      | Pino with AsyncLocalStorage context                 |
+| Storage     | `@groot/core/storage/`     | S3 file storage service                             |
+| Middlewares | `@groot/core/middlewares/` | Auth, validation, rate-limiting, error handling     |
+| Utils       | `@groot/core/utils/`       | `createRouter`, `parseId`, validation helpers       |
 
 ## Next Steps
 

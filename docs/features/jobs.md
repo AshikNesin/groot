@@ -48,7 +48,7 @@ export function registerTodoJobs(): void {
 Then register in `apps/web/src/server/routes.ts`:
 
 ```typescript
-import { registerTodoJobs } from "./app/todo/todo.jobs";
+import { registerTodoJobs } from "./api/todo/todo.jobs";
 
 export function registerJobHandlers(): void {
   registerTodoJobs();
@@ -175,7 +175,7 @@ export function registerFeatureJobs(): void {
 3. **Register in `apps/web/src/server/routes.ts`**:
 
 ```typescript
-import { registerFeatureJobs } from "./app/feature/feature.jobs";
+import { registerFeatureJobs } from "./api/feature/feature.jobs";
 
 export function registerJobHandlers(): void {
   registerFeatureJobs();

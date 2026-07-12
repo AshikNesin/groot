@@ -15,7 +15,7 @@ Application settings live in `config.yml` — a YAML file at the project root. I
 3. Access config in code:
 
    ```typescript
-   import { config } from "@groot/core/core/config";
+   import { config } from "@groot/core/config";
 
    config.app.name; // "Groot"
    config.logging.level; // "info"

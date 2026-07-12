@@ -86,7 +86,7 @@ export const storageService = {
 
 ## Frontend Integration
 
-`apps/web/src/client/pages/storage/pages/Storage.tsx` provides:
+`packages/shell/src/pages/storage/Storage.tsx` provides:
 
 - Breadcrumb navigation + "Up" button
 - Inline uploads (single + bulk)
@@ -94,7 +94,7 @@ export const storageService = {
 - File rename modal
 - Table UI with download, rename, delete actions
 
-React Query keys live in `apps/web/src/client/pages/storage/hooks/useStorage.ts`.
+React Query keys live in `packages/shell/src/pages/storage/hooks/useStorage.ts`.
 
 ## Security & Rate Limiting
 

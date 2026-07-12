@@ -34,6 +34,6 @@ The client is a Vite + React 19 SPA that consumes the Express API through Axios 
 
 ## Local Development
 
-`pnpm dev` starts the Express server with Vite middleware. The client uses `@groot/ui`, `@groot/shell`, and relative `./app/*` imports via Vite + TypeScript path aliases.
+`pnpm dev` starts the Express server with Vite middleware. The client uses `@groot/ui`, `@groot/shell`, and relative `./pages/*` imports (business features live in `apps/web/src/client/pages/`) via Vite + TypeScript path aliases.
 
 Use this document as a checklist when building new client features so routing, auth, and data patterns stay uniform.

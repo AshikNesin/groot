@@ -77,7 +77,7 @@ Response (auto-serialized by handle middleware)
 Routes use `createRouter()` which automatically wraps handlers:
 
 ```typescript
-import { createRouter } from "@groot/core/core/utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as controller from "./todo.controller";
 
 const router = createRouter();
@@ -117,7 +117,7 @@ No base classes, no manual response handling - just return values.
 Zod schemas validate requests:
 
 ```typescript
-import { validate } from "@groot/core/core/middlewares/validation.middleware";
+import { validate } from "@groot/core/middlewares/validation.middleware";
 import { createTodoSchema } from "./todo.validation";
 
 router.post("/", validate(createTodoSchema, "body"), controller.create);
@@ -130,7 +130,7 @@ Validated data is available at `req.validated.body`.
 Use `Boom` for HTTP errors:
 
 ```typescript
-import { Boom } from "@groot/core/core/errors";
+import { Boom } from "@groot/core/errors";
 
 if (!todo) {
   throw Boom.notFound("Todo not found");
@@ -143,14 +143,14 @@ Prisma errors are automatically transformed by `PrismaHandler`.
 
 Built on pg-boss with modular structure:
 
-| File                        | Purpose                           |
-| --------------------------- | --------------------------------- |
-| `core/job/config.ts`        | Environment-based configuration   |
-| `core/job/client.ts`        | PgBoss singleton instance         |
-| `core/job/queue.ts`         | Job registration and queueing API |
-| `core/job/queries.ts`       | Job inspection queries            |
-| `core/job/worker.ts`        | Worker management                 |
-| `core/job/error-handler.ts` | Sentry + logging wrapper          |
+| File (in `packages/jobs/src/server/`) | Purpose                           |
+| ------------------------------------- | --------------------------------- |
+| `config.ts`                           | Environment-based configuration   |
+| `client.ts`                           | PgBoss singleton instance         |
+| `queue.ts`                            | Job registration and queueing API |
+| `queries.ts`                          | Job inspection queries            |
+| `worker.ts`                           | Worker management                 |
+| `error-handler.ts`                    | Sentry + logging wrapper          |
 
 ### Job Registration
 
@@ -158,7 +158,7 @@ Jobs are registered in feature modules:
 
 ```typescript
 // todo.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/core/core/job";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
 
 export const cleanupHandler: JobHandler<CleanupPayload> = async ({ data }) => {
   // Job logic
@@ -200,7 +200,7 @@ Uses AsyncLocalStorage for request tracing.
 Keyv with PostgreSQL adapter:
 
 ```typescript
-import kv, { createNamespaceKv } from "@groot/core/core/kv";
+import kv, { createNamespaceKv } from "@groot/core/kv";
 
 // Basic usage
 await kv.set("key", { data: "value" });
