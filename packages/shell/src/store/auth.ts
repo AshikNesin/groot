@@ -7,11 +7,14 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   hasCheckedAuth: boolean;
+  /** Bumped on any auth-state change so stale 401s can be ignored. */
+  generation: number;
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -20,6 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
   error: null,
   hasCheckedAuth: false,
+  generation: 0,
 
   /**
    * Login with email and password (JWT)
@@ -28,7 +32,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { user } = await apiClient.login(email, password);
-      set({ isAuthenticated: true, user, isLoading: false });
+      set((s) => ({
+        isAuthenticated: true,
+        user,
+        isLoading: false,
+        generation: s.generation + 1,
+      }));
     } catch (error) {
       set({
         isAuthenticated: false,
@@ -47,7 +56,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await apiClient.logout();
     } finally {
-      set({ isAuthenticated: false, user: null, error: null });
+      set((s) => ({
+        isAuthenticated: false,
+        user: null,
+        error: null,
+        generation: s.generation + 1,
+      }));
     }
   },
 
@@ -73,4 +87,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     }
   },
+
+  /**
+   * Clear auth state without a server call. Used by the API 401 interceptor
+   * when the session expires mid-session — <ProtectedRoute> reacts and
+   * navigates to /login.
+   */
+  clearAuth: () =>
+    set((s) => ({
+      isAuthenticated: false,
+      user: null,
+      error: null,
+      generation: s.generation + 1,
+    })),
 }));

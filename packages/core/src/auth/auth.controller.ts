@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
 import * as AuthService from "./auth.service";
 import type { LoginDTO, CreateUserDTO } from "./auth.validation";
-import { Boom } from "../errors";
+import { requireUser, validatedBody } from "../utils/controller.utils";
 import { setAuthCookie, clearAuthCookie } from "../utils/auth-cookie.utils";
 
 export async function login(req: Request, res: Response) {
-  const body = req.body as LoginDTO;
+  const body = validatedBody<LoginDTO>(req);
   const result = await AuthService.login(body);
 
   setAuthCookie(res, result.token);
@@ -22,11 +22,7 @@ export async function logout(req: Request, res: Response) {
  * Get current authenticated user
  */
 export async function getCurrentUser(req: Request) {
-  const user = req.user;
-  if (!user) {
-    throw Boom.unauthorized("Authentication required");
-  }
-
+  const user = requireUser(req);
   return await AuthService.getUserById({ userId: user.userId });
 }
 
@@ -34,7 +30,7 @@ export async function getCurrentUser(req: Request) {
  * Create a new user (admin only)
  */
 export async function createUser(req: Request) {
-  const body = req.body as CreateUserDTO;
+  const body = validatedBody<CreateUserDTO>(req);
   return await AuthService.createUser(body);
 }
 

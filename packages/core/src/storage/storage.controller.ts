@@ -9,10 +9,11 @@ import type {
   RenameFileDTO,
 } from "./storage.validation";
 import { Boom } from "../errors";
+import { validatedBody, validatedQuery } from "../utils/controller.utils";
 import { sanitizeFileName } from "./storage.utils";
 
 export async function listFiles(req: Request) {
-  const query = (req.validated?.query ?? req.query) as ListFilesDTO;
+  const query = validatedQuery<ListFilesDTO>(req);
   return await StorageFileService.listFiles({
     prefix: query.prefix,
     delimiter: query.delimiter,
@@ -36,7 +37,7 @@ export async function uploadFile(req: Request) {
 }
 
 export async function downloadFile(req: Request, res: Response) {
-  const query = (req.validated?.query ?? req.query) as DownloadFileDTO;
+  const query = validatedQuery<DownloadFileDTO>(req);
   const file = await StorageFileService.downloadFile({
     filePath: query.filePath,
   });
@@ -47,21 +48,21 @@ export async function downloadFile(req: Request, res: Response) {
 }
 
 export async function deleteFiles(req: Request) {
-  const body = req.body as DeleteFilesDTO;
+  const body = validatedBody<DeleteFilesDTO>(req);
   return await StorageFileService.deleteFiles({
     filePaths: body.filePaths,
   });
 }
 
 export async function getFileMetadata(req: Request) {
-  const query = (req.validated?.query ?? req.query) as GetFileMetadataDTO;
+  const query = validatedQuery<GetFileMetadataDTO>(req);
   return await StorageFileService.getFileMetadata({
     filePath: query.filePath,
   });
 }
 
 export async function createFolder(req: Request) {
-  const body = req.body as CreateFolderDTO;
+  const body = validatedBody<CreateFolderDTO>(req);
   return await StorageFileService.createFolder({ folderPath: body.folderPath });
 }
 
@@ -75,7 +76,7 @@ export async function deleteFolder(req: Request<{ folderPath?: string }>) {
 }
 
 export async function renameFile(req: Request) {
-  const body = req.body as RenameFileDTO;
+  const body = validatedBody<RenameFileDTO>(req);
   return await StorageFileService.renameFile({
     oldPath: body.oldPath,
     newPath: body.newPath,

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -7,29 +8,23 @@ import {
   DialogTitle,
 } from "@groot/ui/dialog";
 import { Button } from "@groot/ui/button";
+import { Form, FormField } from "@groot/ui/form";
 import { Input } from "@groot/ui/input";
-import { Label } from "@groot/ui/label";
+
+const renameSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+});
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentName: string | undefined;
-  value: string;
-  onValueChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   isPending: boolean;
+  onRename: (newName: string) => void;
 };
 
-/** Modal form for renaming a file. */
-export function RenameDialog({
-  open,
-  onOpenChange,
-  currentName,
-  value,
-  onValueChange,
-  onSubmit,
-  isPending,
-}: Props) {
+/** Modal form for renaming a file. Owns its own field state, seeded from `currentName`. */
+export function RenameDialog({ open, onOpenChange, currentName, isPending, onRename }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -37,24 +32,16 @@ export function RenameDialog({
           <DialogTitle>Rename File</DialogTitle>
           <DialogDescription>Enter a new name for the file</DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="rename-value">New Name</Label>
-            <Input
-              id="rename-value"
-              value={value}
-              onChange={(event) => onValueChange(event.target.value)}
-              placeholder="filename.txt"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
-                }
-              }}
-              required
-            />
-            <p className="text-xs text-muted-foreground">Current: {currentName}</p>
-          </div>
+        <Form
+          schema={renameSchema}
+          defaultValues={{ name: currentName ?? "" }}
+          onSubmit={({ name }) => onRename(name)}
+          className="space-y-4"
+        >
+          <FormField name="name" label="New Name">
+            <Input placeholder="filename.txt" />
+          </FormField>
+          <p className="text-xs text-muted-foreground">Current: {currentName}</p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -63,7 +50,7 @@ export function RenameDialog({
               {isPending ? "Renaming..." : "Rename"}
             </Button>
           </DialogFooter>
-        </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { sendSuccess } from "../utils/api-response.utils";
 
 /**
  * Wraps an asynchronous controller function that returns data.
@@ -6,6 +7,9 @@ import type { Request, Response, NextFunction } from "express";
  * and sent as a JSON envelope `{ success: true, data }`.
  * If it returns `null` or `undefined`, a 204 No Content is sent (unless headers are already sent).
  * If the function throws an error, it is passed to `next()` for centralized error handling.
+ *
+ * To return a non-200 status, call `res.status(N)` before returning — the wrapper
+ * honors `res.statusCode` (which defaults to 200).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Controller return type is intentionally dynamic
 export const handle =
@@ -26,10 +30,7 @@ export const handle =
 
       // Check if response status was explicitly set during the function, otherwise use 200
       const status = res.statusCode === 200 ? 200 : res.statusCode;
-      res.status(status).json({
-        success: true,
-        data: result,
-      });
+      sendSuccess(res, result, status);
     } catch (err) {
       next(err);
     }

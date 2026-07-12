@@ -1,23 +1,46 @@
 import { jobsApi } from "./api";
-import type { Job, JobLog } from "./types";
+import type { JobLog } from "./types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 /**
- * Owns the job-detail page's data + actions: loads the job, polls its logs,
- * and exposes the retry / re-run / resume / cancel / delete mutations.
- * Lifted out of the component so the page is mostly layout.
+ * Owns the job-detail page's data + actions. The job is fetched via React
+ * Query; logs are polled + accumulated on local state (a streaming pattern the
+ * query cache doesn't model). Mutations call the API, toast, then invalidate
+ * the job query.
  */
 export function useJobDetail() {
   const { queueName, jobId } = useParams<{ queueName: string; jobId: string }>();
   const navigate = useNavigate();
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const jobQuery = useQuery({
+    queryKey: ["job", queueName, jobId],
+    queryFn: () => {
+      if (!queueName || !jobId) throw new Error("Missing job reference");
+      return jobsApi.getJob(queueName, jobId);
+    },
+    enabled: Boolean(queueName && jobId),
+  });
+
+  const job = jobQuery.data ?? null;
+  const loading = jobQuery.isLoading;
+  const error = jobQuery.error
+    ? jobQuery.error instanceof Error
+      ? jobQuery.error.message
+      : "Failed to load job"
+    : null;
+
+  const invalidateJob = () =>
+    queryClient.invalidateQueries({ queryKey: ["job", queueName, jobId] });
+
+  // Logs are a streaming/accumulation concern — polled and appended — so they
+  // stay on local state rather than the React Query cache.
   const [logs, setLogs] = useState<JobLog[]>([]);
-  const lastLogIdRef = useRef<number>(0);
-  const activeJobRef = useRef<string>("");
+  const lastLogIdRef = useRef(0);
+  const activeJobRef = useRef("");
 
   const fetchLogs = useCallback(async () => {
     if (!queueName || !jobId) return;
@@ -28,30 +51,11 @@ export function useJobDetail() {
       if (activeJobRef.current !== jobKey) return;
       if (newLogs.length > 0) {
         setLogs((prevLogs) => [...prevLogs, ...newLogs]);
-        const maxId = Math.max(...newLogs.map((l) => l.id));
-        lastLogIdRef.current = Math.max(currentLastId, maxId);
+        lastLogIdRef.current = Math.max(currentLastId, ...newLogs.map((l) => l.id));
       }
     } catch (err) {
       if (activeJobRef.current !== jobKey) return;
       console.error("Failed to fetch logs", err);
-    }
-  }, [queueName, jobId]);
-
-  const loadJob = useCallback(async () => {
-    if (!queueName || !jobId) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const jobData = await jobsApi.getJob(queueName, jobId);
-      setJob(jobData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load job");
-      toast.error("Error", {
-        description: err instanceof Error ? err.message : "Failed to load job",
-      });
-    } finally {
-      setLoading(false);
     }
   }, [queueName, jobId]);
 
@@ -60,19 +64,16 @@ export function useJobDetail() {
     activeJobRef.current = jobKey;
     setLogs([]);
     lastLogIdRef.current = 0;
-
-    loadJob();
     const interval = setInterval(fetchLogs, 2000);
     return () => clearInterval(interval);
-  }, [queueName, jobId, loadJob, fetchLogs]);
+  }, [queueName, jobId, fetchLogs]);
 
   const retry = async () => {
     if (!job) return;
-
     try {
       await jobsApi.retryJob(job.name, job.id);
       toast.success("Success", { description: "Job has been queued for retry" });
-      loadJob();
+      invalidateJob();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to retry job",
@@ -82,11 +83,10 @@ export function useJobDetail() {
 
   const cancel = async () => {
     if (!job) return;
-
     try {
       await jobsApi.cancelJob(job.name, job.id);
       toast.success("Success", { description: "Job has been cancelled" });
-      loadJob();
+      invalidateJob();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to cancel job",
@@ -96,11 +96,10 @@ export function useJobDetail() {
 
   const resume = async () => {
     if (!job) return;
-
     try {
       await jobsApi.resumeJob(job.name, job.id);
       toast.success("Success", { description: "Job has been resumed" });
-      loadJob();
+      invalidateJob();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to resume job",
@@ -110,13 +109,11 @@ export function useJobDetail() {
 
   const deleteJob = async () => {
     if (!job) return;
-
     if (
       !window.confirm("Are you sure you want to delete this job? This action cannot be undone.")
     ) {
       return;
     }
-
     try {
       await jobsApi.deleteJob(job.name, job.id);
       toast.success("Success", { description: "Job has been deleted" });
@@ -130,7 +127,6 @@ export function useJobDetail() {
 
   const rerun = async () => {
     if (!job) return;
-
     try {
       const result = await jobsApi.rerunJob(job.name, job.id);
       toast.success("Success", {

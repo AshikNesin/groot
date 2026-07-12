@@ -1,19 +1,4 @@
 import * as core from "./core";
-import * as factories from "./factories";
-import * as context from "./context";
-import * as traceContext from "./trace-context";
-import * as breadcrumbs from "./breadcrumbs";
-
-/**
- * Unified Logger System namespace
- */
-export const LoggerSystem = {
-  ...core,
-  ...factories,
-  context,
-  traceContext,
-  breadcrumbs,
-} as const;
 
 // Backwards compatibility core logger export
 export const logger = core.logger;

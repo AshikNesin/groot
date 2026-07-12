@@ -1,6 +1,5 @@
 import { Button } from "@groot/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@groot/ui/card";
-import dayjs from "dayjs";
 import {
   Dialog,
   DialogContent,
@@ -11,11 +10,21 @@ import {
 } from "@groot/ui/dialog";
 import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
-import { Alert } from "@groot/ui/alert";
 import { Badge } from "@groot/ui/badge";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { type Passkey, passkeyService } from "../services/passkey";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { z } from "zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Form, FormField } from "@groot/ui/form";
+import { formatDisplayDate } from "../lib/utils";
+import { useToastMutation } from "../hooks/useToastMutation";
+
+const PASSKEYS_KEY = ["passkeys"] as const;
+
+const passkeyNameSchema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
+});
 
 function getPasskeyIcon(passkey: Passkey): string {
   if (passkey.deviceType === "platform") {
@@ -29,80 +38,71 @@ function getPasskeyIcon(passkey: Passkey): string {
 
 function formatDate(date: Date | null): string {
   if (!date) return "Never";
-  return dayjs(date).format("MMM D, YYYY");
+  return formatDisplayDate(date);
 }
 
 export function PasskeyManager() {
-  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAddingPasskey, setIsAddingPasskey] = useState(false);
+  const queryClient = useQueryClient();
+  const passkeysQuery = useQuery({
+    queryKey: PASSKEYS_KEY,
+    queryFn: () => passkeyService.listPasskeys(),
+  });
+  const passkeys = passkeysQuery.data ?? [];
+  const isLoading = passkeysQuery.isLoading;
+
+  const [newPasskeyName, setNewPasskeyName] = useState("");
   const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null);
   const [passkeyToEdit, setPasskeyToEdit] = useState<Passkey | null>(null);
-  const [newPasskeyName, setNewPasskeyName] = useState("");
-  const [editedPasskeyName, setEditedPasskeyName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
-  const loadPasskeys = useCallback(async () => {
-    try {
-      const data = await passkeyService.listPasskeys();
-      setPasskeys(data);
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Failed to load passkeys");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: PASSKEYS_KEY });
 
-  useEffect(() => {
-    loadPasskeys();
-  }, [loadPasskeys]);
+  const addMutation = useToastMutation(
+    (name: string | undefined) => passkeyService.registerPasskey(name),
+    {
+      success: "Passkey added successfully",
+      error: { title: "Add failed", description: "Unable to add passkey" },
+      onSuccess: invalidate,
+    },
+  );
 
-  const handleAddPasskey = async () => {
-    setIsAddingPasskey(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      await passkeyService.registerPasskey(newPasskeyName || undefined);
-      setSuccess("Passkey added successfully");
-      setNewPasskeyName("");
-      await loadPasskeys();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Failed to add passkey");
-    } finally {
-      setIsAddingPasskey(false);
-    }
+  const deleteMutation = useToastMutation((id: number) => passkeyService.deletePasskey(id), {
+    success: "Passkey deleted successfully",
+    error: { title: "Delete failed", description: "Unable to delete passkey" },
+    onSuccess: invalidate,
+  });
+
+  const updateNameMutation = useToastMutation(
+    (vars: { id: number; name: string }) => passkeyService.updatePasskeyName(vars.id, vars.name),
+    {
+      success: "Passkey name updated successfully",
+      error: { title: "Update failed", description: "Unable to update passkey name" },
+      onSuccess: invalidate,
+    },
+  );
+
+  const handleAddPasskey = () => {
+    addMutation.mutate(newPasskeyName || undefined, {
+      onSuccess: () => setNewPasskeyName(""),
+    });
   };
 
-  const handleDeletePasskey = async () => {
+  const handleDeletePasskey = () => {
     if (!passkeyToDelete) return;
-
-    setError(null);
-    setSuccess(null);
-    try {
-      await passkeyService.deletePasskey(passkeyToDelete.id);
-      setSuccess("Passkey deleted successfully");
-      setPasskeyToDelete(null);
-      await loadPasskeys();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Failed to delete passkey");
-    }
+    deleteMutation.mutate(passkeyToDelete.id, {
+      onSuccess: () => setPasskeyToDelete(null),
+    });
   };
 
-  const handleUpdatePasskeyName = async () => {
-    if (!passkeyToEdit || !editedPasskeyName.trim()) return;
-
-    setError(null);
-    setSuccess(null);
-    try {
-      await passkeyService.updatePasskeyName(passkeyToEdit.id, editedPasskeyName);
-      setSuccess("Passkey name updated successfully");
-      setPasskeyToEdit(null);
-      setEditedPasskeyName("");
-      await loadPasskeys();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Failed to update passkey name");
-    }
+  const handleUpdatePasskeyName = (name: string) => {
+    if (!passkeyToEdit) return;
+    updateNameMutation.mutate(
+      { id: passkeyToEdit.id, name },
+      {
+        onSuccess: () => {
+          setPasskeyToEdit(null);
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -131,10 +131,6 @@ export function PasskeyManager() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Error/Success Messages */}
-          {error && <Alert variant="destructive">{error}</Alert>}
-          {success && <Alert>{success}</Alert>}
-
           {/* Add New Passkey */}
           <div className="flex items-end gap-4">
             <div className="flex-1 space-y-2">
@@ -144,16 +140,29 @@ export function PasskeyManager() {
                 placeholder="e.g., My iPhone, Work Laptop"
                 value={newPasskeyName}
                 onChange={(e) => setNewPasskeyName(e.target.value)}
-                disabled={isAddingPasskey}
+                disabled={addMutation.isPending}
               />
             </div>
-            <Button onClick={handleAddPasskey} disabled={isAddingPasskey}>
-              {isAddingPasskey ? "Adding..." : "Add Passkey"}
+            <Button onClick={handleAddPasskey} disabled={addMutation.isPending}>
+              {addMutation.isPending ? "Adding..." : "Add Passkey"}
             </Button>
           </div>
 
           {/* Passkey List */}
-          {passkeys.length === 0 ? (
+          {passkeysQuery.isError ? (
+            <div className="text-center py-8 text-muted-foreground space-y-3">
+              <div className="text-4xl">⚠️</div>
+              <p>Couldn't load passkeys.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => passkeysQuery.refetch()}
+                disabled={passkeysQuery.isFetching}
+              >
+                {passkeysQuery.isFetching ? "Retrying..." : "Retry"}
+              </Button>
+            </div>
+          ) : passkeys.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <div className="text-4xl mb-4">🔐</div>
               <p>No passkeys configured yet.</p>
@@ -184,14 +193,7 @@ export function PasskeyManager() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setPasskeyToEdit(passkey);
-                        setEditedPasskeyName(passkey.credentialName || "");
-                      }}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => setPasskeyToEdit(passkey)}>
                       Edit
                     </Button>
                     <Button
@@ -230,8 +232,12 @@ export function PasskeyManager() {
             <Button variant="outline" onClick={() => setPasskeyToDelete(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeletePasskey}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDeletePasskey}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -246,25 +252,24 @@ export function PasskeyManager() {
               Give your passkey a memorable name to help identify it.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-passkey-name">Passkey Name</Label>
-              <Input
-                id="edit-passkey-name"
-                placeholder="e.g., My iPhone, Work Laptop"
-                value={editedPasskeyName}
-                onChange={(e) => setEditedPasskeyName(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPasskeyToEdit(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdatePasskeyName} disabled={!editedPasskeyName.trim()}>
-              Save
-            </Button>
-          </DialogFooter>
+          <Form
+            schema={passkeyNameSchema}
+            defaultValues={{ name: passkeyToEdit?.credentialName ?? "" }}
+            onSubmit={({ name }) => handleUpdatePasskeyName(name)}
+            className="space-y-4 py-4"
+          >
+            <FormField name="name" label="Passkey Name">
+              <Input placeholder="e.g., My iPhone, Work Laptop" />
+            </FormField>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setPasskeyToEdit(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateNameMutation.isPending}>
+                {updateNameMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

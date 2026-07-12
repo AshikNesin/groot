@@ -6,18 +6,14 @@ import type {
   UpdatePasskeyNameDTO,
   GenerateAuthenticationOptionsDTO,
 } from "./passkey.validation";
-import { Boom } from "../errors";
-import { parseId } from "../utils/controller.utils";
+import { parseId, requireUser, validatedBody } from "../utils/controller.utils";
 import { setAuthCookie } from "../utils/auth-cookie.utils";
 
 /**
  * Generate options for passkey registration
  */
 export async function generateRegistrationOptions(req: Request) {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw Boom.unauthorized("Authentication required");
-  }
+  const { userId } = requireUser(req);
   return await PasskeySystem.generateRegistrationOptions({ userId });
 }
 
@@ -25,11 +21,8 @@ export async function generateRegistrationOptions(req: Request) {
  * Verify passkey registration
  */
 export async function verifyRegistration(req: Request) {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw Boom.unauthorized("Authentication required");
-  }
-  const payload = req.body as VerifyRegistrationDTO;
+  const { userId } = requireUser(req);
+  const payload = validatedBody<VerifyRegistrationDTO>(req);
 
   return await PasskeySystem.verifyRegistration({
     userId,
@@ -42,7 +35,7 @@ export async function verifyRegistration(req: Request) {
  * Generate options for passkey authentication
  */
 export async function generateAuthenticationOptions(req: Request) {
-  const body = req.body as GenerateAuthenticationOptionsDTO;
+  const body = validatedBody<GenerateAuthenticationOptionsDTO>(req);
   return await PasskeySystem.generateAuthenticationOptions({ email: body?.email });
 }
 
@@ -50,7 +43,7 @@ export async function generateAuthenticationOptions(req: Request) {
  * Verify passkey authentication
  */
 export async function verifyAuthentication(req: Request, res: Response) {
-  const body = req.body as VerifyAuthenticationDTO;
+  const body = validatedBody<VerifyAuthenticationDTO>(req);
   const result = await PasskeySystem.verifyAuthentication({
     email: body.email,
     response: body.response,
@@ -65,10 +58,7 @@ export async function verifyAuthentication(req: Request, res: Response) {
  * List all passkeys for the user
  */
 export async function listPasskeys(req: Request) {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw Boom.unauthorized("Authentication required");
-  }
+  const { userId } = requireUser(req);
   return await PasskeySystem.listPasskeys({ userId });
 }
 
@@ -76,10 +66,7 @@ export async function listPasskeys(req: Request) {
  * Delete a passkey (remove passkey)
  */
 export async function deletePasskey(req: Request) {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw Boom.unauthorized("Authentication required");
-  }
+  const { userId } = requireUser(req);
   const passkeyId = parseId(req.params.id);
 
   return await PasskeySystem.deletePasskey({ userId, passkeyId });
@@ -89,13 +76,10 @@ export async function deletePasskey(req: Request) {
  * Update passkey name
  */
 export async function updatePasskeyName(req: Request) {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw Boom.unauthorized("Authentication required");
-  }
+  const { userId } = requireUser(req);
 
   const passkeyId = parseId(req.params.id);
-  const payload = req.body as UpdatePasskeyNameDTO;
+  const payload = validatedBody<UpdatePasskeyNameDTO>(req);
 
   return await PasskeySystem.updatePasskeyName({
     userId,

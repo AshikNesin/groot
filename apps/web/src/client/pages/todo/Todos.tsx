@@ -1,9 +1,9 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useState } from "react";
 import { Button } from "@groot/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@groot/ui/card";
+import { Form, FormField } from "@groot/ui/form";
 import { Input } from "@groot/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@groot/ui/dialog";
 import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "./hooks/useTodos";
@@ -13,26 +13,19 @@ const todoSchema = z.object({
   title: z.string().min(1, "Title is required"),
 });
 
-type TodoFormValues = z.infer<typeof todoSchema>;
-
 export function Todos() {
   const { data: todos, isLoading } = useTodos();
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
+  // Bumping this key remounts (and thus resets) the create form after a submit.
+  const [formKey, setFormKey] = useState(0);
 
-  const form = useForm<TodoFormValues>({
-    resolver: zodResolver(todoSchema),
-    defaultValues: {
-      title: "",
-    },
-  });
-
-  const onSubmit = async (values: TodoFormValues) => {
+  const onSubmit = async (values: { title: string }) => {
     try {
       await createTodo.mutateAsync({ title: values.title });
       toast.success("Success", { description: "Todo created" });
-      form.reset();
+      setFormKey((k) => k + 1);
     } catch (error) {
       console.error(error);
       toast.error("Error", {
@@ -74,17 +67,20 @@ export function Todos() {
         <DialogHeader>
           <DialogTitle>Add Todo</DialogTitle>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="space-y-2">
-            <Input id="title" placeholder="Todo title" {...form.register("title")} />
-            {form.formState.errors.title && (
-              <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
-            )}
-          </div>
+        <Form
+          key={formKey}
+          schema={todoSchema}
+          defaultValues={{ title: "" }}
+          onSubmit={onSubmit}
+          className="space-y-4"
+        >
+          <FormField name="title" label="Title">
+            <Input placeholder="Todo title" />
+          </FormField>
           <Button className="w-full" type="submit" disabled={createTodo.isPending}>
             {createTodo.isPending ? "Creating..." : "Create"}
           </Button>
-        </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

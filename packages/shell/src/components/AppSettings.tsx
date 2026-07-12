@@ -10,10 +10,15 @@ import {
 } from "@groot/ui/dialog";
 import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
-import { Alert } from "@groot/ui/alert";
+import { Form, FormField } from "@groot/ui/form";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { lazy, Suspense } from "react";
+import { z } from "zod";
 import { useAppSettings } from "../hooks/useAppSettings";
+
+const settingKeySchema = z.object({
+  key: z.string().trim().min(1, "Key is required"),
+});
 
 const CodeMirrorEditor = lazy(() =>
   import("./CodeMirrorEditor").then((m) => ({ default: m.CodeMirrorEditor })),
@@ -33,9 +38,6 @@ export function AppSettings() {
 
   return (
     <div className="space-y-4">
-      {s.error && <Alert variant="destructive">{s.error}</Alert>}
-      {s.success && <Alert>{s.success}</Alert>}
-
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Manage application configuration settings in JSON format
@@ -53,25 +55,27 @@ export function AppSettings() {
       {s.showNewSettingForm && (
         <Card>
           <CardContent className="pt-6">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  value={s.newSettingKey}
-                  onChange={(e) => s.setNewSettingKey(e.target.value)}
-                  placeholder="Enter setting key (e.g., myNewSetting)"
-                />
-              </div>
-              <Button
-                onClick={s.createSetting}
-                disabled={!s.newSettingKey || s.isCreating}
-                size="sm"
-              >
+            <Form
+              schema={settingKeySchema}
+              defaultValues={{ key: "" }}
+              onSubmit={({ key }) => s.createSetting(key)}
+              className="flex items-start gap-2"
+            >
+              <FormField name="key" className="flex-1">
+                <Input placeholder="Enter setting key (e.g., myNewSetting)" />
+              </FormField>
+              <Button type="submit" disabled={s.isCreating} size="sm">
                 {s.isCreating ? "Creating..." : "Create"}
               </Button>
-              <Button variant="outline" onClick={() => s.setShowNewSettingForm(false)} size="sm">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => s.setShowNewSettingForm(false)}
+                size="sm"
+              >
                 Cancel
               </Button>
-            </div>
+            </Form>
           </CardContent>
         </Card>
       )}

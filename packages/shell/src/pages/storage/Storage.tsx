@@ -157,20 +157,16 @@ export function Storage() {
         open={s.folderDialogOpen}
         onOpenChange={s.setFolderDialogOpen}
         currentPath={s.currentPath}
-        folderName={s.folderName}
-        onFolderNameChange={s.setFolderName}
-        onSubmit={s.handleCreateFolder}
         isPending={s.createFolder.isPending}
+        onCreate={s.handleCreateFolder}
       />
 
       <RenameDialog
         open={Boolean(s.renameTarget)}
         onOpenChange={(open) => !open && s.setRenameTarget(null)}
         currentName={s.renameTarget?.name}
-        value={s.renameValue}
-        onValueChange={s.setRenameValue}
-        onSubmit={s.handleRename}
         isPending={s.renameFile.isPending}
+        onRename={s.handleRename}
       />
     </div>
   );

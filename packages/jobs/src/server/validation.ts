@@ -43,3 +43,7 @@ export const getJobsSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
 });
+
+export type CreateJobDTO = z.infer<typeof createJobSchema>;
+export type ScheduleJobDTO = z.infer<typeof scheduleJobSchema>;
+export type EditScheduledJobDTO = z.infer<typeof editScheduledJobSchema>;

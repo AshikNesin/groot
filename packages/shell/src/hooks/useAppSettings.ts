@@ -1,59 +1,45 @@
-import { type AppSetting, settingsService } from "../services/settings";
-import { useCallback, useEffect, useState } from "react";
+import { settingsService } from "../services/settings";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToastMutation } from "./useToastMutation";
+
+const SETTINGS_KEY = ["app-settings"] as const;
 
 /**
- * State + mutations for the AppSettings page. Owns the settings list, the
- * selected setting, the editable JSON/description drafts, and the create /
- * save / delete flows. The draft reset (setState-during-render) mirrors the
- * selected setting's server value so the editor re-syncs after a save.
+ * State + mutations for the AppSettings page. The settings list comes from a
+ * React Query cache; the editable JSON/description drafts and dialog/selection
+ * state stay local. The draft reset (setState-during-render) mirrors the
+ * selected setting's server value so the editor re-syncs after a save/refetch.
  */
 export function useAppSettings() {
-  const [settings, setSettings] = useState<AppSetting[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data: settings = [], isLoading } = useQuery({
+    queryKey: SETTINGS_KEY,
+    queryFn: () => settingsService.getSettings(),
+  });
+
   const [userSelectedKey, setUserSelectedKey] = useState<string | null>(null);
   const [draftKey, setDraftKey] = useState<string | null>(null);
   const [jsonValue, setJsonValue] = useState("");
   const [description, setDescription] = useState("");
-  const [newSettingKey, setNewSettingKey] = useState("");
   const [showNewSettingForm, setShowNewSettingForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
-  const loadSettings = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await settingsService.getSettings();
-      setSettings(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load settings");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: SETTINGS_KEY });
 
   const filteredSettings = settings.filter((setting) =>
     setting.key.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // Selection: the user's explicit choice, else the first setting once loaded.
-  // Deriving this replaces the "auto-select first setting" syncing effect.
   const selectedKey = userSelectedKey ?? settings[0]?.key ?? null;
   const selected = selectedKey ? (settings.find((s) => s.key === selectedKey) ?? null) : null;
 
-  // The JSON editor + description are editable drafts, so they stay in state —
-  // but we reset them when the selection OR the selected setting's server value
-  // changes. That covers initial load, switching setting, and re-syncing the
-  // editor after a save/refresh when the server returns a normalized value.
-  // Replaces the old [selectedKey, settings] syncing effect.
+  // Reset the JSON editor + description drafts when the selection OR the
+  // selected setting's server value changes (covers load, switch, and
+  // re-sync after a save). Replaces the old syncing effect.
   const resetKey = `${selectedKey ?? ""}|${selected ? JSON.stringify(selected.value) : ""}|${
     selected?.metadata?.description ?? ""
   }`;
@@ -63,78 +49,66 @@ export function useAppSettings() {
     setDescription(selected?.metadata?.description ?? "");
   }
 
-  const save = async () => {
-    if (!selectedKey) return;
-    setIsSaving(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
+  const saveMutation = useToastMutation(
+    (vars: { key: string; jsonValue: string; description: string }) => {
       let parsedValue: unknown;
       try {
-        parsedValue = JSON.parse(jsonValue);
+        parsedValue = JSON.parse(vars.jsonValue);
       } catch {
         throw new Error("Invalid JSON format");
       }
-
-      await settingsService.upsertSetting(selectedKey, {
+      return settingsService.upsertSetting(vars.key, {
         value: parsedValue,
-        metadata: { description: description || undefined },
+        metadata: { description: vars.description || undefined },
       });
-      setSuccess(`"${selectedKey}" has been updated successfully`);
-      await loadSettings();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save setting");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    },
+    {
+      success: (data) => `"${data.key}" updated successfully`,
+      error: { title: "Save failed", description: "Unable to update setting" },
+      onSuccess: invalidate,
+    },
+  );
 
-  const requestDelete = () => setShowDeleteDialog(true);
+  const deleteMutation = useToastMutation((key: string) => settingsService.deleteSetting(key), {
+    success: "Setting deleted successfully",
+    error: { title: "Delete failed", description: "Unable to delete setting" },
+    onSuccess: invalidate,
+  });
 
-  const confirmDelete = async () => {
+  const createMutation = useToastMutation(
+    (key: string) =>
+      settingsService.upsertSetting(key, { value: {}, metadata: { description: "New setting" } }),
+    {
+      success: (data) => `"${data.key}" created successfully`,
+      error: { title: "Create failed", description: "Unable to create setting" },
+      onSuccess: invalidate,
+    },
+  );
+
+  const save = () => {
     if (!selectedKey) return;
-    setIsDeleting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      await settingsService.deleteSetting(selectedKey);
-      setSuccess("Setting deleted successfully");
-      setUserSelectedKey(null);
-      setShowDeleteDialog(false);
-      await loadSettings();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to delete setting");
-    } finally {
-      setIsDeleting(false);
-    }
+    saveMutation.mutate({ key: selectedKey, jsonValue, description });
   };
 
-  const createSetting = async () => {
-    if (!newSettingKey) {
-      setError("Setting key is required");
-      return;
-    }
-    setIsCreating(true);
-    setError(null);
-    setSuccess(null);
+  const confirmDelete = () => {
+    if (!selectedKey) return;
+    deleteMutation.mutate(selectedKey, {
+      onSuccess: () => {
+        setUserSelectedKey(null);
+        setShowDeleteDialog(false);
+      },
+    });
+  };
 
-    try {
-      await settingsService.upsertSetting(newSettingKey, {
-        value: {},
-        metadata: { description: "New setting" },
-      });
-      setSuccess(`"${newSettingKey}" has been created successfully`);
-      setUserSelectedKey(newSettingKey);
-      setNewSettingKey("");
-      setShowNewSettingForm(false);
-      await loadSettings();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create setting");
-    } finally {
-      setIsCreating(false);
-    }
+  const createSetting = (key: string) => {
+    const trimmed = key.trim();
+    if (!trimmed) return;
+    createMutation.mutate(trimmed, {
+      onSuccess: () => {
+        setUserSelectedKey(trimmed);
+        setShowNewSettingForm(false);
+      },
+    });
   };
 
   return {
@@ -150,20 +124,16 @@ export function useAppSettings() {
     setJsonValue,
     description,
     setDescription,
-    newSettingKey,
-    setNewSettingKey,
     showNewSettingForm,
     setShowNewSettingForm,
     showDeleteDialog,
     setShowDeleteDialog,
-    error,
-    success,
-    isSaving,
-    isDeleting,
-    isCreating,
-    refresh: loadSettings,
+    refresh: invalidate,
+    isSaving: saveMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isCreating: createMutation.isPending,
     save,
-    requestDelete,
+    requestDelete: () => setShowDeleteDialog(true),
     confirmDelete,
     createSetting,
   };

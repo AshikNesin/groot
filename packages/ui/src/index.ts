@@ -18,6 +18,7 @@ export * from "./checkbox";
 export * from "./command";
 export * from "./dialog";
 export * from "./dropdown-menu";
+export * from "./form";
 export * from "./input";
 export * from "./input-group";
 export * from "./label";

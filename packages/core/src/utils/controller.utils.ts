@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import { Boom } from "../errors";
 
 /**
@@ -63,4 +64,36 @@ export function parseLimit(value: ParamValue, defaultValue = 50, maxLimit = 100)
   const parsed = Number.parseInt(resolved, 10);
   if (Number.isNaN(parsed) || parsed < 1) return defaultValue;
   return Math.min(parsed, maxLimit);
+}
+
+/**
+ * Typed accessors for validated request parts.
+ *
+ * `validateBody/Query/Params` populate `req.validated.*`; controllers read
+ * through these helpers instead of casting `req.body as DTO`, so the route's
+ * Zod schema stays the single source of truth for the validated shape.
+ */
+export function validatedBody<T>(req: Request): T {
+  return req.validated?.body as T;
+}
+
+export function validatedQuery<T>(req: Request): T {
+  return req.validated?.query as T;
+}
+
+export function validatedParams<T>(req: Request): T {
+  return req.validated?.params as T;
+}
+
+/**
+ * Require an authenticated user on a route behind `jwtAuthMiddleware`.
+ * Throws 401 if absent — defense in depth, since the middleware already
+ * guarantees `req.user` is set on protected routes.
+ */
+export function requireUser(req: Request): { userId: number; email: string } {
+  const user = req.user;
+  if (!user) {
+    throw Boom.unauthorized("Authentication required");
+  }
+  return user;
 }

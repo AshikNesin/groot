@@ -5,7 +5,7 @@ import { ENV } from "varlock/env";
 export { prisma };
 export type { PrismaClient } from "./types";
 export { Prisma } from "./types";
-export type { User, Passkey, Todo, JobLog } from "./types";
+export type { User, Passkey, JobLog } from "./types";
 
 if (ENV.NODE_ENV === "development") {
   // Prisma 7's generated `PrismaClient` type doesn't expose the query-event overload

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@groot/shell/lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 
 export interface Todo {
   id: number;
@@ -22,10 +22,7 @@ export interface UpdateTodoDTO {
 export function useTodos() {
   return useQuery({
     queryKey: ["todos"],
-    queryFn: async () => {
-      const { data } = await api.get<{ data: Todo[] }>("/todos");
-      return data.data;
-    },
+    queryFn: () => apiClient.get<Todo[]>("/todos"),
   });
 }
 
@@ -33,10 +30,7 @@ export function useCreateTodo() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: CreateTodoDTO) => {
-      const { data } = await api.post<{ data: Todo }>("/todos", input);
-      return data.data;
-    },
+    mutationFn: (input: CreateTodoDTO) => apiClient.post<Todo>("/todos", input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
@@ -46,10 +40,7 @@ export function useCreateTodo() {
 export function useUpdateTodo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: UpdateTodoDTO) => {
-      const response = await api.put<{ data: Todo }>(`/todos/${id}`, data);
-      return response.data.data;
-    },
+    mutationFn: ({ id, data }: UpdateTodoDTO) => apiClient.put<Todo>(`/todos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
@@ -59,9 +50,7 @@ export function useUpdateTodo() {
 export function useDeleteTodo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
-      await api.delete(`/todos/${id}`);
-    },
+    mutationFn: (id: number) => apiClient.delete(`/todos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },

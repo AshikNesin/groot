@@ -1,22 +1,31 @@
 import { jobsApi } from "./api";
 import { endOfDay, startOfDay, startOfMonth, subtractDays } from "@groot/shell/lib/utils";
-import type { Job, JobName, JobStats, ScheduledJob } from "./types";
+import type { Job, JobName, ScheduledJob } from "./types";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { toast } from "sonner";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { secondaryOptions } from "./constants";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 50;
+// Operational view: always refetch on revisit/focus rather than serving the
+// 5-minute-cached list (overrides the global QueryClient staleTime).
+const JOBS_STALE_TIME = 0;
+
+const STATS_KEY = ["jobs", "stats"] as const;
+const AVAILABLE_KEY = ["jobs", "available"] as const;
+const SCHEDULED_KEY = ["jobs", "scheduled"] as const;
+const LIST_KEY = ["jobs", "list"] as const;
 
 /**
- * All state, data-loading, and mutations for the Jobs page. Owns the query
- * params (URL-synced), the jobs/scheduled-jobs/stats fetches, selection, and
- * the retry / re-run / cancel / delete / purge / schedule flows. Lifted out
- * so the page is layout + composition.
+ * All state, data-loading, and mutations for the Jobs page. Server data
+ * (stats / jobs list / available / scheduled) is held in React Query; dialog,
+ * selection, and draft state stay local. Mutations call the API, toast, then
+ * invalidate the relevant queries so the cache refetches.
  */
 export function useJobs() {
-  const [stats, setStats] = useState<JobStats | null>(null);
+  const queryClient = useQueryClient();
   const [queryParams, setQueryParams] = useQueryStates({
     state: parseAsString.withDefault("all"),
     queue: parseAsString.withDefault("all"),
@@ -27,13 +36,8 @@ export function useJobs() {
     datePreset: parseAsString.withDefault("all"),
   });
 
-  const [jobs, setJobs] = useState<Job[]>([]);
+  // Dialog / draft / selection state (UI only)
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
-  const [scheduledJobs, setScheduledJobs] = useState<ScheduledJob[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [availableJobs, setAvailableJobs] = useState<string[]>([]);
   const [addJobDialogOpen, setAddJobDialogOpen] = useState(false);
   const [scheduleJobDialogOpen, setScheduleJobDialogOpen] = useState(false);
   const [newJobName, setNewJobName] = useState<JobName | "">("");
@@ -46,49 +50,38 @@ export function useJobs() {
   const editScheduledKeyRef = useRef<string | undefined>(undefined);
   const [editScheduledCron, setEditScheduledCron] = useState("");
   const [editScheduledDataStr, setEditScheduledDataStr] = useState("{}");
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [scheduleJobTypeSearch, setScheduleJobTypeSearch] = useState("");
   const [addJobTypeSearch, setAddJobTypeSearch] = useState("");
   const [queueSearch, setQueueSearch] = useState("");
 
-  const handlePresetChange = useCallback(
-    (value: string) => {
-      const now = new Date();
-      let start: Date | undefined;
-      let end: Date | undefined = endOfDay(now);
+  // --- Queries ---
+  const statsQuery = useQuery({
+    queryKey: STATS_KEY,
+    queryFn: jobsApi.getJobStats,
+    staleTime: JOBS_STALE_TIME,
+  });
+  const availableQuery = useQuery({
+    queryKey: AVAILABLE_KEY,
+    queryFn: jobsApi.getAvailableJobs,
+    staleTime: JOBS_STALE_TIME,
+  });
+  const scheduledQuery = useQuery({
+    queryKey: SCHEDULED_KEY,
+    queryFn: jobsApi.getScheduledJobs,
+    staleTime: JOBS_STALE_TIME,
+  });
 
-      switch (value) {
-        case "today":
-          start = startOfDay(now);
-          break;
-        case "last-7-days":
-          start = startOfDay(subtractDays(now, 6));
-          break;
-        case "this-month":
-          start = startOfMonth(now);
-          break;
-        default:
-          start = undefined;
-          end = undefined;
-      }
-
-      setQueryParams({
-        datePreset: value,
-        startDate: start ? start.toISOString() : null,
-        endDate: end ? end.toISOString() : null,
-        page: 0,
-      });
-    },
-    [setQueryParams],
-  );
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const statsData = await jobsApi.getJobStats();
-      setStats(statsData);
-
+  const jobsQuery = useQuery({
+    queryKey: [
+      ...LIST_KEY,
+      queryParams.state,
+      queryParams.queue,
+      queryParams.page,
+      queryParams.startDate ?? null,
+      queryParams.endDate ?? null,
+    ],
+    queryFn: () => {
       const filters: {
         state?: string;
         name?: string;
@@ -96,97 +89,80 @@ export function useJobs() {
         offset: number;
         startDate?: string;
         endDate?: string;
-      } = {
-        limit: PAGE_SIZE,
-        offset: queryParams.page * PAGE_SIZE,
-      };
+      } = { limit: PAGE_SIZE, offset: queryParams.page * PAGE_SIZE };
+      if (queryParams.state !== "all") filters.state = queryParams.state;
+      if (queryParams.queue !== "all") filters.name = queryParams.queue;
+      if (queryParams.startDate) filters.startDate = queryParams.startDate;
+      if (queryParams.endDate) filters.endDate = queryParams.endDate;
+      return jobsApi.getJobs(filters);
+    },
+    placeholderData: keepPreviousData,
+    staleTime: JOBS_STALE_TIME,
+  });
 
-      if (queryParams.state !== "all") {
-        filters.state = queryParams.state;
-      }
+  // Derived view (search is a client-side filter on the fetched page)
+  const fetchedJobs = jobsQuery.data?.jobs ?? [];
+  const jobs: Job[] = queryParams.search.trim()
+    ? fetchedJobs.filter((job) => {
+        const q = queryParams.search.toLowerCase().trim();
+        return job.id.toLowerCase().includes(q) || job.name.toLowerCase().includes(q);
+      })
+    : fetchedJobs;
+  const total = queryParams.search.trim() ? jobs.length : (jobsQuery.data?.total ?? 0);
 
-      if (queryParams.queue !== "all") {
-        filters.name = queryParams.queue;
-      }
+  const invalidateJobs = () => {
+    queryClient.invalidateQueries({ queryKey: LIST_KEY });
+    queryClient.invalidateQueries({ queryKey: STATS_KEY });
+  };
+  const invalidateScheduled = () => queryClient.invalidateQueries({ queryKey: SCHEDULED_KEY });
 
-      if (queryParams.startDate) {
-        filters.startDate = queryParams.startDate;
-      }
-      if (queryParams.endDate) {
-        filters.endDate = queryParams.endDate;
-      }
-
-      const { jobs: jobsData, total: totalCount } = await jobsApi.getJobs(filters);
-
-      let filteredJobs = jobsData;
-      if (queryParams.search.trim()) {
-        const query = queryParams.search.toLowerCase().trim();
-        filteredJobs = jobsData.filter(
-          (job) => job.id.toLowerCase().includes(query) || job.name.toLowerCase().includes(query),
-        );
-      }
-
-      setJobs(filteredJobs);
-      setTotal(queryParams.search.trim() ? filteredJobs.length : totalCount);
-      setLastRefreshed(new Date());
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to load jobs",
-      });
-    } finally {
-      setLoading(false);
-    }
+  // Clear selection whenever the filter / page changes
+  useEffect(() => {
+    setSelectedJobs(new Set());
   }, [
     queryParams.state,
     queryParams.queue,
-    queryParams.search,
     queryParams.page,
     queryParams.startDate,
     queryParams.endDate,
+    queryParams.search,
   ]);
 
-  const loadAvailableJobs = useCallback(async () => {
-    try {
-      const jobs = await jobsApi.getAvailableJobs();
-      setAvailableJobs(jobs);
-    } catch (error) {
-      console.error("Failed to load available jobs:", error);
+  const handlePresetChange = (value: string) => {
+    const now = new Date();
+    let start: Date | undefined;
+    let end: Date | undefined = endOfDay(now);
+
+    switch (value) {
+      case "today":
+        start = startOfDay(now);
+        break;
+      case "last-7-days":
+        start = startOfDay(subtractDays(now, 6));
+        break;
+      case "this-month":
+        start = startOfMonth(now);
+        break;
+      default:
+        start = undefined;
+        end = undefined;
     }
-  }, []);
 
-  const loadScheduledJobs = useCallback(async () => {
-    try {
-      const scheduled = await jobsApi.getScheduledJobs();
-      setScheduledJobs(scheduled);
-    } catch (error) {
-      console.error("Failed to load scheduled jobs:", error);
-    }
-  }, []);
-
-  const hasInitialized = useRef(false);
-
-  // Mount-once bootstrap. `hasInitialized` keeps it to a single run even though
-  // exhaustive-deps lists the (stable) callbacks + queryParams.
-  useEffect(() => {
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
-
-    loadAvailableJobs();
-    loadScheduledJobs();
-
-    if (!queryParams.startDate && !queryParams.endDate && queryParams.datePreset === "all") {
-      handlePresetChange("all");
-    }
-  }, [loadAvailableJobs, loadScheduledJobs, handlePresetChange, queryParams]);
-
-  useEffect(() => {
-    loadData();
-    setSelectedJobs(new Set());
-  }, [loadData]);
+    setQueryParams({
+      datePreset: value,
+      startDate: start ? start.toISOString() : null,
+      endDate: end ? end.toISOString() : null,
+      page: 0,
+    });
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadData(), loadScheduledJobs()]);
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: LIST_KEY }),
+      queryClient.refetchQueries({ queryKey: STATS_KEY }),
+      queryClient.refetchQueries({ queryKey: SCHEDULED_KEY }),
+    ]);
     setRefreshing(false);
   };
 
@@ -194,7 +170,7 @@ export function useJobs() {
     try {
       await jobsApi.retryJob(queueName, jobId);
       toast.success("Success", { description: "Job has been queued for retry" });
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to retry job",
@@ -206,7 +182,7 @@ export function useJobs() {
     try {
       await jobsApi.cancelJob(queueName, jobId);
       toast.success("Success", { description: "Job has been cancelled" });
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to cancel job",
@@ -218,7 +194,7 @@ export function useJobs() {
     try {
       await jobsApi.resumeJob(queueName, jobId);
       toast.success("Success", { description: "Job has been resumed" });
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to resume job",
@@ -230,7 +206,7 @@ export function useJobs() {
     try {
       await jobsApi.deleteJob(queueName, jobId);
       toast.success("Success", { description: "Job has been deleted" });
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to delete job",
@@ -254,7 +230,7 @@ export function useJobs() {
           </span>
         ),
       });
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to re-run job",
@@ -283,7 +259,7 @@ export function useJobs() {
       });
 
       setSelectedJobs(new Set());
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to re-run jobs",
@@ -346,7 +322,7 @@ export function useJobs() {
       toast.success("Success", {
         description: `Purged ${deletedCount} ${state} jobs`,
       });
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to purge jobs",
@@ -379,7 +355,7 @@ export function useJobs() {
       setAddJobDialogOpen(false);
       setNewJobName("");
       setNewJobData("{}");
-      loadData();
+      invalidateJobs();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to add job",
@@ -403,7 +379,7 @@ export function useJobs() {
       setScheduledJobName("");
       setScheduledJobCron("");
       setScheduledJobData("{}");
-      loadScheduledJobs();
+      invalidateScheduled();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to schedule job",
@@ -419,7 +395,7 @@ export function useJobs() {
     try {
       await jobsApi.cancelScheduledJob(jobName, key);
       toast.success("Success", { description: "Scheduled job has been cancelled" });
-      loadScheduledJobs();
+      invalidateScheduled();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to cancel scheduled job",
@@ -451,7 +427,7 @@ export function useJobs() {
       );
       toast.success("Success", { description: "Scheduled job has been updated" });
       setEditScheduledDialogOpen(false);
-      loadScheduledJobs();
+      invalidateScheduled();
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to update scheduled job",
@@ -463,17 +439,22 @@ export function useJobs() {
 
   return {
     pageSize: PAGE_SIZE,
-    stats,
+    stats: statsQuery.data ?? null,
     queryParams,
     setQueryParams,
     jobs,
     selectedJobs,
-    scheduledJobs,
-    loading,
+    scheduledJobs: scheduledQuery.data ?? [],
+    loading: jobsQuery.isLoading,
+    error: jobsQuery.error
+      ? jobsQuery.error instanceof Error
+        ? jobsQuery.error.message
+        : "Failed to load jobs"
+      : null,
     refreshing,
     total,
-    availableJobs,
-    lastRefreshed,
+    availableJobs: availableQuery.data ?? [],
+    lastRefreshed: jobsQuery.dataUpdatedAt ? new Date(jobsQuery.dataUpdatedAt) : null,
     activeSecondaryTab,
     hasActiveFilters,
     queueSearch,
