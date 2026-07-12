@@ -155,7 +155,7 @@ Defined in `todo.jobs.ts`:
 
 ```typescript
 // todo.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
 
 export const cleanupHandler: JobHandler<CleanupPayload> = async ({ data }) => {
   const { daysToKeep = 30 } = data;

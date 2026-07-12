@@ -181,7 +181,7 @@ export interface MyJobPayload {
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
 import type { MyJobPayload } from "./myfeature.validation";
 
 export const myJobHandler: JobHandler<MyJobPayload> = async ({ data }) => {

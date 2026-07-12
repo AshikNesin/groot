@@ -32,7 +32,7 @@ Jobs are registered dynamically in feature modules, not via static enums:
 
 ```typescript
 // apps/web/src/server/api/<feature>/<feature>.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
 import type { TodoCleanupPayload } from "./todo.types";
 
 export const todoCleanupHandler: JobHandler<TodoCleanupPayload> = async ({ data }) => {
@@ -158,7 +158,7 @@ export interface MyJobPayload {
 2. **Create handler** (in `apps/web/src/server/api/<feature>/<feature>.jobs.ts`):
 
 ```typescript
-import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
 import { createJobLogger } from "@groot/jobs/server/logger";
 import type { MyJobPayload } from "./feature.types";
 

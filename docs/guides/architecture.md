@@ -158,7 +158,7 @@ Jobs are registered in feature modules:
 
 ```typescript
 // todo.jobs.ts
-import { registerJobHandler, type JobHandler } from "@groot/jobs/server/worker";
+import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
 
 export const cleanupHandler: JobHandler<CleanupPayload> = async ({ data }) => {
   // Job logic

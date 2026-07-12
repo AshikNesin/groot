@@ -73,7 +73,7 @@ docs/                       # Documentation
 apps/web → @groot/ui, @groot/shell, @groot/core, @groot/core/database, @groot/jobs
 @groot/shell → @groot/ui
 @groot/core → @groot/core/database
-@groot/jobs → @groot/core, @groot/shell
+@groot/jobs → @groot/core, @groot/shell, @groot/ui
 ```
 
 **Key rule:** packages never import from `apps/`. Apps import from packages.
