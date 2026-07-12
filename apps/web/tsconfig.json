@@ -17,10 +17,9 @@
       "@/*": ["./src/client/*"],
       "@groot/ui/*": ["../../packages/ui/src/*"],
       "@groot/ui": ["../../packages/ui/src/index.ts"],
-      "@groot/client/*": ["../../packages/client/src/core/*"],
-      "@groot/client/index.css": ["../../packages/client/src/index.css"],
-      "@groot/jobs/frontend": ["../../packages/jobs/src/frontend/index.ts"],
-      "@groot/jobs/frontend/*": ["../../packages/jobs/src/frontend/*"]
+      "@groot/shell/*": ["../../packages/shell/src/*"],
+      "@groot/jobs/client": ["../../packages/jobs/src/client/index.ts"],
+      "@groot/jobs/client/*": ["../../packages/jobs/src/client/*"]
     },
     "types": ["vite/client"]
   },
