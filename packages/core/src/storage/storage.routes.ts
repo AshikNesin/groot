@@ -64,10 +64,6 @@ router.post(
       throw Boom.badRequest("No files uploaded");
     }
 
-    if (files.length > 50) {
-      throw Boom.badRequest("Maximum 50 files per upload");
-    }
-
     const payload = files.map((file) => ({
       filePath: file.originalname,
       fileData: file.buffer,

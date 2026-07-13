@@ -35,12 +35,21 @@ async function getSetting<T = unknown>(key: string): Promise<AppSetting<T> | nul
   }
 }
 
-async function getAllKeys(): Promise<string[]> {
-  const rows = await prisma.$queryRaw<Array<{ key: string }>>`
-    SELECT key FROM keyv
+async function getAllEntries(): Promise<AppSetting[]> {
+  const rows = await prisma.$queryRaw<Array<{ key: string; value: string }>>`
+    SELECT key, value FROM keyv
     WHERE key LIKE ${KV_NAMESPACE_PREFIX + "%"}
   `;
-  return rows.map((r) => r.key.replace(KV_NAMESPACE_PREFIX, ""));
+  return rows
+    .map((r) => {
+      try {
+        const parsed = JSON.parse(r.value) as AppSetting;
+        return { ...parsed, key: r.key.replace(KV_NAMESPACE_PREFIX, "") };
+      } catch {
+        return null;
+      }
+    })
+    .filter((s): s is AppSetting => s !== null);
 }
 
 async function setSetting<T = unknown>(
@@ -83,8 +92,7 @@ async function removeSetting(key: string): Promise<boolean> {
 
 async function settingExists(key: string): Promise<boolean> {
   try {
-    const value = await appSettingsKv.get(key);
-    return value !== undefined && value !== null;
+    return await appSettingsKv.has(key);
   } catch (error) {
     logger.error({ error, key }, "Failed to check app setting existence");
     throw error;
@@ -103,9 +111,7 @@ export async function get<T = unknown>({ key }: { key: string }): Promise<AppSet
 
 export async function getAll(): Promise<AppSetting[]> {
   try {
-    const keys = await getAllKeys();
-    const results = await Promise.all(keys.map((key) => getSetting(key)));
-    return results.filter((s): s is AppSetting => s !== null);
+    return await getAllEntries();
   } catch (error) {
     logger.error({ error }, "Failed to get all app settings");
     throw error;

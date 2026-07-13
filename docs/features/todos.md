@@ -102,6 +102,17 @@ router.get("/:id", async (req: Request) => {
   return await TodoService.findById({ id });
 });
 
+router.put("/:id", async (req: Request) => {
+  const id = parseId(req.params.id);
+  const payload = parseBody(req, updateTodoSchema);
+  return await TodoService.update({ id, data: payload });
+});
+
+router.delete("/:id", async (req: Request) => {
+  const id = parseId(req.params.id);
+  return await TodoService.deleteTodo({ id });
+});
+
 export default router;
 ```
 

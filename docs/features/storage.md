@@ -26,6 +26,7 @@ packages/core/src/storage/
 ├── storage.service.ts       # Business logic
 ├── storage.validation.ts    # Zod schemas
 ├── storage.utils.ts         # Utility functions
+├── files.ts                 # Configured files-sdk Files instance (S3 wrapper)
 └── index.ts
 ```
 

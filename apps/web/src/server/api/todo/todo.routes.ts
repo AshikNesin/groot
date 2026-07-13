@@ -29,7 +29,7 @@ router.put("/:id", async (req: Request) => {
 
 router.delete("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
-  await TodoService.deleteTodo({ id });
+  return await TodoService.deleteTodo({ id });
 });
 
 export default router;
