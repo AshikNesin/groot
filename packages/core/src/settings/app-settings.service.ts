@@ -43,8 +43,10 @@ async function getAllEntries(): Promise<AppSetting[]> {
   return rows
     .map((r) => {
       try {
-        const parsed = JSON.parse(r.value) as AppSetting;
-        return { ...parsed, key: r.key.replace(KV_NAMESPACE_PREFIX, "") };
+        const envelope = JSON.parse(r.value) as { value?: AppSetting };
+        const setting = envelope.value;
+        if (!setting) return null;
+        return { ...setting, key: r.key.replace(KV_NAMESPACE_PREFIX, "") };
       } catch {
         return null;
       }

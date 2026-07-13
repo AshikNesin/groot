@@ -82,7 +82,7 @@ Validation errors use Boom:
 import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseId, parseBody } from "@groot/core/utils/controller.utils";
-import * as TodoService from "./todo.service";
+import * as todoService from "./todo.service";
 import { createTodoSchema, updateTodoSchema } from "./todo.validation";
 
 const router = createRouter();
@@ -90,27 +90,27 @@ const router = createRouter();
 router.post("/", async (req: Request, res: Response) => {
   const payload = parseBody(req, createTodoSchema);
   res.status(201);
-  return await TodoService.create({ data: payload });
+  return await todoService.create({ data: payload });
 });
 
 router.get("/", async () => {
-  return await TodoService.findAll();
+  return await todoService.findAll();
 });
 
 router.get("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
-  return await TodoService.findById({ id });
+  return await todoService.findById({ id });
 });
 
 router.put("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
   const payload = parseBody(req, updateTodoSchema);
-  return await TodoService.update({ id, data: payload });
+  return await todoService.update({ id, data: payload });
 });
 
 router.delete("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
-  return await TodoService.deleteTodo({ id });
+  return await todoService.deleteTodo({ id });
 });
 
 export default router;

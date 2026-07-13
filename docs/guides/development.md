@@ -84,24 +84,24 @@ export async function findById({ id }: { id: number }) {
 import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseId, parseBody } from "@groot/core/utils/controller.utils";
-import * as Service from "./myfeature.service";
+import * as service from "./myfeature.service";
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
 
 router.get("/", async () => {
-  return await Service.findAll();
+  return await service.findAll();
 });
 
 router.post("/", async (req: Request, res: Response) => {
   const payload = parseBody(req, createSchema);
   res.status(201);
-  return await Service.create({ data: payload });
+  return await service.create({ data: payload });
 });
 
 router.get("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
-  return await Service.findById({ id });
+  return await service.findById({ id });
 });
 
 export default router;

@@ -7,7 +7,7 @@ import {
 } from "@groot/core/middlewares/rate-limit.middleware";
 import { Boom } from "@groot/core/errors";
 import { parseBody, parseQuery } from "@groot/core/utils/controller.utils";
-import * as StorageService from "./storage.service";
+import * as storageService from "./storage.service";
 import {
   listFilesSchema,
   downloadFileSchema,
@@ -31,7 +31,7 @@ const upload = multer({
 
 router.get("/files", async (req: Request) => {
   const query = parseQuery(req, listFilesSchema);
-  return await StorageService.listFiles({
+  return await storageService.listFiles({
     prefix: query.prefix,
     delimiter: query.delimiter,
   });
@@ -46,7 +46,7 @@ router.post("/files/upload", uploadRateLimiter, upload.single("file"), async (re
   }
 
   const path = body?.filePath ?? file.originalname;
-  return await StorageService.uploadFile({
+  return await storageService.uploadFile({
     filePath: path,
     fileData: file.buffer,
     contentType: body?.contentType ?? file.mimetype,
@@ -70,13 +70,13 @@ router.post(
       contentType: file.mimetype,
     }));
 
-    return await StorageService.bulkUpload({ files: payload });
+    return await storageService.bulkUpload({ files: payload });
   },
 );
 
 router.get("/files/download", async (req: Request, res: Response) => {
   const query = parseQuery(req, downloadFileSchema);
-  const file = await StorageService.downloadFile({
+  const file = await storageService.downloadFile({
     filePath: query.filePath,
   });
 
@@ -87,21 +87,21 @@ router.get("/files/download", async (req: Request, res: Response) => {
 
 router.delete("/files", async (req: Request) => {
   const body = parseBody(req, deleteFilesSchema);
-  return await StorageService.deleteFiles({
+  return await storageService.deleteFiles({
     filePaths: body.filePaths,
   });
 });
 
 router.get("/files/metadata", async (req: Request) => {
   const query = parseQuery(req, getFileMetadataSchema);
-  return await StorageService.getFileMetadata({
+  return await storageService.getFileMetadata({
     filePath: query.filePath,
   });
 });
 
 router.post("/folders", async (req: Request) => {
   const body = parseBody(req, createFolderSchema);
-  return await StorageService.createFolder({ folderPath: body.folderPath });
+  return await storageService.createFolder({ folderPath: body.folderPath });
 });
 
 router.delete("/folders/:folderPath", async (req: Request<{ folderPath?: string }>) => {
@@ -110,12 +110,12 @@ router.delete("/folders/:folderPath", async (req: Request<{ folderPath?: string 
     throw Boom.badRequest("Folder path is required");
   }
   const normalized = folderPath.endsWith("/") ? folderPath : `${folderPath}/`;
-  return await StorageService.deleteFolder({ folderPath: normalized });
+  return await storageService.deleteFolder({ folderPath: normalized });
 });
 
 router.put("/files/rename", async (req: Request) => {
   const body = parseBody(req, renameFileSchema);
-  return await StorageService.renameFile({
+  return await storageService.renameFile({
     oldPath: body.oldPath,
     newPath: body.newPath,
   });

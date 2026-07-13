@@ -73,20 +73,20 @@ Routes use `createRouter()` which automatically wraps handlers:
 ```typescript
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseBody } from "@groot/core/utils/controller.utils";
-import * as TodoService from "./todo.service";
+import * as todoService from "./todo.service";
 import { createTodoSchema } from "./todo.validation";
 
 const router = createRouter();
 
 // Handler is auto-wrapped with handle() middleware
 router.get("/", async () => {
-  return await TodoService.findAll();
+  return await todoService.findAll();
 });
 
 router.post("/", async (req, res) => {
   const payload = parseBody(req, createTodoSchema);
   res.status(201);
-  return await TodoService.create({ data: payload });
+  return await todoService.create({ data: payload });
 });
 
 export default router;
@@ -98,18 +98,18 @@ Route handlers are simple async functions defined directly in the routes file. T
 
 ```typescript
 export async function getAll() {
-  return await TodoService.findAll();
+  return await todoService.findAll();
 }
 
 export async function create(req: Request, res: Response) {
   const payload = parseBody(req, createTodoSchema);
   res.status(201);
-  return await TodoService.create({ data: payload });
+  return await todoService.create({ data: payload });
 }
 
 export async function getById(req: Request) {
   const id = parseId(req.params.id);
-  return await TodoService.findById({ id });
+  return await todoService.findById({ id });
 }
 ```
 

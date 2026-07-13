@@ -73,7 +73,7 @@ Test business logic directly:
 ```typescript
 // tests/server/app/todo/todo.service.test.ts
 import { describe, it, expect, vi } from "vitest";
-import * as TodoService from "../../../../apps/web/src/server/api/todo/todo.service";
+import * as todoService from "../../../../apps/web/src/server/api/todo/todo.service";
 
 vi.mock("@groot/core/database", () => ({
   prisma: {
@@ -85,9 +85,9 @@ vi.mock("@groot/core/database", () => ({
   },
 }));
 
-describe("TodoService", () => {
+describe("todoService", () => {
   it("findAll returns todos", async () => {
-    const todos = await TodoService.findAll();
+    const todos = await todoService.findAll();
     expect(Array.isArray(todos)).toBe(true);
   });
 });

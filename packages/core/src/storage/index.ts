@@ -1,6 +1,6 @@
-export * as StorageRoutes from "./storage.routes";
-export * as StorageService from "./storage.service";
-export * as StorageValidation from "./storage.validation";
+export * as storageRoutes from "./storage.routes";
+export * as storageService from "./storage.service";
+export * as storageValidation from "./storage.validation";
 
 export { files } from "./files";
 export { Files, FilesError } from "files-sdk";
