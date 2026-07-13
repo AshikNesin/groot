@@ -1,5 +1,12 @@
 # @groot/jobs
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`86c1657`](https://github.com/AshikNesin/groot/commit/86c165721799f81f001ea8f3c986ffc984551b4e)]:
+  - @groot/core@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes

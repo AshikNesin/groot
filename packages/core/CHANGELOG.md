@@ -1,5 +1,11 @@
 # @groot/core
 
+## 0.6.0
+
+### Minor Changes
+
+- [#71](https://github.com/AshikNesin/groot/pull/71) [`86c1657`](https://github.com/AshikNesin/groot/commit/86c165721799f81f001ea8f3c986ffc984551b4e) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Flatten API feature modules: merge controller handlers into routes, fold model layer into services, remove index.ts barrels. Each feature is now 3-4 files: routes, service, validation, (optional) jobs.
+
 ## 0.5.0
 
 ### Minor Changes
