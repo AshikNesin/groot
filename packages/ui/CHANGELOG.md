@@ -10,7 +10,6 @@
   controllers shape responses, plus a shared Form primitive.
 
   ## @groot/core
-
   - Removed the `*System` namespace barrels (`AISystem`, `AuthSystem`,
     `ErrorSystem`, `KVSystem`, plus the passkey/settings/storage equivalents).
     Callers now use direct named imports instead of convenience namespaces.
@@ -26,12 +25,10 @@
     `validation` middlewares.
 
   ## @groot/ui
-
   - Added a `Form` component (`form.tsx`) with `react-hook-form` integration and
     field helpers.
 
   ## @groot/shell
-
   - Reworked `lib/api.ts` (the `apiClient`) for simpler, more consistent request
     handling.
   - Added `useToastMutation` hook to standardize mutation + toast feedback.
@@ -40,7 +37,6 @@
     hooks to build on the new Form component and apiClient.
 
   ## @groot/jobs
-
   - Refactored the client API layer (`api.ts`), `useJobs`, `useJobDetail`, and
     `JobsTable` to align with the new apiClient patterns.
 

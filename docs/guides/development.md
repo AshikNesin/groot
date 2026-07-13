@@ -23,7 +23,7 @@ pnpm db:migrate        # Apply pending migrations (migrate deploy)
 ## Coding Conventions
 
 - **TypeScript everywhere** – Path aliases defined in `tsconfig.json` (`@groot/core/*` for server, `@groot/shell/*` for client)
-- **Validation first** – Use `validate(zodSchema, "body")` middleware on routes
+- **Validation first** – Use `parseBody`, `parseQuery`, and `parseParams` in controllers.
 - **Return values** – Controllers return values directly, `createRouter` handles serialization
 - **Boom errors** – Use `Boom.notFound()`, `Boom.badRequest()`, etc. for HTTP errors
 - **Logging** – Use logger from `@groot/core/logger` for structured events; avoid `console.log`
@@ -97,7 +97,7 @@ export async function getAll() {
 }
 
 export async function create(req: Request, res: Response) {
-  const payload = req.validated?.body || req.body;
+  const payload = parseBody(req, createTodoSchema);
   res.status(201);
   return await Service.create({ data: payload });
 }
@@ -114,13 +114,13 @@ export async function getById(req: Request) {
 // apps/web/src/server/api/myfeature/myfeature.routes.ts
 import { createRouter } from "@groot/core/utils/router.utils";
 import * as controller from "./myfeature.controller";
-import { validate } from "@groot/core/middlewares/validation.middleware";
+
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
 
 router.get("/", controller.getAll);
-router.post("/", validate(createSchema, "body"), controller.create);
+router.post("/", controller.create);
 router.get("/:id", controller.getById);
 
 export default router;

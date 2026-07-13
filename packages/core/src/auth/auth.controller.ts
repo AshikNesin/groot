@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
 import * as AuthService from "./auth.service";
-import type { LoginDTO, CreateUserDTO } from "./auth.validation";
-import { requireUser, validatedBody } from "@groot/core/utils/controller.utils";
+import { loginSchema, createUserSchema } from "./auth.validation";
+import { requireUser, parseBody } from "@groot/core/utils/controller.utils";
 import { setAuthCookie, clearAuthCookie } from "@groot/core/utils/auth-cookie.utils";
 
 export async function login(req: Request, res: Response) {
-  const body = validatedBody<LoginDTO>(req);
+  const body = parseBody(req, loginSchema);
   const result = await AuthService.login(body);
 
   setAuthCookie(res, result.token);
@@ -30,7 +30,7 @@ export async function getCurrentUser(req: Request) {
  * Create a new user (admin only)
  */
 export async function createUser(req: Request) {
-  const body = validatedBody<CreateUserDTO>(req);
+  const body = parseBody(req, createUserSchema);
   return await AuthService.createUser(body);
 }
 

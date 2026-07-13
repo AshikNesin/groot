@@ -1,31 +1,18 @@
 import { createRouter } from "@groot/core/utils/router.utils";
 import * as jobController from "./controller";
-import {
-  validateBody,
-  validateQuery,
-  validateParams,
-} from "@groot/core/middlewares/validation.middleware";
-import {
-  createJobSchema,
-  scheduleJobSchema,
-  editScheduledJobSchema,
-  bulkRerunSchema,
-  getJobsByStateSchema,
-  getJobsSchema,
-} from "./validation";
 
 const router = createRouter();
 
 // Job creation and scheduling
-router.post("/", validateBody(createJobSchema), jobController.create);
-router.post("/schedule", validateBody(scheduleJobSchema), jobController.schedule);
+router.post("/", jobController.create);
+router.post("/schedule", jobController.schedule);
 
 // Bulk operations
-router.post("/bulk-rerun", validateBody(bulkRerunSchema), jobController.bulkRerun);
+router.post("/bulk-rerun", jobController.bulkRerun);
 
 // Scheduled jobs
 router.get("/schedule", jobController.getScheduled);
-router.put("/schedule/:jobName", validateBody(editScheduledJobSchema), jobController.editScheduled);
+router.put("/schedule/:jobName", jobController.editScheduled);
 router.delete("/schedule/:jobName", jobController.cancelScheduled);
 
 // Queue management
@@ -35,10 +22,10 @@ router.delete("/state/:state", jobController.purgeByState);
 
 // Job status queries
 router.get("/status/failed", jobController.getFailed);
-router.get("/state/:state", validateParams(getJobsByStateSchema), jobController.getByState);
+router.get("/state/:state", jobController.getByState);
 
 // Job CRUD
-router.get("/", validateQuery(getJobsSchema), jobController.getAll);
+router.get("/", jobController.getAll);
 router.get("/:queueName/:jobId", jobController.getById);
 router.get("/:queueName/:jobId/logs", jobController.getLogs);
 router.delete("/:queueName/:jobId", jobController.deleteJobHandler);

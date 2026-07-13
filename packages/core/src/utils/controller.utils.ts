@@ -1,5 +1,6 @@
 import type { Request } from "express";
-import { Boom } from "@groot/core/errors";
+import { type ZodSchema, z } from "zod";
+import { Boom, ErrorCode } from "@groot/core/errors";
 
 /**
  * Express 5 types route params/query values loosely (params as `string | string[]`,
@@ -15,6 +16,23 @@ function firstString(value: ParamValue): string | undefined {
     return typeof first === "string" ? first : undefined;
   }
   return undefined;
+}
+
+/**
+ * Parse raw input against a Zod schema, throwing a structured Boom error on
+ * failure. Shared by `parseBody`, `parseQuery`, and `parseParams`.
+ */
+function parseInput<S extends ZodSchema>(input: unknown, schema: S): z.output<S> {
+  const result = schema.safeParse(input ?? {});
+  if (!result.success) {
+    const details: Record<string, string[]> = {};
+    for (const issue of result.error.issues) {
+      const field = issue.path.join(".") || "global";
+      details[field] = [...(details[field] ?? []), issue.message];
+    }
+    throw Boom.badRequest("Validation failed", details, ErrorCode.VALIDATION_ERROR.code);
+  }
+  return result.data;
 }
 
 /**
@@ -67,22 +85,33 @@ export function parseLimit(value: ParamValue, defaultValue = 50, maxLimit = 100)
 }
 
 /**
- * Typed accessors for validated request parts.
+ * Schema-aware request parsers.
  *
- * `validateBody/Query/Params` populate `req.validated.*`; controllers read
- * through these helpers instead of casting `req.body as DTO`, so the route's
- * Zod schema stays the single source of truth for the validated shape.
+ * Parse and validate `req.body`, `req.query`, or `req.params` against a Zod
+ * schema. The return type flows directly from the schema — no manual DTO
+ * generic needed, so the schema is the single source of truth for both
+ * runtime validation and the TypeScript type.
+ *
+ * @example
+ * ```ts
+ * import { createTodoSchema } from "./todo.validation";
+ *
+ * export async function create(req: Request) {
+ *   const payload = parseBody(req, createTodoSchema);
+ *   //    ^ type inferred from schema — no <DTO> generic
+ * }
+ * ```
  */
-export function validatedBody<T>(req: Request): T {
-  return req.validated?.body as T;
+export function parseBody<S extends ZodSchema>(req: Request, schema: S): z.output<S> {
+  return parseInput(req.body, schema);
 }
 
-export function validatedQuery<T>(req: Request): T {
-  return req.validated?.query as T;
+export function parseQuery<S extends ZodSchema>(req: Request, schema: S): z.output<S> {
+  return parseInput(req.query, schema);
 }
 
-export function validatedParams<T>(req: Request): T {
-  return req.validated?.params as T;
+export function parseParams<S extends ZodSchema>(req: Request, schema: S): z.output<S> {
+  return parseInput(req.params, schema);
 }
 
 /**

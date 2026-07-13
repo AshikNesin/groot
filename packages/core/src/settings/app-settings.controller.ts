@@ -1,7 +1,7 @@
 import type { Request } from "express";
 import * as AppSettingsService from "./app-settings.service";
-import type { UpsertAppSettingDTO } from "./app-settings.validation";
-import { parseStringParam, validatedBody } from "@groot/core/utils/controller.utils";
+import { upsertAppSettingSchema } from "./app-settings.validation";
+import { parseStringParam, parseBody } from "@groot/core/utils/controller.utils";
 
 /**
  * Get all app settings
@@ -23,7 +23,7 @@ export async function getByKey(req: Request) {
  */
 export async function upsert(req: Request) {
   const key = parseStringParam(req.params.key, "key");
-  const payload = validatedBody<UpsertAppSettingDTO>(req);
+  const payload = parseBody(req, upsertAppSettingSchema);
   return await AppSettingsService.upsert({ key, data: payload });
 }
 

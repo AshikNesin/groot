@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import * as TodoService from "./todo.service";
-import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
-import { parseId, validatedBody } from "@groot/core/utils/controller.utils";
+import { createTodoSchema, updateTodoSchema } from "./todo.validation";
+import { parseId, parseBody } from "@groot/core/utils/controller.utils";
 
 export async function create(req: Request, res: Response) {
-  const payload = validatedBody<CreateTodoDTO>(req);
+  const payload = parseBody(req, createTodoSchema);
   res.status(201);
   return await TodoService.create({ data: payload });
 }
@@ -20,7 +20,7 @@ export async function getById(req: Request) {
 
 export async function update(req: Request) {
   const id = parseId(req.params.id);
-  const payload = validatedBody<UpdateTodoDTO>(req);
+  const payload = parseBody(req, updateTodoSchema);
   return await TodoService.update({ id, data: payload });
 }
 

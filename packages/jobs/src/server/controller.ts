@@ -3,20 +3,24 @@ import * as queue from "./queue";
 import * as queries from "./queries";
 import { prisma } from "@groot/core/database";
 import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "./types";
-import type { CreateJobDTO, ScheduleJobDTO, EditScheduledJobDTO } from "./validation";
-import { Boom } from "@groot/core/errors";
 import {
-  parseLimit,
-  parseStringParam,
-  validatedBody,
-  validatedQuery,
-} from "@groot/core/utils/controller.utils";
+  createJobSchema,
+  scheduleJobSchema,
+  editScheduledJobSchema,
+  cancelScheduledJobSchema,
+  bulkRerunSchema,
+  paginationQuerySchema,
+  getJobsSchema,
+  getLogsQuerySchema,
+} from "./validation";
+import { Boom } from "@groot/core/errors";
+import { parseBody, parseQuery, parseStringParam } from "@groot/core/utils/controller.utils";
 
 /**
  * Queue a job for immediate execution
  */
 export async function create(req: Request) {
-  const { jobName, data, options } = validatedBody<CreateJobDTO>(req);
+  const { jobName, data, options } = parseBody(req, createJobSchema);
   const jobId = await queue.addJob(jobName, data, options);
   return { jobId, jobName, data };
 }
@@ -25,7 +29,7 @@ export async function create(req: Request) {
  * Schedule a recurring job
  */
 export async function schedule(req: Request) {
-  const { jobName, data, cron, options } = validatedBody<ScheduleJobDTO>(req);
+  const { jobName, data, cron, options } = parseBody(req, scheduleJobSchema);
   await queue.scheduleJob(jobName, data, cron, options);
   return { success: true };
 }
@@ -34,7 +38,7 @@ export async function schedule(req: Request) {
  * Bulk re-run jobs
  */
 export async function bulkRerun(req: Request) {
-  const { jobs } = validatedBody<{ jobs: RerunJobOptions[] }>(req);
+  const { jobs } = parseBody(req, bulkRerunSchema);
   return await queue.rerunJobs(jobs);
 }
 
@@ -50,7 +54,7 @@ export async function getScheduled() {
  */
 export async function cancelScheduled(req: Request) {
   const jobName = parseStringParam(req.params.jobName, "jobName");
-  const { key } = req.body ?? {};
+  const { key } = parseBody(req, cancelScheduledJobSchema);
   await queue.cancelScheduledJob(jobName, key);
   return { success: true };
 }
@@ -60,7 +64,7 @@ export async function cancelScheduled(req: Request) {
  */
 export async function editScheduled(req: Request) {
   const jobName = parseStringParam(req.params.jobName, "jobName");
-  const { key, cron, data, options } = validatedBody<EditScheduledJobDTO>(req);
+  const { key, cron, data, options } = parseBody(req, editScheduledJobSchema);
   await queue.editScheduledJob(jobName, key, cron, data, options);
   return { success: true };
 }
@@ -93,8 +97,8 @@ export async function purgeByState(req: Request) {
  * Get failed jobs
  */
 export async function getFailed(req: Request) {
-  const limit = parseLimit(req.query.limit as string);
-  return await queries.getFailedJobs({ limit });
+  const { limit } = parseQuery(req, paginationQuerySchema);
+  return await queries.getFailedJobs({ limit: limit ?? 50 });
 }
 
 /**
@@ -102,16 +106,19 @@ export async function getFailed(req: Request) {
  */
 export async function getByState(req: Request) {
   const state = parseStringParam(req.params.state, "state");
-  const limit = parseLimit(req.query.limit);
-  const offset = Math.max(0, Number.parseInt(req.query.offset as string, 10) || 0);
-  return await queries.getJobsByState({ state, limit, offset } as GetJobsByStateOptions);
+  const { limit, offset } = parseQuery(req, paginationQuerySchema);
+  return await queries.getJobsByState({
+    state,
+    limit: limit ?? 50,
+    offset: offset ?? 0,
+  } as GetJobsByStateOptions);
 }
 
 /**
  * Get all jobs with filters
  */
 export async function getAll(req: Request) {
-  const query = validatedQuery<GetJobsOptions>(req);
+  const query = parseQuery(req, getJobsSchema);
   return await queries.getJobs(query);
 }
 
@@ -183,13 +190,13 @@ export async function deleteJobHandler(req: Request) {
  */
 export async function getLogs(req: Request) {
   const jobId = parseStringParam(req.params.jobId, "jobId");
-  const afterId = req.query.afterId ? Number.parseInt(req.query.afterId as string, 10) : 0;
+  const { afterId } = parseQuery(req, getLogsQuerySchema);
 
   const logs = await prisma.jobLog.findMany({
     where: {
       jobId,
       id: {
-        gt: afterId,
+        gt: afterId ?? 0,
       },
     },
     orderBy: {

@@ -141,7 +141,7 @@ pnpm groot:sync       # Apply safe boilerplate changes
 - **Routes**: `createRouter()`; **controllers**: simple async fns.
 - **Errors**: `Boom` factory methods from `@groot/core/errors`.
 - **Database migrations**: never use `prisma db push` for schema changes. Use `pnpm db:migrate:create` to generate a migration, then `pnpm prisma migrate dev` to apply locally; deploys auto-run `pnpm db:migrate` (migrate deploy) via the `prestart` hook.
-- **Validation**: Zod via `validate(schema, "body"|"params"|"query")`; read `req.validated.*`.
+- **Validation**: Zod via `parseBody(req, schema)` / `parseQuery(req, schema)` / `parseParams(req, schema)` inside controllers.
 - **Exports**: prefer named exports (use `* as` for controllers).
 - **Async**: always async/await, never raw Promises.
 - **Naming**: camelCase vars/fns, PascalCase components/types.
