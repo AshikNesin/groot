@@ -1,23 +1,38 @@
+import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
-import * as authController from "./auth.controller";
 import { jwtAuthMiddleware } from "@groot/core/middlewares/jwt-auth.middleware";
 import { adminAuthMiddleware } from "@groot/core/middlewares/admin-auth.middleware";
+import { requireUser, parseBody } from "@groot/core/utils/controller.utils";
+import { setAuthCookie, clearAuthCookie } from "@groot/core/utils/auth-cookie.utils";
+import * as AuthService from "./auth.service";
+import { loginSchema, createUserSchema } from "./auth.validation";
 
 const router = createRouter();
 
-// Login endpoint (public)
-router.post("/login", authController.login);
+router.post("/login", async (req: Request, res: Response) => {
+  const body = parseBody(req, loginSchema);
+  const result = await AuthService.login(body);
+  setAuthCookie(res, result.token);
+  return result;
+});
 
-// Logout endpoint (requires JWT authentication)
-router.post("/logout", jwtAuthMiddleware, authController.logout);
+router.post("/logout", jwtAuthMiddleware, async (_req: Request, res: Response) => {
+  clearAuthCookie(res);
+  return { status: "logged out" };
+});
 
-// Get current user (requires JWT authentication)
-router.get("/me", jwtAuthMiddleware, authController.getCurrentUser);
+router.get("/me", jwtAuthMiddleware, async (req: Request) => {
+  const user = requireUser(req);
+  return await AuthService.getUserById({ userId: user.userId });
+});
 
-// Create new user (requires admin auth key)
-router.post("/users", adminAuthMiddleware, authController.createUser);
+router.post("/users", adminAuthMiddleware, async (req: Request) => {
+  const body = parseBody(req, createUserSchema);
+  return await AuthService.createUser(body);
+});
 
-// Get all users (requires admin auth key)
-router.get("/users", adminAuthMiddleware, authController.getAllUsers);
+router.get("/users", adminAuthMiddleware, async () => {
+  return await AuthService.getAllUsers();
+});
 
 export default router;

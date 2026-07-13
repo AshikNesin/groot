@@ -38,10 +38,10 @@ This boilerplate ships a secure Express 5 + TypeScript server with a domain-driv
 
 ### Architecture Highlights
 
-- **Feature Modules** – Self-contained domains with routes, controllers, services, and jobs
+- **Feature Modules** – Self-contained domains with routes, services, and jobs
 - **App vs Shared** – `app/` for domain features, `shared/` for reusable modules
 - **Core Infrastructure** – Modularized systems for jobs, logging, errors, storage, and AI
-- **Functional Controllers** – Simple async functions returning values (auto-serialized)
+- **Functional Route Handlers** – Simple async functions returning values (auto-serialized)
 
 ### Key Capabilities
 
@@ -79,11 +79,9 @@ Middlewares (logging, auth, validation)
     ↓
 createRouter (auto-wraps handlers)
     ↓
-Controller (async function → return value)
+Route Handler (async function → return value)
     ↓
-Service (business logic)
-    ↓
-Model (Prisma queries)
+Service (business logic + Prisma queries)
     ↓
 PostgreSQL
 

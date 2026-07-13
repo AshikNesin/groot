@@ -1,18 +1,15 @@
 # Todos Feature
 
-The todo domain demonstrates the recommended feature module pattern with self-contained validation, controllers, services, models, and jobs.
+The todo domain demonstrates the recommended feature module pattern with self-contained validation, services, and jobs.
 
 ## Module Structure
 
 ```
 apps/web/src/server/api/todo/
-├── todo.routes.ts       # Route definitions
-├── todo.controller.ts   # Request handlers
-├── todo.service.ts      # Business logic
+├── todo.routes.ts       # Route definitions + inline request handlers
+├── todo.service.ts      # Business logic (calls Prisma directly)
 ├── todo.validation.ts   # Zod schemas
-├── todo.model.ts        # Prisma queries
-├── todo.jobs.ts         # Background jobs
-└── index.ts             # Exports
+└── todo.jobs.ts         # Background jobs
 ```
 
 ## API Surface
@@ -42,7 +39,7 @@ export type CreateTodoDTO = z.infer<typeof createTodoSchema>;
 export type UpdateTodoDTO = z.infer<typeof updateTodoSchema>;
 ```
 
-Controllers return values directly (auto-serialized by `createRouter`).
+Route handlers return values directly (auto-serialized by `createRouter`).
 
 ### Example Requests
 
@@ -82,61 +79,46 @@ Validation errors use Boom:
 
 ```typescript
 // todo.routes.ts
+import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
-import * as todoController from "./todo.controller";
-
+import { parseId, parseBody } from "@groot/core/utils/controller.utils";
+import * as TodoService from "./todo.service";
 import { createTodoSchema, updateTodoSchema } from "./todo.validation";
 
 const router = createRouter();
 
-router.get("/", todoController.getAll);
-router.post("/", todoController.create);
-router.get("/:id", todoController.getById);
-router.put("/:id", todoController.update);
-router.delete("/:id", todoController.deleteTodo);
-
-export default router;
-```
-
-### Controller
-
-```typescript
-// todo.controller.ts
-import type { Request, Response } from "express";
-import * as TodoService from "./todo.service";
-import { parseId } from "@groot/core/utils/controller.utils";
-import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
-
-export async function getAll() {
-  return await TodoService.findAll();
-}
-
-export async function create(req: Request, res: Response) {
+router.post("/", async (req: Request, res: Response) => {
   const payload = parseBody(req, createTodoSchema);
   res.status(201);
   return await TodoService.create({ data: payload });
-}
+});
 
-export async function getById(req: Request) {
+router.get("/", async () => {
+  return await TodoService.findAll();
+});
+
+router.get("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
   return await TodoService.findById({ id });
-}
+});
+
+export default router;
 ```
 
 ### Service
 
 ```typescript
 // todo.service.ts
-import * as TodoModel from "./todo.model";
-import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
+import { prisma } from "@groot/core/database";
 import { Boom } from "@groot/core/errors";
+import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
 
 export async function create({ data }: { data: CreateTodoDTO }) {
-  return TodoModel.create(data);
+  return prisma.todo.create({ data });
 }
 
 export async function findById({ id }: { id: number }) {
-  const todo = await TodoModel.findById(id);
+  const todo = await prisma.todo.findUnique({ where: { id } });
   if (!todo) {
     throw Boom.notFound("Todo not found");
   }

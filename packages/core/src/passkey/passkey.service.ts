@@ -2,11 +2,10 @@ import dayjs from "dayjs";
 import { Boom } from "@groot/core/errors";
 import { logger } from "@groot/core/logger";
 import type { Passkey, User } from "@groot/core/database";
-import { passkeyModel } from "./passkey.model";
-import { userModel } from "@groot/core/auth/user.model";
+import { prisma } from "@groot/core/database";
+import { findUserById, findUserByEmail } from "@groot/core/auth/auth.service";
 import { generateToken } from "@groot/core/utils/jwt.utils";
 import { createNamespaceKv } from "@groot/core/kv";
-import { prisma } from "@groot/core/database";
 import {
   generateDeviceName,
   generatePasskeyAuthenticationOptions,
@@ -21,6 +20,56 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
+
+// ── Passkey data access ────────────────────────────────────────────────────
+
+type CreatePasskeyData = {
+  userId: number;
+  credentialId: string;
+  publicKey: Uint8Array<ArrayBuffer>;
+  counter: bigint;
+  deviceType?: string | null;
+  backedUp: boolean;
+  transports: string[];
+  credentialName?: string | null;
+};
+
+type UpdatePasskeyData = {
+  counter?: bigint;
+  lastUsedAt?: Date;
+  credentialName?: string;
+};
+
+export async function createPasskey(data: CreatePasskeyData): Promise<Passkey> {
+  return prisma.passkey.create({ data });
+}
+
+export async function findPasskeyByCredentialId(credentialId: string): Promise<Passkey | null> {
+  return prisma.passkey.findUnique({ where: { credentialId } });
+}
+
+export async function findPasskeysByUserId(userId: number): Promise<Passkey[]> {
+  return prisma.passkey.findMany({ where: { userId }, orderBy: { createdAt: "desc" } });
+}
+
+export async function updatePasskey(id: number, data: UpdatePasskeyData): Promise<Passkey> {
+  return prisma.passkey.update({ where: { id }, data });
+}
+
+export async function deletePasskeyRecord(id: number): Promise<Passkey> {
+  return prisma.passkey.delete({ where: { id } });
+}
+
+export async function countPasskeysByUserId(userId: number): Promise<number> {
+  return prisma.passkey.count({ where: { userId } });
+}
+
+export async function findPasskeyByIdAndUserId(
+  id: number,
+  userId: number,
+): Promise<Passkey | null> {
+  return prisma.passkey.findFirst({ where: { id, userId } });
+}
 
 // ── Challenge store backed by KV with TTL ──────────────────────────────────
 
@@ -71,12 +120,12 @@ export async function generateRegistrationOptions({
 }: {
   userId: number;
 }): Promise<PublicKeyCredentialCreationOptionsJSON> {
-  const user = await userModel.findById(userId);
+  const user = await findUserById(userId);
   if (!user) {
     throw Boom.notFound("User not found");
   }
 
-  const existingPasskeys = await passkeyModel.findByUserId(userId);
+  const existingPasskeys = await findPasskeysByUserId(userId);
   const options = await generatePasskeyRegistrationOptions(user, existingPasskeys);
 
   await storeChallenge(options.challenge);
@@ -116,7 +165,7 @@ export async function verifyRegistration({
   }
 
   const credentialIdBase64 = credential.id;
-  const existingPasskey = await passkeyModel.findByCredentialId(credentialIdBase64);
+  const existingPasskey = await findPasskeyByCredentialId(credentialIdBase64);
   if (existingPasskey) {
     throw Boom.conflict("This passkey is already registered");
   }
@@ -126,7 +175,7 @@ export async function verifyRegistration({
 
   const publicKey = new Uint8Array(Buffer.from(credential.publicKey));
 
-  const passkey = await passkeyModel.create({
+  const passkey = await createPasskey({
     userId,
     credentialId: credentialIdBase64,
     publicKey,
@@ -151,9 +200,9 @@ export async function generateAuthenticationOptions({
   let userPasskeys: Passkey[] = [];
 
   if (email) {
-    const user = await userModel.findByEmail(email);
+    const user = await findUserByEmail(email);
     if (user) {
-      userPasskeys = await passkeyModel.findByUserId(user.id);
+      userPasskeys = await findPasskeysByUserId(user.id);
     }
   }
 
@@ -179,7 +228,7 @@ export async function verifyAuthentication({
   }
 
   const credentialIdBase64 = Buffer.from(response.rawId, "base64url").toString("base64url");
-  const passkey = await passkeyModel.findByCredentialId(credentialIdBase64);
+  const passkey = await findPasskeyByCredentialId(credentialIdBase64);
   if (!passkey) {
     throw Boom.unauthorized("Passkey not found");
   }
@@ -190,12 +239,12 @@ export async function verifyAuthentication({
     throw Boom.unauthorized("Passkey authentication verification failed");
   }
 
-  const user = await userModel.findById(passkey.userId);
+  const user = await findUserById(passkey.userId);
   if (!user) {
     throw Boom.unauthorized("User not found");
   }
 
-  await passkeyModel.update(passkey.id, {
+  await updatePasskey(passkey.id, {
     counter: BigInt(verification.authenticationInfo.newCounter),
     lastUsedAt: dayjs().toDate(),
   });
@@ -222,7 +271,7 @@ export async function listPasskeys({ userId }: { userId: number }): Promise<
     counter: number;
   })[]
 > {
-  const passkeys = await passkeyModel.findByUserId(userId);
+  const passkeys = await findPasskeysByUserId(userId);
 
   return passkeys.map(({ publicKey: _, credentialId: __, counter, ...safePasskey }) => ({
     ...safePasskey,
@@ -237,17 +286,17 @@ export async function deletePasskey({
   passkeyId: number;
   userId: number;
 }): Promise<void> {
-  const passkey = await passkeyModel.findByIdAndUserId(passkeyId, userId);
+  const passkey = await findPasskeyByIdAndUserId(passkeyId, userId);
   if (!passkey) {
     throw Boom.notFound("Passkey not found");
   }
 
-  const passkeyCount = await passkeyModel.countByUserId(userId);
+  const passkeyCount = await countPasskeysByUserId(userId);
   if (passkeyCount === 1) {
     throw Boom.badRequest("Cannot delete the last passkey. Please add another passkey first.");
   }
 
-  await passkeyModel.deletePasskey(passkeyId);
+  await deletePasskeyRecord(passkeyId);
 
   logger.info({ userId, passkeyId }, "Passkey deleted successfully");
 }
@@ -261,12 +310,12 @@ export async function updatePasskeyName({
   userId: number;
   credentialName: string;
 }): Promise<Passkey> {
-  const passkey = await passkeyModel.findByIdAndUserId(passkeyId, userId);
+  const passkey = await findPasskeyByIdAndUserId(passkeyId, userId);
   if (!passkey) {
     throw Boom.notFound("Passkey not found");
   }
 
-  const updatedPasskey = await passkeyModel.update(passkeyId, {
+  const updatedPasskey = await updatePasskey(passkeyId, {
     credentialName,
   });
 

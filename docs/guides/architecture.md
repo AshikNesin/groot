@@ -23,13 +23,11 @@ Each feature is a self-contained module with all its components:
 
 ```
 feature/
-├── feature.routes.ts      # Route definitions
-├── feature.controller.ts  # Request handlers
-├── feature.service.ts     # Business logic
+├── feature.routes.ts      # Route definitions + inline request handlers
+├── feature.service.ts     # Business logic (calls Prisma directly)
 ├── feature.validation.ts  # Zod schemas
-├── feature.model.ts       # Prisma queries
 ├── feature.jobs.ts        # Background jobs (optional)
-└── index.ts               # Exports
+└── feature.utils.ts       # Optional utilities (e.g. webauthn)
 ```
 
 **App vs Shared:**
@@ -59,11 +57,7 @@ Middlewares (CORS, logging, auth, JSON parsing)
     ↓
 Route Handler (createRouter auto-wraps with handle middleware)
     ↓
-Controller (async function returning value)
-    ↓
-Service (business logic)
-    ↓
-Model (Prisma queries)
+Service (business logic + Prisma queries)
     ↓
 Database (PostgreSQL)
     ↓
@@ -78,20 +72,29 @@ Routes use `createRouter()` which automatically wraps handlers:
 
 ```typescript
 import { createRouter } from "@groot/core/utils/router.utils";
-import * as controller from "./todo.controller";
+import { parseBody } from "@groot/core/utils/controller.utils";
+import * as TodoService from "./todo.service";
+import { createTodoSchema } from "./todo.validation";
 
 const router = createRouter();
 
 // Handler is auto-wrapped with handle() middleware
-router.get("/", controller.getAll);
-router.post("/", controller.create);
+router.get("/", async () => {
+  return await TodoService.findAll();
+});
+
+router.post("/", async (req, res) => {
+  const payload = parseBody(req, createTodoSchema);
+  res.status(201);
+  return await TodoService.create({ data: payload });
+});
 
 export default router;
 ```
 
-### Functional Controllers
+### Inline Route Handlers
 
-Controllers are simple async functions that return values:
+Route handlers are simple async functions defined directly in the routes file. They parse requests, call services, and return values:
 
 ```typescript
 export async function getAll() {
@@ -110,7 +113,21 @@ export async function getById(req: Request) {
 }
 ```
 
-No base classes, no manual response handling - just return values.
+```typescript
+export async function create({ data }: { data: CreateTodoDTO }) {
+  return prisma.todo.create({ data });
+}
+
+export async function findById({ id }: { id: number }) {
+  const todo = await prisma.todo.findUnique({ where: { id } });
+  if (!todo) {
+    throw Boom.notFound("Todo not found");
+  }
+  return todo;
+}
+```
+
+No base classes, no manual response handling - just return values. Services call Prisma directly; no separate model layer.
 
 ### Validation Middleware
 
@@ -255,7 +272,7 @@ export function registerRoutes(app: Express): void {
 ## Adding a New Feature
 
 1. Create feature directory in `apps/web/src/server/api/` (app-specific) or `packages/core/src/` (reusable)
-2. Add files: routes, controller, service, validation, model
+2. Add files: routes (with inline handlers), service, validation
 3. Register routes in `routes.ts`
 4. Register jobs in `registerJobHandlers()` if needed
 5. Add environment variables to `.env.schema`

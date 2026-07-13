@@ -1,28 +1,68 @@
+import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
-import * as passkeyController from "./passkey.controller";
 import { jwtAuthMiddleware } from "@groot/core/middlewares/jwt-auth.middleware";
+import { parseId, requireUser, parseBody } from "@groot/core/utils/controller.utils";
+import { setAuthCookie } from "@groot/core/utils/auth-cookie.utils";
+import * as PasskeyService from "./passkey.service";
+import {
+  verifyRegistrationSchema,
+  verifyAuthenticationSchema,
+  updatePasskeyNameSchema,
+  generateAuthenticationOptionsSchema,
+} from "./passkey.validation";
 
 const router = createRouter();
 
-// Generate registration options (requires authentication)
-router.post("/register/options", jwtAuthMiddleware, passkeyController.generateRegistrationOptions);
+router.post("/register/options", jwtAuthMiddleware, async (req: Request) => {
+  const { userId } = requireUser(req);
+  return await PasskeyService.generateRegistrationOptions({ userId });
+});
 
-// Verify registration (requires authentication)
-router.post("/register/verify", jwtAuthMiddleware, passkeyController.verifyRegistration);
+router.post("/register/verify", jwtAuthMiddleware, async (req: Request) => {
+  const { userId } = requireUser(req);
+  const payload = parseBody(req, verifyRegistrationSchema);
+  return await PasskeyService.verifyRegistration({
+    userId,
+    response: payload.response,
+    credentialName: payload.credentialName,
+  });
+});
 
-// Generate authentication options (public endpoint)
-router.post("/login/options", passkeyController.generateAuthenticationOptions);
+router.post("/login/options", async (req: Request) => {
+  const body = parseBody(req, generateAuthenticationOptionsSchema);
+  return await PasskeyService.generateAuthenticationOptions({ email: body?.email });
+});
 
-// Verify authentication (public endpoint)
-router.post("/login/verify", passkeyController.verifyAuthentication);
+router.post("/login/verify", async (req: Request, res: Response) => {
+  const body = parseBody(req, verifyAuthenticationSchema);
+  const result = await PasskeyService.verifyAuthentication({
+    email: body.email,
+    response: body.response,
+  });
+  setAuthCookie(res, result.token);
+  return result;
+});
 
-// List passkeys (requires authentication)
-router.get("/list", jwtAuthMiddleware, passkeyController.listPasskeys);
+router.get("/list", jwtAuthMiddleware, async (req: Request) => {
+  const { userId } = requireUser(req);
+  return await PasskeyService.listPasskeys({ userId });
+});
 
-// Delete passkey (requires authentication)
-router.delete("/:id", jwtAuthMiddleware, passkeyController.deletePasskey);
+router.delete("/:id", jwtAuthMiddleware, async (req: Request) => {
+  const { userId } = requireUser(req);
+  const passkeyId = parseId(req.params.id);
+  return await PasskeyService.deletePasskey({ userId, passkeyId });
+});
 
-// Update passkey name (requires authentication)
-router.patch("/:id", jwtAuthMiddleware, passkeyController.updatePasskeyName);
+router.patch("/:id", jwtAuthMiddleware, async (req: Request) => {
+  const { userId } = requireUser(req);
+  const passkeyId = parseId(req.params.id);
+  const payload = parseBody(req, updatePasskeyNameSchema);
+  return await PasskeyService.updatePasskeyName({
+    userId,
+    passkeyId,
+    credentialName: payload.credentialName,
+  });
+});
 
 export default router;

@@ -75,9 +75,14 @@ Test business logic directly:
 import { describe, it, expect, vi } from "vitest";
 import * as TodoService from "../../../../apps/web/src/server/api/todo/todo.service";
 
-vi.mock("../../../../apps/web/src/server/api/todo/todo.model", () => ({
-  findAll: vi.fn().mockResolvedValue([]),
-  create: vi.fn().mockResolvedValue({ id: 1 }),
+vi.mock("@groot/core/database", () => ({
+  prisma: {
+    todo: {
+      findMany: vi.fn().mockResolvedValue([]),
+      create: vi.fn().mockResolvedValue({ id: 1 }),
+      findUnique: vi.fn().mockResolvedValue({ id: 1 }),
+    },
+  },
 }));
 
 describe("TodoService", () => {

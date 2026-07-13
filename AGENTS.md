@@ -93,16 +93,13 @@ import `pages/`. `pages/` imports both.
 
 Each feature in `apps/web/src/server/api/<feature>/` is self-contained:
 
-- `*.routes.ts` — route defs via `createRouter()`
-- `*.controller.ts` — async request handlers (return values, auto-serialized)
-- `*.service.ts` — business logic
+- `*.routes.ts` — route defs via `createRouter()` with inline async request handlers
+- `*.service.ts` — business logic (calls Prisma directly)
 - `*.validation.ts` — Zod schemas
-- `*.model.ts` — Prisma queries
 - `*.jobs.ts` — background job handlers (if applicable)
-- `index.ts` — feature exports
 
-**Request flow:** Route (`createRouter` + validation) → Controller (async fn) →
-Service → Prisma. Responses auto-serialized by the handle middleware.
+**Request flow:** Route handler (parse + validate + call service) →
+Service (business logic + Prisma) → response auto-serialized by `handle` middleware.
 
 **Server imports:** `@groot/core/*` for both infrastructure (errors, kv, ai, middlewares, utils, config) and reusable features (auth, passkey, settings, storage). Background jobs live in `@groot/jobs/server/*`.
 
@@ -138,11 +135,11 @@ pnpm groot:sync       # Apply safe boilerplate changes
 - **Frontend imports**: `@groot/ui/*`, `@groot/shell/*`, relative `./pages/*`.
 - **Server imports**: `@groot/core/*`, `@groot/jobs/server/*`, relative `./api/*`.
 - **Frontend data hooks**: use `apiClient` from `@groot/shell/lib/api` (not raw axios).
-- **Routes**: `createRouter()`; **controllers**: simple async fns.
+- **Routes**: `createRouter()` with inline async handlers; **services**: business logic calling Prisma directly.
 - **Errors**: `Boom` factory methods from `@groot/core/errors`.
 - **Database migrations**: never use `prisma db push` for schema changes. Use `pnpm db:migrate:create` to generate a migration, then `pnpm prisma migrate dev` to apply locally; deploys auto-run `pnpm db:migrate` (migrate deploy) via the `prestart` hook.
-- **Validation**: Zod via `parseBody(req, schema)` / `parseQuery(req, schema)` / `parseParams(req, schema)` inside controllers.
-- **Exports**: prefer named exports (use `* as` for controllers).
+- **Validation**: Zod via `parseBody(req, schema)` / `parseQuery(req, schema)` / `parseParams(req, schema)` inside route handlers.
+- **Exports**: prefer named exports (use `* as` for services).
 - **Async**: always async/await, never raw Promises.
 - **Naming**: camelCase vars/fns, PascalCase components/types.
 

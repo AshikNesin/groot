@@ -23,8 +23,8 @@ pnpm db:migrate        # Apply pending migrations (migrate deploy)
 ## Coding Conventions
 
 - **TypeScript everywhere** – Path aliases defined in `tsconfig.json` (`@groot/core/*` for server, `@groot/shell/*` for client)
-- **Validation first** – Use `parseBody`, `parseQuery`, and `parseParams` in controllers.
-- **Return values** – Controllers return values directly, `createRouter` handles serialization
+- **Validation first** – Use `parseBody`, `parseQuery`, and `parseParams` in route handlers.
+- **Return values** – Route handlers return values directly, `createRouter` handles serialization
 - **Boom errors** – Use `Boom.notFound()`, `Boom.badRequest()`, etc. for HTTP errors
 - **Logging** – Use logger from `@groot/core/logger` for structured events; avoid `console.log`
 - **Minimal comments** – Favor clear code over extensive documentation
@@ -52,81 +52,62 @@ export const createSchema = z.object({
 export type CreateDTO = z.infer<typeof createSchema>;
 ```
 
-### 3. Create Model
+### 3. Create Service
 
 ```typescript
-// apps/web/src/server/api/myfeature/myfeature.model.ts
+// apps/web/src/server/api/myfeature/myfeature.service.ts
 import { prisma } from "@groot/core/database";
+import { Boom } from "@groot/core/errors";
 import type { CreateDTO } from "./myfeature.validation";
 
-export async function create(data: CreateDTO) {
+export async function create({ data }: { data: CreateDTO }) {
   return prisma.myfeature.create({ data });
 }
 
 export async function findAll() {
   return prisma.myfeature.findMany();
 }
-```
 
-### 4. Create Service
-
-```typescript
-// apps/web/src/server/api/myfeature/myfeature.service.ts
-import * as Model from "./myfeature.model";
-import type { CreateDTO } from "./myfeature.validation";
-
-export async function create({ data }: { data: CreateDTO }) {
-  return Model.create(data);
-}
-
-export async function findAll() {
-  return Model.findAll();
+export async function findById({ id }: { id: number }) {
+  const item = await prisma.myfeature.findUnique({ where: { id } });
+  if (!item) {
+    throw Boom.notFound("MyFeature not found");
+  }
+  return item;
 }
 ```
 
-### 5. Create Controller
-
-```typescript
-// apps/web/src/server/api/myfeature/myfeature.controller.ts
-import type { Request, Response } from "express";
-import * as Service from "./myfeature.service";
-import { parseId } from "@groot/core/utils/controller.utils";
-
-export async function getAll() {
-  return await Service.findAll();
-}
-
-export async function create(req: Request, res: Response) {
-  const payload = parseBody(req, createTodoSchema);
-  res.status(201);
-  return await Service.create({ data: payload });
-}
-
-export async function getById(req: Request) {
-  const id = parseId(req.params.id);
-  return await Service.findById({ id });
-}
-```
-
-### 6. Create Routes
+### 4. Create Routes
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.routes.ts
+import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
-import * as controller from "./myfeature.controller";
-
+import { parseId, parseBody } from "@groot/core/utils/controller.utils";
+import * as Service from "./myfeature.service";
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
 
-router.get("/", controller.getAll);
-router.post("/", controller.create);
-router.get("/:id", controller.getById);
+router.get("/", async () => {
+  return await Service.findAll();
+});
+
+router.post("/", async (req: Request, res: Response) => {
+  const payload = parseBody(req, createSchema);
+  res.status(201);
+  return await Service.create({ data: payload });
+});
+
+router.get("/:id", async (req: Request) => {
+  const id = parseId(req.params.id);
+  return await Service.findById({ id });
+});
 
 export default router;
 ```
 
-### 7. Register Routes
+### 5. Register Routes
 
 ```typescript
 // apps/web/src/server/routes.ts
@@ -138,7 +119,7 @@ export function registerRoutes(app: Express): void {
 }
 ```
 
-### 8. Add Tests
+### 6. Add Tests
 
 ```typescript
 // tests/server/api/myfeature/myfeature.routes.test.ts
