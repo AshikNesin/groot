@@ -1,5 +1,16 @@
 # @groot/core
 
+## 0.5.0
+
+### Minor Changes
+
+- [#69](https://github.com/AshikNesin/groot/pull/69) [`0c47508`](https://github.com/AshikNesin/groot/commit/0c47508c31623b46f051257048c19f7c86c89e2b) Thanks [@AshikNesin](https://github.com/AshikNesin)! - refactor(core): migrate backend validation from middleware to strictly-typed controller helpers
+
+  Replaced the `validateBody`, `validateQuery`, and `validateParams` Express middlewares with inline controller helpers `parseBody`, `parseQuery`, and `parseParams`. This change improves type safety by directly leveraging `z.output<typeof Schema>` inside the controllers, eliminating the need for unsafe `as T` casting.
+
+  - The `req.validated` property has been removed from the Express Request type.
+  - All core and shared feature modules (auth, passkey, storage, jobs, settings) have been migrated.
+
 ## 0.4.1
 
 ### Patch Changes
@@ -13,6 +24,7 @@
   making import style inconsistent across the codebase.
 
   ## @groot/core
+
   - Converted all cross-directory `../` imports to `@groot/core/*` aliases
     across `ai`, `auth`, `config`, `kv`, `middlewares`, `notification`,
     `passkey`, `settings`, `storage`, and `utils`.
@@ -21,11 +33,13 @@
     relative (no alias maps to the generated output outside `src/`).
 
   ## @groot/shell
+
   - Converted cross-directory `../` imports to `@groot/shell/*` aliases
     across `components`, `hooks`, `lib`, `pages/storage`, `services`, and
     `store`.
 
   ## @groot/jobs
+
   - Converted cross-directory `../` imports to `@groot/jobs/client/*`
     aliases across the client `components/`.
 
@@ -39,6 +53,7 @@
   controllers shape responses, plus a shared Form primitive.
 
   ## @groot/core
+
   - Removed the `*System` namespace barrels (`AISystem`, `AuthSystem`,
     `ErrorSystem`, `KVSystem`, plus the passkey/settings/storage equivalents).
     Callers now use direct named imports instead of convenience namespaces.
@@ -54,10 +69,12 @@
     `validation` middlewares.
 
   ## @groot/ui
+
   - Added a `Form` component (`form.tsx`) with `react-hook-form` integration and
     field helpers.
 
   ## @groot/shell
+
   - Reworked `lib/api.ts` (the `apiClient`) for simpler, more consistent request
     handling.
   - Added `useToastMutation` hook to standardize mutation + toast feedback.
@@ -66,6 +83,7 @@
     hooks to build on the new Form component and apiClient.
 
   ## @groot/jobs
+
   - Refactored the client API layer (`api.ts`), `useJobs`, `useJobDetail`, and
     `JobsTable` to align with the new apiClient patterns.
 
