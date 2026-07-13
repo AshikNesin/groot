@@ -118,13 +118,10 @@ Apps can freely add additional models.
 ## Adding a Business Feature Downstream
 
 1. **Server module** (`apps/web/src/server/api/<feature>/`):
-   - `<feature>.routes.ts` - route definitions
-   - `<feature>.controller.ts` - request handlers
-   - `<feature>.service.ts` - business logic
+   - `<feature>.routes.ts` - route definitions + inline request handlers
+   - `<feature>.service.ts` - business logic (calls Prisma directly)
    - `<feature>.validation.ts` - Zod schemas
-   - `<feature>.model.ts` - Prisma queries
    - `<feature>.jobs.ts` - background job handlers (optional)
-   - `index.ts` - exports
 
 2. **Register routes** in `apps/web/src/server/routes.ts`
 

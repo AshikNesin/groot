@@ -107,7 +107,7 @@ curl -X POST https://groot.localhost/api/v1/auth/login \
 
 ## Create Your First Feature
 
-Features are self-contained modules with routes, controllers, services, and jobs:
+Features are self-contained modules with routes, services, and validation:
 
 ### 1. Create the Feature Directory
 
@@ -119,42 +119,30 @@ mkdir -p apps/web/src/server/api/myfeature
 
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.routes.ts
+import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
-import * as controller from "./myfeature.controller";
-
+import { parseId, parseBody } from "@groot/core/utils/controller.utils";
+import * as service from "./myfeature.service";
 import { createSchema } from "./myfeature.validation";
 
 const router = createRouter();
 
-router.get("/", controller.getAll);
-router.post("/", controller.create);
-router.get("/:id", controller.getById);
+router.get("/", async () => {
+  return await service.findAll();
+});
+
+router.post("/", async (req: Request, res: Response) => {
+  const payload = parseBody(req, createSchema);
+  res.status(201);
+  return await service.create({ data: payload });
+});
+
+router.get("/:id", async (req: Request) => {
+  const id = parseId(req.params.id);
+  return await service.findById({ id });
+});
 
 export default router;
-```
-
-### 3. Create Controller
-
-```typescript
-// apps/web/src/server/api/myfeature/myfeature.controller.ts
-import type { Request, Response } from "express";
-import * as Service from "./myfeature.service";
-import { parseId } from "@groot/core/utils/controller.utils";
-
-export async function getAll() {
-  return await Service.findAll();
-}
-
-export async function create(req: Request, res: Response) {
-  const payload = parseBody(req, createItemSchema);
-  res.status(201);
-  return await Service.create({ data: payload });
-}
-
-export async function getById(req: Request) {
-  const id = parseId(req.params.id);
-  return await Service.findById({ id });
-}
 ```
 
 ### 4. Register Routes

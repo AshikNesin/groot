@@ -14,7 +14,7 @@ Client (Storage page)
   ↳ React Query hooks (`useStorage.ts`)
       ↳ Axios `/api/v1/storage/*`
           ↳ Express routes (shared/storage/)
-              ↳ Controllers → Services
+              ↳ Routes → Services
                   ↳ Core S3 wrapper (core/storage)
 ```
 
@@ -22,15 +22,11 @@ Client (Storage page)
 
 ```
 packages/core/src/storage/
-├── storage.routes.ts        # Routes
-├── storage.controller.ts    # Request handlers
+├── storage.routes.ts        # Routes + inline request handlers
 ├── storage.service.ts       # Business logic
 ├── storage.validation.ts    # Zod schemas
-└── index.ts
-
-packages/core/src/storage/
-├── service.ts               # S3 wrapper
-├── types.ts                 # Type definitions
+├── storage.utils.ts         # Utility functions
+├── files.ts                 # Configured files-sdk Files instance (S3 wrapper)
 └── index.ts
 ```
 
