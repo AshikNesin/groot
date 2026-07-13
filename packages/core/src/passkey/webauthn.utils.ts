@@ -11,7 +11,7 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
-import { config } from "../config";
+import { config } from "@groot/core/config";
 
 // Configuration for WebAuthn (module-private — only used in this file)
 const RP_NAME = config.passkey.rpName;

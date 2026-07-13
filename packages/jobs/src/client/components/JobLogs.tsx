@@ -1,5 +1,5 @@
 import { formatLocaleDateTime } from "@groot/shell/lib/utils";
-import type { JobLog } from "../types";
+import type { JobLog } from "@groot/jobs/client/types";
 import { Console } from "console-feed";
 
 /** Streaming log panel rendered with console-feed. */

@@ -9,8 +9,8 @@ import {
 import { Skeleton } from "@groot/ui/loading-skeleton";
 import { StatusBadge } from "@groot/ui";
 import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
-import type { Job } from "../types";
-import type { JobsQueryPatch } from "../constants";
+import type { Job } from "@groot/jobs/client/types";
+import type { JobsQueryPatch } from "@groot/jobs/client/constants";
 import {
   AlertCircle,
   ChevronRight,

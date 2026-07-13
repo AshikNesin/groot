@@ -14,7 +14,7 @@ import { Form, FormField } from "@groot/ui/form";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { lazy, Suspense } from "react";
 import { z } from "zod";
-import { useAppSettings } from "../hooks/useAppSettings";
+import { useAppSettings } from "@groot/shell/hooks/useAppSettings";
 
 const settingKeySchema = z.object({
   key: z.string().trim().min(1, "Key is required"),

@@ -1,7 +1,7 @@
-import { createRouter } from "../utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import multer from "multer";
 import * as storageController from "./storage.controller";
-import { validateBody, validateQuery } from "../middlewares/validation.middleware";
+import { validateBody, validateQuery } from "@groot/core/middlewares/validation.middleware";
 import {
   listFilesSchema,
   downloadFileSchema,
@@ -10,7 +10,10 @@ import {
   createFolderSchema,
   renameFileSchema,
 } from "./storage.validation";
-import { storageRateLimiter, uploadRateLimiter } from "../middlewares/rate-limit.middleware";
+import {
+  storageRateLimiter,
+  uploadRateLimiter,
+} from "@groot/core/middlewares/rate-limit.middleware";
 
 const router = createRouter();
 

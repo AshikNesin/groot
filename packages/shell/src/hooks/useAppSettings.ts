@@ -1,4 +1,4 @@
-import { settingsService } from "../services/settings";
+import { settingsService } from "@groot/shell/services/settings";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastMutation } from "./useToastMutation";

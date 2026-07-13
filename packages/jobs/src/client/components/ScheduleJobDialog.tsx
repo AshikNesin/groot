@@ -11,7 +11,7 @@ import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
 import { Textarea } from "@groot/ui/textarea";
 import { JobTypeSelect } from "./JobTypeSelect";
-import type { JobTypeDialogFields } from "../constants";
+import type { JobTypeDialogFields } from "@groot/jobs/client/constants";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 type Props = JobTypeDialogFields & {

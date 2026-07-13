@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import * as AuthService from "./auth.service";
 import type { LoginDTO, CreateUserDTO } from "./auth.validation";
-import { requireUser, validatedBody } from "../utils/controller.utils";
-import { setAuthCookie, clearAuthCookie } from "../utils/auth-cookie.utils";
+import { requireUser, validatedBody } from "@groot/core/utils/controller.utils";
+import { setAuthCookie, clearAuthCookie } from "@groot/core/utils/auth-cookie.utils";
 
 export async function login(req: Request, res: Response) {
   const body = validatedBody<LoginDTO>(req);

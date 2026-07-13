@@ -1,7 +1,7 @@
 import { Button } from "@groot/ui/button";
 import { Checkbox } from "@groot/ui/checkbox";
-import { handleDownload, handleView } from "../hooks/useStorageActions";
-import type { StorageFile } from "../hooks/useStorage";
+import { handleDownload, handleView } from "@groot/shell/pages/storage/hooks/useStorageActions";
+import type { StorageFile } from "@groot/shell/pages/storage/hooks/useStorage";
 import { Download, File as FileIcon, Folder, Trash2 } from "lucide-react";
 import { formatBytes, formatDate } from "@groot/shell/lib/utils";
 

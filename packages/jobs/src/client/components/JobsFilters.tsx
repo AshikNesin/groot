@@ -9,7 +9,12 @@ import {
 } from "@groot/ui/dropdown-menu";
 import { Input } from "@groot/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@groot/ui/tabs";
-import { primaryOptions, secondaryOptions, type JobsQueryPatch, type StateTab } from "../constants";
+import {
+  primaryOptions,
+  secondaryOptions,
+  type JobsQueryPatch,
+  type StateTab,
+} from "@groot/jobs/client/constants";
 import { Calendar as CalendarIcon, Filter, MoreHorizontal, Search, X } from "lucide-react";
 
 type QueryParams = {

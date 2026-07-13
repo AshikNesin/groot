@@ -1,7 +1,7 @@
 import Keyv from "keyv";
 import KeyvPostgres from "@keyv/postgres";
 import { logger } from "@groot/core/logger";
-import { env } from "../env";
+import { env } from "@groot/core/env";
 
 // PostgreSQL store using @keyv/postgres
 export const store = new KeyvPostgres({

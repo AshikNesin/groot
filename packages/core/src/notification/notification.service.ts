@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { logger } from "@groot/core/logger";
 import { sendPushOverNotification } from "send-push-notification";
-import { env } from "../env";
+import { env } from "@groot/core/env";
 
 export interface NotificationOptions {
   title: string;

@@ -1,12 +1,12 @@
 import dayjs from "dayjs";
-import { Boom } from "../errors";
+import { Boom } from "@groot/core/errors";
 import { logger } from "@groot/core/logger";
 import type { Passkey, User } from "@groot/core/database";
 import { passkeyModel } from "./passkey.model";
-import { userModel } from "../auth/user.model";
-import { generateToken } from "../utils/jwt.utils";
-import { createNamespaceKv } from "../kv";
-import { prisma } from "../database";
+import { userModel } from "@groot/core/auth/user.model";
+import { generateToken } from "@groot/core/utils/jwt.utils";
+import { createNamespaceKv } from "@groot/core/kv";
+import { prisma } from "@groot/core/database";
 import {
   generateDeviceName,
   generatePasskeyAuthenticationOptions,

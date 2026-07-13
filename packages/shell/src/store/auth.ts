@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { apiClient } from "../lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 
 interface AuthState {
   isAuthenticated: boolean;

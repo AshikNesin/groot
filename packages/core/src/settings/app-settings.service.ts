@@ -1,4 +1,4 @@
-import { Boom } from "../errors";
+import { Boom } from "@groot/core/errors";
 import { appSettingsModel } from "./app-settings.model";
 import type { AppSetting } from "./app-settings.model";
 import type { UpsertAppSettingDTO } from "./app-settings.validation";

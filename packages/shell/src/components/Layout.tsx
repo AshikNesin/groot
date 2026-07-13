@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/auth";
+import { useAuthStore } from "@groot/shell/store/auth";
 import { CommandPalette } from "./CommandPalette";
 import {
   DropdownMenu,

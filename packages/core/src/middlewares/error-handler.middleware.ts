@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { Boom } from "../errors";
+import { Boom } from "@groot/core/errors";
 import { logBusinessEvent } from "@groot/core/logger";
 import { getRequestLogger } from "./request-logger.middleware";
 import { buildErrorContext } from "./error-context";
@@ -8,10 +8,10 @@ import {
   formatHttpErrorResponse,
   formatUnknownErrorResponse,
 } from "./error-response";
-import { sendError } from "../utils/api-response.utils";
-import { isPrismaError } from "../errors";
+import { sendError } from "@groot/core/utils/api-response.utils";
+import { isPrismaError } from "@groot/core/errors";
 
-import { ErrorCode } from "../errors";
+import { ErrorCode } from "@groot/core/errors";
 
 /**
  * Global error handling middleware

@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import ms from "ms";
-import { Boom } from "../errors";
-import { env } from "../env";
-import { config } from "../config";
+import { Boom } from "@groot/core/errors";
+import { env } from "@groot/core/env";
+import { config } from "@groot/core/config";
 
 interface JWTPayload {
   userId: number;

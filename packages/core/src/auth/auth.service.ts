@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { userModel } from "./user.model";
-import { Boom } from "../errors";
-import { generateToken } from "../utils/jwt.utils";
+import { Boom } from "@groot/core/errors";
+import { generateToken } from "@groot/core/utils/jwt.utils";
 import type { CreateUserDTO, LoginDTO } from "./auth.validation";
 
 const DUMMY_HASH = "$2a$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";

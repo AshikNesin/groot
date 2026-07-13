@@ -1,4 +1,4 @@
-import type { JobStats } from "../types";
+import type { JobStats } from "@groot/jobs/client/types";
 import { Activity, CheckCircle, Clock, RefreshCw, X, XCircle } from "lucide-react";
 
 function StatCard({

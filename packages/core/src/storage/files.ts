@@ -1,7 +1,7 @@
 import { Files } from "files-sdk";
 import { fs } from "files-sdk/fs";
 import { s3 } from "files-sdk/s3";
-import { env } from "../env";
+import { env } from "@groot/core/env";
 
 /**
  * Storage core: one configured {@link Files} instance for the whole app.

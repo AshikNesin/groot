@@ -1,4 +1,4 @@
-import { prisma } from "../database";
+import { prisma } from "@groot/core/database";
 import type { Passkey } from "@groot/core/database";
 
 export type CreatePasskeyData = {

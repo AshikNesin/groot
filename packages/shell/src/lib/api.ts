@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance } from "axios";
-import { useAuthStore } from "../store/auth";
+import { useAuthStore } from "@groot/shell/store/auth";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {

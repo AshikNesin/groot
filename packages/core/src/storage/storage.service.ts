@@ -1,6 +1,6 @@
 import { FilesError } from "files-sdk";
 import { files } from "./files";
-import { Boom } from "../errors";
+import { Boom } from "@groot/core/errors";
 import { getContentType } from "./storage.utils";
 
 export interface FileInfo {

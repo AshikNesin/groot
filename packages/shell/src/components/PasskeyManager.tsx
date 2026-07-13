@@ -12,13 +12,13 @@ import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
 import { Badge } from "@groot/ui/badge";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
-import { type Passkey, passkeyService } from "../services/passkey";
+import { type Passkey, passkeyService } from "@groot/shell/services/passkey";
 import { useState } from "react";
 import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Form, FormField } from "@groot/ui/form";
-import { formatDisplayDate } from "../lib/utils";
-import { useToastMutation } from "../hooks/useToastMutation";
+import { formatDisplayDate } from "@groot/shell/lib/utils";
+import { useToastMutation } from "@groot/shell/hooks/useToastMutation";
 
 const PASSKEYS_KEY = ["passkeys"] as const;
 

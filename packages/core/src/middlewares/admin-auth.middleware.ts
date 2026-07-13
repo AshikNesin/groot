@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import { Boom } from "../errors";
-import { env } from "../env";
+import { Boom } from "@groot/core/errors";
+import { env } from "@groot/core/env";
 
 /**
  * Admin authentication middleware

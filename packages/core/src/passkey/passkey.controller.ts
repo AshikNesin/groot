@@ -6,8 +6,8 @@ import type {
   UpdatePasskeyNameDTO,
   GenerateAuthenticationOptionsDTO,
 } from "./passkey.validation";
-import { parseId, requireUser, validatedBody } from "../utils/controller.utils";
-import { setAuthCookie } from "../utils/auth-cookie.utils";
+import { parseId, requireUser, validatedBody } from "@groot/core/utils/controller.utils";
+import { setAuthCookie } from "@groot/core/utils/auth-cookie.utils";
 
 /**
  * Generate options for passkey registration

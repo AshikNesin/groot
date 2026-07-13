@@ -1,7 +1,7 @@
 import rateLimit from "express-rate-limit";
 import type { NextFunction, Request, Response } from "express";
-import { Boom, ErrorCode } from "../errors";
-import { config } from "../config";
+import { Boom, ErrorCode } from "@groot/core/errors";
+import { config } from "@groot/core/config";
 
 export const storageRateLimiter = rateLimit({
   windowMs: config.rateLimits.storage.windowMs,

@@ -9,7 +9,7 @@ import {
 } from "@groot/ui/dialog";
 import { Label } from "@groot/ui/label";
 import { JobTypeSelect } from "./JobTypeSelect";
-import type { JobTypeDialogFields } from "../constants";
+import type { JobTypeDialogFields } from "@groot/jobs/client/constants";
 import { lazy, Suspense } from "react";
 import { Plus } from "lucide-react";
 

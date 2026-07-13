@@ -1,5 +1,5 @@
 import { Router, type RouterOptions } from "express";
-import { handle } from "../middlewares/route-handler.middleware";
+import { handle } from "@groot/core/middlewares/route-handler.middleware";
 
 /**
  * Enhanced Router type that allows methods to accept handlers returning values.

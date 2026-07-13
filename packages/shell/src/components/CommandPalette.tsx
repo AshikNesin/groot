@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, LayoutDashboard, CheckSquare, HardDrive, Briefcase, LogOut } from "lucide-react";
-import { useAuthStore } from "../store/auth";
+import { useAuthStore } from "@groot/shell/store/auth";
 import { Dialog, DialogContent, DialogTitle } from "@groot/ui/dialog";
 import {
   Command,

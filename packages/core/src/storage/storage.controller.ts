@@ -8,8 +8,8 @@ import type {
   CreateFolderDTO,
   RenameFileDTO,
 } from "./storage.validation";
-import { Boom } from "../errors";
-import { validatedBody, validatedQuery } from "../utils/controller.utils";
+import { Boom } from "@groot/core/errors";
+import { validatedBody, validatedQuery } from "@groot/core/utils/controller.utils";
 import { sanitizeFileName } from "./storage.utils";
 
 export async function listFiles(req: Request) {

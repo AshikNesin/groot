@@ -1,4 +1,4 @@
-import { apiClient } from "../lib/api";
+import { apiClient } from "@groot/shell/lib/api";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 import type {
   PublicKeyCredentialCreationOptionsJSON,

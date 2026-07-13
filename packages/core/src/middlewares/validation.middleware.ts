@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { type ZodSchema, z } from "zod";
-import { Boom, ErrorCode } from "../errors";
+import { Boom, ErrorCode } from "@groot/core/errors";
 
 function createValidator(target: "body" | "query" | "params") {
   return function <T extends ZodSchema>(schema: T) {

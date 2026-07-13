@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { env } from "../env";
+import { env } from "@groot/core/env";
 import { JWT_EXPIRES_IN_MS } from "./jwt.utils";
 
 const TOKEN_COOKIE_NAME = "token";

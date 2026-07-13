@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { sendSuccess } from "../utils/api-response.utils";
+import { sendSuccess } from "@groot/core/utils/api-response.utils";
 
 /**
  * Wraps an asynchronous controller function that returns data.

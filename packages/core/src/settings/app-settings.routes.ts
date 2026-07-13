@@ -1,8 +1,8 @@
-import { createRouter } from "../utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as appSettingsController from "./app-settings.controller";
-import { validateBody } from "../middlewares/validation.middleware";
+import { validateBody } from "@groot/core/middlewares/validation.middleware";
 import { upsertAppSettingSchema } from "./app-settings.validation";
-import { adminAuthMiddleware } from "../middlewares/admin-auth.middleware";
+import { adminAuthMiddleware } from "@groot/core/middlewares/admin-auth.middleware";
 
 const router = createRouter();
 

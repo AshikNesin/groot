@@ -1,4 +1,4 @@
-import { prisma } from "../database";
+import { prisma } from "@groot/core/database";
 import type { User } from "@groot/core/database";
 
 interface CreateUserData {

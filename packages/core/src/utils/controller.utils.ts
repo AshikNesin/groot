@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import { Boom } from "../errors";
+import { Boom } from "@groot/core/errors";
 
 /**
  * Express 5 types route params/query values loosely (params as `string | string[]`,

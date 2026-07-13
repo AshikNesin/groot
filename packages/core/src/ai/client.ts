@@ -19,7 +19,7 @@ import type {
   ImageContent,
 } from "./types";
 import { zodToTypeBox } from "./schema";
-import { env } from "../env";
+import { env } from "@groot/core/env";
 
 export type CompleteParams = CompletionOptions & {
   prompt: string | (TextContent | ImageContent)[];

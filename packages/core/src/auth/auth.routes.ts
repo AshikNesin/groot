@@ -1,8 +1,8 @@
-import { createRouter } from "../utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as authController from "./auth.controller";
-import { validateBody } from "../middlewares/validation.middleware";
-import { jwtAuthMiddleware } from "../middlewares/jwt-auth.middleware";
-import { adminAuthMiddleware } from "../middlewares/admin-auth.middleware";
+import { validateBody } from "@groot/core/middlewares/validation.middleware";
+import { jwtAuthMiddleware } from "@groot/core/middlewares/jwt-auth.middleware";
+import { adminAuthMiddleware } from "@groot/core/middlewares/admin-auth.middleware";
 import { loginSchema, createUserSchema } from "./auth.validation";
 
 const router = createRouter();

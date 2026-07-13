@@ -1,7 +1,7 @@
-import { createRouter } from "../utils/router.utils";
+import { createRouter } from "@groot/core/utils/router.utils";
 import * as passkeyController from "./passkey.controller";
-import { jwtAuthMiddleware } from "../middlewares/jwt-auth.middleware";
-import { validateBody } from "../middlewares/validation.middleware";
+import { jwtAuthMiddleware } from "@groot/core/middlewares/jwt-auth.middleware";
+import { validateBody } from "@groot/core/middlewares/validation.middleware";
 import {
   verifyRegistrationSchema,
   verifyAuthenticationSchema,

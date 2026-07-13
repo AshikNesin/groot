@@ -1,7 +1,7 @@
 import type { Response } from "express";
-import { ErrorCode, handlePrismaError, Boom } from "../errors";
-import { env } from "../env";
-import { sendError } from "../utils/api-response.utils";
+import { ErrorCode, handlePrismaError, Boom } from "@groot/core/errors";
+import { env } from "@groot/core/env";
+import { sendError } from "@groot/core/utils/api-response.utils";
 
 export function formatPrismaResponse(res: Response, error: unknown): void {
   try {
