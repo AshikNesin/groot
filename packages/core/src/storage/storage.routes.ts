@@ -1,15 +1,6 @@
 import { createRouter } from "@groot/core/utils/router.utils";
 import multer from "multer";
 import * as storageController from "./storage.controller";
-import { validateBody, validateQuery } from "@groot/core/middlewares/validation.middleware";
-import {
-  listFilesSchema,
-  downloadFileSchema,
-  deleteFilesSchema,
-  getFileMetadataSchema,
-  createFolderSchema,
-  renameFileSchema,
-} from "./storage.validation";
 import {
   storageRateLimiter,
   uploadRateLimiter,
@@ -26,7 +17,7 @@ const upload = multer({
   },
 });
 
-router.get("/files", validateQuery(listFilesSchema), storageController.listFiles);
+router.get("/files", storageController.listFiles);
 
 router.post(
   "/files/upload",
@@ -42,20 +33,16 @@ router.post(
   storageController.bulkUpload,
 );
 
-router.get("/files/download", validateQuery(downloadFileSchema), storageController.downloadFile);
+router.get("/files/download", storageController.downloadFile);
 
-router.delete("/files", validateBody(deleteFilesSchema), storageController.deleteFiles);
+router.delete("/files", storageController.deleteFiles);
 
-router.get(
-  "/files/metadata",
-  validateQuery(getFileMetadataSchema),
-  storageController.getFileMetadata,
-);
+router.get("/files/metadata", storageController.getFileMetadata);
 
-router.post("/folders", validateBody(createFolderSchema), storageController.createFolder);
+router.post("/folders", storageController.createFolder);
 
 router.delete("/folders/:folderPath", storageController.deleteFolder);
 
-router.put("/files/rename", validateBody(renameFileSchema), storageController.renameFile);
+router.put("/files/rename", storageController.renameFile);
 
 export default router;

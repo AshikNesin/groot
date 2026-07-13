@@ -1,19 +1,19 @@
 import type { Request, Response } from "express";
 import * as StorageFileService from "./storage.service";
-import type {
-  ListFilesDTO,
-  DownloadFileDTO,
-  DeleteFilesDTO,
-  GetFileMetadataDTO,
-  CreateFolderDTO,
-  RenameFileDTO,
+import {
+  listFilesSchema,
+  downloadFileSchema,
+  deleteFilesSchema,
+  getFileMetadataSchema,
+  createFolderSchema,
+  renameFileSchema,
 } from "./storage.validation";
 import { Boom } from "@groot/core/errors";
-import { validatedBody, validatedQuery } from "@groot/core/utils/controller.utils";
+import { parseBody, parseQuery } from "@groot/core/utils/controller.utils";
 import { sanitizeFileName } from "./storage.utils";
 
 export async function listFiles(req: Request) {
-  const query = validatedQuery<ListFilesDTO>(req);
+  const query = parseQuery(req, listFilesSchema);
   return await StorageFileService.listFiles({
     prefix: query.prefix,
     delimiter: query.delimiter,
@@ -37,7 +37,7 @@ export async function uploadFile(req: Request) {
 }
 
 export async function downloadFile(req: Request, res: Response) {
-  const query = validatedQuery<DownloadFileDTO>(req);
+  const query = parseQuery(req, downloadFileSchema);
   const file = await StorageFileService.downloadFile({
     filePath: query.filePath,
   });
@@ -48,21 +48,21 @@ export async function downloadFile(req: Request, res: Response) {
 }
 
 export async function deleteFiles(req: Request) {
-  const body = validatedBody<DeleteFilesDTO>(req);
+  const body = parseBody(req, deleteFilesSchema);
   return await StorageFileService.deleteFiles({
     filePaths: body.filePaths,
   });
 }
 
 export async function getFileMetadata(req: Request) {
-  const query = validatedQuery<GetFileMetadataDTO>(req);
+  const query = parseQuery(req, getFileMetadataSchema);
   return await StorageFileService.getFileMetadata({
     filePath: query.filePath,
   });
 }
 
 export async function createFolder(req: Request) {
-  const body = validatedBody<CreateFolderDTO>(req);
+  const body = parseBody(req, createFolderSchema);
   return await StorageFileService.createFolder({ folderPath: body.folderPath });
 }
 
@@ -76,7 +76,7 @@ export async function deleteFolder(req: Request<{ folderPath?: string }>) {
 }
 
 export async function renameFile(req: Request) {
-  const body = validatedBody<RenameFileDTO>(req);
+  const body = parseBody(req, renameFileSchema);
   return await StorageFileService.renameFile({
     oldPath: body.oldPath,
     newPath: body.newPath,

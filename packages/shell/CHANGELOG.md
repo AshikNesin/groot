@@ -13,7 +13,6 @@
   making import style inconsistent across the codebase.
 
   ## @groot/core
-
   - Converted all cross-directory `../` imports to `@groot/core/*` aliases
     across `ai`, `auth`, `config`, `kv`, `middlewares`, `notification`,
     `passkey`, `settings`, `storage`, and `utils`.
@@ -22,13 +21,11 @@
     relative (no alias maps to the generated output outside `src/`).
 
   ## @groot/shell
-
   - Converted cross-directory `../` imports to `@groot/shell/*` aliases
     across `components`, `hooks`, `lib`, `pages/storage`, `services`, and
     `store`.
 
   ## @groot/jobs
-
   - Converted cross-directory `../` imports to `@groot/jobs/client/*`
     aliases across the client `components/`.
 
@@ -42,7 +39,6 @@
   controllers shape responses, plus a shared Form primitive.
 
   ## @groot/core
-
   - Removed the `*System` namespace barrels (`AISystem`, `AuthSystem`,
     `ErrorSystem`, `KVSystem`, plus the passkey/settings/storage equivalents).
     Callers now use direct named imports instead of convenience namespaces.
@@ -58,12 +54,10 @@
     `validation` middlewares.
 
   ## @groot/ui
-
   - Added a `Form` component (`form.tsx`) with `react-hook-form` integration and
     field helpers.
 
   ## @groot/shell
-
   - Reworked `lib/api.ts` (the `apiClient`) for simpler, more consistent request
     handling.
   - Added `useToastMutation` hook to standardize mutation + toast feedback.
@@ -72,7 +66,6 @@
     hooks to build on the new Form component and apiClient.
 
   ## @groot/jobs
-
   - Refactored the client API layer (`api.ts`), `useJobs`, `useJobDetail`, and
     `JobsTable` to align with the new apiClient patterns.
 

@@ -99,7 +99,7 @@ export async function getAll() {
 }
 
 export async function create(req: Request, res: Response) {
-  const payload = req.validated?.body || req.body;
+  const payload = parseBody(req, createTodoSchema);
   res.status(201);
   return await TodoService.create({ data: payload });
 }
@@ -117,13 +117,12 @@ No base classes, no manual response handling - just return values.
 Zod schemas validate requests:
 
 ```typescript
-import { validate } from "@groot/core/middlewares/validation.middleware";
 import { createTodoSchema } from "./todo.validation";
 
-router.post("/", validate(createTodoSchema, "body"), controller.create);
+router.post("/", controller.create);
 ```
 
-Validated data is available at `req.validated.body`.
+Controllers use typed helpers (`parseBody`, `parseQuery`, `parseParams`) to read validated data securely:
 
 ### Error Handling
 

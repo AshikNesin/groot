@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
 import * as PasskeySystem from "./passkey.service";
-import type {
-  VerifyRegistrationDTO,
-  VerifyAuthenticationDTO,
-  UpdatePasskeyNameDTO,
-  GenerateAuthenticationOptionsDTO,
+import {
+  verifyRegistrationSchema,
+  verifyAuthenticationSchema,
+  updatePasskeyNameSchema,
+  generateAuthenticationOptionsSchema,
 } from "./passkey.validation";
-import { parseId, requireUser, validatedBody } from "@groot/core/utils/controller.utils";
+import { parseId, requireUser, parseBody } from "@groot/core/utils/controller.utils";
 import { setAuthCookie } from "@groot/core/utils/auth-cookie.utils";
 
 /**
@@ -22,7 +22,7 @@ export async function generateRegistrationOptions(req: Request) {
  */
 export async function verifyRegistration(req: Request) {
   const { userId } = requireUser(req);
-  const payload = validatedBody<VerifyRegistrationDTO>(req);
+  const payload = parseBody(req, verifyRegistrationSchema);
 
   return await PasskeySystem.verifyRegistration({
     userId,
@@ -35,7 +35,7 @@ export async function verifyRegistration(req: Request) {
  * Generate options for passkey authentication
  */
 export async function generateAuthenticationOptions(req: Request) {
-  const body = validatedBody<GenerateAuthenticationOptionsDTO>(req);
+  const body = parseBody(req, generateAuthenticationOptionsSchema);
   return await PasskeySystem.generateAuthenticationOptions({ email: body?.email });
 }
 
@@ -43,7 +43,7 @@ export async function generateAuthenticationOptions(req: Request) {
  * Verify passkey authentication
  */
 export async function verifyAuthentication(req: Request, res: Response) {
-  const body = validatedBody<VerifyAuthenticationDTO>(req);
+  const body = parseBody(req, verifyAuthenticationSchema);
   const result = await PasskeySystem.verifyAuthentication({
     email: body.email,
     response: body.response,
@@ -79,7 +79,7 @@ export async function updatePasskeyName(req: Request) {
   const { userId } = requireUser(req);
 
   const passkeyId = parseId(req.params.id);
-  const payload = validatedBody<UpdatePasskeyNameDTO>(req);
+  const payload = parseBody(req, updatePasskeyNameSchema);
 
   return await PasskeySystem.updatePasskeyName({
     userId,

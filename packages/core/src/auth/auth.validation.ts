@@ -26,14 +26,3 @@ export const createUserSchema = z.object({
 });
 
 export type CreateUserDTO = z.infer<typeof createUserSchema>;
-
-/**
- * Update user schema
- */
-export const updateUserSchema = z.object({
-  email: emailField.optional(),
-  password: passwordField.optional(),
-  name: z.string().min(1, "Name is required").optional(),
-});
-
-export type UpdateUserDTO = z.infer<typeof updateUserSchema>;

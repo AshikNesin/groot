@@ -20,6 +20,10 @@ export const editScheduledJobSchema = z.object({
   options: z.any().optional(),
 });
 
+export const cancelScheduledJobSchema = z.object({
+  key: z.string().optional(),
+});
+
 export const bulkRerunSchema = z.object({
   jobs: z.array(
     z.object({
@@ -27,6 +31,11 @@ export const bulkRerunSchema = z.object({
       jobId: z.string().min(1),
     }),
   ),
+});
+
+export const paginationQuerySchema = z.object({
+  limit: z.coerce.number().optional(),
+  offset: z.coerce.number().optional(),
 });
 
 export const getJobsByStateSchema = z.object({
@@ -42,6 +51,10 @@ export const getJobsSchema = z.object({
   offset: z.coerce.number().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+});
+
+export const getLogsQuerySchema = z.object({
+  afterId: z.coerce.number().optional(),
 });
 
 export type CreateJobDTO = z.infer<typeof createJobSchema>;

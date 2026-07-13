@@ -84,15 +84,15 @@ Validation errors use Boom:
 // todo.routes.ts
 import { createRouter } from "@groot/core/utils/router.utils";
 import * as todoController from "./todo.controller";
-import { validate } from "@groot/core/middlewares/validation.middleware";
+
 import { createTodoSchema, updateTodoSchema } from "./todo.validation";
 
 const router = createRouter();
 
 router.get("/", todoController.getAll);
-router.post("/", validate(createTodoSchema, "body"), todoController.create);
+router.post("/", todoController.create);
 router.get("/:id", todoController.getById);
-router.put("/:id", validate(updateTodoSchema, "body"), todoController.update);
+router.put("/:id", todoController.update);
 router.delete("/:id", todoController.deleteTodo);
 
 export default router;
@@ -112,7 +112,7 @@ export async function getAll() {
 }
 
 export async function create(req: Request, res: Response) {
-  const payload = (req.validated?.body || req.body) as CreateTodoDTO;
+  const payload = parseBody(req, createTodoSchema);
   res.status(201);
   return await TodoService.create({ data: payload });
 }

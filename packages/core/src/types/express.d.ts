@@ -10,11 +10,6 @@ declare global {
       };
       logger?: Logger;
       startTime?: number;
-      validated?: {
-        body?: unknown;
-        query?: unknown;
-        params?: unknown;
-      };
     }
   }
 }
