@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { apiClient } from "@groot/shell/lib/api";
+import { passkeyService } from "@groot/shell/services/passkey";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -12,6 +13,8 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
+  /** Login with a passkey (WebAuthn). Optional email disambiguates the user. */
+  loginWithPasskey: (email?: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearAuth: () => void;
@@ -44,6 +47,32 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         isLoading: false,
         error: error instanceof Error ? error.message : "Login failed",
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Login with a passkey (WebAuthn). Delegates the browser ceremony to
+   * passkeyService; on success the server sets the same HttpOnly cookie as
+   * password login, so the rest of the app is unaffected.
+   */
+  loginWithPasskey: async (email?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { user } = await passkeyService.loginWithPasskey(email);
+      set((s) => ({
+        isAuthenticated: true,
+        user,
+        isLoading: false,
+        generation: s.generation + 1,
+      }));
+    } catch (error) {
+      set({
+        isAuthenticated: false,
+        user: null,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Passkey authentication failed",
       });
       throw error;
     }
