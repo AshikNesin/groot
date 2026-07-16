@@ -1,5 +1,18 @@
 # @groot/jobs
 
+## 0.5.2
+
+### Patch Changes
+
+- [#73](https://github.com/AshikNesin/groot/pull/73) [`40eb1ec`](https://github.com/AshikNesin/groot/commit/40eb1ece15b0b3c299b32f12763f2c7be4ff25d0) Thanks [@exe-dev-github-integration](https://github.com/apps/exe-dev-github-integration)! - perf: reduce memory and connection overhead in job queue
+
+  - **PgBoss connection pool**: explicitly capped at `max=3` connections (`idleTimeoutMillis=30s`, `connectionTimeoutMillis=5s`). Previously used pg's default of `max=10`, creating up to 10 idle connections for background-job polling that needs at most 2-3.
+  - **Job logger**: reuse a single module-level `pino-pretty` stream instance across all job executions instead of allocating a new `Transform` + `SonicBoom` writer on every job run.
+
+- Updated dependencies [[`40eb1ec`](https://github.com/AshikNesin/groot/commit/40eb1ece15b0b3c299b32f12763f2c7be4ff25d0), [`1e85141`](https://github.com/AshikNesin/groot/commit/1e851410f1b5cdce9a6bcafd269da4f091c99245), [`225280b`](https://github.com/AshikNesin/groot/commit/225280b0899784e6fd92a363adb141dc7647bd24)]:
+  - @groot/core@0.6.1
+  - @groot/shell@0.4.0
+
 ## 0.5.1
 
 ### Patch Changes
