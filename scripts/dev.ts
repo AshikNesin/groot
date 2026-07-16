@@ -116,14 +116,25 @@ async function main() {
   console.log("\n🚀 Starting dev server...\n");
 
   // Spawn the actual dev server with the local DB URL
-  devServer = spawn("tsx", ["watch", "apps/web/src/server/index.ts"], {
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      NODE_ENV: "development",
-      DATABASE_URL: connectionString,
+  devServer = spawn(
+    "node_modules/.bin/tsx",
+    [
+      // Cap V8 old-space to 512 MB in dev. Node's default is ~1.5 GB which is
+      // far beyond what this server ever needs. Setting a tighter ceiling lets
+      // GC run more aggressively and keeps the process footprint honest.
+      "--max-old-space-size=512",
+      "watch",
+      "apps/web/src/server/index.ts",
+    ],
+    {
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        DATABASE_URL: connectionString,
+      },
     },
-  });
+  );
 
   devServer.on("close", (code) => {
     if (!isShuttingDown) {

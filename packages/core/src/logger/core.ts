@@ -1,6 +1,4 @@
 import pino, { type Logger, type LoggerOptions } from "pino";
-import dayjs from "dayjs";
-import { serializeObject } from "./utils";
 
 export interface LoggerRuntimeOptions {
   level: string;
@@ -29,17 +27,6 @@ function buildLoggerConfig(opts: LoggerRuntimeOptions): LoggerOptions {
     },
     formatters: {
       level: (label: string) => ({ level: label }),
-      log: (object: unknown): Record<string, unknown> => {
-        const serialized = serializeObject(object);
-        if (typeof serialized === "object" && serialized !== null) {
-          const obj = serialized as Record<string, unknown>;
-          if (!obj.timestamp) {
-            obj.timestamp = dayjs().toISOString();
-          }
-          return obj;
-        }
-        return { value: serialized };
-      },
     },
     serializers: {
       req: pino.stdSerializers.req,

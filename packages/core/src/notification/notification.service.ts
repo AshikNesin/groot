@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { logger } from "@groot/core/logger";
 import { sendPushOverNotification } from "send-push-notification";
 import { env } from "@groot/core/env";
@@ -35,7 +34,7 @@ export class NotificationService {
       return;
     }
 
-    const message = `<b>Environment:</b><br/>${environment}<br/><b>Port:</b><br/>${port}<br/><b>Time:</b><br/>${dayjs().toISOString()}`;
+    const message = `<b>Environment:</b><br/>${environment}<br/><b>Port:</b><br/>${port}<br/><b>Time:</b><br/>${new Date().toISOString()}`;
 
     await this.sendNotification({
       title: "Groot API Started",

@@ -1,11 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import mergeWith from "lodash.mergewith";
 import { load as yamlLoad } from "js-yaml";
 import { z, ZodError } from "zod";
 import { env } from "@groot/core/env";
 import { Boom } from "@groot/core/errors";
-import { deepFreeze, replaceArrays } from "@groot/core/utils/object.utils";
+import { deepFreeze, replaceArrays, mergeWith } from "@groot/core/utils/object.utils";
 import { configSchema } from "./config.schema";
 
 const CONFIG_PATH = resolve(process.cwd(), "config.yml");

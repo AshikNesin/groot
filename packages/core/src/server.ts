@@ -6,7 +6,6 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import closeWithGrace from "close-with-grace";
 import type { ViteDevServer } from "vite-plus";
-import dayjs from "dayjs";
 import { Sentry } from "./instrument";
 import { env } from "./env";
 import { config } from "./config";
@@ -43,15 +42,16 @@ export async function createServer(options: ServerOptions): Promise<ServerInstan
 
   app.use(requestLoggerMiddleware);
   app.use(corsMiddleware);
-  app.use(compression());
-  // Body parsers. Size limits accept large payloads (e.g. base64 email
-  // attachments) instead of the default ~100kb ceiling. express.text() is
-  // required for AWS SNS webhooks (SES inbound email, S3 event notifications,
-  // CloudWatch alarms): SNS posts notifications as Content-Type: text/plain
-  // even when the body is JSON, and express.json() would skip them, leaving
-  // req.body as {}.
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Only compress responses ≥ 1 KB — compressing tiny payloads wastes CPU
+  // with no meaningful bandwidth saving.
+  app.use(compression({ threshold: 1024 }));
+  // Body parsers. The JSON/URL-encoded limits cover typical API payloads.
+  // For large binary uploads use the /storage multipart endpoint (multer).
+  // express.text() is required for AWS SNS webhooks (SES inbound email,
+  // S3 event notifications, CloudWatch alarms): SNS posts as text/plain even
+  // when the body is JSON, so express.json() would leave req.body as {}.
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ limit: "1mb", extended: true }));
   app.use(express.text({ type: "text/plain", limit: "1mb" }));
   app.use(cookieParser());
 
@@ -118,10 +118,10 @@ export async function createServer(options: ServerOptions): Promise<ServerInstan
   // Health endpoints
   app.get("/health", (_req, res) => {
     if (isShuttingDown) {
-      res.status(503).json({ status: "shutting_down", timestamp: dayjs().toISOString() });
+      res.status(503).json({ status: "shutting_down", timestamp: new Date().toISOString() });
       return;
     }
-    res.json({ status: "ok", timestamp: dayjs().toISOString() });
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
   app.get("/ready", (_req, res) => {

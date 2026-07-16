@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Request } from "express";
 import type { Logger } from "pino";
-import dayjs from "dayjs";
 import { logger } from "./core";
 
 export interface CreateRequestLoggerOptions {
@@ -52,7 +51,7 @@ export function logBusinessEvent(options: LogBusinessEventOptions): void {
       type: "business_event",
       event,
       ...data,
-      timestamp: dayjs().toISOString(),
+      timestamp: new Date().toISOString(),
     },
     `Business event: ${event}`,
   );

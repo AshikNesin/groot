@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { Boom } from "@groot/core/errors";
 import { logger } from "@groot/core/logger";
 import { prisma } from "@groot/core/database";
@@ -65,7 +64,7 @@ async function setSetting<T = unknown>(
       value,
       metadata: {
         ...metadata,
-        updatedAt: dayjs().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
     };
 
