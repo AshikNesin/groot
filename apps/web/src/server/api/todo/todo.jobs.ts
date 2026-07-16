@@ -1,8 +1,8 @@
-import type { Job, SendOptions } from "pg-boss";
 import dayjs from "dayjs";
 import { prisma } from "@groot/core/database";
 import { createJobLogger } from "@groot/jobs/server/logger";
 import { registerJobHandler } from "@groot/jobs/server/worker";
+import type { JobContext, SendJobOptions } from "@groot/jobs/server/adapter";
 
 // Job names
 export const TODO_JOB_NAMES = {
@@ -20,7 +20,7 @@ export type TodoSummaryJobData = {
 };
 
 // Per-job retry/scheduling options
-export const todoJobOptions: Record<string, Partial<SendOptions>> = {
+export const todoJobOptions: Record<string, Partial<SendJobOptions>> = {
   [TODO_JOB_NAMES.CLEANUP]: {
     retryLimit: 2,
     retryDelay: 120,
@@ -39,7 +39,7 @@ export const todoJobOptions: Record<string, Partial<SendOptions>> = {
 
 const DEFAULT_DAYS_TO_KEEP = 30;
 
-const todoCleanupHandler = async (job: Job<TodoCleanupJobData>): Promise<void> => {
+const todoCleanupHandler = async (job: JobContext<TodoCleanupJobData>): Promise<void> => {
   const logger = createJobLogger({ jobId: job.id, jobName: TODO_JOB_NAMES.CLEANUP });
   const daysToKeep = job.data?.daysToKeep ?? DEFAULT_DAYS_TO_KEEP;
   const cutoff = dayjs().subtract(daysToKeep, "day").toDate();
@@ -54,7 +54,7 @@ const todoCleanupHandler = async (job: Job<TodoCleanupJobData>): Promise<void> =
   logger.info({ jobId: job.id, deleted: result.count, daysToKeep }, "Todo cleanup completed");
 };
 
-const todoSummaryHandler = async (job: Job<TodoSummaryJobData>): Promise<void> => {
+const todoSummaryHandler = async (job: JobContext<TodoSummaryJobData>): Promise<void> => {
   const logger = createJobLogger({ jobId: job.id, jobName: TODO_JOB_NAMES.SUMMARY });
 
   const [total, completed, pending] = await Promise.all([

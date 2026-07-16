@@ -1,4 +1,4 @@
-import type { Job as BossJob } from "pg-boss";
+import type { QueueJob } from "./adapter";
 
 export interface PaginationOptions {
   limit?: number;
@@ -30,18 +30,14 @@ export interface RerunJobOptions {
   jobId: string;
 }
 
-export interface ScheduledJobInfo {
-  name: string;
-  cron: string;
-  timezone?: string;
-  data?: unknown;
-  key?: string;
-}
-
 export interface JobQueryResponse {
-  jobs: BossJob[];
+  jobs: QueueJob[];
   total: number;
 }
+
+// ScheduledJobInfo now lives in adapter.ts (single source of truth). Re-export
+// so existing imports from "./types" keep resolving.
+export type { ScheduledJobInfo } from "./adapter";
 
 export interface BulkRerunResult {
   queueName: string;

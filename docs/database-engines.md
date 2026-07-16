@@ -4,8 +4,8 @@ This branch (`feat/sqlite-migration`) makes the app run on **either** SQLite or
 PostgreSQL, selected by the `DATABASE_ENGINE` env var. SQLite is the default
 (zero-infra local dev); set `DATABASE_ENGINE=postgres` to opt into Postgres.
 
-The job queue (pg-boss) is Postgres-only and is auto-disabled when the engine
-is SQLite (see [Jobs](#jobs-pg-boss)).
+The job queue runs on both engines: pg-boss on Postgres, honker on SQLite
+(see [Jobs](#jobs-dual-engine-pg-boss-on-postgres-honker-on-sqlite)).
 
 ## Quick start
 
@@ -115,30 +115,66 @@ const result = await prisma.$queryRaw<{ value: string }[]>`
 `RETURNING` on `DELETE` requires SQLite ≥ 3.35 (2021); Node 24 and
 `better-sqlite3` both ship modern SQLite, so this is safe.
 
-## Jobs (pg-boss)
+## Jobs (dual-engine: pg-boss on Postgres, honker on SQLite)
 
-pg-boss is Postgres-only (its schema, `LISTEN/NOTIFY`, `SELECT FOR UPDATE SKIP
-LOCKED`, etc.). Rather than migrate it, the server auto-disables the job queue
-when `DATABASE_ENGINE=sqlite`:
+The job queue runs on **both** engines via an adapter pattern. A
+`JobQueueAdapter` interface (`packages/jobs/src/server/adapter.ts`) captures the
+operations the rest of `@groot/jobs` needs; `client.ts` picks the implementation
+by engine:
 
-```ts
-const jobsEnabled = config.jobs.enabled && isPostgres;
+- **Postgres** → `PgBossAdapter` wraps `pg-boss` (unchanged behaviour).
+- **SQLite** → `HonkerAdapter` wraps `@russellthehippo/honker-node`, a durable
+  SQLite-backed queue with retries, visibility timeouts, dead-letter rows, and
+  cron scheduling. Jobs live in `_honker_live` / `_honker_dead` tables inside
+  the same SQLite file as the app data.
+
+Both adapters return jobs in a normalized `QueueJob` shape (pg-boss column
+names lower-cased, underscores stripped) that matches the client dashboard's
+`Job` type, so feature code and the dashboard are engine-agnostic. Feature job
+handlers (e.g. `todo.jobs.ts`) take a `JobContext<T>` and `SendJobOptions` —
+no `pg-boss` import anywhere in app code.
+
+```
+@groot/jobs/server/adapter.ts         JobQueueAdapter interface + QueueJob/JobContext types
+@groot/jobs/server/pgboss-adapter.ts   PgBossAdapter (Postgres)
+@groot/jobs/server/honker-adapter.ts   HonkerAdapter (SQLite)
+@groot/jobs/server/client.ts           initJobQueue()/getJobQueue() → picks adapter by engine
+@groot/jobs/server/{queue,queries,worker}.ts   now depend on the adapter, not pg-boss
 ```
 
-- `packages/jobs/**` and `apps/web/src/server/api/todo/todo.jobs.ts` are left
-  untouched and still import `pg-boss`.
-- On SQLite, `initJobQueue()` is never called; the server logs that jobs are
-  disabled and stays up. All non-job API routes work normally.
-- `JobLog` stays in the schema (as `Json?` for `data`) so `prisma.jobLog` code
-  compiles on both engines; on SQLite nothing writes `JobLog` rows because no
-  handlers run.
-- There is one **pre-existing** TypeScript error in
-  `packages/jobs/src/server/client.ts` (the `PgBoss` constructor overload with
-  `idleTimeoutMillis`). It exists on `main` too and is unrelated to this change.
+### Honker specifics
 
-To finish the jobs story later, either swap pg-boss for a SQLite-compatible
-queue, or keep pg-boss behind a separate Postgres connection just for the queue
-(requires `DATABASE_ENGINE=postgres`).
+- honker is **push-driven**: workers claim jobs via an async iterator woken by
+  `PRAGMA data_version` changes (1 ms watcher). No polling loop in app code.
+- The adapter uses `claimWaker()` (not `claim()`) so it can `close()` cleanly
+  on shutdown.
+- honker's job `id` is an integer; the adapter stringifies it to match the
+  rest of the package.
+- State names are mapped: honker `pending`/`processing`/`done`/`dead` →
+  dashboard `created`/`active`/`completed`/`failed`.
+- Acknowledged jobs are **deleted** from `_honker_live` (honker doesn't keep
+  completed history); failed jobs move to `_honker_dead`.
+- Dashboard queries (`getJobs`, `getJobsByState`, `getQueueStats`, …) read
+  `_honker_live`/`_honker_dead` directly and map into `QueueJob`. Fields honker
+  has no analogue for (singleton key, keep-until, policy) are null/empty to
+  stay shape-compatible.
+- `JobLog` rows are written by the job logger via Prisma on both engines.
+
+### Gotcha: migrate before the server opens the SQLite file
+
+honker creates its `_honker_*` tables lazily on first queue use. If the server
+starts against a non-existent SQLite file, honker bootstraps its tables before
+Prisma migrates, and a subsequent `prisma migrate deploy` fails with
+`P3005: database schema is not empty`. Always run migrations first (which
+`scripts/dev.ts` and `scripts/ensure-test-db.ts` do). Starting the server
+directly via `tsx apps/web/src/server/index.ts` against an empty file will
+hit this — run `pnpm db:migrate` first.
+
+### Build: native modules are external
+
+`scripts/build.mjs` externalizes native modules (`better-sqlite3`, `sqlite3`,
+`pg`, `@russellthehippo/honker-node` + its platform packages) so esbuild
+leaves them as runtime requires (it has no `.node` loader).
 
 ## Packages
 
@@ -161,16 +197,18 @@ queue, or keep pg-boss behind a separate Postgres connection just for the queue
 ## Verification
 
 - `pnpm check` (oxlint + oxfmt): 0 errors.
-- `tsc --noEmit`: 1 error — the pre-existing pg-boss overload issue in
-  `packages/jobs/src/server/client.ts`. No new errors.
-- `pnpm test` (vitest, 12 files / 129 tests): **all pass**, including the
-  schema-parity test and the KV test (loads the `sqlite3` native binding).
+- `tsc --noEmit`: clean (the pre-existing pg-boss constructor overload error
+  is gone — the adapter casts through the loose options type).
+- `pnpm test` (vitest, 13 files / 133 tests): **all pass**, including the
+  schema-parity test, the KV test, and 4 new honker-adapter integration tests
+  (enqueue/ack, retry→dead-letter, stats, scheduling).
 - `pnpm build`: succeeds.
-- **SQLite runtime smoke test** (`file:./tmp/smoke.db`): `prisma migrate deploy`
-  - `db seed`, then `POST /api/v1/auth/login` (JWT), `GET/POST /api/v1/todos`,
-    and `POST /api/v1/passkey/register/options` (writes a challenge to the `keyv`
-    table via `@keyv/sqlite`) all pass. Confirmed `transports JSONB` and
-    `data JSONB` columns in the SQLite file.
+- **SQLite runtime smoke test** (`file:./tmp/jobs-smoke.db`): migrated + seeded,
+  then `POST /api/v1/auth/login` (JWT), `POST /api/v1/jobs` to enqueue
+  `todo-summary` and `todo-cleanup`, confirmed the honker workers claimed and
+  ran both handlers (logs: `Starting job` → `Todo summary generated` /
+  `Todo cleanup completed` → `Job ... completed`), `JobLog` rows persisted via
+  Prisma, and `_honker_live` emptied on ack.
 - **Postgres client parity**: `DATABASE_ENGINE=postgres prisma generate`
   produces a client with identical `runtime.JsonValue` types for `transports`
   and `data` — confirming the generated client is type-identical across engines.

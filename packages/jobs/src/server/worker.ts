@@ -1,9 +1,9 @@
-import type { PgBoss, WorkOptions } from "pg-boss";
 import { logger } from "@groot/core/logger";
 import { createJobLogger } from "./logger";
 import { jobConfig } from "./config";
 import { withSentryErrorCapture, type JobHandler } from "./error-handler";
-import { getBoss } from "./client";
+import { getJobQueue } from "./client";
+import type { JobContext } from "./adapter";
 
 const jobHandlers = new Map<string, JobHandler<unknown>>();
 let workersStarted = false;
@@ -25,17 +25,13 @@ export const registerJobHandler = <T>(name: string, handler: JobHandler<T>): voi
  * process is supposed to process jobs, an empty registry is a bug: you
  * forgot to register handlers.
  */
-export const startWorkers = async (boss?: PgBoss): Promise<void> => {
+export const startWorkers = async (): Promise<void> => {
   if (workersStarted) {
     logger.warn("Job workers already running");
     return;
   }
 
   if (jobHandlers.size === 0) {
-    // Enqueue-only processes legitimately register no handlers, so this is
-    // not a hard error — but it is almost always a misconfiguration, so log
-    // it loudly and do NOT claim workers are running.
-    // Checked before the dynamic import so the no-handler path pays nothing.
     logger.error(
       "No job handlers registered — workers NOT started. Jobs will enqueue " +
         "but never process. If this process should run workers, you forgot to " +
@@ -45,22 +41,22 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
     return;
   }
 
-  const activeBoss = boss ?? getBoss();
+  const queue = getJobQueue();
 
-  const workOptions: WorkOptions = {
+  const workOptions = {
     pollingIntervalSeconds: jobConfig.pollIntervalSeconds,
     batchSize: jobConfig.concurrency,
   };
 
-  // Create queues before starting workers (required in pg-boss v12+).
-  // Per-queue calls are independent — fan them out.
-  await Promise.all([...jobHandlers.keys()].map((name) => activeBoss.createQueue(name)));
+  // Create queues before starting workers (required by pg-boss v12+; a no-op
+  // for honker, which creates queues implicitly on enqueue).
+  await Promise.all([...jobHandlers.keys()].map((name) => queue.createQueue(name)));
 
   const started: string[] = [];
   try {
     await Promise.all(
       [...jobHandlers.entries()].map(async ([name, handler]) => {
-        await activeBoss.work(name, workOptions, async (jobs: Parameters<typeof handler>[0][]) => {
+        await queue.work(name, workOptions, async (jobs: JobContext[]) => {
           // Process a delivered batch sequentially — handlers may not be
           // concurrency-safe and failure semantics (throw after N) matter.
           for (const job of jobs) {
@@ -90,9 +86,7 @@ export const startWorkers = async (boss?: PgBoss): Promise<void> => {
       }),
     );
   } catch (err) {
-    // Partial registration: stop any workers that registered before the failure
-    // so they don't keep running while workersStarted stays false.
-    await Promise.allSettled(started.map((name) => activeBoss.offWork(name)));
+    await Promise.allSettled(started.map((name) => queue.offWork(name)));
     throw err;
   }
 
@@ -105,12 +99,12 @@ export const stopWorkers = async (): Promise<void> => {
     return;
   }
 
-  const boss = getBoss();
+  const queue = getJobQueue();
 
   await Promise.all(
     [...jobHandlers.keys()].map(async (name) => {
       try {
-        await boss.offWork(name);
+        await queue.offWork(name);
         logger.debug({ jobName: name }, "Workers stopped");
       } catch (error) {
         logger.error({ jobName: name, error }, "Failed to stop workers");

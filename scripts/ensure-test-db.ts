@@ -91,6 +91,16 @@ async function main() {
   if (isPostgres) {
     env.DATABASE_URL_DIRECT = connectionString;
   }
+
+  // Regenerate the Prisma client for the active engine. The generated client
+  // embeds the datasource provider (sqlite vs postgres), so a client generated
+  // for one engine is incompatible with the other engine's driver adapter at
+  // runtime ("Driver Adapter ... is not compatible with the provider ...").
+  // The postinstall hook generates for whatever engine was active at install
+  // time; switching engines requires regenerating.
+  console.log("🔧 Regenerating Prisma client for the active engine...\n");
+  await runCommand("pnpm", ["exec", "varlock", "run", "--", "prisma", "generate"], env);
+
   await runCommand("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], env);
 
   console.log("\n✅ Test database ready for tests!\n");

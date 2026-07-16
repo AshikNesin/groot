@@ -13,6 +13,7 @@
     "@groot/core": "workspace:*",
     "@groot/shell": "workspace:*",
     "@groot/ui": "workspace:*",
+    "@russellthehippo/honker-node": "^0.4.0",
     "@tanstack/react-query": "^5.101.2",
     "console-feed": "^3.8.0",
     "dayjs": "^1.11.21",
