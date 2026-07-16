@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -23,45 +24,28 @@ const getSentryRelease = () => {
   return undefined;
 };
 
-// Sentry is only initialised when a real DSN is configured. Without a DSN the
-// entire @sentry/node import is skipped, which avoids loading the OpenTelemetry
-// SDK (api, core, sdk-trace, resources, semantic-conventions, etc.) into memory
-// — roughly 5-10 MB of JS modules that are useless without a reporting endpoint.
-const dsn = config.sentry.dsn;
-const sentryEnabled = !!dsn && dsn.startsWith("https://");
+// Initialize Sentry as early as possible
+Sentry.init({
+  // Use DSN from environment variables or fall back to the provided one if not set
+  dsn: config.sentry.dsn,
 
-let Sentry: typeof import("@sentry/node");
+  // Release identifier for source map correlation
+  release: getSentryRelease(),
 
-if (sentryEnabled) {
-  const sentryModule = await import("@sentry/node");
-  Sentry = sentryModule;
-  Sentry.init({
-    dsn,
-    release: getSentryRelease(),
-    environment: env.NODE_ENV,
-    sendDefaultPii: true,
-    enableLogs: true,
-    integrations: [Sentry.pinoIntegration(), Sentry.zodErrorsIntegration()],
-  });
-} else {
-  // Stub — all methods are no-ops when Sentry is disabled.
-  Sentry = {
-    init: () => {},
-    captureException: () => "",
-    captureMessage: () => "",
-    withScope: (cb: (scope: unknown) => void) => cb({}),
-    configureScope: () => {},
-    setUser: () => {},
-    setTag: () => {},
-    setExtra: () => {},
-    setContext: () => {},
-    addBreadcrumb: () => {},
-    startSpan: async (_opts: unknown, cb: () => unknown) => cb(),
-    setupExpressErrorHandler: () => {},
-    pinoIntegration: () => ({}),
-    zodErrorsIntegration: () => ({}),
-  } as unknown as typeof import("@sentry/node");
-}
+  // Environment for filtering in Sentry (production, development, etc.)
+  environment: env.NODE_ENV,
+
+  // Setting this option to true will send default PII data to Sentry
+  // For example, automatic IP address collection on events
+  sendDefaultPii: true,
+  // https://sentry.io/product/logs/
+  enableLogs: true,
+  integrations: [
+    // https://docs.sentry.io/platforms/javascript/guides/node/configuration/integrations/pino/
+    Sentry.pinoIntegration(),
+    // https://docs.sentry.io/platforms/javascript/guides/node/configuration/integrations/zodErrors/
+    Sentry.zodErrorsIntegration(),
+  ],
+});
 
 export { Sentry };
-export { sentryEnabled };
