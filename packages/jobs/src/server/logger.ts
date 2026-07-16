@@ -110,12 +110,17 @@ export class JobLogStream extends Writable {
         const { level, time, msg, message, jobId, jobName, ...rest } = log;
         const levelStr = typeof level === "number" ? levelMap[level] || "info" : (level as string);
 
+        // SQLite has no native JSON type, so JobLog.data is a TEXT column. We
+        // JSON-encode the structured fields so they stay queryable/parseable
+        // on read, and store null when there is nothing to record.
+        const hasData = Object.keys(rest).length > 0;
+
         return {
           jobId: this.jobId,
           jobName: this.jobName || (jobName as string) || "unknown",
           level: levelStr,
           message: msg || message || "",
-          data: Object.keys(rest).length > 0 ? (rest as Prisma.InputJsonValue) : Prisma.JsonNull,
+          data: hasData ? JSON.stringify(rest) : null,
           timestamp: time ? new Date(time) : new Date(),
         };
       });

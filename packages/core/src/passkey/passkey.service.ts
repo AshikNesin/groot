@@ -30,7 +30,7 @@ type CreatePasskeyData = {
   counter: bigint;
   deviceType?: string | null;
   backedUp: boolean;
-  transports: string[];
+  transports: string;
   credentialName?: string | null;
 };
 
@@ -83,8 +83,11 @@ async function storeChallenge(challenge: string): Promise<void> {
 
 async function getAndDeleteChallenge(challenge: string): Promise<string | null> {
   const now = Date.now();
+  // SQLite uses `?` placeholders (not Postgres `$1`) and supports RETURNING
+  // on DELETE since SQLite 3.35. better-sqlite3 returns rows synchronously,
+  // but Prisma's $queryRawUnsafe normalises to an async array result.
   const result = await prisma.$queryRawUnsafe<Array<{ value: string }>>(
-    `DELETE FROM keyv WHERE key = $1 RETURNING value`,
+    `DELETE FROM keyv WHERE key = ? RETURNING value`,
     `passkey:challenge:${challenge}`,
   );
   if (!result.length) return null;
@@ -171,7 +174,11 @@ export async function verifyRegistration({
   }
 
   const defaultName =
-    credentialName || generateDeviceName(response.authenticatorAttachment, credential.transports);
+    credentialName ||
+    generateDeviceName(
+      response.authenticatorAttachment,
+      credential.transports ? (credential.transports as string[]) : undefined,
+    );
 
   const publicKey = new Uint8Array(Buffer.from(credential.publicKey));
 

@@ -1,25 +1,43 @@
 import "varlock/auto-load";
 import { ENV } from "varlock/env";
+import { mkdirSync } from "node:fs";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { PrismaClient } from "../../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-// Shared pg Pool: capped to avoid holding idle connections unnecessarily.
-// PrismaPg, Keyv, and pg-boss each open their own pool by default (pg default
-// max=10 each = 30 idle connections). Prisma accepts an external Pool so we
-// can size it explicitly and share it across the Prisma adapter.
 const isDev = ENV.NODE_ENV === "development";
-const pgPool = new pg.Pool({
-  connectionString: ENV.DATABASE_URL,
-  max: isDev ? 5 : 10,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
-});
+
+/**
+ * Resolve the SQLite database file path from DATABASE_URL.
+ *
+ * DATABASE_URL holds a plain file path (e.g. `./data/app.db`) or the
+ * `:memory:` sentinel. We accept an optional `file:` prefix for parity with
+ * Prisma's `file:./dev.db` URL convention and strip it before handing the raw
+ * path to better-sqlite3. A relative path is resolved against `process.cwd()`
+ * and the parent directory is created on demand so a fresh checkout "just
+ * works" without the operator having to `mkdir` the data dir.
+ */
+export function resolveSqlitePath(url: string): string {
+  if (url === ":memory:") return ":memory:";
+  const stripped = url.replace(/^file:/, "");
+  const abs = isAbsolute(stripped) ? stripped : resolve(process.cwd(), stripped);
+  if (abs !== ":memory:") {
+    mkdirSync(dirname(abs), { recursive: true });
+  }
+  return abs;
+}
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaPg(pgPool);
+  const dbUrl = ENV.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error(
+      "DATABASE_URL is not set. SQLite needs a file path (e.g. file:./data/dev.db) or ':memory:'.",
+    );
+  }
+  const dbPath = resolveSqlitePath(dbUrl);
+  const adapter = new PrismaBetterSqlite3({ url: dbPath });
 
   return new PrismaClient({
     adapter,
@@ -44,10 +62,6 @@ if (ENV.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-// Export the shared pool so other modules (e.g. KV store) can reuse it.
-export { pgPool };
-
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
-  await pgPool.end();
 });

@@ -1,116 +1,61 @@
 /**
- * Dev orchestrator script
+ * Dev orchestrator script.
  *
- * Intelligently manages database connections for local development:
- * - If DATABASE_URL is not set or contains "localhost": uses Docker PostgreSQL
- * - If DATABASE_URL points to an external database: uses it directly
- *
- * This is ONLY used for local development (`pnpm dev`).
- * Production uses `pnpm start` with an externally-provided DATABASE_URL.
+ * SQLite needs no container, so dev startup is just: ensure the DB file's
+ * directory exists, run migrations, seed, then start the tsx watch server.
+ * DATABASE_URL (resolved by varlock from .env.schema, e.g. file:./data/dev.db)
+ * is the source of truth for the file location.
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import {
-  databaseHasMigrationHistory,
-  databaseHasTables,
-  dockerDb,
-  ensurePostgresContainer,
-} from "./lib/docker-db.js";
-
-const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
+import { mkdirSync } from "node:fs";
+import { dirname, resolve, isAbsolute } from "node:path";
 
 let devServer: ChildProcess | null = null;
 let isShuttingDown = false;
 
-/**
- * Determine if we should use Docker-based database.
- * Returns true if DATABASE_URL is not set or contains "localhost".
- * Returns false if DATABASE_URL points to an external database.
- */
-function shouldUseDocker(): boolean {
-  return !process.env.DATABASE_URL || process.env.DATABASE_URL?.includes("localhost");
+/** Resolve a SQLite DATABASE_URL to an absolute filesystem path (or null for :memory:). */
+function dbFilePath(url: string): string | null {
+  if (url === ":memory:") return null;
+  const stripped = url.replace(/^file:/, "");
+  return isAbsolute(stripped) ? stripped : resolve(process.cwd(), stripped);
 }
 
-/**
- * Extract host from a database URL for display purposes
- */
-function extractHost(dbUrl: string): string {
-  try {
-    const url = new URL(dbUrl);
-    return url.host;
-  } catch {
-    return dbUrl;
-  }
+function run(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<void> {
+  return new Promise<void>((resolvePromise, reject) => {
+    const proc = spawn(cmd, args, { stdio: "inherit", env });
+    proc.on("close", (code) => {
+      if (code === 0) resolvePromise();
+      else reject(new Error(`${cmd} ${args.join(" ")} exited with code ${code}`));
+    });
+    proc.on("error", reject);
+  });
 }
 
 async function main() {
-  let connectionString: string;
-  const useDocker = shouldUseDocker();
+  const connectionString = process.env.DATABASE_URL || "file:./data/dev.db";
 
-  if (useDocker) {
-    console.log("\n🗄️  Starting local development database...\n");
-
-    const docker = await ensurePostgresContainer({
-      projectName: pkg.name,
-      port: process.env.LOCAL_DB_DOCKER_PORT
-        ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
-        : undefined,
-    });
-    connectionString = docker.connectionString;
-    console.log("🐳 Using Docker PostgreSQL\n");
-
-    // Detect a db-push-managed database (tables present but no _prisma_migrations
-    // table). `migrate deploy` would fail with P3005 on such a database, so reset
-    // it first. This is safe: it's a local Docker dev DB and the seed step
-    // re-creates the demo user.
-    const hasTables = await databaseHasTables(docker.databaseName);
-    const hasMigrations = await databaseHasMigrationHistory(docker.databaseName);
-    if (hasTables && !hasMigrations) {
-      console.log(
-        "⚠️  Database has tables but no Prisma migration history (was `db push` managed).",
-      );
-      console.log("   Resetting local dev database so migrations apply cleanly...\n");
-      await dockerDb.reset(docker.databaseName);
-      console.log("   ✅ Database reset.\n");
-    }
-  } else {
-    connectionString = process.env.DATABASE_URL!;
-    const host = extractHost(connectionString);
-    console.log(`\n🔌 Using external database: ${host}\n`);
-  }
-
-  console.log("✅ Database ready!\n");
+  console.log("\n🗄️  Using SQLite database\n");
   console.log(`   Connection: ${connectionString}`);
   console.log();
 
+  const filePath = dbFilePath(connectionString);
+  if (filePath) {
+    mkdirSync(dirname(filePath), { recursive: true });
+  }
+
   // Apply migrations to the local DB (no db push — that bypasses migration history)
   console.log("📦 Applying Prisma migrations...\n");
-  await new Promise<void>((resolvePromise, reject) => {
-    const push = spawn("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], {
-      stdio: "inherit",
-      env: { ...process.env, DATABASE_URL: connectionString },
-    });
-    push.on("close", (code) => {
-      if (code === 0) resolvePromise();
-      else reject(new Error(`prisma migrate deploy exited with code ${code}`));
-    });
-    push.on("error", reject);
+  await run("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], {
+    ...process.env,
+    DATABASE_URL: connectionString,
   });
 
   // Seed default user for local development
   console.log("\n👤 Seeding default user...");
-  await new Promise<void>((resolvePromise, reject) => {
-    const seed = spawn("pnpm", ["exec", "varlock", "run", "--", "tsx", "apps/web/prisma/seed.ts"], {
-      stdio: "inherit",
-      env: { ...process.env, DATABASE_URL: connectionString },
-    });
-    seed.on("close", (code) => {
-      if (code === 0) resolvePromise();
-      else reject(new Error(`prisma seed exited with code ${code}`));
-    });
-    seed.on("error", reject);
+  await run("pnpm", ["exec", "varlock", "run", "--", "tsx", "apps/web/prisma/seed.ts"], {
+    ...process.env,
+    DATABASE_URL: connectionString,
   });
 
   console.log("\n🚀 Starting dev server...\n");

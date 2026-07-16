@@ -11,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model Todo {
@@ -26,9 +26,9 @@ model Todo {
 
 model User {
   id             Int              @id @default(autoincrement())
-  email          String           @unique @db.VarChar
-  password       String           @db.VarChar
-  name           String?          @db.VarChar
+  email          String           @unique
+  password       String
+  name           String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   passkeys       Passkey[]
@@ -39,13 +39,13 @@ model User {
 model Passkey {
   id             Int       @id @default(autoincrement())
   userId         Int
-  credentialId   String    @unique @db.Text
+  credentialId   String    @unique
   publicKey      Bytes
   counter        BigInt    @default(0)
-  deviceType     String?   @db.VarChar
+  deviceType     String?
   backedUp       Boolean   @default(false)
-  transports     String[]  @db.VarChar
-  credentialName String?   @db.VarChar
+  transports     String
+  credentialName String?
   lastUsedAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -56,25 +56,30 @@ model Passkey {
 }
 
 
-// Note: The keyv table is managed by @keyv/postgres package
+// Note: The keyv table is managed by @keyv/sqlite package
 // The @@ignore attribute tells Prisma not to manage this table
 model Keyv {
-  key   String @id @db.VarChar
-  value String @db.Text
+  key   String @id
+  value String
 
   @@map("keyv")
   @@ignore
 }
 
 // Job execution logs for real-time monitoring
+// NOTE: pg-boss (the job queue) is Postgres-only and is intentionally NOT
+// migrated to SQLite in this branch. As a result JobLog rows are never written
+// (the job logger only runs inside pg-boss worker handlers). The table is kept
+// in the schema so the generated client compiles and existing code that
+// references `prisma.jobLog` stays valid, but jobs are effectively disabled.
 model JobLog {
   id        Int      @id @default(autoincrement())
-  jobId     String   @db.VarChar
-  jobName   String?  @db.VarChar
-  level     String   @db.VarChar
-  message   String   @db.Text
-  data      Json?    @db.Json
-  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  jobId     String
+  jobName   String?
+  level     String
+  message   String
+  data      String?
+  timestamp DateTime @default(now())
 
   @@index([jobId])
   @@index([timestamp])

@@ -21,6 +21,8 @@ const ORIGIN = config.passkey.origin;
 /**
  * Interface for passkey data stored in database
  */
+// SQLite has no native array type, so `transports` is stored as a JSON-encoded
+// string. `parseTransports` decodes it back to an array at the read boundary.
 export interface PasskeyData {
   id: number;
   userId: number;
@@ -29,11 +31,21 @@ export interface PasskeyData {
   counter: bigint;
   deviceType: string | null;
   backedUp: boolean;
-  transports: string[];
+  transports: string;
   credentialName: string | null;
   lastUsedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** Decode the JSON-encoded `transports` column into an array. */
+export function parseTransports(transports: string): string[] {
+  try {
+    const parsed = JSON.parse(transports);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -52,7 +64,7 @@ export async function generatePasskeyRegistrationOptions(
     excludeCredentials: existingCredentials.map((passkey) => ({
       id: passkey.credentialId,
       type: "public-key",
-      transports: passkey.transports as AuthenticatorTransportFuture[],
+      transports: parseTransports(passkey.transports) as AuthenticatorTransportFuture[],
     })),
     authenticatorSelection: {
       residentKey: "preferred",
@@ -92,7 +104,7 @@ export async function generatePasskeyAuthenticationOptions(userPasskeys: Passkey
     allowCredentials: userPasskeys.map((passkey) => ({
       id: passkey.credentialId,
       type: "public-key",
-      transports: passkey.transports as AuthenticatorTransportFuture[],
+      transports: parseTransports(passkey.transports) as AuthenticatorTransportFuture[],
     })),
     userVerification: "preferred",
   };
@@ -124,10 +136,11 @@ export async function verifyPasskeyAuthentication(
 }
 
 /**
- * Convert authenticator transports to database format
+ * Convert authenticator transports to database format.
+ * SQLite has no array type, so we JSON-encode the array into a string column.
  */
-export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string[] {
-  return transports || [];
+export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string {
+  return JSON.stringify(transports || []);
 }
 
 /**

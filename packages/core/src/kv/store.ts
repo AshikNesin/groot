@@ -1,19 +1,26 @@
+import { resolve } from "node:path";
+import { isAbsolute } from "node:path";
 import Keyv from "keyv";
-import KeyvPostgres from "@keyv/postgres";
+import KeyvSqlite from "@keyv/sqlite";
 import { logger } from "@groot/core/logger";
 import { env } from "@groot/core/env";
 
-// KeyvPostgres manages its own internal pg.Pool singleton keyed by URI —
-// it does not accept an external pool instance. We cap `max` and
-// `idleTimeoutMillis` so its pool stays small: KV queries are infrequent
-// and short-lived, so 2 connections are more than sufficient.
-export const store = new KeyvPostgres({
-  uri: env.DATABASE_URL,
+// KeyvSqlite manages its own sqlite3 connection (async, via the `sqlite3`
+// native driver — distinct from Prisma's better-sqlite3 handle). It cannot
+// share Prisma's DB handle, but KV access is infrequent and short-lived so a
+// second connection is negligible. `uri` accepts a `sqlite://path` URL; we
+// normalise DATABASE_URL (a bare path or `:memory:`) into that form.
+function toKeyvUri(url: string): string {
+  if (url === ":memory:") return "sqlite://:memory:";
+  const stripped = url.replace(/^file:/, "");
+  const abs = isAbsolute(stripped) ? stripped : resolve(process.cwd(), stripped);
+  return `sqlite://${abs}`;
+}
+
+export const store = new KeyvSqlite({
+  uri: toKeyvUri(env.DATABASE_URL ?? ":memory:"),
   table: "keyv",
-  // Pool size opts are forwarded to pg.Pool by @keyv/postgres
-  max: 2,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
+  busyTimeout: 5_000,
 });
 
 // Default KV instance

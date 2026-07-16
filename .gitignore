@@ -23,6 +23,11 @@ config.local.yml
 
 # Local storage (files-sdk fs adapter dev root)
 /local/
+# SQLite database files (dev/test data). Keep the dir tracked but ignore contents.
+/data/*.db
+/data/*.db-journal
+/data/*.db-wal
+/data/*.db-shm
 
 # Scratch / generated SQL from scripts (e.g. pnpm db:baseline)
 /tmp/

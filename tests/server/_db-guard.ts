@@ -1,57 +1,59 @@
 /**
- * Host-based test-database safety guard.
+ * SQLite test-database safety guard.
  *
  * The test setup wipes tables for test isolation. That is correct against a
- * local test database and catastrophic against production. This guard makes
- * the wrong-DB connection impossible *by construction*: it parses the URL and
- * throws unless the host is explicitly local AND the database name looks like
- * a test DB. It must run BEFORE any Prisma import, so no connection is ever
- * opened to a non-test database.
- *
- * Unlike a string-equality check against DATABASE_URL (which silently no-ops
- * when DATABASE_URL is loaded from a secret manager and has no .env line),
- * this is structural: a prod host or a non-test db name is refused regardless
- * of how the URL was provided.
+ * local throwaway SQLite file and catastrophic against a production database.
+ * This guard makes the wrong-DB connection impossible *by construction*: it
+ * only accepts paths that resolve inside the project's `tmp/` directory (or
+ * the `:memory:` sentinel), and refuses anything else. It must run BEFORE any
+ * Prisma import, so no connection is ever opened to a non-test database.
  */
 
-const TEST_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
-const PROD_HOST_MARKERS = ["supabase", "neon.tech", "railway.app", "render.com", "fly.dev"];
-const TEST_DB_SUFFIX = "_test";
+import { resolve, relative, isAbsolute } from "node:path";
+
+const MEMORY = ":memory:";
 
 /**
  * Assert that `url` points at a safe test database. Throws on any sign of a
  * non-test target.
  *
+ * Accepts:
+ *   - ":memory:"
+ *   - "file:./tmp/test.db" or "./tmp/test.db" (resolved under project tmp/)
+ *   - an absolute path inside the project's tmp/ directory
+ *
  * @param url The TEST_DATABASE_URL to validate.
- * @param expectedDb Optional exact database name (e.g. `myapp_test`). When
- *   omitted, any name ending in `_test` is accepted so the boilerplate stays
- *   project-agnostic.
  */
-export function assertTestDatabase(url: string | undefined, expectedDb?: string): void {
+export function assertTestDatabase(url: string | undefined, _expectedDb?: string): void {
   if (!url) {
     throw new Error(
       "TEST_DATABASE_URL is not set. Refusing to run tests — no DB is safer than the wrong DB.",
     );
   }
 
-  let u: URL;
-  try {
-    u = new URL(url);
-  } catch {
-    throw new Error(`TEST_DATABASE_URL is not a valid URL: ${url}`);
-  }
+  if (url === MEMORY) return;
 
-  if (PROD_HOST_MARKERS.some((m) => u.hostname.includes(m))) {
+  const stripped = url.replace(/^file:/, "");
+  const cwd = process.cwd();
+  const abs = isAbsolute(stripped) ? stripped : resolve(cwd, stripped);
+  const rel = relative(cwd, abs);
+
+  // Refuse anything that escapes the project dir (e.g. ".." traversal or an
+  // absolute path outside cwd) — those are almost certainly operator mistakes.
+  const insideProject = rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  if (!insideProject) {
     throw new Error(
-      `Refusing to run tests: DB host '${u.hostname}' looks like production. Tests TRUNCATE tables.`,
+      `Refusing to run tests: DB path '${url}' resolves outside the project directory. ` +
+        `Tests TRUNCATE tables; only a path under the project is safe.`,
     );
   }
 
-  const db = u.pathname.replace(/^\//, "");
-  const dbOk = expectedDb ? db === expectedDb : db.endsWith(TEST_DB_SUFFIX);
-  if (!TEST_HOSTS.has(u.hostname) || !dbOk) {
+  // Require the file to live under tmp/ so dev/prod SQLite files are never touched.
+  const underTmp = rel === "tmp" || rel.startsWith("tmp" + "/") || rel.startsWith("tmp\\");
+  if (!underTmp) {
     throw new Error(
-      `Refusing to run tests on non-test DB (host=${u.hostname}, db=${db}). Tests TRUNCATE tables.`,
+      `Refusing to run tests: DB path '${url}' is not under tmp/. ` +
+        `Tests TRUNCATE tables; point TEST_DATABASE_URL at ./tmp/...db (or :memory:).`,
     );
   }
 }
