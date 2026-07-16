@@ -6,6 +6,18 @@ import { prisma } from "@groot/core/database";
 import { Prisma } from "@groot/core/database";
 import { loggerConfig, isDevelopment, logLevel } from "@groot/core/logger";
 
+// Reuse a single pino-pretty stream for all job loggers in development.
+// Creating a new pinoPretty() per job is wasteful — it allocates a new
+// Transform stream and SonicBoom writer on every job execution.
+const devPrettyStream = isDevelopment
+  ? pinoPretty({
+      colorize: true,
+      translateTime: "yyyy-mm-dd HH:MM:ss Z",
+      ignore: "pid,hostname",
+      singleLine: true,
+    })
+  : null;
+
 export interface CreateJobLoggerOptions {
   jobId: string;
   jobName: string;
@@ -150,15 +162,8 @@ export function createJobLogger(options: CreateJobLoggerOptions): Logger {
 
   // biome-ignore lint/suspicious/noExplicitAny: streams array type is complex
   let streams: any[];
-  if (isDevelopment) {
-    const pretty = pinoPretty({
-      colorize: true,
-      translateTime: "yyyy-mm-dd HH:MM:ss Z",
-      ignore: "pid,hostname",
-      singleLine: true,
-    });
-
-    streams = [{ stream: pretty }, { stream: dbStream }];
+  if (isDevelopment && devPrettyStream) {
+    streams = [{ stream: devPrettyStream }, { stream: dbStream }];
   } else {
     streams = [{ stream: process.stdout }, { stream: dbStream }];
   }

@@ -19,6 +19,13 @@ export const initJobQueue = async (): Promise<void> => {
 
   bossInstance = new PgBoss({
     connectionString: jobConfig.connectionString,
+    // Explicitly cap the pg-boss connection pool. The default is pg's max=10
+    // which is too generous for a background-job pool sharing the DB with
+    // Prisma and the KV store. 3 connections handle all pg-boss internal
+    // queries (polling, lock, maintenance) without starving Prisma.
+    max: 3,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
   });
 
   bossInstance.on("error", (error) => {

@@ -116,7 +116,7 @@ async function main() {
   console.log("\n🚀 Starting dev server...\n");
 
   // Spawn the actual dev server with the local DB URL
-  devServer = spawn("tsx", ["watch", "apps/web/src/server/index.ts"], {
+  devServer = spawn("node_modules/.bin/tsx", ["watch", "apps/web/src/server/index.ts"], {
     stdio: "inherit",
     env: {
       ...process.env,

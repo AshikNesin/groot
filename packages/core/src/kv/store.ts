@@ -3,10 +3,17 @@ import KeyvPostgres from "@keyv/postgres";
 import { logger } from "@groot/core/logger";
 import { env } from "@groot/core/env";
 
-// PostgreSQL store using @keyv/postgres
+// KeyvPostgres manages its own internal pg.Pool singleton keyed by URI —
+// it does not accept an external pool instance. We cap `max` and
+// `idleTimeoutMillis` so its pool stays small: KV queries are infrequent
+// and short-lived, so 2 connections are more than sufficient.
 export const store = new KeyvPostgres({
   uri: env.DATABASE_URL,
-  table: "keyv", // Use the Keyv table from Prisma schema
+  table: "keyv",
+  // Pool size opts are forwarded to pg.Pool by @keyv/postgres
+  max: 2,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
 });
 
 // Default KV instance
