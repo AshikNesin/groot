@@ -9,8 +9,7 @@ test.describe("Login page", () => {
   test("can login with test user", async ({ page }) => {
     await page.goto("/login");
 
-    // The form uses "Username" label but accepts email
-    await page.getByLabel(/username/i).fill("demo@example.com");
+    await page.getByLabel(/email/i).fill("demo@example.com");
     await page.getByLabel(/password/i).fill("demo@example.com");
     await page.getByRole("button", { name: /sign in/i }).click();
 
@@ -21,7 +20,7 @@ test.describe("Login page", () => {
   test("shows error with invalid credentials", async ({ page }) => {
     await page.goto("/login");
 
-    await page.getByLabel(/username/i).fill("wrong@example.com");
+    await page.getByLabel(/email/i).fill("wrong@example.com");
     await page.getByLabel(/password/i).fill("wrongpassword");
     await page.getByRole("button", { name: /sign in/i }).click();
 

@@ -119,11 +119,14 @@ async function main() {
   devServer = spawn(
     "node_modules/.bin/tsx",
     [
+      // `watch` MUST be the first arg — it's a tsx subcommand, not a flag. If a
+      // node flag (--max-old-space-size) precedes it, tsx enters "flags + script"
+      // mode and treats `watch` as a file path (ERR_MODULE_NOT_FOUND).
+      "watch",
       // Cap V8 old-space to 512 MB in dev. Node's default is ~1.5 GB which is
       // far beyond what this server ever needs. Setting a tighter ceiling lets
       // GC run more aggressively and keeps the process footprint honest.
       "--max-old-space-size=512",
-      "watch",
       "apps/web/src/server/index.ts",
     ],
     {

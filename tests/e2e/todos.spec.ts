@@ -4,7 +4,7 @@ test.describe("Todos page (authenticated)", () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto("/login");
-    await page.getByLabel(/username/i).fill("demo@example.com");
+    await page.getByLabel(/email/i).fill("demo@example.com");
     await page.getByLabel(/password/i).fill("demo@example.com");
     await page.getByRole("button", { name: /sign in/i }).click();
     // Wait for redirect to a specific page after login

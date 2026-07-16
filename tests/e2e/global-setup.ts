@@ -1,4 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+// Prisma v7 generates the client to a custom output path
+// (packages/core/generated/prisma), so PrismaClient is NOT re-exported from
+// "@prisma/client" (that package only ships the runtime). Import the generated
+// class directly — same pattern as packages/core/src/database/client.ts.
+import { PrismaClient } from "../../packages/core/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
