@@ -1,8 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// SQLite schema. Selected when DATABASE_ENGINE=sqlite (default).
+// The model definitions are identical to schema.postgres.prisma; only the
+// datasource provider differs. Keep the two files in sync — a parity test
+// (tests/server/prisma/schema-parity.test.ts) asserts the models match.
 
 generator client {
   provider            = "prisma-client"
@@ -25,13 +24,13 @@ model Todo {
 }
 
 model User {
-  id             Int              @id @default(autoincrement())
-  email          String           @unique
-  password       String
-  name           String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  passkeys       Passkey[]
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  passkeys  Passkey[]
 
   @@map("users")
 }
@@ -44,7 +43,7 @@ model Passkey {
   counter        BigInt    @default(0)
   deviceType     String?
   backedUp       Boolean   @default(false)
-  transports     String
+  transports     Json
   credentialName String?
   lastUsedAt     DateTime?
   createdAt      DateTime  @default(now())
@@ -55,9 +54,8 @@ model Passkey {
   @@map("passkeys")
 }
 
-
-// Note: The keyv table is managed by @keyv/sqlite package
-// The @@ignore attribute tells Prisma not to manage this table
+// The keyv table is managed by @keyv/postgres / @keyv/sqlite at runtime, so
+// Prisma must not create or migrate it. @@ignore keeps it out of migrations.
 model Keyv {
   key   String @id
   value String
@@ -66,24 +64,21 @@ model Keyv {
   @@ignore
 }
 
-// Job execution logs for real-time monitoring
-// NOTE: pg-boss (the job queue) is Postgres-only and is intentionally NOT
-// migrated to SQLite in this branch. As a result JobLog rows are never written
-// (the job logger only runs inside pg-boss worker handlers). The table is kept
-// in the schema so the generated client compiles and existing code that
-// references `prisma.jobLog` stays valid, but jobs are effectively disabled.
+// Job execution logs for real-time monitoring.
+// NOTE: pg-boss (the job queue) is Postgres-only. When DATABASE_ENGINE=sqlite
+// the job queue is disabled, so JobLog rows are never written; the table is
+// kept in the schema so the generated client compiles and existing code that
+// references `prisma.jobLog` stays valid on both engines.
 model JobLog {
   id        Int      @id @default(autoincrement())
   jobId     String
   jobName   String?
   level     String
   message   String
-  data      String?
+  data      Json?
   timestamp DateTime @default(now())
 
   @@index([jobId])
   @@index([timestamp])
   @@map("job_logs")
 }
-
-

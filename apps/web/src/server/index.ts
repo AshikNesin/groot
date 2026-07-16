@@ -14,6 +14,7 @@ import { notificationService } from "@groot/core/notification/notification.servi
 import { initJobQueue, stopJobQueue } from "@groot/jobs/server/client";
 import { startWorkers } from "@groot/jobs/server/worker";
 import { filesPromise } from "@groot/core/storage";
+import { isPostgres } from "@groot/core/database/engine";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,8 +54,12 @@ async function main() {
       // Warm up the storage adapter (resolves the dynamic import in production).
       await filesPromise;
 
-      // Initialize job queue after server is listening
-      if (config.jobs.enabled) {
+      // Initialize job queue after server is listening.
+      // pg-boss is PostgreSQL-only, so the queue is auto-disabled when the
+      // database engine is SQLite (the todo job handlers still register, but
+      // are never invoked). Set jobs.enabled=false to silence this entirely.
+      const jobsEnabled = config.jobs.enabled && isPostgres;
+      if (jobsEnabled) {
         try {
           await initJobQueue();
           await startWorkers();
@@ -62,6 +67,11 @@ async function main() {
         } catch (error) {
           logger.error({ error }, "Failed to initialize job queue");
         }
+      } else if (!isPostgres) {
+        logger.info(
+          "Job queue disabled (pg-boss requires PostgreSQL; DATABASE_ENGINE=sqlite). " +
+            "Set DATABASE_ENGINE=postgres to enable jobs.",
+        );
       } else {
         logger.info("Job queue disabled (set jobs.enabled=true in config.yml to enable)");
       }
@@ -79,7 +89,7 @@ async function main() {
       }
     },
     onShutdown: async () => {
-      if (config.jobs.enabled) {
+      if (config.jobs.enabled && isPostgres) {
         await stopJobQueue();
       }
     },

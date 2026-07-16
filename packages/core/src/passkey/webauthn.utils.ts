@@ -20,9 +20,11 @@ const ORIGIN = config.passkey.origin;
 
 /**
  * Interface for passkey data stored in database
- */
-// SQLite has no native array type, so `transports` is stored as a JSON-encoded
-// string. `parseTransports` decodes it back to an array at the read boundary.
+ */ import type { Prisma } from "@groot/core/database";
+
+// `transports` is a Prisma `Json` column on both SQLite and Postgres, so it
+// round-trips as a JS array natively (typed as Prisma.JsonValue). At the
+// WebAuthn boundary we cast to `AuthenticatorTransportFuture[]`.
 export interface PasskeyData {
   id: number;
   userId: number;
@@ -31,21 +33,11 @@ export interface PasskeyData {
   counter: bigint;
   deviceType: string | null;
   backedUp: boolean;
-  transports: string;
+  transports: Prisma.JsonValue;
   credentialName: string | null;
   lastUsedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/** Decode the JSON-encoded `transports` column into an array. */
-export function parseTransports(transports: string): string[] {
-  try {
-    const parsed = JSON.parse(transports);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
 }
 
 /**
@@ -64,7 +56,7 @@ export async function generatePasskeyRegistrationOptions(
     excludeCredentials: existingCredentials.map((passkey) => ({
       id: passkey.credentialId,
       type: "public-key",
-      transports: parseTransports(passkey.transports) as AuthenticatorTransportFuture[],
+      transports: passkey.transports as AuthenticatorTransportFuture[],
     })),
     authenticatorSelection: {
       residentKey: "preferred",
@@ -104,7 +96,7 @@ export async function generatePasskeyAuthenticationOptions(userPasskeys: Passkey
     allowCredentials: userPasskeys.map((passkey) => ({
       id: passkey.credentialId,
       type: "public-key",
-      transports: parseTransports(passkey.transports) as AuthenticatorTransportFuture[],
+      transports: passkey.transports as AuthenticatorTransportFuture[],
     })),
     userVerification: "preferred",
   };
@@ -137,10 +129,10 @@ export async function verifyPasskeyAuthentication(
 
 /**
  * Convert authenticator transports to database format.
- * SQLite has no array type, so we JSON-encode the array into a string column.
+ * `transports` is a Json column, so the array is stored as-is.
  */
-export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string {
-  return JSON.stringify(transports || []);
+export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string[] {
+  return transports || [];
 }
 
 /**

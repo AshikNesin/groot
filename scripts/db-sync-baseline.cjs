@@ -26,6 +26,9 @@
  * Pooled databases: the datasource URL is read from prisma.config.ts. With
  * SQLite there is no pooler, so the migrate engine reads DATABASE_URL
  * directly. Run via `pnpm db:baseline` so varlock loads the env.
+ *
+ * The active schema + migrations directory are selected by DATABASE_ENGINE
+ * (sqlite by default, postgres to opt in), mirroring prisma.config.ts.
  */
 const fs = require("node:fs");
 const path = require("node:path");
@@ -33,8 +36,16 @@ const { spawnSync } = require("node:child_process");
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const OUT_SQL = path.join(process.cwd(), "tmp", "db-baseline-sync.sql");
-const SCHEMA_PATH = path.join(process.cwd(), "apps/web/prisma/schema.prisma");
-const MIGRATIONS_DIR = path.join(process.cwd(), "apps/web/prisma/migrations");
+const ENGINE = (process.env.DATABASE_ENGINE || "sqlite").toLowerCase();
+const isPostgres = ENGINE === "postgres" || ENGINE === "postgresql" || ENGINE === "pg";
+const SCHEMA_PATH = path.join(
+  process.cwd(),
+  `apps/web/prisma/schema.${isPostgres ? "postgres" : "sqlite"}.prisma`,
+);
+const MIGRATIONS_DIR = path.join(
+  process.cwd(),
+  `apps/web/prisma/migrations-${isPostgres ? "postgres" : "sqlite"}`,
+);
 
 /** The baseline is the earliest migration folder, sorted by timestamp prefix. */
 function detectBaselineMigration() {

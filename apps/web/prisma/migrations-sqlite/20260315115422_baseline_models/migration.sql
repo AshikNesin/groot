@@ -6,7 +6,6 @@ CREATE TABLE "todos" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
-
 -- CreateTable
 CREATE TABLE "users" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -16,7 +15,6 @@ CREATE TABLE "users" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
-
 -- CreateTable
 CREATE TABLE "passkeys" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -26,20 +24,18 @@ CREATE TABLE "passkeys" (
     "counter" BIGINT NOT NULL DEFAULT 0,
     "deviceType" TEXT,
     "backedUp" BOOLEAN NOT NULL DEFAULT false,
-    "transports" TEXT NOT NULL,
+    "transports" JSONB NOT NULL,
     "credentialName" TEXT,
     "lastUsedAt" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "passkeys_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 -- CreateTable
 CREATE TABLE "keyv" (
     "key" TEXT NOT NULL PRIMARY KEY,
     "value" TEXT NOT NULL
 );
-
 -- CreateTable
 CREATE TABLE "job_logs" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -47,22 +43,16 @@ CREATE TABLE "job_logs" (
     "jobName" TEXT,
     "level" TEXT NOT NULL,
     "message" TEXT NOT NULL,
-    "data" TEXT,
+    "data" JSONB,
     "timestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
 -- CreateIndex
 CREATE UNIQUE INDEX "passkeys_credentialId_key" ON "passkeys"("credentialId");
-
 -- CreateIndex
 CREATE INDEX "passkeys_userId_idx" ON "passkeys"("userId");
-
 -- CreateIndex
 CREATE INDEX "job_logs_jobId_idx" ON "job_logs"("jobId");
-
 -- CreateIndex
 CREATE INDEX "job_logs_timestamp_idx" ON "job_logs"("timestamp");
-

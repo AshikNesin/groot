@@ -1,15 +1,16 @@
 /**
  * Dev orchestrator script.
  *
- * SQLite needs no container, so dev startup is just: ensure the DB file's
- * directory exists, run migrations, seed, then start the tsx watch server.
- * DATABASE_URL (resolved by varlock from .env.schema, e.g. file:./data/dev.db)
- * is the source of truth for the file location.
+ * Branches on DATABASE_ENGINE:
+ *  - sqlite (default): just mkdir the data dir, migrate, seed, start tsx.
+ *  - postgres: start/ensure the local Docker container, detect db-push drift,
+ *    migrate, seed, start tsx. (Original behaviour.)
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve, isAbsolute } from "node:path";
+import { isPostgres } from "../packages/core/src/database/engine.ts";
 
 let devServer: ChildProcess | null = null;
 let isShuttingDown = false;
@@ -33,16 +34,45 @@ function run(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<void>
 }
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL || "file:./data/dev.db";
+  const connectionString = process.env.DATABASE_URL!;
 
-  console.log("\n🗄️  Using SQLite database\n");
+  if (isPostgres) {
+    const { ensurePostgresContainer, databaseHasTables, databaseHasMigrationHistory, dockerDb } =
+      await import("./lib/docker-db.js");
+    const { readFileSync } = await import("node:fs");
+    const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
+
+    console.log("\n🗄️  Starting local PostgreSQL database...\n");
+    const docker = await ensurePostgresContainer({
+      projectName: pkg.name,
+      port: process.env.LOCAL_DB_DOCKER_PORT
+        ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
+        : undefined,
+    });
+    // connectionString already resolved by varlock to the same Docker DB.
+    console.log("🐳 Using Docker PostgreSQL\n");
+
+    // Detect a db-push-managed database and reset it so `migrate deploy` works.
+    const hasTables = await databaseHasTables(docker.databaseName);
+    const hasMigrations = await databaseHasMigrationHistory(docker.databaseName);
+    if (hasTables && !hasMigrations) {
+      console.log(
+        "⚠️  Database has tables but no Prisma migration history (was `db push` managed).",
+      );
+      console.log("   Resetting local dev database so migrations apply cleanly...\n");
+      await dockerDb.reset(docker.databaseName);
+      console.log("   ✅ Database reset.\n");
+    }
+  } else {
+    console.log("\n🗄️  Using SQLite database\n");
+    const filePath = dbFilePath(connectionString);
+    if (filePath) {
+      mkdirSync(dirname(filePath), { recursive: true });
+    }
+  }
+
   console.log(`   Connection: ${connectionString}`);
   console.log();
-
-  const filePath = dbFilePath(connectionString);
-  if (filePath) {
-    mkdirSync(dirname(filePath), { recursive: true });
-  }
 
   // Apply migrations to the local DB (no db push — that bypasses migration history)
   console.log("📦 Applying Prisma migrations...\n");
