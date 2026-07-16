@@ -90,13 +90,13 @@ async function main() {
 
   console.log("\n🚀 Starting dev server...\n");
 
-  // Spawn the actual dev server with the local DB URL
+  // Spawn the actual dev server with the local DB URL.
+  // `tsx watch` must come before any Node V8 flags — with tsx 4.22+ putting a
+  // flag like --max-old-space-size before `watch` makes tsx treat `watch` as
+  // the script path and fail with ERR_MODULE_NOT_FOUND.
   devServer = spawn(
     "node_modules/.bin/tsx",
     [
-      // `watch` MUST be the first arg — it's a tsx subcommand, not a flag. If a
-      // node flag (--max-old-space-size) precedes it, tsx enters "flags + script"
-      // mode and treats `watch` as a file path (ERR_MODULE_NOT_FOUND).
       "watch",
       // Cap V8 old-space to 512 MB in dev. Node's default is ~1.5 GB which is
       // far beyond what this server ever needs. Setting a tighter ceiling lets
