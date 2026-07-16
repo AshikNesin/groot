@@ -1,5 +1,34 @@
 # @groot/shell
 
+## 0.4.0
+
+### Minor Changes
+
+- [#74](https://github.com/AshikNesin/groot/pull/74) [`1e85141`](https://github.com/AshikNesin/groot/commit/1e851410f1b5cdce9a6bcafd269da4f091c99245) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Add `loginWithPasskey` to the shell auth store
+
+  `useAuthStore` now exposes `loginWithPasskey(email?)`, which runs the WebAuthn
+  ceremony via the existing `passkeyService.loginWithPasskey` and — on success —
+  sets `isAuthenticated`/`user` and bumps `generation`, mirroring password login.
+
+  Previously apps that wanted passkey login had to fork the store and track a
+  separate `username` field. Now any app can `<PasskeyManager>` + call
+  `loginWithPasskey` directly from `@groot/shell/store/auth`, keeping a single
+  auth store. No change to existing fields or behavior.
+
+- [#74](https://github.com/AshikNesin/groot/pull/74) [`225280b`](https://github.com/AshikNesin/groot/commit/225280b0899784e6fd92a363adb141dc7647bd24) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Add `header` / `padded` / `mainClassName` / `className` slots to the shell `Layout`
+
+  `<Layout/>` now accepts:
+
+  - `header?: ReactNode` — render a custom header/nav (e.g. an app `<Navbar/>`)
+    instead of the default shell header (logo + command palette + user menu).
+  - `padded?: boolean` (default `true`) — toggle `<main>`'s default padding. Set
+    `false` when pages own their own padding via `PageContainer`.
+  - `mainClassName?` / `className?` — extra classes merged onto `<main>` / the
+    outer wrapper.
+
+  Fully backward compatible: `<Layout/>` with no props behaves exactly as before.
+  Lets apps brand the shell without forking the whole layout component.
+
 ## 0.3.1
 
 ### Patch Changes
@@ -13,6 +42,7 @@
   making import style inconsistent across the codebase.
 
   ## @groot/core
+
   - Converted all cross-directory `../` imports to `@groot/core/*` aliases
     across `ai`, `auth`, `config`, `kv`, `middlewares`, `notification`,
     `passkey`, `settings`, `storage`, and `utils`.
@@ -21,11 +51,13 @@
     relative (no alias maps to the generated output outside `src/`).
 
   ## @groot/shell
+
   - Converted cross-directory `../` imports to `@groot/shell/*` aliases
     across `components`, `hooks`, `lib`, `pages/storage`, `services`, and
     `store`.
 
   ## @groot/jobs
+
   - Converted cross-directory `../` imports to `@groot/jobs/client/*`
     aliases across the client `components/`.
 
@@ -39,6 +71,7 @@
   controllers shape responses, plus a shared Form primitive.
 
   ## @groot/core
+
   - Removed the `*System` namespace barrels (`AISystem`, `AuthSystem`,
     `ErrorSystem`, `KVSystem`, plus the passkey/settings/storage equivalents).
     Callers now use direct named imports instead of convenience namespaces.
@@ -54,10 +87,12 @@
     `validation` middlewares.
 
   ## @groot/ui
+
   - Added a `Form` component (`form.tsx`) with `react-hook-form` integration and
     field helpers.
 
   ## @groot/shell
+
   - Reworked `lib/api.ts` (the `apiClient`) for simpler, more consistent request
     handling.
   - Added `useToastMutation` hook to standardize mutation + toast feedback.
@@ -66,6 +101,7 @@
     hooks to build on the new Form component and apiClient.
 
   ## @groot/jobs
+
   - Refactored the client API layer (`api.ts`), `useJobs`, `useJobDetail`, and
     `JobsTable` to align with the new apiClient patterns.
 
