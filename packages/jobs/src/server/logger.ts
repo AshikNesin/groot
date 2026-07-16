@@ -1,5 +1,4 @@
 import { Writable } from "node:stream";
-import dayjs from "dayjs";
 import pino, { type Logger } from "pino";
 import pinoPretty from "pino-pretty";
 import { prisma } from "@groot/core/database";
@@ -117,7 +116,7 @@ export class JobLogStream extends Writable {
           level: levelStr,
           message: msg || message || "",
           data: Object.keys(rest).length > 0 ? (rest as Prisma.InputJsonValue) : Prisma.JsonNull,
-          timestamp: time ? dayjs(time).toDate() : dayjs().toDate(),
+          timestamp: time ? new Date(time) : new Date(),
         };
       });
 

@@ -13,6 +13,7 @@ import { registerRoutes, registerJobHandlers } from "./routes";
 import { notificationService } from "@groot/core/notification/notification.service";
 import { initJobQueue, stopJobQueue } from "@groot/jobs/server/client";
 import { startWorkers } from "@groot/jobs/server/worker";
+import { filesPromise } from "@groot/core/storage";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +50,9 @@ async function main() {
   // Start server
   await startServer(httpServer, viteServer, {
     onStart: async () => {
+      // Warm up the storage adapter (resolves the dynamic import in production).
+      await filesPromise;
+
       // Initialize job queue after server is listening
       if (config.jobs.enabled) {
         try {
