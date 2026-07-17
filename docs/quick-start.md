@@ -10,7 +10,7 @@ Your boilerplate includes everything needed for a production-ready SaaS:
 - **Passkey/WebAuthn** - Passwordless biometric authentication
 - **Boom Error Handling** - Standardized HTTP errors
 - **Enhanced Logging** - Pino with AsyncLocalStorage context
-- **Background Jobs** - pg-boss with dynamic registration
+- **Background Jobs** - dual-engine queue (pg-boss on Postgres, honker on SQLite) with dynamic registration
 - **Key-Value Store** - Keyv for caching and sessions
 - **File Storage** - S3-compatible storage
 - **AI Integration** - Unified LLM API with Zod output
@@ -283,7 +283,10 @@ pnpm format           # Format code
 pnpm check            # Lint and format check
 
 # Testing
-pnpm test             # Run tests
+pnpm test             # Run tests (SQLite by default)
+pnpm test:sqlite      # Run tests on SQLite
+pnpm test:postgres    # Run tests on PostgreSQL
+pnpm test:all         # Run tests on both engines
 pnpm test:watch       # Watch mode
 pnpm test:e2e         # E2E tests
 ```
@@ -296,7 +299,7 @@ Before deploying to production:
 
 - [ ] Run `pnpm groot:setup` to configure your app
 - [ ] Set `DOPPLER_TOKEN` (or configure secrets on your hosting platform)
-- [ ] Set `DATABASE_URL` to your production database
+- [ ] Set `DATABASE_ENGINE` (`sqlite` or `postgres`) and `DATABASE_URL` to your production database
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
 - [ ] Configure passkey environment (`RP_ID`, `RP_NAME`, `RP_ORIGIN`)
 - [ ] Set `NODE_ENV=production`

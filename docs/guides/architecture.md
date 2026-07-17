@@ -59,7 +59,7 @@ Route Handler (createRouter auto-wraps with handle middleware)
     ↓
 Service (business logic + Prisma queries)
     ↓
-Database (PostgreSQL)
+Database (SQLite or PostgreSQL — see [Database Engines](../database-engines.md))
     ↓
 Response (auto-serialized by handle middleware)
 ```
@@ -157,16 +157,18 @@ Prisma errors are automatically transformed by `PrismaHandler`.
 
 ## Background Job System
 
-Built on pg-boss with modular structure:
+Built on an engine-selected queue adapter — [pg-boss](https://github.com/timgit/pg-boss) on Postgres, [honker](https://github.com/russellromney/honker) on SQLite — behind a shared `JobQueueAdapter` interface (see [Database Engines](../database-engines.md#job-queue-adapter)). Modular structure:
 
-| File (in `packages/jobs/src/server/`) | Purpose                           |
-| ------------------------------------- | --------------------------------- |
-| `config.ts`                           | Environment-based configuration   |
-| `client.ts`                           | PgBoss singleton instance         |
-| `queue.ts`                            | Job registration and queueing API |
-| `queries.ts`                          | Job inspection queries            |
-| `worker.ts`                           | Worker management                 |
-| `error-handler.ts`                    | Sentry + logging wrapper          |
+| File (in `packages/jobs/src/server/`) | Purpose                                        |
+| ------------------------------------- | ---------------------------------------------- |
+| `adapter.ts`                          | `JobQueueAdapter` interface + normalized types |
+| `pgboss-adapter.ts`                   | pg-boss implementation (Postgres)              |
+| `honker-adapter.ts`                   | honker implementation (SQLite)                 |
+| `client.ts`                           | Constructs the active adapter                  |
+| `queue.ts`                            | Job registration and queueing API              |
+| `queries.ts`                          | Job inspection queries                         |
+| `worker.ts`                           | Worker management                              |
+| `error-handler.ts`                    | Sentry + logging wrapper                       |
 
 ### Job Registration
 
@@ -213,7 +215,7 @@ Uses AsyncLocalStorage for request tracing.
 
 ## Key-Value Store
 
-Keyv with PostgreSQL adapter:
+Keyv with a SQLite or PostgreSQL adapter (selected by `DATABASE_ENGINE`):
 
 ```typescript
 import kv, { createNamespaceKv } from "@groot/core/kv";

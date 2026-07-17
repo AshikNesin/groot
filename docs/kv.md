@@ -1,13 +1,19 @@
 # KV (Key-Value) Storage System
 
-This project uses Keyv for key-value storage with PostgreSQL as the backend. The KV system provides a simple way to store and retrieve data, perfect for caching, session storage, or any temporary data needs.
+This project uses [Keyv](https://github.com/jaredwray/keyv) for key-value storage, perfect for caching, session storage, or any temporary data needs. The backend is selected by `DATABASE_ENGINE` to match the Prisma adapter:
+
+- **SQLite** (default) — [`@keyv/sqlite`](https://github.com/jaredwray/keyv/tree/main/packages/sqlite)
+- **PostgreSQL** — [`@keyv/postgres`](https://github.com/jaredwray/keyv/tree/main/packages/postgres)
+
+Both adapters implement the same Keyv interface, so the rest of the code is engine-agnostic. Both packages are always installed (dual-engine support). See [Database Engines](./database-engines.md) for the engine matrix.
 
 ## Installation
 
-The KV system uses these packages:
+The KV system uses these packages (already installed):
 
 - `keyv` - The core Keyv library
 - `@keyv/postgres` - PostgreSQL adapter for Keyv
+- `@keyv/sqlite` - SQLite adapter for Keyv
 
 ## Usage
 

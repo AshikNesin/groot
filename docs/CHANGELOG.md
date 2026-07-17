@@ -1,5 +1,13 @@
 # Docs Changelog
 
+## 2026-07-17
+
+- Documented dual-database-engine support (SQLite default, PostgreSQL opt-in via `DATABASE_ENGINE`):
+  - New [Database Engines](./database-engines.md) guide covering engine selection, the `Json` parity strategy, two schema files, and the job-queue adapter pattern (pg-boss on Postgres, honker on SQLite)
+  - Updated setup, quick-start, architecture, jobs, KV, testing, and migration guides to reflect both engines
+  - Added `test:sqlite` / `test:postgres` / `test:all` scripts and documented the dual-engine CI matrix workflow
+- Updated `README.md`, `AGENTS.md`, and `docs/README.md` tech-stack tables to list SQLite/PostgreSQL and pg-boss/honker
+
 ## 2026-04-07
 
 - Updated all documentation to reflect new domain-driven architecture:

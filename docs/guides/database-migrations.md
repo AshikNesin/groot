@@ -2,6 +2,13 @@
 
 This guide covers the Prisma migration-based deployment workflow for managing database schema changes.
 
+> **Engine note:** The default database is **SQLite** (`DATABASE_ENGINE=sqlite`).
+> Set `DATABASE_ENGINE=postgres` to use PostgreSQL. The schema is split into
+> `schema.sqlite.prisma` / `schema.postgres.prisma`; migrations are shared.
+> See [Database Engines](../database-engines.md) for the full matrix. The
+> `DATABASE_URL_DIRECT` / pooler guidance later in this guide is
+> PostgreSQL-specific.
+
 ## Overview
 
 This project uses Prisma Migrate for database schema management. This approach:
@@ -17,12 +24,18 @@ This project uses Prisma Migrate for database schema management. This approach:
 
 1. **Edit the Prisma schema**
 
-   Modify `apps/web/prisma/schema.prisma` with your changes:
+   The schema is split by engine — edit **both** to keep them in parity (a unit
+   test in `tests/server/prisma/schema-parity.test.ts` enforces this):
 
    ```bash
-   # Edit the schema file
-   vim apps/web/prisma/schema.prisma
+   # Edit both schema files
+   vim apps/web/prisma/schema.sqlite.prisma
+   vim apps/web/prisma/schema.postgres.prisma
    ```
+
+   Use the `Json` type (not `String` + `JSON.stringify`) for array/JSON columns
+   — it maps to native `JSONB` on Postgres and `TEXT` on SQLite, with identical
+   generated client types. See [Database Engines](../database-engines.md).
 
 2. **Create a migration**
 

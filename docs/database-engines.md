@@ -127,6 +127,8 @@ const result = await prisma.$queryRaw<{ value: string }[]>`
 
 ## Jobs (dual-engine: pg-boss on Postgres, honker on SQLite)
 
+### Job queue adapter
+
 The job queue runs on **both** engines via an adapter pattern. A
 `JobQueueAdapter` interface (`packages/jobs/src/server/adapter.ts`) captures the
 operations the rest of `@groot/jobs` needs; `client.ts` picks the implementation
