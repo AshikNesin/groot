@@ -2,9 +2,15 @@
  * pg-boss adapter — the PostgreSQL job queue implementation.
  *
  * Wraps `pg-boss` behind the {@link JobQueueAdapter} interface. Selected when
- * `DATABASE_ENGINE=postgres`. The dashboard queries run raw SQL against the
- * `pgboss.job` table (Postgres-only); the column set is normalized into
- * {@link QueueJob} so the rest of the package never touches pg-boss types.
+ * `DATABASE_ENGINE=postgres`. Single-job reads use pg-boss's own
+ * `getJobById()`; the cross-queue dashboard queries (global state counts,
+ * paginated/state-filtered lists, purge-by-state) run raw SQL against the
+ * `pgboss.job` table because pg-boss exposes no API for them — `findJobs`
+ * can't filter by state/date or paginate, and `getQueueStats(name)` is
+ * per-queue (and needs `persistQueueStats`). The raw results are normalized
+ * into {@link QueueJob} so the rest of the package never touches pg-boss
+ * types. These tables are vendor-owned (migrated by pg-boss), so they are
+ * intentionally NOT modeled in the Prisma schema.
  */
 import { PgBoss } from "pg-boss";
 import type { Job as BossJob, JobWithMetadata, WorkOptions as BossWorkOptions } from "pg-boss";
@@ -164,12 +170,10 @@ export class PgBossAdapter implements JobQueueAdapter {
   }
 
   async getJobById(queueName: string, jobId: string): Promise<QueueJob | null> {
-    const result = await prisma.$queryRawUnsafe<JobWithMetadata[]>(
-      `${JOB_SELECT_COLUMNS} FROM pgboss.job WHERE id = $1 AND name = $2`,
-      jobId,
-      queueName,
-    );
-    return result[0] ? normalizeBossJob(result[0]) : null;
+    // Use pg-boss's own accessor instead of raw SQL. It returns the same
+    // JobWithMetadata shape and keeps us off the pgboss.job column list here.
+    const job = await this.boss.getJobById(queueName, jobId);
+    return job ? normalizeBossJob(job as JobWithMetadata) : null;
   }
 
   async getQueueStats(): Promise<Record<string, number>> {

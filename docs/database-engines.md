@@ -129,6 +129,22 @@ const result = await prisma.$queryRaw<{ value: string }[]>`
 
 ### Job queue adapter
 
+The dashboard queries in the adapters intentionally use raw SQL, not Prisma:
+the `pgboss.job` and `_honker_*` tables are **vendor-owned** (migrated by
+pg-boss / honker themselves), so modeling them in `schema.prisma` would put
+Prisma migrate in conflict with the library that owns them. App data
+(`Todo`, `User`, `JobLog`, …) is all Prisma — including `job_logs`, written
+via `prisma.jobLog.createMany`.
+
+Where the library exposes an equivalent accessor, the adapter uses it instead
+of SQL — e.g. `PgBossAdapter.getJobById()` calls `boss.getJobById()`. The
+cross-queue dashboard queries (global `GROUP BY state` counts, paginated /
+state-filtered / date-filtered lists, purge-by-state) have no library
+equivalent: pg-boss `findJobs` can't filter by state/date or paginate and
+`getQueueStats(name)` is per-queue; honker exposes no inspection API at all.
+Those stay as `$queryRawUnsafe` / `db.query` against the vendor tables and
+normalize results into `QueueJob`.
+
 The job queue runs on **both** engines via an adapter pattern. A
 `JobQueueAdapter` interface (`packages/jobs/src/server/adapter.ts`) captures the
 operations the rest of `@groot/jobs` needs; `client.ts` picks the implementation
