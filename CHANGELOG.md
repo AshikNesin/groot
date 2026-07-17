@@ -34,7 +34,6 @@
   controllers shape responses, plus a shared Form primitive.
 
   ## @groot/core
-
   - Removed the `*System` namespace barrels (`AISystem`, `AuthSystem`,
     `ErrorSystem`, `KVSystem`, plus the passkey/settings/storage equivalents).
     Callers now use direct named imports instead of convenience namespaces.
@@ -50,12 +49,10 @@
     `validation` middlewares.
 
   ## @groot/ui
-
   - Added a `Form` component (`form.tsx`) with `react-hook-form` integration and
     field helpers.
 
   ## @groot/shell
-
   - Reworked `lib/api.ts` (the `apiClient`) for simpler, more consistent request
     handling.
   - Added `useToastMutation` hook to standardize mutation + toast feedback.
@@ -64,7 +61,6 @@
     hooks to build on the new Form component and apiClient.
 
   ## @groot/jobs
-
   - Refactored the client API layer (`api.ts`), `useJobs`, `useJobDetail`, and
     `JobsTable` to align with the new apiClient patterns.
 
@@ -89,7 +85,6 @@
   and `apps/web/` (app-owned, not synced).
 
   ## What changed
-
   - `client/src/ui` → `packages/ui` (`@groot/ui`)
   - `client/src/core` → `packages/shell` (`@groot/shell`)
   - `server/src/core` + `server/src/shared` → `packages/core` (`@groot/core`)
@@ -148,7 +143,6 @@
   breaking API changes.
 
   #### Performance
-
   - Parallelize independent awaits in the boilerplate sync engine
     (`.groot/lib/engine.ts`) — reconcile + apply phases now fan out per file.
   - Code-split CodeMirror behind `React.lazy` so it lands in its own chunk
@@ -157,7 +151,6 @@
   - Single-pass job filters and keyboard-toggle selection.
 
   #### Architecture
-
   - Split the four largest pages into focused components + custom hooks:
     `Jobs` (1433 → 132), `Storage` (629 → 171), `JobDetail` (474 → 128),
     `AppSettings` (339 → 206). Each sub-300 lines now.
@@ -167,7 +160,6 @@
     make WebAuthn RP constants module-private.
 
   #### Fixes
-
   - Accessibility: breadcrumb current-page item now uses `aria-current="page"`
     instead of an incorrect `role="link"`; keyboard parity for input-group.
   - Remove derived-state syncing effects in favor of derived values.
@@ -176,7 +168,6 @@
     export.
 
   #### Tooling
-
   - Add `react-doctor` CI workflow, triage skill, and `doctor` script.
   - Drop redundant `@radix-ui/react-*` packages (covered by the `radix-ui`
     meta-package) and unused `p-limit`.
@@ -233,7 +224,6 @@
   and latent lint warnings cleaned up.
 
   ### Toolchain migrations
-
   - **Vite+ 0.1 → 0.2** via `vp migrate`. The catalog now pins real `vitest@4.1.9`
     — the `@voidzero-dev/vite-plus-test` wrapper is removed in 0.2.x, which fixes
     `vp test`: it previously could not resolve the `vitest` bin through the stale
@@ -247,7 +237,6 @@
   - **Vite 8.** `server.hmr.*` → `server.ws.*` for the HMR websocket config.
 
   ### Breaking dependency changes
-
   - `@mariozechner/pi-ai` → `@earendil-works/pi-ai@0.80` (the `@mariozechner`
     package is deprecated). Imports use the `/compat` shim, which preserves the
     existing `stream`/`complete`/`getModel` API surface.
@@ -258,14 +247,12 @@
     `@sentry/node` 10.63, `@tanstack/react-query` 5.101, and more.
 
   ### Code cleanup
-
   - Resolved 13 pre-existing oxlint `no-unused-vars` warnings: removed unused
     imports, an unused controller parameter, and switched to an optional catch
     binding.
   - Fixed a `ThinkingLevel` local-use bug in the AI module's type re-exports.
 
   ### Validation
-
   - `pnpm build` ✓, `pnpm test` (140/140) ✓, `pnpm lint` (0 warnings) ✓.
 
 ## 1.9.0
@@ -279,7 +266,6 @@
   the pi coding agent CLI for conflict resolution.
 
   ### Sync engine (v5 snapshot reconciliation)
-
   - **Git-tracked baseline.** A parentless snapshot commit of every synced file
     at the last-sync state is stored as `refs/groot/baseline`. The baseline is
     rebuilt from the boilerplate checkout when missing or stale, making sync
@@ -300,7 +286,6 @@
     drift between `sync.ts`, `resolve.ts`, and `upstream.ts`.
 
   ### Resolve (pi CLI)
-
   - **Replaces `@cline/sdk`.** Conflict resolution now shells out to the
     [pi](https://pi.dev) coding agent CLI (`pi -p`) in a locked-down single-shot
     mode: no session, no tools, no extensions, no skills, no prompt templates,
@@ -314,7 +299,6 @@
     `pi` + `/login`. `@cline/sdk` is no longer a dependency.
 
   ### Tests
-
   - 22 unit tests for the reconciliation decision table
     (`tests/server/groot/reconcile.test.ts`).
   - 7 integration tests with fixture git repos covering check mode, apply +
