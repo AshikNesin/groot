@@ -114,15 +114,25 @@ export class PgBossAdapter implements JobQueueAdapter {
 
   async getSchedules() {
     const schedules = await this.boss.getSchedules();
-    return schedules
-      .filter((s) => !s.name.startsWith("__pgboss__"))
-      .map((s) => ({
+    // Single pass: skip internal pgboss schedules (prefixed "__pgboss__").
+    const result: Array<{
+      name: string;
+      cron: string;
+      timezone: string;
+      data: unknown;
+      key: string;
+    }> = [];
+    for (const s of schedules) {
+      if (s.name.startsWith("__pgboss__")) continue;
+      result.push({
         name: s.name,
         cron: s.cron,
         timezone: s.timezone,
         data: s.data,
         key: s.key,
-      }));
+      });
+    }
+    return result;
   }
 
   async createQueue(name: string): Promise<void> {
@@ -174,7 +184,12 @@ export class PgBossAdapter implements JobQueueAdapter {
 
   async getAvailableQueues(): Promise<string[]> {
     const queues = await this.boss.getQueues();
-    return queues.filter((q) => !q.name.startsWith("__pgboss__")).map((q) => q.name);
+    // Single pass: skip internal pgboss queues (prefixed "__pgboss__").
+    const names: string[] = [];
+    for (const q of queues) {
+      if (!q.name.startsWith("__pgboss__")) names.push(q.name);
+    }
+    return names;
   }
 
   async fetchJobs(queueName: string, limit: number): Promise<QueueJob[]> {
@@ -267,21 +282,25 @@ export class PgBossAdapter implements JobQueueAdapter {
       i++;
     }
     const where = `WHERE ${conditions.join(" AND ")}`;
-    const totalResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-      `SELECT COUNT(*) as count FROM pgboss.job ${where}`,
-      ...params,
-    );
-    const rows = await prisma.$queryRawUnsafe<JobWithMetadata[]>(
-      `
-      ${JOB_SELECT_COLUMNS}
-      FROM pgboss.job
-      ${where}
-      ORDER BY created_on DESC
-      LIMIT $${i} OFFSET $${i + 1}`,
-      ...params,
-      limit,
-      offset,
-    );
+    // Both queries scan pgboss.job with the same WHERE clause and neither
+    // depends on the other's result, so run them concurrently.
+    const [totalResult, rows] = await Promise.all([
+      prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+        `SELECT COUNT(*) as count FROM pgboss.job ${where}`,
+        ...params,
+      ),
+      prisma.$queryRawUnsafe<JobWithMetadata[]>(
+        `
+        ${JOB_SELECT_COLUMNS}
+        FROM pgboss.job
+        ${where}
+        ORDER BY created_on DESC
+        LIMIT $${i} OFFSET $${i + 1}`,
+        ...params,
+        limit,
+        offset,
+      ),
+    ]);
     return {
       jobs: rows.map(normalizeBossJob),
       total: Number(totalResult[0]?.count ?? 0),

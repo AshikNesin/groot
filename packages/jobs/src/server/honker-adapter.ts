@@ -343,7 +343,12 @@ export class HonkerAdapter implements JobQueueAdapter {
 
   async getAvailableQueues(): Promise<string[]> {
     const r = rows<{ queue: string }>(this.db.query("SELECT DISTINCT queue FROM _honker_live"));
-    return r.map((x) => x.queue).filter((q) => !q.startsWith("_"));
+    // Single pass: skip internal honker queues (prefixed "_").
+    const queues: string[] = [];
+    for (const x of r) {
+      if (!x.queue.startsWith("_")) queues.push(x.queue);
+    }
+    return queues;
   }
 
   async fetchJobs(queueName: string, limit: number): Promise<QueueJob[]> {
