@@ -23,7 +23,7 @@ packages/                       # Boilerplate (always synced)
   ui/                           # @groot/ui - shadcn/ui design primitives
   shell/                        # @groot/shell - client infrastructure
   core/                         # @groot/core - server core + database (merged)
-  jobs/                         # @groot/jobs - pg-boss job queue + dashboard
+  jobs/                         # @groot/jobs - job queue (pg-boss/honker adapter) + dashboard
 prisma/                         # Schema + migrations (app-owned)
 tests/                          # Centralized unit tests
 docs/                           # Documentation
@@ -74,7 +74,7 @@ Server-side infrastructure. After the flattening, modules live directly under
 - `@groot/core/*` - errors, KV store, AI client, middlewares, config, storage,
   auth, passkey, settings (infrastructure + reusable features share one namespace)
 - `@groot/core/logger` - Pino logger with AsyncLocalStorage context (leaf; configured via `configureLogger()` at bootstrap)
-- `@groot/jobs` - pg-boss job queue + dashboard (`server/*` + `client/*`)
+- `@groot/jobs` - job queue + dashboard (`server/*` + `client/*`); queue runs on pg-boss (Postgres) or honker (SQLite) behind a shared adapter interface
 
 ### @groot/core/database (`packages/core`)
 

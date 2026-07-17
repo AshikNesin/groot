@@ -5,10 +5,37 @@ Vitest powers the unit/integration tests while Supertest handles HTTP assertions
 ## Commands
 
 ```bash
-pnpm test         # Single run, great for CI
+pnpm test         # Single run, great for CI (SQLite by default)
 pnpm test:watch   # Watch mode during development
 pnpm test:e2e     # Playwright E2E tests
 ```
+
+## Running on both database engines
+
+The suite is engine-agnostic and must pass on **both** SQLite and PostgreSQL.
+Convenience scripts run each engine (and both together):
+
+```bash
+pnpm test:sqlite      # DATABASE_ENGINE=sqlite  → ./tmp/test.db
+pnpm test:postgres    # DATABASE_ENGINE=postgres → isolated *_test DB
+pnpm test:all         # both, sequentially
+```
+
+The `pretest` hook (`scripts/ensure-test-db.ts`) provisions the right test DB
+for the active engine: it creates/migrates a `*_test` database on Postgres
+(reusing the local Docker container, or a pre-provisioned Postgres in CI) and
+ensures the `./tmp/test.db` file exists on SQLite. It also regenerates the
+Prisma client for the active engine — the generated client embeds the
+datasource provider, so switching engines without regenerating causes a
+runtime driver-adapter mismatch.
+
+CI enforces both engines on every PR and push to `main` via a matrix workflow
+(`.github/workflows/test.yml`): the Postgres leg uses a `pgvector/pgvector:pg18`
+service container, SQLite needs no infra. Each leg typechecks, lints, tests,
+and builds. The honker-adapter test is SQLite-only (the adapter opens a SQLite
+file) and is `describe.skip` on Postgres.
+
+> See [Database Engines](../database-engines.md) for the full engine matrix.
 
 ## Test Structure
 
@@ -200,5 +227,5 @@ describe("Button", () => {
 ## Continuous Verification
 
 - Run `pnpm check` (lint + format) before opening PRs
-- Run `pnpm test` to verify tests pass
-- Add CI (GitHub Actions) to enforce checks automatically
+- Run `pnpm test:all` to verify tests pass on both database engines
+- CI (`.github/workflows/test.yml`) enforces typecheck, lint, tests, and build on both SQLite and PostgreSQL automatically

@@ -26,9 +26,11 @@ onlyBuiltDependencies:
   - "@prisma/engines"
   - "@sentry-internal/node-cpu-profiler"
   - bcrypt
+  - better-sqlite3
   - esbuild
   - prisma
   - protobufjs
+  - sqlite3
 
 overrides:
   # Force `pg` to a SINGLE version across the whole workspace. @prisma/adapter-pg

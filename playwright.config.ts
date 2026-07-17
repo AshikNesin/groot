@@ -22,7 +22,15 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    // Start the dev server directly via tsx (bypassing the `pnpm dev` portless
+    // wrapper, which conflicts with Playwright's port-availability check).
+    // Migrations + seed run first so the demo user exists. The command inherits
+    // DATABASE_ENGINE/DATABASE_URL from the environment, so e2e runs on the same
+    // engine as the rest of the suite (SQLite by default).
+    command:
+      "pnpm exec varlock run -- prisma migrate deploy && " +
+      "pnpm exec varlock run -- tsx apps/web/prisma/seed.ts && " +
+      "pnpm exec varlock run -- tsx watch --max-old-space-size=512 apps/web/src/server/index.ts",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

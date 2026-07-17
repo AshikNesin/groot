@@ -23,10 +23,12 @@
  *   - Idempotent: re-running on an already-synced, baselined database is a no-op
  *     (exit 0).
  *
- * Pooled databases: the datasource URL is read from prisma.config.ts, which
- * routes the migrate engine at DATABASE_URL_DIRECT (bypassing transaction-mode
- * poolers like Supabase Supavisor / PgBouncer) when set — so this works against
- * pooled databases too. Run via `pnpm db:baseline` so varlock loads the env.
+ * Pooled databases: the datasource URL is read from prisma.config.ts. With
+ * SQLite there is no pooler, so the migrate engine reads DATABASE_URL
+ * directly. Run via `pnpm db:baseline` so varlock loads the env.
+ *
+ * The active schema + migrations directory are selected by DATABASE_ENGINE
+ * (sqlite by default, postgres to opt in), mirroring prisma.config.ts.
  */
 const fs = require("node:fs");
 const path = require("node:path");
@@ -34,7 +36,16 @@ const { spawnSync } = require("node:child_process");
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const OUT_SQL = path.join(process.cwd(), "tmp", "db-baseline-sync.sql");
-const MIGRATIONS_DIR = path.join(process.cwd(), "prisma", "migrations");
+const ENGINE = (process.env.DATABASE_ENGINE || "sqlite").toLowerCase();
+const isPostgres = ENGINE === "postgres" || ENGINE === "postgresql" || ENGINE === "pg";
+const SCHEMA_PATH = path.join(
+  process.cwd(),
+  `apps/web/prisma/schema.${isPostgres ? "postgres" : "sqlite"}.prisma`,
+);
+const MIGRATIONS_DIR = path.join(
+  process.cwd(),
+  `apps/web/prisma/migrations-${isPostgres ? "postgres" : "sqlite"}`,
+);
 
 /** The baseline is the earliest migration folder, sorted by timestamp prefix. */
 function detectBaselineMigration() {
@@ -100,7 +111,7 @@ function main() {
 
   console.log("→ Generating diff SQL (live DB → schema.prisma)...");
   const sql = runText(
-    "pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script",
+    `pnpm exec prisma migrate diff --from-config-datasource --to-schema ${SCHEMA_PATH} --script`,
   );
 
   fs.mkdirSync(path.dirname(OUT_SQL), { recursive: true });

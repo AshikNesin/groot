@@ -68,6 +68,17 @@ async function build() {
         "vite",
         "lightningcss",
         "fsevents",
+        // Native modules + their optional platform packages cannot be bundled
+        // (esbuild has no ".node" loader). Keep them as runtime requires.
+        "better-sqlite3",
+        "sqlite3",
+        "pg",
+        "@russellthehippo/honker-node",
+        "@russellthehippo/honker-node-linux-x64-gnu",
+        "@russellthehippo/honker-node-linux-arm64-gnu",
+        "@russellthehippo/honker-node-darwin-x64",
+        "@russellthehippo/honker-node-darwin-arm64",
+        "@russellthehippo/honker-node-win32-x64-msvc",
       ],
       plugins:
         release && authToken && process.env.SENTRY_ORG

@@ -1,5 +1,6 @@
 // Public API
 export * from "./client";
+export * from "./adapter";
 export * from "./queue";
 export * from "./queries";
 export * from "./worker";

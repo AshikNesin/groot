@@ -53,7 +53,10 @@ async function main() {
       // Warm up the storage adapter (resolves the dynamic import in production).
       await filesPromise;
 
-      // Initialize job queue after server is listening
+      // Initialize the job queue after the server is listening. The queue
+      // adapter is selected by DATABASE_ENGINE: pg-boss on Postgres, honker on
+      // SQLite. Both implement the JobQueueAdapter interface, so the rest of
+      // the app is engine-agnostic.
       if (config.jobs.enabled) {
         try {
           await initJobQueue();

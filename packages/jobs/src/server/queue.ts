@@ -1,19 +1,19 @@
-import type { SendOptions, ScheduleOptions } from "pg-boss";
+import type { SendJobOptions, ScheduleJobOptions } from "./adapter";
 import { logger } from "@groot/core/logger";
 import { Boom } from "@groot/core/errors";
 import { defaultJobOptions } from "./config";
-import { getBoss } from "./client";
+import { getJobQueue } from "./client";
 import type { BulkRerunResult, RerunJobOptions } from "./types";
 
 // Queue a job for immediate execution.
 export const addJob = async (
   name: string,
   data: unknown,
-  options?: SendOptions,
+  options?: SendJobOptions,
 ): Promise<string | null> => {
-  const boss = getBoss();
-  const jobOpts = { ...defaultJobOptions, ...options } as SendOptions;
-  const jobId = await boss.send(name, data as object, jobOpts);
+  const queue = getJobQueue();
+  const jobOpts = { ...defaultJobOptions, ...options };
+  const jobId = await queue.send(name, data, jobOpts);
   logger.info({ jobId, name }, "Job queued");
   return jobId;
 };
@@ -23,17 +23,17 @@ export const scheduleJob = async (
   name: string,
   data: unknown,
   cron: string,
-  options?: ScheduleOptions,
+  options?: ScheduleJobOptions,
 ): Promise<void> => {
-  const boss = getBoss();
-  await boss.schedule(name, cron, data as object, options);
+  const queue = getJobQueue();
+  await queue.schedule(name, data, cron, options);
   logger.info({ name, cron }, "Job scheduled");
 };
 
 // Cancel a scheduled job
 export const cancelScheduledJob = async (name: string, key?: string): Promise<void> => {
-  const boss = getBoss();
-  await boss.unschedule(name, key);
+  const queue = getJobQueue();
+  await queue.unschedule(name, key);
 };
 
 // Edit a scheduled job - unschedule old and schedule new
@@ -42,22 +42,21 @@ export const editScheduledJob = async (
   key: string | undefined,
   cron: string,
   data: unknown,
-  options?: ScheduleOptions,
+  options?: ScheduleJobOptions,
 ): Promise<void> => {
   if (!key) {
     throw Boom.badRequest("Key is required to edit a scheduled job");
   }
-
-  const boss = getBoss();
-  await boss.unschedule(name, key);
-  await boss.schedule(name, cron, data as object, options);
+  const queue = getJobQueue();
+  await queue.unschedule(name, key);
+  await queue.schedule(name, data, cron, options);
   logger.info({ name, key, cron }, "Job schedule updated");
 };
 
 // Delete a job
 export const deleteJob = async (options: { queueName: string; jobId: string }): Promise<void> => {
-  const boss = getBoss();
-  const deleted = await boss.deleteJob(options.queueName, options.jobId);
+  const queue = getJobQueue();
+  const deleted = await queue.deleteJob(options.queueName, options.jobId);
   if (!deleted) {
     throw Boom.internal(`Failed to delete job: ${options.queueName}/${options.jobId}`);
   }
@@ -65,8 +64,8 @@ export const deleteJob = async (options: { queueName: string; jobId: string }): 
 
 // Retry a failed job
 export const retryJob = async (options: { queueName: string; jobId: string }): Promise<void> => {
-  const boss = getBoss();
-  const retried = await boss.retry(options.queueName, options.jobId);
+  const queue = getJobQueue();
+  const retried = await queue.retryJob(options.queueName, options.jobId);
   if (!retried) {
     throw Boom.internal("Retry failed");
   }
@@ -74,8 +73,8 @@ export const retryJob = async (options: { queueName: string; jobId: string }): P
 
 // Cancel a pending job
 export const cancelJob = async (options: { queueName: string; jobId: string }): Promise<void> => {
-  const boss = getBoss();
-  const cancelled = await boss.cancel(options.queueName, options.jobId);
+  const queue = getJobQueue();
+  const cancelled = await queue.cancelJob(options.queueName, options.jobId);
   if (!cancelled) {
     throw Boom.internal("Cancel failed");
   }
@@ -83,8 +82,8 @@ export const cancelJob = async (options: { queueName: string; jobId: string }): 
 
 // Resume a cancelled job
 export const resumeJob = async (options: { queueName: string; jobId: string }): Promise<void> => {
-  const boss = getBoss();
-  const resumed = await boss.resume(options.queueName, options.jobId);
+  const queue = getJobQueue();
+  const resumed = await queue.resumeJob(options.queueName, options.jobId);
   if (!resumed) {
     throw Boom.internal("Resume failed");
   }
@@ -94,12 +93,12 @@ export const resumeJob = async (options: { queueName: string; jobId: string }): 
 export const rerunJob = async (
   options: Omit<RerunJobOptions, "success">,
 ): Promise<string | null> => {
-  const boss = getBoss();
-  const job = await boss.getJobById(options.queueName, options.jobId);
+  const queue = getJobQueue();
+  const job = await queue.getJobById(options.queueName, options.jobId);
   if (!job) {
     throw Boom.notFound(`Job not found: ${options.queueName}/${options.jobId}`);
   }
-  return boss.send(job.name, job.data as object, { ...defaultJobOptions } as SendOptions);
+  return queue.send(job.name, job.data, { ...defaultJobOptions });
 };
 
 // Bulk re-run jobs

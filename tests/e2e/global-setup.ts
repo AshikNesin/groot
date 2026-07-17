@@ -1,9 +1,4 @@
-// Prisma v7 generates the client to a custom output path
-// (packages/core/generated/prisma), so PrismaClient is NOT re-exported from
-// "@prisma/client" (that package only ships the runtime). Import the generated
-// class directly — same pattern as packages/core/src/database/client.ts.
-import { PrismaClient } from "../../packages/core/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "@groot/core/database";
 import bcrypt from "bcryptjs";
 
 const SEED_USER = {
@@ -13,12 +8,11 @@ const SEED_USER = {
 };
 
 async function globalSetup() {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
-  });
-
-  const prisma = new PrismaClient({ adapter });
-
+  // Reuse the app's Prisma singleton (constructed in
+  // packages/core/src/database/client.ts), which already selects the right
+  // adapter for DATABASE_ENGINE. The dev server (started separately by
+  // Playwright's webServer) points at the same DATABASE_URL, so the seed user
+  // is visible to it.
   const hashedPassword = await bcrypt.hash(SEED_USER.password, 10);
   await prisma.user.upsert({
     where: { email: SEED_USER.email },

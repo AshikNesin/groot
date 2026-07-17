@@ -1,22 +1,17 @@
 /**
  * Pre-test orchestrator: ensures a test database exists and is migrated.
  *
- * The test DB (`${projectName}_test`) lives in the SAME Docker container
- * as the dev DB (groot-local-dev-db, port 5433) but as a separate database.
- * This means:
- *   - No separate container to manage
- *   - Same credentials as dev
- *   - Fully isolated at the database level (tests can never touch dev data)
- *
- * This is the test equivalent of scripts/dev.ts.
+ * Branches on DATABASE_ENGINE:
+ *  - sqlite (default): delete any stale file (for --reset), mkdir tmp/, then
+ *    `prisma migrate deploy` against it. No container to manage.
+ *  - postgres: ensure the isolated *_test database in the Docker container,
+ *    optionally reset it, then `prisma migrate deploy`.
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { ensureTestDatabase, dockerDb } from "./lib/docker-db.js";
-
-const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
+import { rmSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, resolve, isAbsolute } from "node:path";
+import { isPostgres } from "../packages/core/src/database/engine.ts";
 
 function runCommand(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<void> {
   return new Promise<void>((resolvePromise, reject) => {
@@ -32,47 +27,91 @@ function runCommand(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promis
   });
 }
 
+/** Resolve a SQLite DATABASE_URL to an absolute filesystem path (or null for :memory:). */
+function dbFilePath(url: string): string | null {
+  if (url === ":memory:") return null;
+  const stripped = url.replace(/^file:/, "");
+  return isAbsolute(stripped) ? stripped : resolve(process.cwd(), stripped);
+}
+
 async function main() {
   const shouldReset = process.argv.includes("--reset");
+  const dbUrl = process.env.TEST_DATABASE_URL!;
 
   console.log("\n🧪 Ensuring test database...\n");
 
-  const port = process.env.LOCAL_DB_DOCKER_PORT
-    ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
-    : undefined;
-  if (port !== undefined && Number.isNaN(port)) {
-    throw new Error(
-      `LOCAL_DB_DOCKER_PORT is set to a non-numeric value "${process.env.LOCAL_DB_DOCKER_PORT}" — refusing to guess.`,
-    );
+  let connectionString = dbUrl;
+
+  if (isPostgres) {
+    const { ensureTestDatabase, dockerDb } = await import("./lib/docker-db.js");
+    const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
+
+    // Derive the Postgres port from the explicitly-configured TEST_DATABASE_URL
+    // (set by CI / the test:postgres script) when present, falling back to
+    // LOCAL_DB_DOCKER_PORT and then the docker-db default (5433). This keeps a
+    // single source of truth: a CI service container on port 5432 is detected
+    // via the URL rather than silently probed on the wrong port.
+    let port: number | undefined;
+    if (process.env.LOCAL_DB_DOCKER_PORT) {
+      port = Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10);
+      if (Number.isNaN(port)) {
+        throw new Error(
+          `LOCAL_DB_DOCKER_PORT is set to a non-numeric value "${process.env.LOCAL_DB_DOCKER_PORT}" — refusing to guess.`,
+        );
+      }
+    } else if (dbUrl && /^postgres(ql)?:\/\//i.test(dbUrl)) {
+      const parsed = new URL(dbUrl);
+      if (parsed.port) port = Number.parseInt(parsed.port, 10);
+    }
+
+    const result = await ensureTestDatabase({ projectName: pkg.name, port });
+    connectionString = result.connectionString;
+    console.log(`✅ Test database ready: ${result.databaseName}`);
+    console.log(`   Container: ${result.containerName}\n`);
+
+    if (shouldReset) {
+      console.log("🗑️  Resetting test database (drop + recreate)...\n");
+      await dockerDb.reset(result.databaseName);
+      console.log("✅ Test database reset!\n");
+    }
+  } else {
+    const filePath = dbFilePath(dbUrl);
+    if (filePath) {
+      mkdirSync(dirname(filePath), { recursive: true });
+      if (shouldReset) {
+        console.log("🗑  Resetting test database (deleting file)...\n");
+        rmSync(filePath, { force: true });
+        rmSync(`${filePath}-wal`, { force: true });
+        rmSync(`${filePath}-shm`, { force: true });
+        console.log("   ✅ Test database reset!\n");
+      }
+    }
+    console.log(`✅ Test database path: ${dbUrl}\n`);
   }
 
-  const result = await ensureTestDatabase({ projectName: pkg.name, port });
-
-  console.log(`✅ Test database ready: ${result.databaseName}`);
-  console.log(`   Container: ${result.containerName}`);
-  console.log();
-
-  if (shouldReset) {
-    console.log("🗑️  Resetting test database (drop + recreate)...\n");
-    await dockerDb.reset(result.databaseName);
-    console.log("✅ Test database reset!\n");
-  }
-
-  // Apply migrations to the test DB. NODE_ENV=test makes varlock resolve
-  // DATABASE_URL to the *_test DB (via the forEnv(test) branch in .env.schema),
-  // and prisma.config.ts reads ENV.DATABASE_URL — so without NODE_ENV=test the
-  // migrate engine silently targets the dev DB instead. DATABASE_URL_DIRECT is
-  // pinned too because prisma.config.ts prefers it over DATABASE_URL, and an
-  // ambient DIRECT value (e.g. a staging direct URL) would otherwise divert
-  // migrations away from the test DB.
+  // Apply migrations. We pin DATABASE_URL (and for Postgres, DATABASE_URL_DIRECT)
+  // so an ambient value can't divert migrations away from the test DB.
   console.log("📦 Applying Prisma migrations to test database...\n");
-  await runCommand("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], {
+  const env: NodeJS.ProcessEnv = {
     ...process.env,
     NODE_ENV: "test",
-    DATABASE_URL: result.connectionString,
-    DATABASE_URL_DIRECT: result.connectionString,
-    TEST_DATABASE_URL: result.connectionString,
-  });
+    DATABASE_URL: connectionString,
+    TEST_DATABASE_URL: connectionString,
+  };
+  if (isPostgres) {
+    env.DATABASE_URL_DIRECT = connectionString;
+  }
+
+  // Regenerate the Prisma client for the active engine. The generated client
+  // embeds the datasource provider (sqlite vs postgres), so a client generated
+  // for one engine is incompatible with the other engine's driver adapter at
+  // runtime ("Driver Adapter ... is not compatible with the provider ...").
+  // The postinstall hook generates for whatever engine was active at install
+  // time; switching engines requires regenerating.
+  console.log("🔧 Regenerating Prisma client for the active engine...\n");
+  await runCommand("pnpm", ["exec", "varlock", "run", "--", "prisma", "generate"], env);
+
+  await runCommand("pnpm", ["exec", "varlock", "run", "--", "prisma", "migrate", "deploy"], env);
 
   console.log("\n✅ Test database ready for tests!\n");
 }

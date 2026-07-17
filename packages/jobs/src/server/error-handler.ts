@@ -1,8 +1,8 @@
 import { Sentry } from "@groot/core/instrument";
-import type { Job } from "pg-boss";
 import { logger } from "@groot/core/logger";
+import type { JobContext } from "./adapter";
 
-export type JobHandler<T = unknown> = (job: Job<T>) => Promise<void>;
+export type JobHandler<T = unknown> = (job: JobContext<T>) => Promise<void>;
 
 export const withSentryErrorCapture = <T>(
   handler: JobHandler<T>,

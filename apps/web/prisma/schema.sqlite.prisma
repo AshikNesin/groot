@@ -1,0 +1,84 @@
+// SQLite schema. Selected when DATABASE_ENGINE=sqlite (default).
+// The model definitions are identical to schema.postgres.prisma; only the
+// datasource provider differs. Keep the two files in sync — a parity test
+// (tests/server/prisma/schema-parity.test.ts) asserts the models match.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../../../packages/core/generated/prisma"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("todos")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  passkeys  Passkey[]
+
+  @@map("users")
+}
+
+model Passkey {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  credentialId   String    @unique
+  publicKey      Bytes
+  counter        BigInt    @default(0)
+  deviceType     String?
+  backedUp       Boolean   @default(false)
+  transports     Json
+  credentialName String?
+  lastUsedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkeys")
+}
+
+// The keyv table is managed by @keyv/postgres / @keyv/sqlite at runtime, so
+// Prisma must not create or migrate it. @@ignore keeps it out of migrations.
+model Keyv {
+  key   String @id
+  value String
+
+  @@map("keyv")
+  @@ignore
+}
+
+// Job execution logs for real-time monitoring.
+// NOTE: pg-boss (the job queue) is Postgres-only. When DATABASE_ENGINE=sqlite
+// the job queue is disabled, so JobLog rows are never written; the table is
+// kept in the schema so the generated client compiles and existing code that
+// references `prisma.jobLog` stays valid on both engines.
+model JobLog {
+  id        Int      @id @default(autoincrement())
+  jobId     String
+  jobName   String?
+  level     String
+  message   String
+  data      Json?
+  timestamp DateTime @default(now())
+
+  @@index([jobId])
+  @@index([timestamp])
+  @@map("job_logs")
+}

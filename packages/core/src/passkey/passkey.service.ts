@@ -83,10 +83,14 @@ async function storeChallenge(challenge: string): Promise<void> {
 
 async function getAndDeleteChallenge(challenge: string): Promise<string | null> {
   const now = Date.now();
-  const result = await prisma.$queryRawUnsafe<Array<{ value: string }>>(
-    `DELETE FROM keyv WHERE key = $1 RETURNING value`,
-    `passkey:challenge:${challenge}`,
-  );
+  // Use the $queryRaw tagged template (not $queryRawUnsafe with literal
+  // placeholders) so Prisma emits the correct placeholder syntax per engine
+  // (? for SQLite, $1 for Postgres). SQLite supports RETURNING on DELETE
+  // since 3.35; Postgres supports it natively.
+  const challengeKey = `passkey:challenge:${challenge}`;
+  const result = await prisma.$queryRaw<{ value: string }[]>`
+    DELETE FROM keyv WHERE key = ${challengeKey} RETURNING value
+  `;
   if (!result.length) return null;
 
   try {

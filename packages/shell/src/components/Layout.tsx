@@ -100,13 +100,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
         </header>
       )}
 
-      <main
-        className={cn(
-          "flex-1 w-full",
-          padded && "px-4 sm:px-6 lg:px-8 py-8",
-          mainClassName,
-        )}
-      >
+      <main className={cn("flex-1 w-full", padded && "px-4 sm:px-6 lg:px-8 py-8", mainClassName)}>
         <Outlet />
       </main>
     </div>

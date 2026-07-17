@@ -20,7 +20,11 @@ const ORIGIN = config.passkey.origin;
 
 /**
  * Interface for passkey data stored in database
- */
+ */ import type { Prisma } from "@groot/core/database";
+
+// `transports` is a Prisma `Json` column on both SQLite and Postgres, so it
+// round-trips as a JS array natively (typed as Prisma.JsonValue). At the
+// WebAuthn boundary we cast to `AuthenticatorTransportFuture[]`.
 export interface PasskeyData {
   id: number;
   userId: number;
@@ -29,7 +33,7 @@ export interface PasskeyData {
   counter: bigint;
   deviceType: string | null;
   backedUp: boolean;
-  transports: string[];
+  transports: Prisma.JsonValue;
   credentialName: string | null;
   lastUsedAt: Date | null;
   createdAt: Date;
@@ -124,7 +128,8 @@ export async function verifyPasskeyAuthentication(
 }
 
 /**
- * Convert authenticator transports to database format
+ * Convert authenticator transports to database format.
+ * `transports` is a Json column, so the array is stored as-is.
  */
 export function serializeTransports(transports?: AuthenticatorTransportFuture[]): string[] {
   return transports || [];

@@ -8,6 +8,7 @@ Welcome to the documentation hub for the Express + React boilerplate. This guide
 
 - **[Quick Start](./quick-start.md)** – Get started in 3 steps with authentication, components, and examples
 - **[Setup Guide](./setup-guide.md)** – Environment variables, database, and local workflow
+- **[Database Engines](./database-engines.md)** – SQLite (default) vs PostgreSQL, switching, and the job-queue adapter
 - **[Development Workflow](./guides/development.md)** – Day-to-day commands, conventions, and scripts
 
 ### Guides
@@ -20,12 +21,12 @@ Welcome to the documentation hub for the Express + React boilerplate. This guide
 ### Features
 
 - **[Todos API](./features/todos.md)** – CRUD contract, validation, and React integration
-- **[Background Jobs](./features/jobs.md)** – pg-boss queues, dynamic registration, and job API
+- **[Background Jobs](./features/jobs.md)** – queue adapter (pg-boss on Postgres, honker on SQLite), dynamic registration, and job API
 - **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
 - **[Storage](./features/storage.md)** – S3-backed file browser, secure shares, and rate limits
 - **[Passkey Authentication](./features/passkey-authentication.md)** – WebAuthn/FIDO2 passwordless authentication
 - **[AI Inference](./features/ai-inference.md)** – Unified LLM API with Zod structured output
-- **[KV Storage](./kv.md)** – Keyv-based key-value storage with PostgreSQL backend
+- **[KV Storage](./kv.md)** – Keyv-based key-value storage (SQLite or PostgreSQL backend)
 
 ### Examples & Reference
 
@@ -46,14 +47,14 @@ This boilerplate ships a secure Express 5 + TypeScript server with a domain-driv
 ### Key Capabilities
 
 - **Todo lifecycle** – Validation via Zod, persistence through Prisma, Boom error handling
-- **Background processing** – pg-boss queues with dynamic handler registration
+- **Background processing** – dual-engine job queue (pg-boss on Postgres, honker on SQLite) with dynamic handler registration
 - **Full-stack DX** – TypeScript, Vite+ (Oxlint/Oxfmt), Vitest, Playwright, Tailwind UI
 
 ## Tech Stack
 
 | Area    | Technologies                                                       |
 | ------- | ------------------------------------------------------------------ |
-| Server  | Node 18+, Express 5, pg-boss, Prisma, Pino, Sentry, Boom           |
+| Server  | Node 18+, Express 5, Prisma, pg-boss / honker, Pino, Sentry, Boom  |
 | Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
 | Tooling | TypeScript 5.9, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
 | AI      | @earendil-works/pi-ai (unified LLM API with Zod structured output) |
@@ -83,7 +84,7 @@ Route Handler (async function → return value)
     ↓
 Service (business logic + Prisma queries)
     ↓
-PostgreSQL
+Database (SQLite or PostgreSQL)
 
 Background Jobs:
 Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
@@ -96,7 +97,7 @@ Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
 | AI          | `@groot/core/ai/`          | Unified LLM client with Zod schema conversion       |
 | Errors      | `@groot/core/errors/`      | Boom factory, error codes, Prisma error handler     |
 | Jobs        | `@groot/jobs/server/`      | Queue client, queries, worker, dynamic registration |
-| KV          | `@groot/core/kv/`          | Keyv key-value storage with PostgreSQL              |
+| KV          | `@groot/core/kv/`          | Keyv key-value storage (SQLite or PostgreSQL)       |
 | Logger      | `@groot/core/logger/`      | Pino with AsyncLocalStorage context                 |
 | Storage     | `@groot/core/storage/`     | S3 file storage service                             |
 | Middlewares | `@groot/core/middlewares/` | Auth, validation, rate-limiting, error handling     |

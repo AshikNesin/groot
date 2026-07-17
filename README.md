@@ -2,13 +2,13 @@
 
 Starter kit for building web apps with a reliable, minimal tech stack.
 
-No framework churn. No over-abstraction. Just Express + React + Postgres — wired together so you can ship.
+No framework churn. No over-abstraction. Just Express + React + Prisma — with SQLite (default) or PostgreSQL — wired together so you can ship.
 
 ## Tech Stack
 
 | Layer   | What                                                   |
 | ------- | ------------------------------------------------------ |
-| Server  | Express 5, TypeScript, Prisma, pg-boss, Pino           |
+| Server  | Express 5, TypeScript, Prisma, pg-boss / honker, Pino  |
 | Client  | React 19, Vite 7, React Router 7, React Query, Zustand |
 | Auth    | JWT + Passkeys (WebAuthn)                              |
 | Tooling | Vite+ (Oxlint, Oxfmt, Vitest), Playwright, pnpm        |
@@ -28,10 +28,10 @@ pnpm dev                    # https://<appname>.localhost via portless
 ## What's Included
 
 - JWT + Passkey auth with protected routes
-- Background jobs via pg-boss
+- Background jobs via pg-boss (Postgres) or honker (SQLite)
 - S3 file storage with secure sharing
 - AI inference with Zod structured output
-- Key-value store (Keyv + Postgres)
+- Key-value store (Keyv — SQLite or Postgres backend)
 - UI component library (Radix + Tailwind)
 - Request logging, error tracking (Sentry), rate limiting
 - Pre-commit hooks with secret detection
@@ -80,6 +80,7 @@ pnpm start            # run production build
 pnpm check            # lint + format + typecheck
 pnpm test             # run tests
 pnpm test:e2e         # playwright e2e tests
+pnpm test:all         # run tests on both SQLite and PostgreSQL
 pnpm docker:db        # manage Docker PostgreSQL (--stop/--reset/--status)
 ```
 
@@ -93,6 +94,7 @@ pnpm docker:db        # manage Docker PostgreSQL (--stop/--reset/--status)
 | Development workflow | [docs/guides/development.md](./docs/guides/development.md)                           |
 | Portless & HTTPS     | [docs/guides/portless-https.md](./docs/guides/portless-https.md)                     |
 | Database migrations  | [docs/guides/database-migrations.md](./docs/guides/database-migrations.md)           |
+| Database engines     | [docs/database-engines.md](./docs/database-engines.md)                               |
 | Testing              | [docs/guides/testing.md](./docs/guides/testing.md)                                   |
 | Background jobs      | [docs/features/jobs.md](./docs/features/jobs.md)                                     |
 | File storage (S3)    | [docs/features/storage.md](./docs/features/storage.md)                               |

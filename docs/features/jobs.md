@@ -1,10 +1,12 @@
 # Background Jobs
 
-Pg-boss powers asynchronous work with a modularized, dynamically-registered job system. Jobs are registered at boot time and executed by dedicated workers.
+The job system powers asynchronous work with a modularized, dynamically-registered handler model. Jobs are registered at boot time and executed by dedicated workers.
+
+The queue itself runs on an **adapter selected by `DATABASE_ENGINE`** — [pg-boss](https://github.com/timgit/pg-boss) on PostgreSQL, [honker](https://github.com/russellromney/honker) on SQLite. Application code (handlers, enqueue API, the dashboard) is engine-agnostic and talks to a normalized `JobQueueAdapter` interface; see [Database Engines](../database-engines.md#job-queue-adapter) for the adapter design.
 
 The entire jobs vertical — backend infrastructure + HTTP admin API + job logger + the dashboard UI + client types/api — lives in the **`@groot/jobs`** package:
 
-- `@groot/jobs/server/*` — server-side (pg-boss queue/worker/queries, HTTP routes, job logger)
+- `@groot/jobs/server/*` — server-side (queue adapter, worker, queries, HTTP routes, job logger)
 - `@groot/jobs/client/*` — client-side (dashboard UI, `jobsApi`, types)
 
 Project-specific job **handlers** (e.g. `todo.jobs.ts`) + bootstrap wiring stay in `apps/web/`.
@@ -13,16 +15,17 @@ Project-specific job **handlers** (e.g. `todo.jobs.ts`) + bootstrap wiring stay 
 
 The backend job system is split into focused modules, flat under `@groot/jobs/server`:
 
-| Module        | File (import path)                 | Purpose                            |
-| ------------- | ---------------------------------- | ---------------------------------- |
-| Config        | `@groot/jobs/server/config`        | Configuration from `config.yml`    |
-| Client        | `@groot/jobs/server/client`        | PgBoss singleton instance          |
-| Queue         | `@groot/jobs/server/queue`         | Job queueing and scheduling        |
-| Queries       | `@groot/jobs/server/queries`       | Job inspection and management      |
-| Worker        | `@groot/jobs/server/worker`        | Handler registration and execution |
-| Error Handler | `@groot/jobs/server/error-handler` | Sentry capture + logging           |
-| Logger        | `@groot/jobs/server/logger`        | `createJobLogger` (DB-persisted)   |
-| Routes        | `@groot/jobs/server/routes`        | HTTP admin API (`/api/v1/jobs`)    |
+| Module        | File (import path)                 | Purpose                                                                |
+| ------------- | ---------------------------------- | ---------------------------------------------------------------------- |
+| Adapter       | `@groot/jobs/server/adapter`       | `JobQueueAdapter` interface + normalized `QueueJob`/`JobContext` types |
+| Config        | `@groot/jobs/server/config`        | Configuration from `config.yml`                                        |
+| Client        | `@groot/jobs/server/client`        | Constructs the active adapter (pg-boss or honker)                      |
+| Queue         | `@groot/jobs/server/queue`         | Job queueing and scheduling                                            |
+| Queries       | `@groot/jobs/server/queries`       | Job inspection and management                                          |
+| Worker        | `@groot/jobs/server/worker`        | Handler registration and execution                                     |
+| Error Handler | `@groot/jobs/server/error-handler` | Sentry capture + logging                                               |
+| Logger        | `@groot/jobs/server/logger`        | `createJobLogger` (DB-persisted)                                       |
+| Routes        | `@groot/jobs/server/routes`        | HTTP admin API (`/api/v1/jobs`)                                        |
 
 The public API is also re-exported from the barrel `@groot/jobs/server`.
 
@@ -67,7 +70,7 @@ starts no workers — intended only for enqueue-only processes.
 | `todo-cleanup` | `app/todo/todo.jobs.ts` | Deletes completed todos older than `daysToKeep` (default 30) |
 | `todo-summary` | `app/todo/todo.jobs.ts` | Logs aggregate todo stats                                    |
 
-Each handler receives `{ id, data }` from PgBoss.
+Each handler receives a normalized `JobContext` (`{ id, data }`) from the queue adapter, regardless of engine.
 
 ## Queueing Jobs
 
@@ -132,7 +135,7 @@ Configured via `config.yml` `jobs:` section (read in `@groot/jobs/server/config`
 
 - **Logs**: Pino outputs job lifecycle events (queued, started, errors, completion); job logs persist to the `job_logs` table via `createJobLogger`
 - **Sentry**: Captures exceptions with tags (`component=job_queue`, `jobName`)
-- **Database**: Inspect directly via `SELECT * FROM pgboss.job` (queue) or `job_logs` (persisted logs)
+- **Database**: Inspect directly — on Postgres `SELECT * FROM pgboss.job` (queue) or `job_logs` (persisted logs); on SQLite the live queue is `_honker_live` and dead-letter is `_honker_dead`.
 
 ## Dashboard UI
 
