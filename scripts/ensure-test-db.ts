@@ -45,13 +45,23 @@ async function main() {
   if (isPostgres) {
     const { ensureTestDatabase, dockerDb } = await import("./lib/docker-db.js");
     const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
-    const port = process.env.LOCAL_DB_DOCKER_PORT
-      ? Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10)
-      : undefined;
-    if (port !== undefined && Number.isNaN(port)) {
-      throw new Error(
-        `LOCAL_DB_DOCKER_PORT is set to a non-numeric value "${process.env.LOCAL_DB_DOCKER_PORT}" — refusing to guess.`,
-      );
+
+    // Derive the Postgres port from the explicitly-configured TEST_DATABASE_URL
+    // (set by CI / the test:postgres script) when present, falling back to
+    // LOCAL_DB_DOCKER_PORT and then the docker-db default (5433). This keeps a
+    // single source of truth: a CI service container on port 5432 is detected
+    // via the URL rather than silently probed on the wrong port.
+    let port: number | undefined;
+    if (process.env.LOCAL_DB_DOCKER_PORT) {
+      port = Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10);
+      if (Number.isNaN(port)) {
+        throw new Error(
+          `LOCAL_DB_DOCKER_PORT is set to a non-numeric value "${process.env.LOCAL_DB_DOCKER_PORT}" — refusing to guess.`,
+        );
+      }
+    } else if (dbUrl && /^postgres(ql)?:\/\//i.test(dbUrl)) {
+      const parsed = new URL(dbUrl);
+      if (parsed.port) port = Number.parseInt(parsed.port, 10);
     }
 
     const result = await ensureTestDatabase({ projectName: pkg.name, port });

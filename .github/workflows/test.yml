@@ -1,0 +1,96 @@
+# Runs the full test suite on BOTH database engines so a regression that only
+# shows up on one engine (e.g. a SQLite-only adapter, a Postgres-only raw SQL
+# query, or a Prisma client generated for the wrong provider) is caught before
+# merge. SQLite needs no infra; the Postgres leg uses a service container.
+#
+# The dual-engine design means application code is engine-agnostic, but the
+# *generated Prisma client* and the *queue adapter* are engine-specific, so
+# both must be exercised. See docs/database-engines.md.
+
+name: Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (${{ matrix.engine }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [sqlite, postgres]
+
+    # The Postgres leg needs a live Postgres to run migrations + tests against.
+    # SQLite needs nothing — it writes to a file under tmp/.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: groot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_ENGINE: ${{ matrix.engine }}
+      # Postgres: point at the service container. The test guard requires a
+      # localhost host + a _test database name. SQLite: a file under tmp/
+      # (validated by the guard). ensure-test-db.ts detects the reachable
+      # Postgres and skips Docker container management.
+      DATABASE_URL: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || 'file:./tmp/test.db' }}
+      TEST_DATABASE_URL: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || 'file:./tmp/test.db' }}
+      DATABASE_URL_DIRECT: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || '' }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Generate the Prisma client for THIS engine. The generated client embeds
+      # the datasource provider, so a client generated for sqlite is
+      # incompatible with the postgres driver adapter (and vice versa).
+      # ensure-test-db.ts (pretest) regenerates too, but doing it here makes
+      # failures easier to attribute.
+      - name: Generate Prisma client (${{ matrix.engine }})
+        run: pnpm exec varlock run -- prisma generate
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Lint & format check
+        run: pnpm check
+
+      # `pnpm test` runs pretest (ensure-test-db.ts) which creates/migrates the
+      # test DB for the active engine, then runs vitest.
+      - name: Run tests (${{ matrix.engine }})
+        run: pnpm test
+
+      - name: Build
+        env:
+          DATABASE_URL: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || 'file:./tmp/build.db' }}
+        run: pnpm build

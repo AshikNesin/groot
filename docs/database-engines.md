@@ -19,7 +19,17 @@ DATABASE_ENGINE=postgres pnpm dev
 # Tests: same switch. SQLite → ./tmp/test.db, Postgres → isolated *_test DB.
 pnpm test
 DATABASE_ENGINE=postgres pnpm test
+
+# Or use the engine-specific helpers (run both with `pnpm test:all`):
+pnpm test:sqlite
+pnpm test:postgres
 ```
+
+CI runs both engines on every PR and push to main via a matrix workflow
+(`.github/workflows/test.yml`). The Postgres leg uses a `pgvector/pgvector:pg18`
+service container; SQLite needs no infra. The workflow also typechecks, lints,
+and builds per engine — the generated Prisma client is engine-specific, so each
+engine must be exercised independently.
 
 ## How the engine is selected
 

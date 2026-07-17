@@ -291,6 +291,39 @@ async function databaseExists(dbName: string): Promise<boolean> {
 }
 
 /**
+ * Check whether a Postgres is reachable at localhost:port AND has the given
+ * database, by connecting directly with the `pg` driver (no Docker CLI).
+ *
+ * Used by {@link ensureTestDatabase} to detect a pre-provisioned Postgres
+ * (e.g. a CI service container) and skip Docker container management.
+ * Returns false on any connection error so the caller falls back to the
+ * Docker-managed path.
+ */
+async function testDatabaseExists(dbName: string, port: number): Promise<boolean> {
+  try {
+    // Resolve `pg` from @groot/core (it's a dependency there, not at the repo
+    // root). createRequire lets us resolve a CJS module path from this ESM
+    // module; the dynamic import then loads it. This keeps the optional
+    // pg dependency out of the SQLite engine, which never reaches this code.
+    const { createRequire } = await import("node:module");
+    const requireFromHere = createRequire(import.meta.url);
+    const pgPath = requireFromHere.resolve("pg", {
+      paths: [`${process.cwd()}/packages/core`],
+    });
+    const { Client } = await import(pgPath);
+    const client = new Client({
+      connectionString: buildConnectionString(dbName, port),
+      connectionTimeoutMillis: 2000,
+    });
+    await client.connect();
+    await client.end();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Create a database if it doesn't exist
  */
 async function ensureDatabase(dbName: string): Promise<boolean> {
@@ -401,6 +434,21 @@ export async function ensurePostgresContainer(options: DockerDbOptions): Promise
 export async function ensureTestDatabase(options: DockerDbOptions): Promise<DockerDbResult> {
   const { projectName, port = DEFAULT_PORT } = options;
   const dbName = `${sanitizeDbName(projectName)}_test`;
+
+  // CI / pre-provisioned Postgres fast path: if a Postgres is already
+  // reachable at the configured port AND the test database already exists,
+  // skip all Docker container management. This lets the test suite run against
+  // a GitHub Actions `postgres` service container (or any external Postgres)
+  // without the Docker CLI. We still verify the DB exists so a misconfigured
+  // URL fails loudly instead of silently creating a stray container.
+  if (await testDatabaseExists(dbName, port)) {
+    return {
+      connectionString: buildConnectionString(dbName, port),
+      containerName: "(external)",
+      databaseName: dbName,
+    };
+  }
+
   return ensureContainerWithDatabase(dbName, port, "test");
 }
 
