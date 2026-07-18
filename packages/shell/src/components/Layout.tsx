@@ -1,7 +1,9 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useAuthStore } from "@groot/shell/store/auth";
 import { CommandPalette } from "./CommandPalette";
+import { SidebarNav, type NavItem } from "./SidebarNav";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,13 +14,19 @@ import {
 } from "@groot/ui/dropdown-menu";
 import { Button } from "@groot/ui/button";
 import { cn } from "@groot/ui/lib/utils";
-import { UserCircle, LogOut, Settings as SettingsIcon } from "lucide-react";
+import {
+  UserCircle,
+  LogOut,
+  Settings as SettingsIcon,
+  PanelLeftClose,
+  PanelLeft,
+} from "lucide-react";
 
 export interface LayoutProps {
   /**
-   * Custom header / nav. When omitted, the default shell header renders
-   * (logo + command palette + user menu). Pass your own `<Navbar/>` to brand
-   * the app shell without reimplementing the surrounding layout.
+   * Custom header / nav. When omitted, the default shell sidebar renders
+   * (logo + command palette + user menu). Pass your own to brand the app shell
+   * without reimplementing the surrounding layout.
    */
   header?: ReactNode;
   /**
@@ -34,75 +42,114 @@ export interface LayoutProps {
 }
 
 /**
- * App shell: sticky header on top, routed `<Outlet/>` below. Apps can inject a
- * custom `header` (e.g. a finance `<Navbar/>`) and toggle main padding without
- * forking the whole layout.
+ * App shell: a dub.sh-style collapsible sidebar on the left, routed `<Outlet/>`
+ * on the right inside a rounded content card on a muted canvas. Apps can inject
+ * a custom `header` to fully replace the sidebar.
  */
 export function Layout({ header, padded = true, mainClassName, className }: LayoutProps) {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
+  const navItems: NavItem[] = [
+    { name: "Todos", href: "/todos", icon: "check-square" },
+    { name: "Storage", href: "/storage", icon: "hard-drive" },
+    { name: "Jobs", href: "/jobs", icon: "briefcase" },
+    { name: "Settings", href: "/settings", icon: "settings" },
+  ];
+
   return (
-    <div className={cn("min-h-screen bg-background text-foreground flex flex-col", className)}>
+    <div className={cn("min-h-screen bg-muted/40 text-foreground", className)}>
       {header ?? (
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 sticky top-0 w-full">
-          <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-4">
-              <Link
-                to="/"
-                className="text-sm font-semibold tracking-tight transition-colors hover:text-primary"
-              >
-                Groot
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="w-full sm:w-64">
-                <CommandPalette />
-              </div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
-                    <UserCircle className="h-5 w-5 text-muted-foreground" />
-                    <span className="sr-only">Toggle user menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">Account</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/settings")}>
-                    <SettingsIcon className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </header>
+        <SidebarNav
+          items={navItems}
+          pathname={location.pathname}
+          open={sidebarOpen}
+          onOpenChange={setSidebarOpen}
+          footer={
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-accent"
+                >
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    {user?.email?.[0]?.toUpperCase() ?? "?"}
+                  </span>
+                  <span className="hidden min-w-0 flex-1 flex-col lg:flex">
+                    <span className="truncate text-sm font-medium leading-tight">
+                      {user?.email ?? "Account"}
+                    </span>
+                    <span className="truncate text-xs leading-tight text-muted-foreground">
+                      Free plan
+                    </span>
+                  </span>
+                  <UserCircle className="hidden size-4 text-muted-foreground lg:block" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Account</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <SettingsIcon className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          }
+        />
       )}
 
-      <main className={cn("flex-1 w-full", padded && "px-4 sm:px-6 lg:px-8 py-8", mainClassName)}>
-        <Outlet />
-      </main>
+      {/* Main column: sidebar offset on desktop, full-width on mobile. */}
+      <div className="lg:pl-56">
+        {/* Top bar — mobile (sidebar toggle + brand + search). */}
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur lg:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen((o) => !o)}
+            aria-label="Toggle sidebar"
+          >
+            {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeft className="size-5" />}
+          </Button>
+          <Link to="/" className="text-sm font-semibold tracking-tight">
+            Groot
+          </Link>
+          <div className="ml-auto w-full max-w-xs">
+            <CommandPalette />
+          </div>
+        </header>
+
+        {/* Desktop slim toolbar with command palette. */}
+        <header className="hidden h-14 items-center justify-end border-b border-border bg-background/60 px-6 lg:flex">
+          <div className="w-full max-w-md">
+            <CommandPalette />
+          </div>
+        </header>
+
+        <main className={cn("w-full", padded && "px-4 pb-10 pt-6 sm:px-6 lg:px-8", mainClassName)}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
