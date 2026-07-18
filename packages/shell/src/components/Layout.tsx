@@ -14,7 +14,13 @@ import {
 } from "@groot/ui/dropdown-menu";
 import { Button } from "@groot/ui/button";
 import { cn } from "@groot/ui/lib/utils";
-import { UserCircle, LogOut, Settings as SettingsIcon, PanelLeft } from "lucide-react";
+import {
+  UserCircle,
+  LogOut,
+  Settings as SettingsIcon,
+  PanelLeftClose,
+  PanelLeft,
+} from "lucide-react";
 
 const SIDEBAR_COLLAPSED_KEY = "groot.sidebar.collapsed";
 
@@ -38,11 +44,9 @@ export interface LayoutProps {
 }
 
 /**
- * App shell: a Cursor/dub.sh-style collapsible sidebar on the left, routed
- * `<Outlet/>` on the right. The sidebar header holds the logo, a collapse
- * toggle, and a command-palette trigger; the nav is a compact list of icon
- * rows; the footer is a user menu. Collapsing animates the width to an icon
- * rail (150ms); on mobile the sidebar slides in as an overlay drawer.
+ * App shell: a dub.sh-style collapsible sidebar on the left, routed `<Outlet/>`
+ * on the right. The sidebar collapses (desktop) into an icon rail with a
+ * 300ms width animation; on mobile it slides in as an overlay drawer.
  */
 export function Layout({ header, padded = true, mainClassName, className }: LayoutProps) {
   const logout = useAuthStore((state) => state.logout);
@@ -60,6 +64,14 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     if (stored === "true") setCollapsed(true);
   }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      return next;
+    });
+  };
 
   const handleLogout = () => {
     logout();
@@ -90,24 +102,24 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                   type="button"
                   title={collapsed ? (user?.email ?? "Account") : undefined}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-md p-1 text-left transition-colors hover:bg-accent",
-                    collapsed && "lg:justify-center",
+                    "flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-accent",
+                    collapsed && "lg:justify-center lg:p-0",
                   )}
                 >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                     {user?.email?.[0]?.toUpperCase() ?? "?"}
                   </span>
-                  <span className="hidden min-w-0 flex-1 flex-col leading-tight lg:flex">
-                    <span className="truncate text-sm font-medium">
-                      {user?.email?.split("@")[0] ?? "Account"}
+                  <span className="hidden min-w-0 flex-1 flex-col lg:flex">
+                    <span className="truncate text-sm font-medium leading-tight">
+                      {user?.email ?? "Account"}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {user?.email ?? ""}
+                    <span className="truncate text-xs leading-tight text-muted-foreground">
+                      Free plan
                     </span>
                   </span>
                   <UserCircle
                     className={cn(
-                      "hidden size-4 shrink-0 text-muted-foreground lg:block",
+                      "hidden size-4 text-muted-foreground lg:block",
                       collapsed && "lg:hidden",
                     )}
                   />
@@ -142,19 +154,19 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           full-width on mobile. */}
       <div
         className={cn(
-          "transition-[padding] duration-150 ease-in-out",
-          collapsed ? "lg:pl-16" : "lg:pl-64",
+          "transition-[padding] duration-300 ease-in-out",
+          collapsed ? "lg:pl-16" : "lg:pl-56",
         )}
       >
         {/* Top bar — mobile (sidebar toggle + brand + search). */}
-        <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur lg:hidden">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen((o) => !o)}
             aria-label="Toggle sidebar"
           >
-            <PanelLeft className="size-5" />
+            {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeft className="size-5" />}
           </Button>
           <Link to="/" className="text-sm font-semibold tracking-tight">
             Groot
@@ -164,8 +176,16 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           </div>
         </header>
 
-        {/* Desktop slim toolbar with command palette. */}
-        <header className="hidden h-12 items-center justify-end gap-4 border-b border-border bg-background/60 px-6 lg:flex">
+        {/* Desktop slim toolbar: collapse toggle + command palette. */}
+        <header className="hidden h-14 items-center justify-between gap-4 border-b border-border bg-background/60 px-6 lg:flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeft className="size-5" /> : <PanelLeftClose className="size-5" />}
+          </Button>
           <div className="w-full max-w-md">
             <CommandPalette />
           </div>

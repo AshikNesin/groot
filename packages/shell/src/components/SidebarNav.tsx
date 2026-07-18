@@ -7,11 +7,8 @@ import {
   Briefcase,
   Settings as SettingsIcon,
   LayoutDashboard,
-  PanelLeftClose,
-  PanelLeft,
   type LucideIcon,
 } from "lucide-react";
-import { CommandPalette } from "./CommandPalette";
 
 export type NavIcon = "dashboard" | "check-square" | "hard-drive" | "briefcase" | "settings";
 
@@ -44,12 +41,14 @@ interface SidebarNavProps {
 }
 
 /**
- * Collapsible left sidebar — Cursor/dub.sh style.
+ * Collapsible left sidebar — dub.sh style.
  *
- * Layout: a compact header row (logo + toggle + search), a primary nav, a
- * flexible scroll region, and a user footer. On desktop the width animates
- * between `w-64` (expanded) and `w-16` (icon rail) over 150ms; labels fade
- * and clip via `overflow-hidden`. On mobile it slides in as an overlay drawer.
+ * Two independent states:
+ *  - `open` (mobile only): slides the drawer in/out as an overlay.
+ *  - `collapsed` (desktop only): animates the width between `w-56` and `w-16`,
+ *    fading out labels into an icon rail. Both transitions share a 300ms
+ *    ease-in-out curve so the sidebar and the main content padding stay in
+ *    sync.
  */
 export function SidebarNav({
   items,
@@ -57,7 +56,6 @@ export function SidebarNav({
   open,
   onOpenChange,
   collapsed,
-  onCollapsedChange,
   footer,
 }: SidebarNavProps) {
   const isActive = (item: NavItem) =>
@@ -78,64 +76,36 @@ export function SidebarNav({
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-border bg-card",
           // Mobile: fixed width, slide via translate.
-          "w-64 transition-transform duration-150 ease-in-out",
+          "w-56 transition-transform duration-300 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full",
           // Desktop: always visible, animate width between rail and full.
-          "lg:translate-x-0 lg:transition-[width] lg:duration-150 lg:ease-in-out",
-          collapsed ? "lg:w-16" : "lg:w-64",
+          "lg:translate-x-0 lg:transition-[width] lg:duration-300 lg:ease-in-out",
+          collapsed ? "lg:w-16" : "lg:w-56",
         )}
       >
-        {/* Header: logo + (toggle / search). */}
-        <div className="flex h-12 shrink-0 items-center justify-between gap-1 px-2">
+        {/* Brand. */}
+        <div className="flex h-14 shrink-0 items-center gap-2 px-4 lg:px-3">
           <Link
             to="/"
             onClick={() => onOpenChange(false)}
-            className="flex min-w-0 items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold tracking-tight transition-opacity hover:opacity-80"
+            className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight"
           >
-            <span className="flex size-5 shrink-0 items-center justify-center text-primary">
-              <LayoutDashboard className="size-5" />
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <LayoutDashboard className="size-4" />
             </span>
             <span
               className={cn(
-                "truncate transition-opacity duration-150",
+                "truncate transition-opacity duration-200",
                 collapsed ? "lg:opacity-0 lg:invisible" : "opacity-100",
               )}
             >
               Groot
             </span>
           </Link>
-
-          {/* Expanded: search field + collapse toggle. Collapsed: just search icon. */}
-          <div className={cn("flex items-center gap-0.5", collapsed ? "lg:hidden" : "flex")}>
-            <div className="hidden lg:block lg:w-40">
-              <CommandPalette />
-            </div>
-            <button
-              type="button"
-              onClick={() => onCollapsedChange(true)}
-              aria-label="Collapse sidebar"
-              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <PanelLeftClose className="size-4" />
-            </button>
-          </div>
-
-          {/* Collapsed-rail: search icon button (expand on click). */}
-          <button
-            type="button"
-            onClick={() => onCollapsedChange(false)}
-            aria-label="Expand sidebar"
-            className={cn(
-              "hidden size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-              collapsed ? "lg:inline-flex" : "lg:hidden",
-            )}
-          >
-            <PanelLeft className="size-4" />
-          </button>
         </div>
 
-        {/* Primary nav. */}
-        <nav className="flex flex-col gap-px px-2 pb-1">
+        {/* Nav. */}
+        <nav className="flex-1 space-y-1 px-3 py-2">
           {items.map((item) => {
             const Icon = ICONS[item.icon] ?? LayoutDashboard;
             const active = isActive(item);
@@ -146,8 +116,8 @@ export function SidebarNav({
                 onClick={() => onOpenChange(false)}
                 title={collapsed ? item.name : undefined}
                 className={cn(
-                  "group flex h-8 items-center gap-2 rounded-md px-2 text-sm font-medium transition-colors",
-                  collapsed && "lg:justify-center",
+                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  collapsed && "lg:justify-center lg:px-0",
                   active
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
@@ -155,7 +125,7 @@ export function SidebarNav({
               >
                 <Icon
                   className={cn(
-                    "size-3.5 shrink-0",
+                    "size-4 shrink-0",
                     active
                       ? "text-foreground"
                       : "text-muted-foreground group-hover:text-foreground",
@@ -163,7 +133,7 @@ export function SidebarNav({
                 />
                 <span
                   className={cn(
-                    "truncate transition-opacity duration-150",
+                    "flex-1 whitespace-nowrap transition-opacity duration-200",
                     collapsed ? "lg:w-0 lg:opacity-0 lg:overflow-hidden" : "opacity-100",
                   )}
                 >
@@ -176,7 +146,7 @@ export function SidebarNav({
         </nav>
 
         {/* Footer (user menu). */}
-        {footer && <div className="mt-auto shrink-0 border-t border-border p-2">{footer}</div>}
+        {footer && <div className="shrink-0 border-t border-border p-3">{footer}</div>}
       </aside>
     </>
   );
