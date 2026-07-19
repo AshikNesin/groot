@@ -91,7 +91,7 @@ export function SidebarNav({
         )}
       >
         {/* Collapsed rail: expand toggle + centered nav icons only. */}
-        {collapsed ? (
+        {collapsed && !open ? (
           <>
             <div className="flex h-14 shrink-0 items-center justify-center px-3 lg:flex">
               <button
@@ -100,7 +100,7 @@ export function SidebarNav({
                 aria-label="Expand sidebar"
                 className={ICON_BTN}
               >
-                <PanelLeft className="size-4" />
+                <PanelLeft className="size-5" />
               </button>
             </div>
             <nav className="flex flex-col items-center gap-1 px-2 py-2">
@@ -162,7 +162,7 @@ export function SidebarNav({
                   aria-label="Close sidebar"
                   className={ICON_BTN}
                 >
-                  <PanelLeftClose className="size-4" />
+                  <PanelLeftClose className="size-5" />
                 </button>
               </div>
             </div>
