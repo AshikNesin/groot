@@ -51,10 +51,10 @@ const ICON_BTN =
  *
  * Two independent states:
  *  - `open` (mobile only): slides the drawer in/out as an overlay.
- *  - `collapsed` (desktop only): collapses to a minimal icon rail. When
- *    collapsed, *only* the expand toggle is shown — the brand, nav, and footer
- *    are hidden entirely (not just faded). Both the width and the main content
- *    padding animate over 300ms ease-in-out so they stay in sync.
+ *  - `collapsed` (desktop only): collapses to a minimal icon rail — the expand
+ *    toggle and centered nav icons only. Brand text, labels, and the footer
+ *    are hidden. Both the width and the main content padding animate over
+ *    300ms ease-in-out so they stay in sync.
  */
 export function SidebarNav({
   items,
@@ -90,18 +90,50 @@ export function SidebarNav({
           collapsed ? "lg:w-16" : "lg:w-56",
         )}
       >
-        {/* Collapsed rail: only the expand toggle is rendered. */}
+        {/* Collapsed rail: expand toggle + centered nav icons only. */}
         {collapsed ? (
-          <div className="flex h-14 shrink-0 items-center justify-center px-3 lg:flex">
-            <button
-              type="button"
-              onClick={() => onCollapsedChange(false)}
-              aria-label="Expand sidebar"
-              className={ICON_BTN}
-            >
-              <PanelLeft className="size-4" />
-            </button>
-          </div>
+          <>
+            <div className="flex h-14 shrink-0 items-center justify-center px-3 lg:flex">
+              <button
+                type="button"
+                onClick={() => onCollapsedChange(false)}
+                aria-label="Expand sidebar"
+                className={ICON_BTN}
+              >
+                <PanelLeft className="size-4" />
+              </button>
+            </div>
+            <nav className="flex flex-col items-center gap-1 px-2 py-2">
+              {items.map((item) => {
+                const Icon = ICONS[item.icon] ?? LayoutDashboard;
+                const active = isActive(item);
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={() => onOpenChange(false)}
+                    title={item.name}
+                    aria-label={item.name}
+                    className={cn(
+                      "group flex size-9 items-center justify-center rounded-lg transition-colors",
+                      active
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0",
+                        active
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover:text-foreground",
+                      )}
+                    />
+                  </Link>
+                );
+              })}
+            </nav>
+          </>
         ) : (
           <>
             {/* Expanded header: brand on the left, collapse + search on the right. */}
