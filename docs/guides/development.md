@@ -4,7 +4,6 @@
 
 ```bash
 pnpm dev              # Express + Vite dev servers (hot reload)
-pnpm dev:docker       # Start with Docker PostgreSQL
 pnpm lint             # Vite+ (Oxlint) linting
 pnpm format           # Vite+ (Oxfmt) formatting
 pnpm check            # Lint and format check

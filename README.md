@@ -81,7 +81,6 @@ pnpm check            # lint + format + typecheck
 pnpm test             # run tests
 pnpm test:e2e         # playwright e2e tests
 pnpm test:all         # run tests on both SQLite and PostgreSQL
-pnpm docker:db        # manage Docker PostgreSQL (--stop/--reset/--status)
 ```
 
 ## Docs

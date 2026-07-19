@@ -22,12 +22,12 @@ pnpm test:all         # both, sequentially
 ```
 
 The `pretest` hook (`scripts/ensure-test-db.ts`) provisions the right test DB
-for the active engine: it creates/migrates a `*_test` database on Postgres
-(reusing the local Docker container, or a pre-provisioned Postgres in CI) and
-ensures the `./tmp/test.db` file exists on SQLite. It also regenerates the
-Prisma client for the active engine — the generated client embeds the
-datasource provider, so switching engines without regenerating causes a
-runtime driver-adapter mismatch.
+for the active engine: it migrates a Postgres test DB reached via `DATABASE_URL`
+(a pre-provisioned Postgres in CI, or your own local Postgres) and ensures the
+`./tmp/test.db` file exists on SQLite. It also regenerates the Prisma client
+for the active engine — the generated client embeds the datasource provider, so
+switching engines without regenerating causes a runtime driver-adapter
+mismatch.
 
 CI enforces both engines on every PR and push to `main` via a matrix workflow
 (`.github/workflows/test.yml`): the Postgres leg uses a `pgvector/pgvector:pg18`

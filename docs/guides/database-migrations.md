@@ -218,10 +218,6 @@ This is normal if:
 Reset the local database:
 
 ```bash
-# With Docker PostgreSQL
-pnpm docker:db -- --reset
-
-# Or manually
 pnpm prisma migrate reset
 ```
 

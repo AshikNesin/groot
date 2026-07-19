@@ -52,8 +52,8 @@ jobs:
       DATABASE_ENGINE: ${{ matrix.engine }}
       # Postgres: point at the service container. The test guard requires a
       # localhost host + a _test database name. SQLite: a file under tmp/
-      # (validated by the guard). ensure-test-db.ts detects the reachable
-      # Postgres and skips Docker container management.
+      # (validated by the guard). ensure-test-db.ts runs prisma generate +
+      # migrate deploy against this URL (no container management).
       DATABASE_URL: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || 'file:./tmp/test.db' }}
       TEST_DATABASE_URL: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || 'file:./tmp/test.db' }}
       DATABASE_URL_DIRECT: ${{ matrix.engine == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/groot_test' || '' }}

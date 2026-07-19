@@ -4,12 +4,14 @@
  * Branches on DATABASE_ENGINE:
  *  - sqlite (default): delete any stale file (for --reset), mkdir tmp/, then
  *    `prisma migrate deploy` against it. No container to manage.
- *  - postgres: ensure the isolated *_test database in the Docker container,
- *    optionally reset it, then `prisma migrate deploy`.
+ *  - postgres: the caller provisions the test DB (CI service container, or an
+ *    external Postgres reached via DATABASE_URL). This script only resets it
+ *    (when asked) and runs `prisma migrate deploy`. It no longer manages a
+ *    local Docker container — run your own Postgres and point DATABASE_URL at it.
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { rmSync, mkdirSync, readFileSync } from "node:fs";
+import { rmSync, mkdirSync } from "node:fs";
 import { dirname, resolve, isAbsolute } from "node:path";
 import { isPostgres } from "../packages/core/src/database/engine.ts";
 
@@ -34,6 +36,40 @@ function dbFilePath(url: string): string | null {
   return isAbsolute(stripped) ? stripped : resolve(process.cwd(), stripped);
 }
 
+/** Drop and recreate a Postgres database by connecting with the `pg` driver. */
+async function resetPostgresDatabase(connectionString: string): Promise<void> {
+  // Resolve `pg` from @groot/core (it's a dependency there, not at the repo root).
+  const { createRequire } = await import("node:module");
+  const requireFromHere = createRequire(import.meta.url);
+  const pgPath = requireFromHere.resolve("pg", {
+    paths: [`${process.cwd()}/packages/core`],
+  });
+  const { Client } = await import(pgPath);
+
+  const url = new URL(connectionString);
+  const dbName = url.pathname.replace(/^\//, "");
+  if (!dbName) throw new Error(`Cannot derive database name from ${connectionString}`);
+
+  // Connect to the maintenance DB ("postgres") to drop+recreate.
+  const adminUrl = new URL(connectionString);
+  adminUrl.pathname = "/postgres";
+  const admin = new Client({
+    connectionString: adminUrl.toString(),
+    connectionTimeoutMillis: 5000,
+  });
+  await admin.connect();
+  try {
+    await admin.query(
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`,
+      [dbName],
+    );
+    await admin.query(`DROP DATABASE IF EXISTS "${dbName}"`);
+    await admin.query(`CREATE DATABASE "${dbName}"`);
+  } finally {
+    await admin.end();
+  }
+}
+
 async function main() {
   const shouldReset = process.argv.includes("--reset");
   const dbUrl = process.env.TEST_DATABASE_URL!;
@@ -43,36 +79,11 @@ async function main() {
   let connectionString = dbUrl;
 
   if (isPostgres) {
-    const { ensureTestDatabase, dockerDb } = await import("./lib/docker-db.js");
-    const pkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
-
-    // Derive the Postgres port from the explicitly-configured TEST_DATABASE_URL
-    // (set by CI / the test:postgres script) when present, falling back to
-    // LOCAL_DB_DOCKER_PORT and then the docker-db default (5433). This keeps a
-    // single source of truth: a CI service container on port 5432 is detected
-    // via the URL rather than silently probed on the wrong port.
-    let port: number | undefined;
-    if (process.env.LOCAL_DB_DOCKER_PORT) {
-      port = Number.parseInt(process.env.LOCAL_DB_DOCKER_PORT, 10);
-      if (Number.isNaN(port)) {
-        throw new Error(
-          `LOCAL_DB_DOCKER_PORT is set to a non-numeric value "${process.env.LOCAL_DB_DOCKER_PORT}" — refusing to guess.`,
-        );
-      }
-    } else if (dbUrl && /^postgres(ql)?:\/\//i.test(dbUrl)) {
-      const parsed = new URL(dbUrl);
-      if (parsed.port) port = Number.parseInt(parsed.port, 10);
-    }
-
-    const result = await ensureTestDatabase({ projectName: pkg.name, port });
-    connectionString = result.connectionString;
-    console.log(`✅ Test database ready: ${result.databaseName}`);
-    console.log(`   Container: ${result.containerName}\n`);
-
+    console.log(`✅ Using external Postgres: ${dbUrl}\n`);
     if (shouldReset) {
       console.log("🗑️  Resetting test database (drop + recreate)...\n");
-      await dockerDb.reset(result.databaseName);
-      console.log("✅ Test database reset!\n");
+      await resetPostgresDatabase(dbUrl);
+      console.log("   ✅ Test database reset!\n");
     }
   } else {
     const filePath = dbFilePath(dbUrl);

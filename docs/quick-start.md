@@ -267,7 +267,6 @@ await apiClient.delete("/todos/1");
 ```bash
 # Development
 pnpm dev              # Start dev server
-pnpm dev:docker       # Start with Docker PostgreSQL
 
 # Database
 pnpm prisma generate  # Generate Prisma client

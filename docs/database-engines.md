@@ -13,8 +13,8 @@ The job queue runs on both engines: pg-boss on Postgres, honker on SQLite
 # Default: SQLite. DB lives in ./data/dev.db (auto-created).
 pnpm dev
 
-# Opt into Postgres. Uses the local Docker container (or DATABASE_URL).
-DATABASE_ENGINE=postgres pnpm dev
+# Opt into Postgres. Provide your own Postgres via DATABASE_URL.
+DATABASE_URL=postgresql://user:pass@host:5432/db DATABASE_ENGINE=postgres pnpm dev
 
 # Tests: same switch. SQLite → ./tmp/test.db, Postgres → isolated *_test DB.
 pnpm test
@@ -43,7 +43,7 @@ in `packages/core/src/database/engine.ts`, which exports `dbEngine`,
 | `packages/core/src/database/client.ts`        | `PrismaBetterSqlite3` vs `PrismaPg` (+ `pg.Pool`)                            |
 | `packages/core/src/kv/store.ts`               | `@keyv/sqlite` vs `@keyv/postgres`                                           |
 | `apps/web/src/server/index.ts`                | skips `initJobQueue()` when SQLite                                           |
-| `scripts/dev.ts`, `scripts/ensure-test-db.ts` | mkdir+migrate (SQLite) vs Docker container+migrate (Postgres)                |
+| `scripts/dev.ts`, `scripts/ensure-test-db.ts` | mkdir+migrate (SQLite) vs migrate against an external Postgres (Postgres)    |
 | `tests/server/_db-guard.ts`                   | path-under-`tmp/` check (SQLite) vs `localhost`+`_test` URL check (Postgres) |
 | `tests/e2e/global-setup.ts`                   | picks the adapter for the seed client                                        |
 | `scripts/db-sync-baseline.cjs`                | picks schema + migrations paths                                              |
@@ -80,10 +80,15 @@ for Postgres but ignored for SQLite.
 `DATABASE_URL` is resolved by varlock from `.env.schema`, branching on engine
 _and_ `NODE_ENV`:
 
-| Engine   | dev                                                             | test                                   | production                          |
-| -------- | --------------------------------------------------------------- | -------------------------------------- | ----------------------------------- |
-| sqlite   | `file:./data/dev.db`                                            | `file:./tmp/test.db`                   | operator sets an absolute file path |
-| postgres | local Docker URL (`scripts/get-local-db-connection-string.cjs`) | isolated `*_test` DB in same container | operator sets a Postgres URL        |
+| Engine   | dev                          | test                                   | production                          |
+| -------- | ---------------------------- | -------------------------------------- | ----------------------------------- |
+| sqlite   | `file:./data/dev.db`         | `file:./tmp/test.db`                   | operator sets an absolute file path |
+| postgres | operator sets a Postgres URL | operator sets a Postgres URL (e.g. CI) | operator sets a Postgres URL        |
+
+Postgres has **no built-in local-dev container management** — run your own
+Postgres (Docker, OrbStack, Homebrew, a managed instance, …) and set
+`DATABASE_URL` explicitly. CI provisions a `pgvector/pgvector:pg18` service
+container for the Postgres test leg (see `.github/workflows/test.yml`).
 
 `resolveSqlitePath(url)` (exported from `packages/core/src/database/client.ts`)
 handles the `file:` prefix, relative-path resolution, and parent-dir creation
