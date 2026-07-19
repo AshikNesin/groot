@@ -12,6 +12,7 @@ import type {
   JobQueryResponse,
 } from "./types";
 import type { QueueJob } from "./adapter";
+import { getRegisteredHandlers } from "./worker";
 
 // Get all scheduled jobs
 export const getScheduledJobs = async (): Promise<ScheduledJobInfo[]> => {
@@ -34,10 +35,23 @@ export const getQueueStats = async (): Promise<Record<string, number>> => {
   return queue.getQueueStats();
 };
 
-// Get available queue names
+// Get available job/queue names — the types shown in the "Add Job" dropdown.
+//
+// This is the union of two sources:
+//   1. Registered handlers (the source of truth for triggerable job types).
+//   2. Queues the adapter knows about (jobs enqueued without a local handler).
+//
+// The merge is necessary because honker (SQLite) has no queue registry —
+// `createQueue` is a no-op and `getAvailableQueues()` only sees queues with
+// rows currently in `_honker_live`. On a fresh database the dropdown would be
+// empty despite handlers being registered. pg-boss persists queue definitions
+// on `createQueue`, so for Postgres the two sources overlap and the union is a
+// no-op.
 export const getAvailableQueues = async (): Promise<string[]> => {
   const queue = getJobQueue();
-  return queue.getAvailableQueues();
+  const adapterQueues = await queue.getAvailableQueues();
+  const registered = getRegisteredHandlers();
+  return Array.from(new Set([...adapterQueues, ...registered])).sort();
 };
 
 // Fetch jobs with filters (queue-based, for fetching from a specific queue)

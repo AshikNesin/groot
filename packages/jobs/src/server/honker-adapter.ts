@@ -100,6 +100,23 @@ function mapState(state: string): string {
   }
 }
 
+/** Reverse of {@link mapState}: dashboard state → honker internal state.
+ * Used when translating dashboard filter values into SQL WHERE clauses. */
+function toHonkerState(state: string): string {
+  switch (state) {
+    case "created":
+      return "pending";
+    case "active":
+      return "processing";
+    case "completed":
+      return "done";
+    case "failed":
+      return "dead";
+    default:
+      return state;
+  }
+}
+
 function parsePayload(raw: string | null): Record<string, unknown> {
   if (!raw) return {};
   try {
@@ -134,7 +151,7 @@ function normalizeHonkerJob(row: HonkerJobRow): QueueJob {
     singletonon: null,
     expirein: row.expires_at ? toIso(row.expires_at) : "",
     createdon: toIso(row.created_at),
-    completedon: row.state === "done" ? toIso(row.created_at) : null,
+    completedon: row.state === "done" ? toIso(row.run_at) : null,
     keepuntil: "",
     output: null,
     deadletter: null,
@@ -285,7 +302,17 @@ export class HonkerAdapter implements JobQueueAdapter {
         const batch: JobContext[] = [{ id: String(job.id), name, data: job.payload }];
         try {
           await handler(batch);
-          job.ack();
+          // Mark the job as 'done' in-place instead of calling job.ack().
+          // honker's ack() DELETEs the row, which would make completed jobs
+          // invisible to the dashboard — pg-boss keeps them with state=
+          // 'completed'. Storing the completion timestamp in run_at (no longer
+          // needed once the job is done) lets normalizeHonkerJob report an
+          // accurate completedon. The worker_id + claim guard prevents races
+          // where the claim already expired and another worker owns the job.
+          this.db.query(
+            "UPDATE _honker_live SET state = 'done', worker_id = NULL, claim_expires_at = NULL, run_at = unixepoch() WHERE id = ? AND worker_id = ? AND claim_expires_at >= unixepoch()",
+            [job.id, workerId],
+          );
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           // retry() requeues with a delay; returns false once attempts are
@@ -386,7 +413,7 @@ export class HonkerAdapter implements JobQueueAdapter {
       );
       return { jobs: dead.map(normalizeDeadJob), total: Number(total) };
     }
-    const honkerState = state === "created" ? "pending" : state === "active" ? "processing" : state;
+    const honkerState = toHonkerState(state);
     const total =
       rows<{ count: number }>(
         this.db.query("SELECT COUNT(*) as count FROM _honker_live WHERE state = ?", [honkerState]),
@@ -425,8 +452,7 @@ export class HonkerAdapter implements JobQueueAdapter {
     const where: string[] = [];
     const params: JsonValue[] = [];
     if (state) {
-      const honkerState =
-        state === "created" ? "pending" : state === "active" ? "processing" : state;
+      const honkerState = toHonkerState(state);
       where.push("state = ?");
       params.push(honkerState);
     }
@@ -465,7 +491,7 @@ export class HonkerAdapter implements JobQueueAdapter {
       this.db.query("DELETE FROM _honker_dead");
       return Number(before);
     }
-    const honkerState = state === "created" ? "pending" : state === "active" ? "processing" : state;
+    const honkerState = toHonkerState(state);
     const before =
       rows<{ count: number }>(
         this.db.query("SELECT COUNT(*) as count FROM _honker_live WHERE state = ?", [honkerState]),

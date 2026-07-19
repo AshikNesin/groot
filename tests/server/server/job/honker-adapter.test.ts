@@ -101,4 +101,50 @@ runIfSqlite("HonkerAdapter (SQLite job queue)", () => {
     expect(found?.cron).toBe("@every 1h");
     await adapter.unschedule("daily-summary");
   });
+
+  it("getAvailableQueues only returns queues with live rows (adapter-level)", async () => {
+    // This documents the honker adapter limitation that motivated the
+    // queries.ts union with registered handlers: honker has no queue registry,
+    // so getAvailableQueues() can only see queues that currently have rows in
+    // _honker_live. A queue that was only createQueue'd (never enqueued to)
+    // does NOT appear.
+    await adapter.start();
+    await adapter.createQueue("never-used");
+    const before = await adapter.getAvailableQueues();
+    expect(before).not.toContain("never-used");
+
+    // Once a job is enqueued, the queue appears.
+    await adapter.send("has-jobs", { x: 1 }, { delaySeconds: 3600 });
+    const queues = await adapter.getAvailableQueues();
+    expect(queues).toContain("has-jobs");
+    expect(queues).not.toContain("never-used");
+  });
+
+  it("completed jobs remain visible after ack (matches pg-boss behavior)", async () => {
+    // Regression: honker's job.ack() DELETEs the row, making completed jobs
+    // invisible. The adapter now marks state='done' in-place instead so the
+    // dashboard can list them — same as pg-boss.
+    let resolveWork!: () => void;
+    const workDone = new Promise<void>((r) => (resolveWork = r));
+
+    await adapter.start();
+    await adapter.createQueue("succeed-q");
+    await adapter.work("succeed-q", { pollingIntervalSeconds: 1, batchSize: 1 }, async () => {
+      resolveWork();
+    });
+
+    const jobId = await adapter.send("succeed-q", { msg: "done" });
+    await workDone;
+
+    // Give the UPDATE a tick to land.
+    await new Promise((r) => setTimeout(r, 200));
+
+    // The job should be queryable as completed.
+    const { jobs, total } = await adapter.getJobsByState("completed", 10, 0);
+    expect(total).toBeGreaterThanOrEqual(1);
+    const found = jobs.find((j) => j.id === jobId);
+    expect(found).toBeTruthy();
+    expect(found?.state).toBe("completed");
+    expect(found?.completedon).toBeTruthy();
+  });
 });
