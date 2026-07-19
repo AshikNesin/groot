@@ -103,17 +103,12 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                   </span>
                   <span
                     className={cn(
-                      "flex min-w-0 flex-1 flex-col leading-tight",
+                      "flex min-w-0 flex-1 items-center leading-tight",
                       collapsed && "lg:hidden",
                     )}
                   >
                     <span className="truncate text-sm font-medium">
-                      {user?.name?.trim() ||
-                        user?.email?.split("@")[0]?.replace(/^\w/, (c) => c.toUpperCase()) ||
-                        "Account"}
-                    </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {user?.email?.toLowerCase() ?? ""}
+                      {user?.name?.trim() || user?.email?.toLowerCase() || "Account"}
                     </span>
                   </span>
                   <MoreHorizontal
