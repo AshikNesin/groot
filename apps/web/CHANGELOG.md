@@ -1,5 +1,23 @@
 # @groot/web
 
+## 0.2.9
+
+### Patch Changes
+
+- [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Rename `*.validation.ts` to `*.schema.ts`
+
+  These files contain only Zod schemas, not validation logic, so the
+  naming was misleading. Renamed `auth`, `passkey`, `app-settings`,
+  `storage`, and `todo` validation files to `*.schema.ts` and updated
+  all imports across `@groot/core`, `@groot/web`, the docs, and
+  `AGENTS.md`. This is a pure rename — no behavior change.
+
+- Updated dependencies [[`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1), [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1), [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1), [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1)]:
+  - @groot/ui@0.2.1
+  - @groot/jobs@0.6.2
+  - @groot/shell@0.5.0
+  - @groot/core@0.7.1
+
 ## 0.2.8
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @groot/ui
 
+## 0.2.1
+
+### Patch Changes
+
+- [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Improve form field spacing and consistency
+
+  The shared `form.tsx` primitives now apply more consistent spacing
+  between fields. Updated the job dialogs (Add/Edit/Schedule) and
+  AppSettings form to use the improved form components for uniform
+  vertical rhythm across forms.
+
 ## 0.2.0
 
 ### Minor Changes
@@ -10,6 +21,7 @@
   controllers shape responses, plus a shared Form primitive.
 
   ## @groot/core
+
   - Removed the `*System` namespace barrels (`AISystem`, `AuthSystem`,
     `ErrorSystem`, `KVSystem`, plus the passkey/settings/storage equivalents).
     Callers now use direct named imports instead of convenience namespaces.
@@ -25,10 +37,12 @@
     `validation` middlewares.
 
   ## @groot/ui
+
   - Added a `Form` component (`form.tsx`) with `react-hook-form` integration and
     field helpers.
 
   ## @groot/shell
+
   - Reworked `lib/api.ts` (the `apiClient`) for simpler, more consistent request
     handling.
   - Added `useToastMutation` hook to standardize mutation + toast feedback.
@@ -37,6 +51,7 @@
     hooks to build on the new Form component and apiClient.
 
   ## @groot/jobs
+
   - Refactored the client API layer (`api.ts`), `useJobs`, `useJobDetail`, and
     `JobsTable` to align with the new apiClient patterns.
 

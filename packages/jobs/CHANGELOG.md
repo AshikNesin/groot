@@ -1,5 +1,27 @@
 # @groot/jobs
 
+## 0.6.2
+
+### Patch Changes
+
+- [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Improve form field spacing and consistency
+
+  The shared `form.tsx` primitives now apply more consistent spacing
+  between fields. Updated the job dialogs (Add/Edit/Schedule) and
+  AppSettings form to use the improved form components for uniform
+  vertical rhythm across forms.
+
+- [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Truncate job IDs in the jobs list and toasts
+
+  Job IDs are now shown truncated to 6 characters in the jobs list, and
+  the same `formatJobId` helper is reused for job IDs in toasts so the
+  short form is consistent everywhere a job is referenced.
+
+- Updated dependencies [[`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1), [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1), [`b0a391b`](https://github.com/AshikNesin/groot/commit/b0a391b85274ab8cf2f6837b8dda4dadf6f716a1)]:
+  - @groot/ui@0.2.1
+  - @groot/shell@0.5.0
+  - @groot/core@0.7.1
+
 ## 0.6.1
 
 ### Patch Changes
