@@ -8,14 +8,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@groot/ui/dropdown-menu";
 import { Button } from "@groot/ui/button";
 import { cn } from "@groot/ui/lib/utils";
 import {
-  UserCircle,
+  MoreHorizontal,
   LogOut,
   Settings as SettingsIcon,
   HardDrive,
@@ -96,34 +94,36 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                   type="button"
                   title={collapsed ? (user?.email ?? "Account") : undefined}
                   className={cn(
-                    "flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-accent",
-                    collapsed && "lg:justify-center lg:p-0",
+                    "flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent",
+                    collapsed && "lg:justify-center lg:px-0",
                   )}
                 >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
                     {user?.email?.[0]?.toUpperCase() ?? "?"}
                   </span>
-                  <span className="hidden min-w-0 flex-1 flex-col lg:flex">
-                    <span className="truncate text-sm font-medium leading-tight">
-                      {user?.email ?? "Account"}
+                  <span
+                    className={cn(
+                      "hidden min-w-0 flex-1 flex-col leading-tight",
+                      collapsed && "lg:hidden",
+                    )}
+                  >
+                    <span className="truncate text-sm font-medium">
+                      {user?.email?.split("@")[0]?.replace(/^\w/, (c) => c.toUpperCase()) ??
+                        "Account"}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user?.email ?? ""}
                     </span>
                   </span>
-                  <UserCircle
+                  <MoreHorizontal
                     className={cn(
-                      "hidden size-4 text-muted-foreground lg:block",
+                      "size-4 shrink-0 text-muted-foreground",
                       collapsed && "lg:hidden",
                     )}
                   />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="top" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Account</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+              <DropdownMenuContent align="end" side="top" className="w-52">
                 <DropdownMenuItem onClick={() => navigate("/storage")}>
                   <HardDrive className="mr-2 h-4 w-4" />
                   <span>Storage</span>
