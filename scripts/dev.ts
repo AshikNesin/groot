@@ -1,15 +1,17 @@
 /**
  * Dev orchestrator script.
  *
- * SQLite-only: mkdir the data dir, migrate, seed, start tsx.
- *
- * Postgres users run their own server and set DATABASE_URL explicitly —
- * this script no longer manages a local Docker container.
+ * Branches on DATABASE_ENGINE:
+ *  - sqlite (default): mkdir the data dir, migrate, seed, start tsx.
+ *  - postgres: the user runs their own Postgres and sets DATABASE_URL/
+ *    DATABASE_ENGINE=postgres explicitly. We just migrate, seed, and start —
+ *    no container management on our end.
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve, isAbsolute } from "node:path";
+import { isPostgres } from "../packages/core/src/database/engine.ts";
 
 let devServer: ChildProcess | null = null;
 let isShuttingDown = false;
@@ -35,10 +37,19 @@ function run(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<void>
 async function main() {
   const connectionString = process.env.DATABASE_URL!;
 
-  console.log("\n🗄️  Using SQLite database\n");
-  const filePath = dbFilePath(connectionString);
-  if (filePath) {
-    mkdirSync(dirname(filePath), { recursive: true });
+  if (isPostgres) {
+    if (!connectionString) {
+      throw new Error(
+        "DATABASE_ENGINE=postgres but DATABASE_URL is not set. Run your own Postgres and set DATABASE_URL (and DATABASE_URL_DIRECT if pooled).",
+      );
+    }
+    console.log("\n🗄️  Using PostgreSQL database\n");
+  } else {
+    console.log("\n🗄️  Using SQLite database\n");
+    const filePath = dbFilePath(connectionString);
+    if (filePath) {
+      mkdirSync(dirname(filePath), { recursive: true });
+    }
   }
 
   console.log(`   Connection: ${connectionString}`);
