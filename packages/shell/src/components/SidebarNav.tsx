@@ -150,11 +150,16 @@ export function SidebarNav({
               </Link>
 
               <div className="flex items-center gap-0.5">
-                <CommandPalette iconOnly />
+                <div className="lg:hidden">
+                  <CommandPalette iconOnly />
+                </div>
                 <button
                   type="button"
-                  onClick={() => onCollapsedChange(true)}
-                  aria-label="Collapse sidebar"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onCollapsedChange(true);
+                  }}
+                  aria-label="Close sidebar"
                   className={ICON_BTN}
                 >
                   <PanelLeftClose className="size-4" />

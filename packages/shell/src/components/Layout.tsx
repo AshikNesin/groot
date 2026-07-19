@@ -153,7 +153,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           collapsed ? "lg:pl-16" : "lg:pl-56",
         )}
       >
-        {/* Top bar — mobile (sidebar toggle + brand + search). */}
+        {/* Top bar — mobile (sidebar toggle + brand + search icon). */}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur lg:hidden">
           <Button
             variant="ghost"
@@ -166,8 +166,8 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           <Link to="/" className="text-sm font-semibold tracking-tight">
             Groot
           </Link>
-          <div className="ml-auto w-full max-w-xs">
-            <CommandPalette />
+          <div className="ml-auto">
+            <CommandPalette iconOnly />
           </div>
         </header>
 
