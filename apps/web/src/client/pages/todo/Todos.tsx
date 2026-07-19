@@ -1,20 +1,31 @@
 import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Plus, Check, Trash2, Loader2, ListChecks, AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@groot/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@groot/ui/card";
+import { Card } from "@groot/ui/card";
+import { Checkbox } from "@groot/ui/checkbox";
 import { Form, FormField } from "@groot/ui/form";
 import { Input } from "@groot/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@groot/ui/dialog";
+import { Badge } from "@groot/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@groot/ui/dialog";
 import { useCreateTodo, useDeleteTodo, useTodos, useUpdateTodo } from "./hooks/useTodos";
 import { PageLayout } from "@groot/shell/components/layout/PageLayout";
+import { cn } from "@groot/ui/lib/utils";
 
 const todoSchema = z.object({
   title: z.string().min(1, "Title is required"),
 });
 
 export function Todos() {
-  const { data: todos, isLoading } = useTodos();
+  const { data: todos, isLoading, isError, refetch } = useTodos();
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
@@ -61,11 +72,15 @@ export function Todos() {
   const actions = (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create Todo</Button>
+        <Button size="lg">
+          <Plus className="size-4" />
+          Create Todo
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Todo</DialogTitle>
+          <DialogDescription>Create a new task to track.</DialogDescription>
         </DialogHeader>
         <Form
           key={formKey}
@@ -75,9 +90,14 @@ export function Todos() {
           className="space-y-4"
         >
           <FormField name="title" label="Title">
-            <Input placeholder="Todo title" />
+            <Input placeholder="e.g. Ship the landing page" autoFocus />
           </FormField>
-          <Button className="w-full" type="submit" disabled={createTodo.isPending}>
+          <Button className="w-full" type="submit" size="lg" disabled={createTodo.isPending}>
+            {createTodo.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Plus className="size-4" />
+            )}
             {createTodo.isPending ? "Creating..." : "Create"}
           </Button>
         </Form>
@@ -85,46 +105,107 @@ export function Todos() {
     </Dialog>
   );
 
+  const completedCount = todos?.filter((t) => t.completed).length ?? 0;
+  const total = todos?.length ?? 0;
+
   return (
-    <PageLayout title="Todos" description="Track your tasks" actions={actions}>
-      <div className="grid gap-4 md:grid-cols-2">
-        {isLoading && <p>Loading todos...</p>}
-        {!isLoading && todos?.length === 0 && <p>No todos yet.</p>}
-        {todos?.map((todo) => (
-          <Card key={todo.id}>
-            <CardHeader>
-              <CardTitle
-                className={todo.completed ? "line-through text-muted-foreground" : undefined}
+    <PageLayout title="Todos" description="Track your tasks" actions={actions} maxWidth="7xl">
+      {/* Summary strip. */}
+      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+        <Badge variant="secondary" className="gap-1.5">
+          <ListChecks className="size-3.5" />
+          {total} total
+        </Badge>
+        <Badge variant="secondary" className="gap-1.5">
+          <Check className="size-3.5" />
+          {completedCount} done
+        </Badge>
+        {total > 0 && (
+          <span className="text-xs">{Math.round((completedCount / total) * 100)}% complete</span>
+        )}
+      </div>
+
+      {/* List. */}
+      <Card className="overflow-hidden p-0">
+        {isLoading ? (
+          <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            Loading todos...
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="size-6 text-destructive" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Failed to load todos</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Unable to fetch your todo list. Please try again.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RotateCcw className="size-4 mr-1" />
+              Retry
+            </Button>
+          </div>
+        ) : total === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+              <ListChecks className="size-6 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">No todos yet</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Create your first todo to get started.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {todos?.map((todo) => (
+              <li
+                key={todo.id}
+                className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-5"
               >
-                {todo.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between gap-2">
-              <span className="text-sm text-muted-foreground">
-                {todo.completed ? "Completed" : "Pending"}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+                <Checkbox
+                  checked={todo.completed}
+                  onCheckedChange={(checked) => toggleTodo(todo.id, checked === true)}
                   disabled={updateTodo.isPending}
-                  onClick={() => toggleTodo(todo.id, !todo.completed)}
+                  aria-label={`Mark ${todo.title} as ${todo.completed ? "pending" : "done"}`}
+                />
+                <span
+                  className={cn(
+                    "flex-1 truncate text-sm",
+                    todo.completed ? "text-muted-foreground line-through" : "text-foreground",
+                  )}
                 >
-                  {todo.completed ? "Mark Pending" : "Mark Done"}
-                </Button>
+                  {todo.title}
+                </span>
+                {!todo.completed && (
+                  <Badge variant="outline" className="hidden sm:inline-flex">
+                    Pending
+                  </Badge>
+                )}
+                {todo.completed && (
+                  <Badge variant="secondary" className="hidden sm:inline-flex">
+                    Done
+                  </Badge>
+                )}
                 <Button
-                  variant="destructive"
-                  size="sm"
+                  variant="ghost"
+                  size="icon-sm"
                   disabled={deleteTodo.isPending}
                   onClick={() => removeTodo(todo.id)}
+                  aria-label={`Delete ${todo.title}`}
+                  className="text-muted-foreground hover:text-destructive"
                 >
-                  Delete
+                  <Trash2 className="size-4" />
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </PageLayout>
   );
 }
