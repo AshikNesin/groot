@@ -15,7 +15,7 @@ import {
   getFileMetadataSchema,
   createFolderSchema,
   renameFileSchema,
-} from "./storage.validation";
+} from "./storage.schema";
 import { sanitizeFileName } from "./storage.utils";
 
 const router = createRouter();

@@ -1,6 +1,6 @@
 export * as storageRoutes from "./storage.routes";
 export * as storageService from "./storage.service";
-export * as storageValidation from "./storage.validation";
+export * as storageValidation from "./storage.schema";
 export { files, filesPromise, getFiles } from "./files";
 
 export { Files, FilesError } from "files-sdk";

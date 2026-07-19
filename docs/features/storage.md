@@ -24,7 +24,7 @@ Client (Storage page)
 packages/core/src/storage/
 ├── storage.routes.ts        # Routes + inline request handlers
 ├── storage.service.ts       # Business logic
-├── storage.validation.ts    # Zod schemas
+├── storage.schema.ts    # Zod schemas
 ├── storage.utils.ts         # Utility functions
 ├── files.ts                 # Configured files-sdk Files instance (S3 wrapper)
 └── index.ts

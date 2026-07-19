@@ -2,7 +2,7 @@ import { Boom } from "@groot/core/errors";
 import { logger } from "@groot/core/logger";
 import { prisma } from "@groot/core/database";
 import { createNamespaceKv } from "@groot/core/kv";
-import type { UpsertAppSettingDTO } from "./app-settings.validation";
+import type { UpsertAppSettingDTO } from "./app-settings.schema";
 
 const KV_NAMESPACE = "APP_SETTING";
 const KV_NAMESPACE_PREFIX = `${KV_NAMESPACE}:`;

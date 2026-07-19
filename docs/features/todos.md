@@ -8,7 +8,7 @@ The todo domain demonstrates the recommended feature module pattern with self-co
 apps/web/src/server/api/todo/
 ├── todo.routes.ts       # Route definitions + inline request handlers
 ├── todo.service.ts      # Business logic (calls Prisma directly)
-├── todo.validation.ts   # Zod schemas
+├── todo.schema.ts   # Zod schemas
 └── todo.jobs.ts         # Background jobs
 ```
 
@@ -27,7 +27,7 @@ All routes are mounted under `/api/v1/todos` and require JWT authentication.
 ### Request/Response Shape
 
 ```typescript
-// todo.validation.ts
+// todo.schema.ts
 export const createTodoSchema = z.object({
   title: z.string().min(1),
   completed: z.boolean().optional().default(false),
@@ -83,7 +83,7 @@ import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseId, parseBody } from "@groot/core/utils/controller.utils";
 import * as todoService from "./todo.service";
-import { createTodoSchema, updateTodoSchema } from "./todo.validation";
+import { createTodoSchema, updateTodoSchema } from "./todo.schema";
 
 const router = createRouter();
 
@@ -122,7 +122,7 @@ export default router;
 // todo.service.ts
 import { prisma } from "@groot/core/database";
 import { Boom } from "@groot/core/errors";
-import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
+import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.schema";
 
 export async function create({ data }: { data: CreateTodoDTO }) {
   return prisma.todo.create({ data });

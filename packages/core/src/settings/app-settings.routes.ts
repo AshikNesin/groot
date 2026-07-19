@@ -3,7 +3,7 @@ import { createRouter } from "@groot/core/utils/router.utils";
 import { adminAuthMiddleware } from "@groot/core/middlewares/admin-auth.middleware";
 import { parseStringParam, parseBody } from "@groot/core/utils/controller.utils";
 import * as appSettingsService from "./app-settings.service";
-import { upsertAppSettingSchema } from "./app-settings.validation";
+import { upsertAppSettingSchema } from "./app-settings.schema";
 
 const router = createRouter();
 

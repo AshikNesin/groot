@@ -1,6 +1,6 @@
 import { prisma } from "@groot/core/database";
 import { Boom } from "@groot/core/errors";
-import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.validation";
+import type { CreateTodoDTO, UpdateTodoDTO } from "./todo.schema";
 
 export async function create({ data }: { data: CreateTodoDTO }) {
   return prisma.todo.create({ data });

@@ -11,7 +11,7 @@ const isDev = import.meta.env.DEV;
 
 const DEMO_CREDENTIALS = { email: "demo@example.com", password: "demo@example.com" };
 
-// Mirrors the server's loginSchema (packages/core/src/auth/auth.validation.ts).
+// Mirrors the server's loginSchema (packages/core/src/auth/auth.schema.ts).
 // Duplicated locally so the client never imports the server package (which
 // pulls Prisma/AWS/bcrypt) into the client bundle.
 const loginSchema = z.object({

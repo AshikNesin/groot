@@ -3,7 +3,7 @@ import { Boom } from "@groot/core/errors";
 import { prisma } from "@groot/core/database";
 import type { User } from "@groot/core/database";
 import { generateToken } from "@groot/core/utils/jwt.utils";
-import type { CreateUserDTO, LoginDTO } from "./auth.validation";
+import type { CreateUserDTO, LoginDTO } from "./auth.schema";
 
 const DUMMY_HASH = "$2a$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 

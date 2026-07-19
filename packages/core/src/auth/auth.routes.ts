@@ -5,7 +5,7 @@ import { adminAuthMiddleware } from "@groot/core/middlewares/admin-auth.middlewa
 import { requireUser, parseBody } from "@groot/core/utils/controller.utils";
 import { setAuthCookie, clearAuthCookie } from "@groot/core/utils/auth-cookie.utils";
 import * as authService from "./auth.service";
-import { loginSchema, createUserSchema } from "./auth.validation";
+import { loginSchema, createUserSchema } from "./auth.schema";
 
 const router = createRouter();
 

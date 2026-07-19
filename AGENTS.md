@@ -95,7 +95,7 @@ Each feature in `apps/web/src/server/api/<feature>/` is self-contained:
 
 - `*.routes.ts` — route defs via `createRouter()` with inline async request handlers
 - `*.service.ts` — business logic (calls Prisma directly)
-- `*.validation.ts` — Zod schemas
+- `*.schema.ts` — Zod schemas
 - `*.jobs.ts` — background job handlers (if applicable)
 
 **Request flow:** Route handler (parse + validate + call service) →

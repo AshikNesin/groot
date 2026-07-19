@@ -9,7 +9,7 @@ import {
   verifyAuthenticationSchema,
   updatePasskeyNameSchema,
   generateAuthenticationOptionsSchema,
-} from "./passkey.validation";
+} from "./passkey.schema";
 
 const router = createRouter();
 

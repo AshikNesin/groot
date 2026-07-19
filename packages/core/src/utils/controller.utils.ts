@@ -94,7 +94,7 @@ export function parseLimit(value: ParamValue, defaultValue = 50, maxLimit = 100)
  *
  * @example
  * ```ts
- * import { createTodoSchema } from "./todo.validation";
+ * import { createTodoSchema } from "./todo.schema";
  *
  * export async function create(req: Request) {
  *   const payload = parseBody(req, createTodoSchema);

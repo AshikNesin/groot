@@ -40,7 +40,7 @@ mkdir -p apps/web/src/server/api/myfeature
 ### 2. Define Validation Schema
 
 ```typescript
-// apps/web/src/server/api/myfeature/myfeature.validation.ts
+// apps/web/src/server/api/myfeature/myfeature.schema.ts
 import { z } from "zod";
 
 export const createSchema = z.object({
@@ -57,7 +57,7 @@ export type CreateDTO = z.infer<typeof createSchema>;
 // apps/web/src/server/api/myfeature/myfeature.service.ts
 import { prisma } from "@groot/core/database";
 import { Boom } from "@groot/core/errors";
-import type { CreateDTO } from "./myfeature.validation";
+import type { CreateDTO } from "./myfeature.schema";
 
 export async function create({ data }: { data: CreateDTO }) {
   return prisma.myfeature.create({ data });
@@ -84,7 +84,7 @@ import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseId, parseBody } from "@groot/core/utils/controller.utils";
 import * as service from "./myfeature.service";
-import { createSchema } from "./myfeature.validation";
+import { createSchema } from "./myfeature.schema";
 
 const router = createRouter();
 
@@ -151,7 +151,7 @@ describe("MyFeature Routes", () => {
 ### 1. Define Job Types
 
 ```typescript
-// myfeature.validation.ts
+// myfeature.schema.ts
 export interface MyJobPayload {
   itemId: number;
 }
@@ -162,7 +162,7 @@ export interface MyJobPayload {
 ```typescript
 // apps/web/src/server/api/myfeature/myfeature.jobs.ts
 import { registerJobHandler, type JobHandler } from "@groot/jobs/server";
-import type { MyJobPayload } from "./myfeature.validation";
+import type { MyJobPayload } from "./myfeature.schema";
 
 export const myJobHandler: JobHandler<MyJobPayload> = async ({ data }) => {
   const { itemId } = data;

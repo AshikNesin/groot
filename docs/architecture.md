@@ -120,7 +120,7 @@ Apps can freely add additional models.
 1. **Server module** (`apps/web/src/server/api/<feature>/`):
    - `<feature>.routes.ts` - route definitions + inline request handlers
    - `<feature>.service.ts` - business logic (calls Prisma directly)
-   - `<feature>.validation.ts` - Zod schemas
+   - `<feature>.schema.ts` - Zod schemas
    - `<feature>.jobs.ts` - background job handlers (optional)
 
 2. **Register routes** in `apps/web/src/server/routes.ts`

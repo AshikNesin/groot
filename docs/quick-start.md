@@ -123,7 +123,7 @@ import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseId, parseBody } from "@groot/core/utils/controller.utils";
 import * as service from "./myfeature.service";
-import { createSchema } from "./myfeature.validation";
+import { createSchema } from "./myfeature.schema";
 
 const router = createRouter();
 

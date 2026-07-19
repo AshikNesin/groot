@@ -25,7 +25,7 @@ Each feature is a self-contained module with all its components:
 feature/
 ├── feature.routes.ts      # Route definitions + inline request handlers
 ├── feature.service.ts     # Business logic (calls Prisma directly)
-├── feature.validation.ts  # Zod schemas
+├── feature.schema.ts  # Zod schemas
 ├── feature.jobs.ts        # Background jobs (optional)
 └── feature.utils.ts       # Optional utilities (e.g. webauthn)
 ```
@@ -74,7 +74,7 @@ Routes use `createRouter()` which automatically wraps handlers:
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseBody } from "@groot/core/utils/controller.utils";
 import * as todoService from "./todo.service";
-import { createTodoSchema } from "./todo.validation";
+import { createTodoSchema } from "./todo.schema";
 
 const router = createRouter();
 
@@ -134,7 +134,7 @@ No base classes, no manual response handling - just return values. Services call
 Zod schemas validate requests:
 
 ```typescript
-import { createTodoSchema } from "./todo.validation";
+import { createTodoSchema } from "./todo.schema";
 
 router.post("/", controller.create);
 ```

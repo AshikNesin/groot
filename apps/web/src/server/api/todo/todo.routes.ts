@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
 import { parseId, parseBody } from "@groot/core/utils/controller.utils";
 import * as todoService from "./todo.service";
-import { createTodoSchema, updateTodoSchema } from "./todo.validation";
+import { createTodoSchema, updateTodoSchema } from "./todo.schema";
 
 const router = createRouter();
 
