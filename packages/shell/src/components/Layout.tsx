@@ -189,13 +189,6 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           </div>
         </header>
 
-        {/* Desktop slim toolbar with command palette. */}
-        <header className="hidden h-14 items-center justify-end gap-4 border-b border-border bg-background/60 px-6 lg:flex">
-          <div className="w-full max-w-md">
-            <CommandPaletteTrigger />
-          </div>
-        </header>
-
         <main className={cn("w-full", padded && "px-4 pb-10 pt-6 sm:px-6 lg:px-8", mainClassName)}>
           <Outlet />
         </main>
