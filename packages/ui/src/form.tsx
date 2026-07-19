@@ -68,6 +68,10 @@ interface FormFieldProps<TValues extends FieldValues> {
   /** Typed field path — invalid names are caught at compile time. */
   name: FieldPath<TValues>;
   label?: string;
+  /** Help text shown directly under the label, above the input. */
+  description?: React.ReactNode;
+  /** Hint shown below the input (e.g. an example or format note). */
+  hint?: React.ReactNode;
   className?: string;
   /** A single controlled input (Input/Textarea/Select). Bound automatically. */
   children: React.ReactElement;
@@ -85,6 +89,8 @@ interface FormFieldProps<TValues extends FieldValues> {
 function FormField<TValues extends FieldValues = FieldValues>({
   name,
   label,
+  description,
+  hint,
   className,
   children,
 }: FormFieldProps<TValues>) {
@@ -94,8 +100,13 @@ function FormField<TValues extends FieldValues = FieldValues>({
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <div className={cn("space-y-2", className)}>
-          {label && <Label htmlFor={name}>{label}</Label>}
+        <div className={cn("space-y-1.5", className)}>
+          {label && (
+            <Label htmlFor={name} className="text-sm font-medium">
+              {label}
+            </Label>
+          )}
+          {description && <p className="text-xs text-muted-foreground">{description}</p>}
           {/* The field binding is merged onto the child input via cloneElement;
               the prop set varies across Input/Textarea/Select, hence the cast. */}
           {React.cloneElement(
@@ -103,8 +114,10 @@ function FormField<TValues extends FieldValues = FieldValues>({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { ...field, id: name, "aria-invalid": fieldState.invalid } as any,
           )}
-          {fieldState.error && (
-            <p className="text-sm text-destructive">{fieldState.error.message}</p>
+          {fieldState.error ? (
+            <p className="text-xs text-destructive">{fieldState.error.message}</p>
+          ) : (
+            hint && <p className="text-xs text-muted-foreground">{hint}</p>
           )}
         </div>
       )}
@@ -113,3 +126,34 @@ function FormField<TValues extends FieldValues = FieldValues>({
 }
 
 export { FormRoot as Form, FormField };
+
+interface FieldProps {
+  label?: React.ReactNode;
+  description?: React.ReactNode;
+  hint?: React.ReactNode;
+  htmlFor?: string;
+  className?: string;
+  children: React.ReactNode;
+}
+
+/**
+ * Presentational label + content wrapper for fields that manage their own
+ * state (e.g. dialogs that don't use react-hook-form). Mirrors `FormField`'s
+ * spacing so forms look consistent whether or not they're schema-driven.
+ */
+function Field({ label, description, hint, htmlFor, className, children }: FieldProps) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      {label && (
+        <Label htmlFor={htmlFor} className="text-sm font-medium">
+          {label}
+        </Label>
+      )}
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+      {children}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+export { Field };

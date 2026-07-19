@@ -8,8 +8,8 @@ import {
   DialogTrigger,
 } from "@groot/ui/dialog";
 import { Input } from "@groot/ui/input";
-import { Label } from "@groot/ui/label";
 import { Textarea } from "@groot/ui/textarea";
+import { Field } from "@groot/ui/form";
 import { JobTypeSelect } from "./JobTypeSelect";
 import type { JobTypeDialogFields } from "@groot/jobs/client/constants";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -52,9 +52,8 @@ export function ScheduleJobDialog({
           <DialogTitle>Schedule Recurring Job</DialogTitle>
           <DialogDescription>Schedule a job to run on a recurring cron schedule</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="scheduled-job-name">Job Type</Label>
+        <div className="space-y-5">
+          <Field label="Job type" htmlFor="scheduled-job-name">
             <JobTypeSelect
               id="scheduled-job-name"
               value={name}
@@ -63,21 +62,20 @@ export function ScheduleJobDialog({
               onSearchChange={onTypeSearchChange}
               availableJobs={availableJobs}
             />
-          </div>
-          <div>
-            <Label htmlFor="scheduled-job-cron">Cron Expression</Label>
+          </Field>
+          <Field
+            label="Cron expression"
+            htmlFor="scheduled-job-cron"
+            hint={`Example: "*/5 * * * *" runs every 5 minutes`}
+          >
             <Input
               id="scheduled-job-cron"
               value={cron}
               onChange={(e) => onCronChange(e.target.value)}
               placeholder="*/5 * * * *"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Example: "*/5 * * * *" runs every 5 minutes
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="scheduled-job-data">Job Data (JSON)</Label>
+          </Field>
+          <Field label="Job data (JSON)" htmlFor="scheduled-job-data">
             <Textarea
               id="scheduled-job-data"
               value={data}
@@ -86,8 +84,8 @@ export function ScheduleJobDialog({
               rows={10}
               className="font-mono text-sm"
             />
-          </div>
-          <div className="flex justify-end gap-2">
+          </Field>
+          <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

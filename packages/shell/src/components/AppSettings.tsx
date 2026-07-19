@@ -8,8 +8,7 @@ import {
   DialogTitle,
 } from "@groot/ui/dialog";
 import { Input } from "@groot/ui/input";
-import { Label } from "@groot/ui/label";
-import { Form, FormField } from "@groot/ui/form";
+import { Form, FormField, Field } from "@groot/ui/form";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { Plus, RefreshCw, Search, Trash2, Save, FileJson } from "lucide-react";
 import { lazy, Suspense } from "react";
@@ -173,24 +172,17 @@ export function AppSettings() {
                 </Button>
               </div>
 
-              <div className="space-y-4 p-5">
-                <div>
-                  <Label htmlFor="description" className="text-xs">
-                    Description
-                  </Label>
+              <div className="space-y-5 p-5">
+                <Field label="Description" htmlFor="description">
                   <Input
                     id="description"
                     value={s.description}
                     onChange={(e) => s.setDescription(e.target.value)}
                     placeholder="Brief description of this setting"
-                    className="mt-1.5"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="jsonEditor" className="text-xs">
-                    JSON Value
-                  </Label>
-                  <div className="mt-1.5 overflow-hidden rounded-md border border-border">
+                </Field>
+                <Field label="JSON value" htmlFor="jsonEditor">
+                  <div className="overflow-hidden rounded-md border border-border">
                     <Suspense fallback={<div className="h-[400px]" />}>
                       <CodeMirrorEditor
                         value={s.jsonValue}
@@ -205,7 +197,7 @@ export function AppSettings() {
                       />
                     </Suspense>
                   </div>
-                </div>
+                </Field>
               </div>
 
               {/* Footer action row */}

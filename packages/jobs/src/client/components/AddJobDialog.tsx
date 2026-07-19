@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@groot/ui/dialog";
-import { Label } from "@groot/ui/label";
+import { Field } from "@groot/ui/form";
 import { JobTypeSelect } from "./JobTypeSelect";
 import type { JobTypeDialogFields } from "@groot/jobs/client/constants";
 import { lazy, Suspense } from "react";
@@ -53,9 +53,8 @@ export function AddJobDialog({
           <DialogTitle>Add New Job</DialogTitle>
           <DialogDescription>Manually trigger a background job</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="job-name">Job Type</Label>
+        <div className="space-y-5">
+          <Field label="Job type" htmlFor="job-name">
             <JobTypeSelect
               id="job-name"
               value={name}
@@ -64,16 +63,19 @@ export function AddJobDialog({
               onSearchChange={onTypeSearchChange}
               availableJobs={availableJobs}
             />
-          </div>
-          <div>
-            <Label htmlFor="job-data">Job Data (JSON)</Label>
-            <div className="mt-1 overflow-hidden rounded-md border">
+          </Field>
+          <Field
+            label="Job data (JSON)"
+            htmlFor="job-data"
+            hint="The payload passed to the job handler."
+          >
+            <div className="overflow-hidden rounded-md border">
               <Suspense fallback={<div className="h-[200px]" />}>
                 <CodeMirrorEditor value={data} height="200px" onChange={onDataChange} />
               </Suspense>
             </div>
-          </div>
-          <div className="flex justify-end gap-2">
+          </Field>
+          <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

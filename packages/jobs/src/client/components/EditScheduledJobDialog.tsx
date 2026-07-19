@@ -7,8 +7,8 @@ import {
   DialogTitle,
 } from "@groot/ui/dialog";
 import { Input } from "@groot/ui/input";
-import { Label } from "@groot/ui/label";
 import { Textarea } from "@groot/ui/textarea";
+import { Field } from "@groot/ui/form";
 
 type Props = {
   open: boolean;
@@ -39,21 +39,20 @@ export function EditScheduledJobDialog({
           <DialogTitle>Edit Scheduled Job</DialogTitle>
           <DialogDescription>Update cron schedule or data for "{name}"</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="edit-scheduled-cron">Cron Expression</Label>
+        <div className="space-y-5">
+          <Field
+            label="Cron expression"
+            htmlFor="edit-scheduled-cron"
+            hint={`Example: "*/5 * * * *" runs every 5 minutes`}
+          >
             <Input
               id="edit-scheduled-cron"
               value={cron}
               onChange={(e) => onCronChange(e.target.value)}
               placeholder="*/5 * * * *"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Example: "*/5 * * * *" runs every 5 minutes
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="edit-scheduled-data">Job Data (JSON)</Label>
+          </Field>
+          <Field label="Job data (JSON)" htmlFor="edit-scheduled-data">
             <Textarea
               id="edit-scheduled-data"
               value={data}
@@ -62,8 +61,8 @@ export function EditScheduledJobDialog({
               rows={10}
               className="font-mono text-sm"
             />
-          </div>
-          <div className="flex justify-end gap-2">
+          </Field>
+          <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
