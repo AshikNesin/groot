@@ -28,6 +28,14 @@ function formatJobDuration(start: string | null, end: string | null): string {
   return formatDuration(start, end);
 }
 
+/**
+ * Shorten a job ID for list display. UUIDs (pg-boss) are truncated to the first
+ * 6 chars; short numeric IDs (honker/SQLite) are shown in full.
+ */
+function formatJobId(id: string): string {
+  return id.length > 8 ? id.substring(0, 6) : id;
+}
+
 type QueryParams = {
   state: string;
   page: number;
@@ -208,7 +216,7 @@ export function JobsTable({
                       <div className="min-w-0">
                         <div className="truncate font-medium">{job.name}</div>
                         <div className="truncate font-mono text-xs text-muted-foreground">
-                          {job.id.substring(0, 12)}...
+                          {formatJobId(job.id)}
                         </div>
                       </div>
                     </div>
@@ -296,7 +304,7 @@ export function JobsTable({
                       <div className="min-w-0">
                         <div className="font-medium text-sm truncate">{job.name}</div>
                         <div className="font-mono text-[11px] text-muted-foreground mt-0.5 truncate">
-                          {job.id.substring(0, 16)}...
+                          {formatJobId(job.id)}
                         </div>
                       </div>
                     </div>
