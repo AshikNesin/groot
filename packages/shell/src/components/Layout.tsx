@@ -13,14 +13,13 @@ import {
 import { Button } from "@groot/ui/button";
 import { cn } from "@groot/ui/lib/utils";
 import {
-  ChevronsUpDown,
+  ChevronRight,
   LogOut,
   Settings as SettingsIcon,
   HardDrive,
   Briefcase,
   PanelLeftClose,
   PanelLeft,
-  User as UserIcon,
 } from "lucide-react";
 
 const SIDEBAR_COLLAPSED_KEY = "groot.sidebar.collapsed";
@@ -93,36 +92,31 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
+                  title={collapsed ? (user?.name ?? user?.email ?? "Account") : undefined}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent",
-                    collapsed ? "lg:justify-center lg:px-1.5" : "",
+                    "flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent",
+                    collapsed && "lg:justify-center lg:px-0",
                   )}
                 >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
-                    {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? (
-                      <UserIcon className="size-4" />
-                    )}
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                    {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "?"}
                   </span>
-
                   <span
                     className={cn(
-                      "flex-1 min-w-0 leading-tight transition-opacity",
+                      "hidden min-w-0 flex-1 flex-col leading-tight",
                       collapsed && "lg:hidden",
                     )}
                   >
-                    <span className="block truncate text-sm font-medium">
+                    <span className="truncate text-sm font-medium">
                       {user?.name?.trim() ||
                         user?.email?.split("@")[0]?.replace(/^\w/, (c) => c.toUpperCase()) ||
                         "Account"}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {user?.name?.trim()
-                        ? user?.email?.toLowerCase()
-                        : (user?.email?.toLowerCase() ?? "")}
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user?.email?.toLowerCase() ?? ""}
                     </span>
                   </span>
-
-                  <ChevronsUpDown
+                  <ChevronRight
                     className={cn(
                       "size-4 shrink-0 text-muted-foreground",
                       collapsed && "lg:hidden",
@@ -161,7 +155,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
       <div
         className={cn(
           "transition-[padding] duration-300 ease-in-out",
-          collapsed ? "lg:pl-16" : "lg:pl-[17.5rem]",
+          collapsed ? "lg:pl-16" : "lg:pl-56",
         )}
       >
         {/* Top bar — mobile (sidebar toggle + brand + search). */}
