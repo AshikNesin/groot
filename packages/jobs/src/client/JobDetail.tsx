@@ -1,6 +1,8 @@
 import { Button } from "@groot/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@groot/ui/card";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { StatusBadge } from "@groot/ui";
+import { PageContainer } from "@groot/shell/components/layout/PageContainer";
 import { formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
 import { JobActions } from "./components/JobActions";
 import { JobJsonBlock } from "./components/JobJsonBlock";
@@ -16,64 +18,69 @@ export function JobDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto">
+      <PageContainer maxWidth="5xl">
         <LoadingSpinner size="lg" className="py-20" />
-      </div>
+      </PageContainer>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="max-w-5xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate("/jobs")} className="mb-4 -ml-2 text-xs">
-          <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+      <PageContainer maxWidth="5xl">
+        <Button variant="ghost" onClick={() => navigate("/jobs")} className="mb-4 -ml-2">
+          <ArrowLeft className="size-4" />
           Back to Jobs
         </Button>
         <div className="text-center py-20">
-          <div className="bg-muted p-3 mb-3 inline-block">
-            <AlertCircle className="h-6 w-6 text-muted-foreground" />
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
+            <AlertCircle className="size-6 text-muted-foreground" />
           </div>
-          <h2 className="text-sm font-medium text-foreground mb-2">Job Not Found</h2>
-          <p className="text-xs text-muted-foreground">
+          <h2 className="text-base font-medium text-foreground mb-1">Job Not Found</h2>
+          <p className="text-sm text-muted-foreground">
             {error || "The job you are looking for does not exist."}
           </p>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
-  return (
-    <div className="max-w-5xl mx-auto">
-      {/* Breadcrumb + Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-          <Link to="/jobs" className="hover:text-foreground">
-            Jobs
-          </Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-foreground">{job.name}</span>
-        </div>
+  const actions = (
+    <JobActions
+      state={job.state}
+      onRetry={retry}
+      onRerun={rerun}
+      onResume={resume}
+      onCancel={cancel}
+      onDelete={deleteJob}
+    />
+  );
 
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold text-foreground">{job.name}</h1>
-              <StatusBadge status={job.state} />
-            </div>
-            <p className="font-mono text-[11px] text-muted-foreground mt-1 truncate">{job.id}</p>
-          </div>
-          <JobActions
-            state={job.state}
-            onRetry={retry}
-            onRerun={rerun}
-            onResume={resume}
-            onCancel={cancel}
-            onDelete={deleteJob}
-          />
-        </div>
+  return (
+    <PageContainer maxWidth="5xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Link to="/jobs" className="hover:text-foreground">
+          Jobs
+        </Link>
+        <ChevronRight className="size-3.5" />
+        <span className="text-foreground">{job.name}</span>
       </div>
 
-      <div className="space-y-6">
+      {/* Header */}
+      <div className="mt-4 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <h1 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {job.name}
+            </h1>
+            <StatusBadge status={job.state} />
+          </div>
+          <p className="font-mono text-xs text-muted-foreground mt-1.5 truncate">{job.id}</p>
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-2">{actions}</div>
+      </div>
+
+      <div className="mt-8 space-y-6">
         <JobOverview job={job} />
 
         <JobJsonBlock label="Data" value={job.data} />
@@ -82,49 +89,51 @@ export function JobDetail() {
 
         {/* Error Details */}
         {job.deadletter && (
-          <div>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-destructive mb-3">
-              Error
-            </h2>
-            <pre className="p-4 bg-destructive/10 border border-destructive/30 text-xs overflow-x-auto text-destructive whitespace-pre-wrap">
-              {job.deadletter}
-            </pre>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-destructive">Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-destructive/10 p-4 text-xs text-destructive">
+                {job.deadletter}
+              </pre>
+            </CardContent>
+          </Card>
         )}
 
         {/* Singleton Info */}
         {(job.singletonkey || job.singletonon) && (
-          <div>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
-              Singleton
-            </h2>
-            <div className="border border-dashed p-4">
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Singleton</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {job.singletonkey && (
                   <div>
-                    <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
+                    <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
                       Key
                     </dt>
-                    <dd className="font-mono text-sm mt-0.5">{job.singletonkey}</dd>
+                    <dd className="font-mono text-sm mt-1">{job.singletonkey}</dd>
                   </div>
                 )}
                 {job.singletonon && (
                   <div>
-                    <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
+                    <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
                       On
                     </dt>
-                    <dd className="text-sm mt-0.5" title={formatLocaleDateTime(job.singletonon)}>
+                    <dd className="text-sm mt-1" title={formatLocaleDateTime(job.singletonon)}>
                       {formatRelativeTime(job.singletonon)}
                     </dd>
                   </div>
                 )}
               </dl>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         <JobLogs logs={logs} />
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -1,41 +1,15 @@
+import { Card } from "@groot/ui/card";
+import { cn } from "@groot/ui/lib/utils";
 import type { JobStats } from "@groot/jobs/client/types";
 import { Activity, CheckCircle, Clock, RefreshCw, X, XCircle } from "lucide-react";
 
-function StatCard({
-  label,
-  value,
-  colorClass,
-  icon,
-  isActive,
-  onClick,
-}: {
+type StatItem = {
+  key: string;
   label: string;
   value: number;
   colorClass: string;
   icon: React.ReactNode;
-  isActive: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`text-left border border-dashed p-4 flex flex-col gap-1 transition-colors hover:bg-accent/50 ${
-        isActive ? "bg-accent/50 border-solid" : "bg-card"
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
-        <span className="text-muted-foreground">{icon}</span>
-      </div>
-      <span className={`text-2xl font-semibold tabular-nums ${colorClass}`}>
-        {value.toLocaleString()}
-      </span>
-    </button>
-  );
-}
+};
 
 type Props = {
   stats: JobStats;
@@ -43,66 +17,86 @@ type Props = {
   onSelectState: (state: string) => void;
 };
 
-/** Clickable stat cards that filter the jobs list by state. */
+/** Compact, clickable stat row that filters the jobs list by state. */
 export function JobsStats({ stats, activeState, onSelectState }: Props) {
+  const items: StatItem[] = [
+    {
+      key: "all",
+      label: "Total",
+      value: stats.active + stats.created + stats.retry + stats.failed + stats.completed,
+      colorClass: "text-foreground",
+      icon: <Activity className="size-3.5" />,
+    },
+    {
+      key: "active",
+      label: "Active",
+      value: stats.active,
+      colorClass: "text-info",
+      icon: <Activity className="size-3.5" />,
+    },
+    {
+      key: "created",
+      label: "Created",
+      value: stats.created,
+      colorClass: "text-muted-foreground",
+      icon: <Clock className="size-3.5" />,
+    },
+    {
+      key: "retry",
+      label: "Retry",
+      value: stats.retry,
+      colorClass: "text-warning",
+      icon: <RefreshCw className="size-3.5" />,
+    },
+    {
+      key: "failed",
+      label: "Failed",
+      value: stats.failed,
+      colorClass: "text-destructive",
+      icon: <XCircle className="size-3.5" />,
+    },
+    {
+      key: "completed",
+      label: "Completed",
+      value: stats.completed,
+      colorClass: "text-success",
+      icon: <CheckCircle className="size-3.5" />,
+    },
+    {
+      key: "cancelled",
+      label: "Cancelled",
+      value: stats.cancelled,
+      colorClass: "text-muted-foreground",
+      icon: <X className="size-3.5" />,
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-      <StatCard
-        label="Total"
-        value={stats.active + stats.created + stats.retry + stats.failed + stats.completed}
-        colorClass="text-foreground"
-        icon={<Activity className="w-3.5 h-3.5" />}
-        isActive={activeState === "all"}
-        onClick={() => onSelectState("all")}
-      />
-      <StatCard
-        label="Active"
-        value={stats.active}
-        colorClass="text-info"
-        icon={<Activity className="w-3.5 h-3.5" />}
-        isActive={activeState === "active"}
-        onClick={() => onSelectState("active")}
-      />
-      <StatCard
-        label="Created"
-        value={stats.created}
-        colorClass="text-muted-foreground"
-        icon={<Clock className="w-3.5 h-3.5" />}
-        isActive={activeState === "created"}
-        onClick={() => onSelectState("created")}
-      />
-      <StatCard
-        label="Retry"
-        value={stats.retry}
-        colorClass="text-warning"
-        icon={<RefreshCw className="w-3.5 h-3.5" />}
-        isActive={activeState === "retry"}
-        onClick={() => onSelectState("retry")}
-      />
-      <StatCard
-        label="Failed"
-        value={stats.failed}
-        colorClass="text-destructive"
-        icon={<XCircle className="w-3.5 h-3.5" />}
-        isActive={activeState === "failed"}
-        onClick={() => onSelectState("failed")}
-      />
-      <StatCard
-        label="Completed"
-        value={stats.completed}
-        colorClass="text-success"
-        icon={<CheckCircle className="w-3.5 h-3.5" />}
-        isActive={activeState === "completed"}
-        onClick={() => onSelectState("completed")}
-      />
-      <StatCard
-        label="Cancelled"
-        value={stats.cancelled}
-        colorClass="text-muted-foreground"
-        icon={<X className="w-3.5 h-3.5" />}
-        isActive={activeState === "cancelled"}
-        onClick={() => onSelectState("cancelled")}
-      />
-    </div>
+    <Card size="sm" className="flex flex-row flex-wrap items-stretch gap-0 p-0">
+      {items.map((item, idx) => {
+        const isActive = activeState === item.key;
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => onSelectState(item.key)}
+            className={cn(
+              "flex min-w-[7rem] flex-1 flex-col gap-1 px-4 py-3 text-left transition-colors hover:bg-muted/50",
+              "focus-visible:bg-muted/50 focus-visible:outline-none",
+              isActive && "bg-muted/60",
+              idx !== 0 && "border-l border-border/60",
+            )}
+          >
+            <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              {item.icon}
+              {item.label}
+            </span>
+            <span className={cn("text-xl font-semibold tabular-nums", item.colorClass)}>
+              {item.value.toLocaleString()}
+            </span>
+          </button>
+        );
+      })}
+    </Card>
   );
 }

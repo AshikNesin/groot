@@ -42,8 +42,8 @@ export function ScheduleJobDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 text-xs">
-          <CalendarIcon className="w-3.5 h-3.5 md:mr-1.5" />
+        <Button variant="outline" size="sm">
+          <CalendarIcon className="size-4" />
           <span className="hidden md:inline">Schedule</span>
         </Button>
       </DialogTrigger>
