@@ -79,7 +79,6 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
     { name: "Todos", href: "/todos", icon: "check-square" },
     { name: "Storage", href: "/storage", icon: "hard-drive" },
     { name: "Jobs", href: "/jobs", icon: "briefcase" },
-    { name: "Settings", href: "/settings", icon: "settings" },
   ];
 
   return (
