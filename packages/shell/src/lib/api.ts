@@ -131,12 +131,11 @@ class ApiClient {
   async login(
     email: string,
     password: string,
-  ): Promise<{ token: string; user: { id: number; email: string } }> {
+  ): Promise<{ token: string; user: { id: number; email: string; name: string | null } }> {
     return this.unwrap(
-      await this.client.post<ApiResponse<{ token: string; user: { id: number; email: string } }>>(
-        "/auth/login",
-        { email, password },
-      ),
+      await this.client.post<
+        ApiResponse<{ token: string; user: { id: number; email: string; name: string | null } }>
+      >("/auth/login", { email, password }),
     );
   }
 
@@ -146,10 +145,12 @@ class ApiClient {
   }
 
   /** Get the current authenticated user, or null if not signed in. */
-  async getCurrentUser(): Promise<{ id: number; email: string } | null> {
+  async getCurrentUser(): Promise<{ id: number; email: string; name: string | null } | null> {
     try {
       const response =
-        await this.client.get<ApiResponse<{ id: number; email: string }>>("/auth/me");
+        await this.client.get<ApiResponse<{ id: number; email: string; name: string | null }>>(
+          "/auth/me",
+        );
       return response.data.data ?? null;
     } catch {
       return null;

@@ -4,7 +4,7 @@ import { passkeyService } from "@groot/shell/services/passkey";
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: { id: number; email: string } | null;
+  user: { id: number; email: string; name: string | null } | null;
   isLoading: boolean;
   error: string | null;
   hasCheckedAuth: boolean;

@@ -13,13 +13,14 @@ import {
 import { Button } from "@groot/ui/button";
 import { cn } from "@groot/ui/lib/utils";
 import {
-  MoreHorizontal,
+  ChevronsUpDown,
   LogOut,
   Settings as SettingsIcon,
   HardDrive,
   Briefcase,
   PanelLeftClose,
   PanelLeft,
+  User as UserIcon,
 } from "lucide-react";
 
 const SIDEBAR_COLLAPSED_KEY = "groot.sidebar.collapsed";
@@ -92,30 +93,29 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  title={collapsed ? (user?.email ?? "Account") : undefined}
                   className={cn(
-                    "flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent",
+                    "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent",
                     collapsed && "lg:justify-center lg:px-0",
                   )}
                 >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                    {user?.email?.[0]?.toUpperCase() ?? "?"}
-                  </span>
-                  <span
-                    className={cn(
-                      "hidden min-w-0 flex-1 flex-col leading-tight",
-                      collapsed && "lg:hidden",
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
+                    {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? (
+                      <UserIcon className="size-4" />
                     )}
-                  >
-                    <span className="truncate text-sm font-medium">
-                      {user?.email?.split("@")[0]?.replace(/^\w/, (c) => c.toUpperCase()) ??
+                  </span>
+                  <span className={cn("flex-1 min-w-0", collapsed && "lg:hidden")}>
+                    <span className="block truncate text-sm font-medium leading-tight">
+                      {user?.name?.trim() ||
+                        user?.email?.split("@")[0]?.replace(/^\w/, (c) => c.toUpperCase()) ||
                         "Account"}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {user?.email ?? ""}
+                    <span className="block truncate text-xs text-muted-foreground leading-tight">
+                      {user?.name?.trim()
+                        ? user?.email?.toLowerCase()
+                        : (user?.email?.toLowerCase() ?? "")}
                     </span>
                   </span>
-                  <MoreHorizontal
+                  <ChevronsUpDown
                     className={cn(
                       "size-4 shrink-0 text-muted-foreground",
                       collapsed && "lg:hidden",
