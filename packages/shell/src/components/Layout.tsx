@@ -25,6 +25,8 @@ import {
 
 const SIDEBAR_COLLAPSED_KEY = "groot.sidebar.collapsed";
 
+const NAV_ITEMS: NavItem[] = [{ name: "Todos", href: "/todos", icon: "check-square" }];
+
 export interface LayoutProps {
   /**
    * Custom header / nav. When omitted, the default shell sidebar renders
@@ -76,6 +78,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        if (e.repeat) return;
         e.preventDefault();
         toggleCommandPalette();
       }
@@ -89,8 +92,6 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
     navigate("/login");
   };
 
-  const navItems: NavItem[] = [{ name: "Todos", href: "/todos", icon: "check-square" }];
-
   return (
     <div className={cn("min-h-screen bg-muted/40 text-foreground", className)}>
       {/* Single shared command palette dialog — mounted once. */}
@@ -98,7 +99,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
 
       {header ?? (
         <SidebarNav
-          items={navItems}
+          items={NAV_ITEMS}
           pathname={location.pathname}
           open={sidebarOpen}
           onOpenChange={setSidebarOpen}
