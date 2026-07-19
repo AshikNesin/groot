@@ -100,7 +100,7 @@ export function SidebarNav({
                 aria-label="Expand sidebar"
                 className={ICON_BTN}
               >
-                <PanelLeft className="size-5" />
+                <PanelLeft className="size-4" />
               </button>
             </div>
             <nav className="flex flex-col items-center gap-1 px-2 py-2">
@@ -150,9 +150,7 @@ export function SidebarNav({
               </Link>
 
               <div className="flex items-center gap-0.5">
-                <div className="lg:hidden">
-                  <CommandPalette iconOnly />
-                </div>
+                <CommandPalette iconOnly />
                 <button
                   type="button"
                   onClick={() => {
@@ -162,7 +160,7 @@ export function SidebarNav({
                   aria-label="Close sidebar"
                   className={ICON_BTN}
                 >
-                  <PanelLeftClose className="size-5" />
+                  <PanelLeftClose className="size-4" />
                 </button>
               </div>
             </div>
