@@ -7,7 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { LayoutDashboard, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 
-const isDev = import.meta.env.NODE_ENV === "development";
+const isDev = import.meta.env.DEV;
 
 const DEMO_CREDENTIALS = { email: "demo@example.com", password: "demo@example.com" };
 
