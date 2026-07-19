@@ -95,7 +95,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                   type="button"
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent",
-                    collapsed && "lg:justify-center lg:px-0",
+                    collapsed ? "lg:justify-center lg:px-1.5" : "",
                   )}
                 >
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
@@ -103,18 +103,25 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                       <UserIcon className="size-4" />
                     )}
                   </span>
-                  <span className={cn("flex-1 min-w-0", collapsed && "lg:hidden")}>
-                    <span className="block truncate text-sm font-medium leading-tight">
+
+                  <span
+                    className={cn(
+                      "flex-1 min-w-0 leading-tight transition-opacity",
+                      collapsed && "lg:hidden",
+                    )}
+                  >
+                    <span className="block truncate text-sm font-medium">
                       {user?.name?.trim() ||
                         user?.email?.split("@")[0]?.replace(/^\w/, (c) => c.toUpperCase()) ||
                         "Account"}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground leading-tight">
+                    <span className="block truncate text-xs text-muted-foreground">
                       {user?.name?.trim()
                         ? user?.email?.toLowerCase()
                         : (user?.email?.toLowerCase() ?? "")}
                     </span>
                   </span>
+
                   <ChevronsUpDown
                     className={cn(
                       "size-4 shrink-0 text-muted-foreground",
@@ -154,7 +161,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
       <div
         className={cn(
           "transition-[padding] duration-300 ease-in-out",
-          collapsed ? "lg:pl-16" : "lg:pl-56",
+          collapsed ? "lg:pl-16" : "lg:pl-[17.5rem]",
         )}
       >
         {/* Top bar — mobile (sidebar toggle + brand + search). */}
