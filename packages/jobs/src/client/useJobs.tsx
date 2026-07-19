@@ -1,4 +1,5 @@
 import { jobsApi } from "./api";
+import { formatJobId } from "./utils";
 import { endOfDay, startOfDay, startOfMonth, subtractDays } from "@groot/shell/lib/utils";
 import type { Job, JobName, ScheduledJob } from "./types";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
@@ -225,7 +226,7 @@ export function useJobs() {
               to={`/jobs/${result.queueName}/${result.newJobId}`}
               className="underline font-medium hover:text-foreground"
             >
-              View new job ({result.newJobId.substring(0, 8)}...)
+              View new job ({formatJobId(result.newJobId)})
             </Link>
           </span>
         ),
@@ -347,7 +348,7 @@ export function useJobs() {
               to={`/jobs/${newJobName}/${jobId}`}
               className="underline font-medium hover:text-foreground"
             >
-              View job ({jobId.substring(0, 8)}...)
+              View job ({formatJobId(jobId)})
             </Link>
           </span>
         ),

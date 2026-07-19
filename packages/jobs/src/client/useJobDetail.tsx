@@ -1,4 +1,5 @@
 import { jobsApi } from "./api";
+import { formatJobId } from "./utils";
 import type { JobLog } from "./types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -137,7 +138,7 @@ export function useJobDetail() {
               to={`/jobs/${result.queueName}/${result.newJobId}`}
               className="underline font-medium hover:text-foreground"
             >
-              View new job ({result.newJobId.substring(0, 8)}...)
+              View new job ({formatJobId(result.newJobId)})
             </Link>
           </span>
         ),

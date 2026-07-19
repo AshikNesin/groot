@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@groot/ui/loading-skeleton";
 import { StatusBadge } from "@groot/ui";
 import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
+import { formatJobId } from "@groot/jobs/client/utils";
 import type { Job } from "@groot/jobs/client/types";
 import type { JobsQueryPatch } from "@groot/jobs/client/constants";
 import {
@@ -26,14 +27,6 @@ import { Link } from "react-router-dom";
 function formatJobDuration(start: string | null, end: string | null): string {
   if (!start || !end) return "N/A";
   return formatDuration(start, end);
-}
-
-/**
- * Shorten a job ID for list display. UUIDs (pg-boss) are truncated to the first
- * 6 chars; short numeric IDs (honker/SQLite) are shown in full.
- */
-function formatJobId(id: string): string {
-  return id.length > 8 ? id.substring(0, 6) : id;
 }
 
 type QueryParams = {
