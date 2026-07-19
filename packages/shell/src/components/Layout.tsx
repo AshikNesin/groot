@@ -18,6 +18,8 @@ import {
   UserCircle,
   LogOut,
   Settings as SettingsIcon,
+  HardDrive,
+  Briefcase,
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
@@ -75,11 +77,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
     navigate("/login");
   };
 
-  const navItems: NavItem[] = [
-    { name: "Todos", href: "/todos", icon: "check-square" },
-    { name: "Storage", href: "/storage", icon: "hard-drive" },
-    { name: "Jobs", href: "/jobs", icon: "briefcase" },
-  ];
+  const navItems: NavItem[] = [{ name: "Todos", href: "/todos", icon: "check-square" }];
 
   return (
     <div className={cn("min-h-screen bg-muted/40 text-foreground", className)}>
@@ -109,9 +107,6 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                     <span className="truncate text-sm font-medium leading-tight">
                       {user?.email ?? "Account"}
                     </span>
-                    <span className="truncate text-xs leading-tight text-muted-foreground">
-                      Free plan
-                    </span>
                   </span>
                   <UserCircle
                     className={cn(
@@ -129,6 +124,14 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/storage")}>
+                  <HardDrive className="mr-2 h-4 w-4" />
+                  <span>Storage</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/jobs")}>
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  <span>Jobs</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/settings")}>
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   <span>Settings</span>
