@@ -7,6 +7,10 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { LayoutDashboard, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 
+const isDev = import.meta.env.NODE_ENV === "development";
+
+const DEMO_CREDENTIALS = { email: "demo@example.com", password: "demo@example.com" };
+
 // Mirrors the server's loginSchema (packages/core/src/auth/auth.validation.ts).
 // Duplicated locally so the client never imports the server package (which
 // pulls Prisma/AWS/bcrypt) into the client bundle.
@@ -57,14 +61,16 @@ export function Login() {
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to your account to continue.</p>
 
-          <div className="mt-6 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Demo credentials</span> — demo@example.com
-            / demo@example.com
-          </div>
+          {isDev && (
+            <div className="mt-6 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Demo credentials</span> —
+              demo@example.com / demo@example.com
+            </div>
+          )}
 
           <Form
             schema={loginSchema}
-            defaultValues={{ email: "demo@example.com", password: "demo@example.com" }}
+            defaultValues={isDev ? DEMO_CREDENTIALS : { email: "", password: "" }}
             onSubmit={onSubmit}
             className="mt-6 space-y-4"
           >
