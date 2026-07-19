@@ -7,8 +7,11 @@ import {
   Briefcase,
   Settings as SettingsIcon,
   LayoutDashboard,
+  PanelLeftClose,
+  PanelLeft,
   type LucideIcon,
 } from "lucide-react";
+import { CommandPalette } from "./CommandPalette";
 
 export type NavIcon = "dashboard" | "check-square" | "hard-drive" | "briefcase" | "settings";
 
@@ -40,15 +43,18 @@ interface SidebarNavProps {
   footer?: ReactNode;
 }
 
+const ICON_BTN =
+  "inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
+
 /**
- * Collapsible left sidebar — dub.sh style.
+ * Collapsible left sidebar.
  *
  * Two independent states:
  *  - `open` (mobile only): slides the drawer in/out as an overlay.
- *  - `collapsed` (desktop only): animates the width between `w-56` and `w-16`,
- *    fading out labels into an icon rail. Both transitions share a 300ms
- *    ease-in-out curve so the sidebar and the main content padding stay in
- *    sync.
+ *  - `collapsed` (desktop only): collapses to a minimal icon rail. When
+ *    collapsed, *only* the expand toggle is shown — the brand, nav, and footer
+ *    are hidden entirely (not just faded). Both the width and the main content
+ *    padding animate over 300ms ease-in-out so they stay in sync.
  */
 export function SidebarNav({
   items,
@@ -56,6 +62,7 @@ export function SidebarNav({
   open,
   onOpenChange,
   collapsed,
+  onCollapsedChange,
   footer,
 }: SidebarNavProps) {
   const isActive = (item: NavItem) =>
@@ -83,70 +90,82 @@ export function SidebarNav({
           collapsed ? "lg:w-16" : "lg:w-56",
         )}
       >
-        {/* Brand. */}
-        <div className="flex h-14 shrink-0 items-center gap-2 px-4 lg:px-3">
-          <Link
-            to="/"
-            onClick={() => onOpenChange(false)}
-            className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight"
-          >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <LayoutDashboard className="size-4" />
-            </span>
-            <span
-              className={cn(
-                "truncate transition-opacity duration-200",
-                collapsed ? "lg:opacity-0 lg:invisible" : "opacity-100",
-              )}
+        {/* Collapsed rail: only the expand toggle is rendered. */}
+        {collapsed ? (
+          <div className="flex h-14 shrink-0 items-center justify-center px-3 lg:flex">
+            <button
+              type="button"
+              onClick={() => onCollapsedChange(false)}
+              aria-label="Expand sidebar"
+              className={ICON_BTN}
             >
-              Groot
-            </span>
-          </Link>
-        </div>
-
-        {/* Nav. */}
-        <nav className="flex-1 space-y-1 px-3 py-2">
-          {items.map((item) => {
-            const Icon = ICONS[item.icon] ?? LayoutDashboard;
-            const active = isActive(item);
-            return (
+              <PanelLeft className="size-4" />
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Expanded header: brand on the left, collapse + search on the right. */}
+            <div className="flex h-14 shrink-0 items-center justify-between gap-1 px-3">
               <Link
-                key={item.href}
-                to={item.href}
+                to="/"
                 onClick={() => onOpenChange(false)}
-                title={collapsed ? item.name : undefined}
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  collapsed && "lg:justify-center lg:px-0",
-                  active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                )}
+                className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight"
               >
-                <Icon
-                  className={cn(
-                    "size-4 shrink-0",
-                    active
-                      ? "text-foreground"
-                      : "text-muted-foreground group-hover:text-foreground",
-                  )}
-                />
-                <span
-                  className={cn(
-                    "flex-1 whitespace-nowrap transition-opacity duration-200",
-                    collapsed ? "lg:w-0 lg:opacity-0 lg:overflow-hidden" : "opacity-100",
-                  )}
-                >
-                  {item.name}
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <LayoutDashboard className="size-4" />
                 </span>
-                {!collapsed && item.badge}
+                <span className="truncate transition-opacity duration-200">Groot</span>
               </Link>
-            );
-          })}
-        </nav>
 
-        {/* Footer (user menu). */}
-        {footer && <div className="shrink-0 border-t border-border p-3">{footer}</div>}
+              <div className="flex items-center gap-0.5">
+                <CommandPalette iconOnly />
+                <button
+                  type="button"
+                  onClick={() => onCollapsedChange(true)}
+                  aria-label="Collapse sidebar"
+                  className={ICON_BTN}
+                >
+                  <PanelLeftClose className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Nav. */}
+            <nav className="flex-1 space-y-1 px-3 py-2">
+              {items.map((item) => {
+                const Icon = ICONS[item.icon] ?? LayoutDashboard;
+                const active = isActive(item);
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={() => onOpenChange(false)}
+                    className={cn(
+                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0",
+                        active
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover:text-foreground",
+                      )}
+                    />
+                    <span className="flex-1 whitespace-nowrap">{item.name}</span>
+                    {item.badge}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Footer (user menu). */}
+            {footer && <div className="shrink-0 border-t border-border p-3">{footer}</div>}
+          </>
+        )}
       </aside>
     </>
   );

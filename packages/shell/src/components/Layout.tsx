@@ -59,19 +59,16 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
   // Desktop collapse state, persisted across reloads.
   const [collapsed, setCollapsed] = useState(false);
 
+  const handleCollapsedChange = (next: boolean) => {
+    setCollapsed(next);
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+  };
+
   // Hydrate the collapsed preference once on mount.
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     if (stored === "true") setCollapsed(true);
   }, []);
-
-  const toggleCollapsed = () => {
-    setCollapsed((c) => {
-      const next = !c;
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
-      return next;
-    });
-  };
 
   const handleLogout = () => {
     logout();
@@ -94,7 +91,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           open={sidebarOpen}
           onOpenChange={setSidebarOpen}
           collapsed={collapsed}
-          onCollapsedChange={setCollapsed}
+          onCollapsedChange={handleCollapsedChange}
           footer={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -176,16 +173,8 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
           </div>
         </header>
 
-        {/* Desktop slim toolbar: collapse toggle + command palette. */}
-        <header className="hidden h-14 items-center justify-between gap-4 border-b border-border bg-background/60 px-6 lg:flex">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleCollapsed}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? <PanelLeft className="size-5" /> : <PanelLeftClose className="size-5" />}
-          </Button>
+        {/* Desktop slim toolbar with command palette. */}
+        <header className="hidden h-14 items-center justify-end gap-4 border-b border-border bg-background/60 px-6 lg:flex">
           <div className="w-full max-w-md">
             <CommandPalette />
           </div>
