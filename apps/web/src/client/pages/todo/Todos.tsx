@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Plus, Check, Trash2, Loader2, ListChecks } from "lucide-react";
+import { Plus, Check, Trash2, Loader2, ListChecks, AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@groot/ui/button";
 import { Card } from "@groot/ui/card";
 import { Checkbox } from "@groot/ui/checkbox";
@@ -25,7 +25,7 @@ const todoSchema = z.object({
 });
 
 export function Todos() {
-  const { data: todos, isLoading } = useTodos();
+  const { data: todos, isLoading, isError, refetch } = useTodos();
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
@@ -131,6 +131,22 @@ export function Todos() {
           <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             Loading todos...
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="size-6 text-destructive" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Failed to load todos</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Unable to fetch your todo list. Please try again.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RotateCcw className="size-4 mr-1" />
+              Retry
+            </Button>
           </div>
         ) : total === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">

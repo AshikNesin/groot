@@ -2,7 +2,8 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@groot/shell/store/auth";
-import { CommandPalette } from "./CommandPalette";
+import { useCommandPaletteStore } from "@groot/shell/store/command-palette";
+import { CommandPaletteTrigger, CommandPaletteDialog } from "./CommandPalette";
 import { SidebarNav, type NavItem } from "./SidebarNav";
 import {
   DropdownMenu,
@@ -53,6 +54,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const toggleCommandPalette = useCommandPaletteStore((state) => state.toggle);
 
   // Mobile drawer state.
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -70,6 +72,18 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
     if (stored === "true") setCollapsed(true);
   }, []);
 
+  // Global ⌘K / Ctrl+K handler for the command palette.
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        toggleCommandPalette();
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [toggleCommandPalette]);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -79,6 +93,9 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
 
   return (
     <div className={cn("min-h-screen bg-muted/40 text-foreground", className)}>
+      {/* Single shared command palette dialog — mounted once. */}
+      <CommandPaletteDialog />
+
       {header ?? (
         <SidebarNav
           items={navItems}
@@ -161,20 +178,20 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
             onClick={() => setSidebarOpen((o) => !o)}
             aria-label="Toggle sidebar"
           >
-            {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeft className="size-5" />}
+            {sidebarOpen ? <PanelLeftClose className="size-4" /> : <PanelLeft className="size-4" />}
           </Button>
           <Link to="/" className="text-sm font-semibold tracking-tight">
             Groot
           </Link>
           <div className="ml-auto">
-            <CommandPalette iconOnly />
+            <CommandPaletteTrigger iconOnly />
           </div>
         </header>
 
         {/* Desktop slim toolbar with command palette. */}
         <header className="hidden h-14 items-center justify-end gap-4 border-b border-border bg-background/60 px-6 lg:flex">
           <div className="w-full max-w-md">
-            <CommandPalette />
+            <CommandPaletteTrigger />
           </div>
         </header>
 
