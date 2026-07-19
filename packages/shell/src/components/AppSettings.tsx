@@ -1,5 +1,4 @@
 import { Button } from "@groot/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@groot/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +11,11 @@ import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
 import { Form, FormField } from "@groot/ui/form";
 import { LoadingSpinner } from "@groot/ui/loading-spinner";
+import { Plus, RefreshCw, Search, Trash2, Save, FileJson } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { z } from "zod";
 import { useAppSettings } from "@groot/shell/hooks/useAppSettings";
+import { cn } from "@groot/ui/lib/utils";
 
 const settingKeySchema = z.object({
   key: z.string().trim().min(1, "Key is required"),
@@ -29,32 +30,43 @@ export function AppSettings() {
 
   if (s.isLoading) {
     return (
-      <div className="flex h-96 flex-col items-center justify-center">
+      <div className="flex h-96 flex-col items-center justify-center rounded-xl border border-border bg-card">
         <LoadingSpinner size="lg" />
-        <p className="mt-4 text-sm text-muted-foreground">Loading settings...</p>
+        <p className="mt-4 text-sm text-muted-foreground">Loading settings…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Manage application configuration settings in JSON format
-        </p>
+    <div className="space-y-6">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <FileJson className="size-4" />
+          <span>Application configuration stored as JSON.</span>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => s.refresh()}>
+            <RefreshCw className="size-3.5" />
             Refresh
           </Button>
           <Button size="sm" onClick={() => s.setShowNewSettingForm(true)}>
+            <Plus className="size-3.5" />
             Add Setting
           </Button>
         </div>
       </div>
 
+      {/* Add-setting inline form */}
       {s.showNewSettingForm && (
-        <Card>
-          <CardContent className="pt-6">
+        <div className="rounded-xl border border-border bg-card">
+          <div className="border-b border-border px-5 py-4">
+            <h3 className="text-sm font-semibold">New setting</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Give it a descriptive key — you can edit the value next.
+            </p>
+          </div>
+          <div className="px-5 py-4">
             <Form
               schema={settingKeySchema}
               defaultValues={{ key: "" }}
@@ -62,10 +74,10 @@ export function AppSettings() {
               className="flex items-start gap-2"
             >
               <FormField name="key" className="flex-1">
-                <Input placeholder="Enter setting key (e.g., myNewSetting)" />
+                <Input placeholder="e.g. featureFlags, theme, rateLimits" />
               </FormField>
               <Button type="submit" disabled={s.isCreating} size="sm">
-                {s.isCreating ? "Creating..." : "Create"}
+                {s.isCreating ? "Creating…" : "Create"}
               </Button>
               <Button
                 type="button"
@@ -76,86 +88,94 @@ export function AppSettings() {
                 Cancel
               </Button>
             </Form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Settings List</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Input
-              type="search"
-              placeholder="Search..."
-              value={s.searchQuery}
-              onChange={(e) => s.setSearchQuery(e.target.value)}
-              className="h-9"
-            />
+      {/* Master / detail */}
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        {/* Settings list */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="border-b border-border p-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search settings…"
+                value={s.searchQuery}
+                onChange={(e) => s.setSearchQuery(e.target.value)}
+                className="h-8 pl-8"
+              />
+            </div>
+          </div>
+          <div className="min-h-[120px] flex-1 p-1.5">
             {s.settings.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">No settings found</p>
+              <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+                No settings yet.
+              </p>
             ) : s.filteredSettings.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">No matches</p>
+              <p className="px-3 py-8 text-center text-sm text-muted-foreground">No matches.</p>
             ) : (
-              <div className="space-y-1">
-                {s.filteredSettings.map((setting) => (
-                  <button
-                    type="button"
-                    key={setting.key}
-                    onClick={() => s.selectKey(setting.key)}
-                    className={`w-full rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
-                      s.selectedKey === setting.key
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    <div className="font-medium">{setting.key}</div>
-                    {setting.metadata?.description && (
-                      <div className="mt-0.5 text-xs opacity-80 truncate">
-                        {setting.metadata.description}
+              <div className="space-y-0.5">
+                {s.filteredSettings.map((setting) => {
+                  const active = s.selectedKey === setting.key;
+                  return (
+                    <button
+                      type="button"
+                      key={setting.key}
+                      onClick={() => s.selectKey(setting.key)}
+                      className={cn(
+                        "w-full rounded-lg px-3 py-2 text-left transition-colors",
+                        active ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-muted",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "truncate text-sm font-medium",
+                          active ? "text-primary" : "text-foreground",
+                        )}
+                      >
+                        {setting.key}
                       </div>
-                    )}
-                  </button>
-                ))}
+                      {setting.metadata?.description && (
+                        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {setting.metadata.description}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle>{s.selectedKey || "No setting selected"}</CardTitle>
-                <CardDescription>
-                  {s.selectedKey
-                    ? "Edit the configuration below"
-                    : "Select a setting from the list"}
-                </CardDescription>
-              </div>
-              {s.selectedKey && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={s.requestDelete}
-                    disabled={s.isDeleting}
-                  >
-                    Delete
-                  </Button>
-                  <Button size="sm" onClick={s.save} disabled={s.isSaving}>
-                    {s.isSaving ? "Saving..." : "Save"}
-                  </Button>
+        {/* Editor */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          {s.selectedKey ? (
+            <>
+              <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+                <div className="min-w-0">
+                  <h3 className="truncate text-base font-semibold">{s.selectedKey}</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Edit the configuration below and save your changes.
+                  </p>
                 </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {s.selectedKey ? (
-              <div className="space-y-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={s.requestDelete}
+                  disabled={s.isDeleting}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete
+                </Button>
+              </div>
+
+              <div className="space-y-4 p-5">
                 <div>
-                  <Label htmlFor="description" className="text-sm">
+                  <Label htmlFor="description" className="text-xs">
                     Description
                   </Label>
                   <Input
@@ -167,10 +187,10 @@ export function AppSettings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="jsonEditor" className="text-sm">
+                  <Label htmlFor="jsonEditor" className="text-xs">
                     JSON Value
                   </Label>
-                  <div className="mt-1.5 overflow-hidden rounded-md border">
+                  <div className="mt-1.5 overflow-hidden rounded-md border border-border">
                     <Suspense fallback={<div className="h-[400px]" />}>
                       <CodeMirrorEditor
                         value={s.jsonValue}
@@ -187,23 +207,33 @@ export function AppSettings() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="flex h-96 items-center justify-center">
-                <p className="text-sm text-muted-foreground">
-                  Select a setting from the list to edit
-                </p>
+
+              {/* Footer action row */}
+              <div className="mt-auto flex items-center justify-end gap-2 border-t border-border bg-muted/40 px-5 py-3">
+                <Button size="sm" onClick={s.save} disabled={s.isSaving}>
+                  <Save className="size-3.5" />
+                  {s.isSaving ? "Saving…" : "Save changes"}
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </>
+          ) : (
+            <div className="flex h-96 flex-col items-center justify-center text-center">
+              <FileJson className="size-8 text-muted-foreground/50" />
+              <p className="mt-3 text-sm font-medium">No setting selected</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Choose a setting from the list to edit its value.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Dialog open={s.showDeleteDialog} onOpenChange={s.setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Setting</DialogTitle>
+            <DialogTitle>Delete setting</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{s.selectedKey}"? This action cannot be undone.
+              Are you sure you want to delete “{s.selectedKey}”? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -211,7 +241,7 @@ export function AppSettings() {
               Cancel
             </Button>
             <Button variant="destructive" onClick={s.confirmDelete} disabled={s.isDeleting}>
-              {s.isDeleting ? "Deleting..." : "Delete"}
+              {s.isDeleting ? "Deleting…" : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
