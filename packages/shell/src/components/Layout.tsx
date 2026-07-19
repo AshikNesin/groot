@@ -13,7 +13,7 @@ import {
 import { Button } from "@groot/ui/button";
 import { cn } from "@groot/ui/lib/utils";
 import {
-  ChevronRight,
+  MoreHorizontal,
   LogOut,
   Settings as SettingsIcon,
   HardDrive,
@@ -103,7 +103,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                   </span>
                   <span
                     className={cn(
-                      "hidden min-w-0 flex-1 flex-col leading-tight",
+                      "flex min-w-0 flex-1 flex-col leading-tight",
                       collapsed && "lg:hidden",
                     )}
                   >
@@ -116,7 +116,7 @@ export function Layout({ header, padded = true, mainClassName, className }: Layo
                       {user?.email?.toLowerCase() ?? ""}
                     </span>
                   </span>
-                  <ChevronRight
+                  <MoreHorizontal
                     className={cn(
                       "size-4 shrink-0 text-muted-foreground",
                       collapsed && "lg:hidden",
