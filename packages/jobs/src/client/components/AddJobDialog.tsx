@@ -43,8 +43,8 @@ export function AddJobDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 text-xs">
-          <Plus className="w-3.5 h-3.5 md:mr-1.5" />
+        <Button size="sm">
+          <Plus className="size-4" />
           <span className="hidden md:inline">Add Job</span>
         </Button>
       </DialogTrigger>

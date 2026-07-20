@@ -1,3 +1,4 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@groot/ui/card";
 import { formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
 import type { Job } from "@groot/jobs/client/types";
 import dayjs from "dayjs";
@@ -8,91 +9,54 @@ function formatDuration(start: string | null, end: string | null): string {
   return `${duration.toFixed(2)}s`;
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dd className="text-sm font-medium text-foreground mt-1 tabular-nums">{children}</dd>
+    </div>
+  );
+}
+
 /** Read-only metadata grid for a job (priority, retries, timestamps, retention…). */
 export function JobOverview({ job }: { job: Job }) {
   return (
-    <div>
-      <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
-        Overview
-      </h2>
-      <div className="border border-dashed p-4">
-        <dl className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">Priority</dt>
-            <dd className="text-sm font-medium mt-0.5 tabular-nums">{job.priority}</dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">Retries</dt>
-            <dd className="text-sm font-medium mt-0.5 tabular-nums">
-              {job.retrycount} / {job.retrylimit}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">Created</dt>
-            <dd
-              className="text-sm mt-0.5"
-              title={job.createdon ? formatLocaleDateTime(job.createdon) : "N/A"}
-            >
+    <Card>
+      <CardHeader>
+        <CardTitle>Overview</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <dl className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+          <Field label="Priority">{job.priority}</Field>
+          <Field label="Retries">
+            {job.retrycount} / {job.retrylimit}
+          </Field>
+          <Field label="Created">
+            <span title={job.createdon ? formatLocaleDateTime(job.createdon) : "N/A"}>
               {job.createdon ? formatRelativeTime(job.createdon) : "N/A"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">Started</dt>
-            <dd
-              className="text-sm mt-0.5"
-              title={job.startedon ? formatLocaleDateTime(job.startedon) : "N/A"}
-            >
+            </span>
+          </Field>
+          <Field label="Started">
+            <span title={job.startedon ? formatLocaleDateTime(job.startedon) : "N/A"}>
               {job.startedon ? formatRelativeTime(job.startedon) : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
-              Completed
-            </dt>
-            <dd
-              className="text-sm mt-0.5"
-              title={job.completedon ? formatLocaleDateTime(job.completedon) : "N/A"}
-            >
+            </span>
+          </Field>
+          <Field label="Completed">
+            <span title={job.completedon ? formatLocaleDateTime(job.completedon) : "N/A"}>
               {job.completedon ? formatRelativeTime(job.completedon) : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">Duration</dt>
-            <dd className="text-sm font-medium mt-0.5 tabular-nums">
-              {formatDuration(job.startedon, job.completedon)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
-              Retry Delay
-            </dt>
-            <dd className="text-sm font-medium mt-0.5">{job.retrydelay}s</dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
-              Retry Backoff
-            </dt>
-            <dd className="text-sm font-medium mt-0.5">{job.retrybackoff ? "Yes" : "No"}</dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
-              Expire In
-            </dt>
-            <dd className="text-sm font-medium mt-0.5">{job.expirein}</dd>
-          </div>
-          <div>
-            <dt className="text-[11px] text-muted-foreground uppercase tracking-wider">
-              Keep Until
-            </dt>
-            <dd
-              className="text-sm mt-0.5"
-              title={job.keepuntil ? formatLocaleDateTime(job.keepuntil) : "N/A"}
-            >
+            </span>
+          </Field>
+          <Field label="Duration">{formatDuration(job.startedon, job.completedon)}</Field>
+          <Field label="Retry Delay">{job.retrydelay}s</Field>
+          <Field label="Retry Backoff">{job.retrybackoff ? "Yes" : "No"}</Field>
+          <Field label="Expire In">{job.expirein}</Field>
+          <Field label="Keep Until">
+            <span title={job.keepuntil ? formatLocaleDateTime(job.keepuntil) : "N/A"}>
               {job.keepuntil ? formatRelativeTime(job.keepuntil) : "N/A"}
-            </dd>
-          </div>
+            </span>
+          </Field>
         </dl>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

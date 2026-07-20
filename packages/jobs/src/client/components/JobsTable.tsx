@@ -1,4 +1,5 @@
 import { Button } from "@groot/ui/button";
+import { Card } from "@groot/ui/card";
 import { Checkbox } from "@groot/ui/checkbox";
 import {
   DropdownMenu,
@@ -6,12 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@groot/ui/dropdown-menu";
-import { Skeleton } from "@groot/ui/loading-skeleton";
 import { StatusBadge } from "@groot/ui";
+import { cn } from "@groot/ui/lib/utils";
 import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
 import { formatJobId } from "@groot/jobs/client/utils";
 import type { Job } from "@groot/jobs/client/types";
 import type { JobsQueryPatch } from "@groot/jobs/client/constants";
+import { JobsTableSkeleton } from "./skeletons";
 import {
   AlertCircle,
   ChevronRight,
@@ -57,6 +59,8 @@ type Props = {
   handlePurge: (state: string) => void;
 } & JobActions;
 
+const COLUMN_HEADER = "text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+
 /** Jobs list: bulk-action bar + desktop grid table + mobile cards + pagination. */
 export function JobsTable({
   jobs,
@@ -80,93 +84,61 @@ export function JobsTable({
   const pageSize = 50;
 
   return (
-    <div>
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {queryParams.state === "all" ? "All jobs" : `${queryParams.state} jobs`}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Showing {jobs.length} of {total}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            {selectedJobs.size > 0 && (
-              <Button variant="outline" size="sm" onClick={handleBulkRerun} className="h-7 text-xs">
-                <Play className="w-3 h-3 md:mr-1.5" />
-                Rerun {selectedJobs.size}
-              </Button>
-            )}
-            {queryParams.state !== "all" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handlePurge(queryParams.state)}
-                className="h-7 text-xs text-destructive"
-              >
-                <Trash2 className="w-3 h-3 md:mr-1.5" />
-                Purge {queryParams.state}
-              </Button>
-            )}
-          </div>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">
+            {queryParams.state === "all" ? "All jobs" : `${queryParams.state} jobs`}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {jobs.length} of {total}
+          </span>
         </div>
+        <div className="flex gap-2">
+          {selectedJobs.size > 0 && (
+            <Button variant="outline" size="sm" onClick={handleBulkRerun}>
+              <Play className="size-3.5" />
+              Rerun {selectedJobs.size}
+            </Button>
+          )}
+          {queryParams.state !== "all" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handlePurge(queryParams.state)}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="size-3.5" />
+              Purge {queryParams.state}
+            </Button>
+          )}
+        </div>
+      </div>
 
+      <Card className="gap-0 overflow-hidden p-0">
         {error && jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="bg-muted p-3 mb-3">
-              <AlertCircle className="h-6 w-6 text-destructive" />
+            <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="size-5 text-destructive" />
             </div>
-            <h3 className="font-medium text-sm text-foreground">Couldn't load jobs</h3>
-            <p className="text-xs text-muted-foreground mt-1">{error}</p>
+            <h3 className="text-sm font-medium text-foreground">Couldn't load jobs</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{error}</p>
             {onErrorRetry && (
-              <Button variant="outline" size="sm" className="mt-3" onClick={onErrorRetry}>
-                <RefreshCw className="w-3 h-3 md:mr-1.5" />
+              <Button variant="outline" size="sm" className="mt-4" onClick={onErrorRetry}>
+                <RefreshCw className="size-3.5" />
                 Retry
               </Button>
             )}
           </div>
         ) : loading && jobs.length === 0 ? (
-          <div className="divide-y divide-border/50">
-            <div className="grid grid-cols-12 gap-4 border-b border-dashed py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-              <div className="col-span-5">Job</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-2">Created</div>
-              <div className="col-span-2">Started</div>
-              <div className="col-span-1" />
-            </div>
-            {[...Array(12)].map((_, i) => (
-              <div key={i.toString()} className="grid grid-cols-12 items-center gap-4 py-3">
-                <div className="col-span-5 flex items-center gap-3">
-                  <Skeleton className="h-4 w-4 rounded" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <Skeleton className="h-5 w-20" />
-                </div>
-                <div className="col-span-2">
-                  <Skeleton className="h-4 w-24" />
-                </div>
-                <div className="col-span-2">
-                  <Skeleton className="h-4 w-24" />
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  <Skeleton className="h-4 w-4 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <JobsTableSkeleton />
         ) : jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="bg-muted p-3 mb-3">
-              <FileText className="h-6 w-6 text-muted-foreground" />
+            <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-muted">
+              <FileText className="size-5 text-muted-foreground" />
             </div>
-            <h3 className="font-medium text-sm text-foreground">No jobs found</h3>
-            <p className="text-xs text-muted-foreground mt-1">
+            <h3 className="text-sm font-medium text-foreground">No jobs found</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
               {queryParams.state !== "all" ? `No ${queryParams.state} jobs` : "The queue is empty"}
             </p>
           </div>
@@ -174,27 +146,27 @@ export function JobsTable({
           <>
             {/* Desktop: CSS Grid Table */}
             <div className="hidden md:block">
-              <div className="grid grid-cols-12 gap-4 border-b border-dashed py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <div className="col-span-5 flex items-center gap-3">
+              <div className="grid grid-cols-12 gap-4 border-b border-border/60 px-4 py-2.5">
+                <div className={cn(COLUMN_HEADER, "col-span-5 flex items-center gap-3")}>
                   <Checkbox
                     checked={jobs.length > 0 && selectedJobs.size === jobs.length}
                     onCheckedChange={toggleSelectAll}
                     aria-label="Select all"
-                    className="h-3.5 w-3.5"
+                    className="size-3.5"
                   />
                   <span>Job</span>
                 </div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-2">Created</div>
-                <div className="col-span-2">Started</div>
+                <div className={cn(COLUMN_HEADER, "col-span-2")}>Status</div>
+                <div className={cn(COLUMN_HEADER, "col-span-2")}>Created</div>
+                <div className={cn(COLUMN_HEADER, "col-span-2")}>Started</div>
                 <div className="col-span-1" />
               </div>
-              <div className="divide-y divide-border/50">
+              <div className="divide-y divide-border/40">
                 {jobs.map((job) => (
                   <Link
                     key={job.id}
                     to={`/jobs/${job.name}/${job.id}`}
-                    className="group grid grid-cols-12 items-center gap-4 py-3 text-sm hover:bg-accent/30 transition-colors"
+                    className="group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
                   >
                     <div className="col-span-5 flex items-center gap-3 min-w-0">
                       <Checkbox
@@ -203,11 +175,11 @@ export function JobsTable({
                         )}
                         onCheckedChange={() => toggleJobSelection(job.name, job.id)}
                         onClick={(e) => e.stopPropagation()}
-                        className="h-3.5 w-3.5"
+                        className="size-3.5"
                       />
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <FileText className="size-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{job.name}</div>
+                        <div className="truncate font-medium text-foreground">{job.name}</div>
                         <div className="truncate font-mono text-xs text-muted-foreground">
                           {formatJobId(job.id)}
                         </div>
@@ -233,29 +205,29 @@ export function JobsTable({
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            size="icon-sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => e.preventDefault()}
                           >
-                            <MoreVertical className="w-3.5 h-3.5" />
+                            <MoreVertical className="size-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                           {job.state === "failed" && (
                             <DropdownMenuItem onClick={() => onRetry(job.name, job.id)}>
-                              <RefreshCw className="w-3.5 h-3.5 mr-2" />
+                              <RefreshCw className="size-3.5" />
                               Retry
                             </DropdownMenuItem>
                           )}
                           {(job.state === "completed" || job.state === "failed") && (
                             <DropdownMenuItem onClick={() => onRerun(job.name, job.id)}>
-                              <Play className="w-3.5 h-3.5 mr-2" />
+                              <Play className="size-3.5" />
                               Re-run
                             </DropdownMenuItem>
                           )}
                           {job.state === "cancelled" && (
                             <DropdownMenuItem onClick={() => onResume(job.name, job.id)}>
-                              <Play className="w-3.5 h-3.5 mr-2" />
+                              <Play className="size-3.5" />
                               Resume
                             </DropdownMenuItem>
                           )}
@@ -263,20 +235,20 @@ export function JobsTable({
                             job.state === "created" ||
                             job.state === "retry") && (
                             <DropdownMenuItem onClick={() => onCancel(job.name, job.id)}>
-                              <X className="w-3.5 h-3.5 mr-2" />
+                              <X className="size-3.5" />
                               Cancel
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
                             onClick={() => onDelete(job.name, job.id)}
-                            className="text-destructive"
+                            className="text-destructive focus:text-destructive"
                           >
-                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                            <Trash2 className="size-3.5" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <ChevronRight className="size-4 text-muted-foreground" />
                     </div>
                   </Link>
                 ))}
@@ -284,16 +256,16 @@ export function JobsTable({
             </div>
 
             {/* Mobile: Card View */}
-            <div className="md:hidden space-y-2">
+            <div className="md:hidden divide-y divide-border/40">
               {jobs.map((job) => (
                 <Link
                   key={job.id}
                   to={`/jobs/${job.name}/${job.id}`}
-                  className="block border border-border rounded-lg p-3 space-y-2 active:bg-accent/50 transition-colors"
+                  className="block px-4 py-3 space-y-2 active:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <FileText className="size-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
                         <div className="font-medium text-sm truncate">{job.name}</div>
                         <div className="font-mono text-[11px] text-muted-foreground mt-0.5 truncate">
@@ -335,38 +307,36 @@ export function JobsTable({
                 </Link>
               ))}
             </div>
-
-            {/* Pagination */}
-            {total > pageSize && (
-              <div className="flex justify-between items-center mt-4">
-                <div className="text-xs text-muted-foreground">
-                  Page {queryParams.page + 1} of {Math.ceil(total / pageSize)}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQueryParams({ page: Math.max(0, queryParams.page - 1) })}
-                    disabled={queryParams.page === 0}
-                    className="h-7 text-xs"
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQueryParams({ page: queryParams.page + 1 })}
-                    disabled={(queryParams.page + 1) * pageSize >= total}
-                    className="h-7 text-xs"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
           </>
         )}
-      </div>
+      </Card>
+
+      {/* Pagination */}
+      {total > pageSize && (
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-muted-foreground">
+            Page {queryParams.page + 1} of {Math.ceil(total / pageSize)}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setQueryParams({ page: Math.max(0, queryParams.page - 1) })}
+              disabled={queryParams.page === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setQueryParams({ page: queryParams.page + 1 })}
+              disabled={(queryParams.page + 1) * pageSize >= total}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
