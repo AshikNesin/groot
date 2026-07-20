@@ -70,13 +70,12 @@ export function Jobs() {
 
   return (
     <PageLayout title="Jobs" description={description} actions={actions} maxWidth="7xl">
-      {j.stats && (
-        <JobsStats
-          stats={j.stats}
-          activeState={j.queryParams.state}
-          onSelectState={(state) => j.setQueryParams({ state, page: 0 })}
-        />
-      )}
+      <JobsStats
+        stats={j.stats}
+        statsLoading={j.statsLoading}
+        activeState={j.queryParams.state}
+        onSelectState={(state) => j.setQueryParams({ state, page: 0 })}
+      />
 
       <JobsFilters
         queryParams={j.queryParams}
@@ -112,6 +111,7 @@ export function Jobs() {
 
       <ScheduledJobsPanel
         scheduledJobs={j.scheduledJobs}
+        loading={j.scheduledLoading}
         onEdit={j.openEditScheduledDialog}
         onCancel={j.handleCancelScheduledJob}
       />

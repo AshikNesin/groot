@@ -441,11 +441,13 @@ export function useJobs() {
   return {
     pageSize: PAGE_SIZE,
     stats: statsQuery.data ?? null,
+    statsLoading: statsQuery.isLoading,
     queryParams,
     setQueryParams,
     jobs,
     selectedJobs,
     scheduledJobs: scheduledQuery.data ?? [],
+    scheduledLoading: scheduledQuery.isLoading,
     loading: jobsQuery.isLoading,
     error: jobsQuery.error
       ? jobsQuery.error instanceof Error

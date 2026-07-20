@@ -3,9 +3,11 @@ import { Card } from "@groot/ui/card";
 import { cn } from "@groot/ui/lib/utils";
 import type { ScheduledJob } from "@groot/jobs/client/types";
 import { Pencil, Trash2 } from "lucide-react";
+import { ScheduledJobsSkeleton } from "./skeletons";
 
 type Props = {
   scheduledJobs: ScheduledJob[];
+  loading?: boolean;
   onEdit: (job: ScheduledJob) => void;
   onCancel: (jobName: string, key?: string) => void;
 };
@@ -13,7 +15,11 @@ type Props = {
 const COLUMN_HEADER = "text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
 
 /** Scheduled (cron) jobs: desktop grid + mobile cards, with edit/cancel actions. */
-export function ScheduledJobsPanel({ scheduledJobs, onEdit, onCancel }: Props) {
+export function ScheduledJobsPanel({ scheduledJobs, loading, onEdit, onCancel }: Props) {
+  if (loading) {
+    return <ScheduledJobsSkeleton />;
+  }
+
   if (scheduledJobs.length === 0) return null;
 
   return (

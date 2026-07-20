@@ -7,13 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@groot/ui/dropdown-menu";
-import { Skeleton } from "@groot/ui/loading-skeleton";
 import { StatusBadge } from "@groot/ui";
 import { cn } from "@groot/ui/lib/utils";
 import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
 import { formatJobId } from "@groot/jobs/client/utils";
 import type { Job } from "@groot/jobs/client/types";
 import type { JobsQueryPatch } from "@groot/jobs/client/constants";
+import { JobsTableSkeleton } from "./skeletons";
 import {
   AlertCircle,
   ChevronRight,
@@ -131,44 +131,7 @@ export function JobsTable({
             )}
           </div>
         ) : loading && jobs.length === 0 ? (
-          <div>
-            <div className="grid grid-cols-12 gap-4 border-b border-border/60 px-4 py-2.5 sm:px-5">
-              <div className={cn(COLUMN_HEADER, "col-span-5")}>Job</div>
-              <div className={cn(COLUMN_HEADER, "col-span-2")}>Status</div>
-              <div className={cn(COLUMN_HEADER, "col-span-2")}>Created</div>
-              <div className={cn(COLUMN_HEADER, "col-span-2")}>Started</div>
-              <div className="col-span-1" />
-            </div>
-            <div className="divide-y divide-border/40">
-              {[...Array(10)].map((_, i) => (
-                <div
-                  key={i.toString()}
-                  className="grid grid-cols-12 items-center gap-4 px-4 py-3 sm:px-5"
-                >
-                  <div className="col-span-5 flex items-center gap-3">
-                    <Skeleton className="size-4 rounded" />
-                    <Skeleton className="size-4 rounded" />
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-4 w-28" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                  </div>
-                  <div className="col-span-2">
-                    <Skeleton className="h-5 w-20" />
-                  </div>
-                  <div className="col-span-2">
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                  <div className="col-span-2">
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                  <div className="col-span-1 flex justify-end">
-                    <Skeleton className="size-4 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <JobsTableSkeleton />
         ) : jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-muted">

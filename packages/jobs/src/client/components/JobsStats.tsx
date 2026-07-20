@@ -2,6 +2,7 @@ import { Card } from "@groot/ui/card";
 import { cn } from "@groot/ui/lib/utils";
 import type { JobStats } from "@groot/jobs/client/types";
 import { Activity, CheckCircle, Clock, RefreshCw, X, XCircle } from "lucide-react";
+import { JobsStatsSkeleton } from "./skeletons";
 
 type StatItem = {
   key: string;
@@ -12,13 +13,18 @@ type StatItem = {
 };
 
 type Props = {
-  stats: JobStats;
+  stats: JobStats | null;
+  statsLoading?: boolean;
   activeState: string;
   onSelectState: (state: string) => void;
 };
 
 /** Compact, clickable stat row that filters the jobs list by state. */
-export function JobsStats({ stats, activeState, onSelectState }: Props) {
+export function JobsStats({ stats, statsLoading, activeState, onSelectState }: Props) {
+  if (statsLoading || !stats) {
+    return <JobsStatsSkeleton />;
+  }
+
   const items: StatItem[] = [
     {
       key: "all",

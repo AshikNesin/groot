@@ -1,6 +1,6 @@
 import { Button } from "@groot/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@groot/ui/card";
-import { LoadingSpinner } from "@groot/ui/loading-spinner";
+import { Skeleton } from "@groot/ui/loading-skeleton";
 import { StatusBadge } from "@groot/ui";
 import { PageContainer } from "@groot/shell/components/layout/PageContainer";
 import { formatLocaleDateTime, formatRelativeTime } from "@groot/shell/lib/utils";
@@ -8,6 +8,7 @@ import { JobActions } from "./components/JobActions";
 import { JobJsonBlock } from "./components/JobJsonBlock";
 import { JobLogs } from "./components/JobLogs";
 import { JobOverview } from "./components/JobOverview";
+import { JobDetailSkeleton } from "./components/skeletons";
 import { useJobDetail } from "./useJobDetail";
 import { AlertCircle, ArrowLeft, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,7 +20,14 @@ export function JobDetail() {
   if (loading) {
     return (
       <PageContainer maxWidth="5xl">
-        <LoadingSpinner size="lg" className="py-20" />
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Skeleton className="h-4 w-10" />
+          <ChevronRight className="size-3.5" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <div className="mt-4">
+          <JobDetailSkeleton />
+        </div>
       </PageContainer>
     );
   }
