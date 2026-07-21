@@ -42,12 +42,19 @@ async function createFiles(): Promise<Files> {
   });
 }
 
-// Resolved at startup; the promise settles before the first request.
-export const filesPromise: Promise<Files> = createFiles();
+// Resolved at module load. The resolved instance is cached in `_files` so the
+// synchronous `files` proxy (used by storageService) works for every call after
+// the first `await`-tick of the event loop — i.e. well before the first HTTP
+// request lands. Callers that need the instance before that tick (e.g. during
+// imperative startup) should `await getFiles()` / `await filesPromise`.
+let _files: Files | null = null;
+export const filesPromise: Promise<Files> = createFiles().then((instance) => {
+  _files = instance;
+  return instance;
+});
 
 // Lazy accessor used by storageService — awaits the promise on first call then
 // returns the cached instance for all subsequent calls.
-let _files: Files | null = null;
 export const getFiles = async (): Promise<Files> => {
   if (!_files) _files = await filesPromise;
   return _files;
