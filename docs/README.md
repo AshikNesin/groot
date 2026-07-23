@@ -1,110 +1,67 @@
-# Express + React Boilerplate Docs
+# Documentation
 
-Welcome to the documentation hub for the Express + React boilerplate. This guide covers the domain-driven architecture, feature modules, and modern development patterns.
+This is the documentation hub for groot — a minimal Express + React + Prisma
+boilerplate. Start with the **Quick start**, then dive into the guides and
+feature docs as you need them.
 
-## Quick Navigation
+## Getting started
 
-### Getting Started
+| Document                                                 | What it covers                                     |
+| -------------------------------------------------------- | -------------------------------------------------- |
+| [`quick-start.md`](./quick-start.md)                     | Boot the app in 4 steps, create your first feature |
+| [`setup-guide.md`](./setup-guide.md)                     | Environment variables, prerequisites, prod build   |
+| [`database-engines.md`](./database-engines.md)           | SQLite (default) vs PostgreSQL, engine matrix      |
+| [`guides/portless-https.md`](./guides/portless-https.md) | Local HTTPS via portless, certificate trust        |
 
-- **[Quick Start](./quick-start.md)** – Get started in 3 steps with authentication, components, and examples
-- **[Setup Guide](./setup-guide.md)** – Environment variables, database, and local workflow
-- **[Database Engines](./database-engines.md)** – SQLite (default) vs PostgreSQL, switching, and the job-queue adapter
-- **[Development Workflow](./guides/development.md)** – Day-to-day commands, conventions, and scripts
+## Guides
 
-### Guides
+| Document                                                           | What it covers                                       |
+| ------------------------------------------------------------------ | ---------------------------------------------------- |
+| [`guides/architecture.md`](./guides/architecture.md)               | Feature modules, core infrastructure, request flow   |
+| [`guides/development.md`](./guides/development.md)                 | Day-to-day commands, conventions, adding a feature   |
+| [`guides/database-migrations.md`](./guides/database-migrations.md) | Prisma migrate workflow, pooled-DB guidance          |
+| [`guides/testing.md`](./guides/testing.md)                         | Vitest + Supertest patterns, running on both engines |
+| [`config.md`](./config.md)                                         | `config.yml` settings, env interpolation, validation |
+| [`precommit-hooks.md`](./precommit-hooks.md)                       | gitleaks secret detection + Vite+ staged lint/format |
 
-- **[Architecture](./guides/architecture.md)** – Feature modules, core infrastructure, and request flow
-- **[Portless & HTTPS](./guides/portless-https.md)** – Local HTTPS setup, certificate trust, and troubleshooting
-- **[Testing](./guides/testing.md)** – Vitest + Supertest guidance and patterns
-- **[Pre-commit Hooks](./precommit-hooks.md)** – Gitleaks secret detection and linting automation
+## Features
 
-### Features
+| Document                                                                     | What it covers                                       |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`features/todos.md`](./features/todos.md)                                   | The reference feature module (CRUD + jobs)           |
+| [`features/jobs.md`](./features/jobs.md)                                     | Background jobs: adapter, registration, HTTP API, UI |
+| [`features/client.md`](./features/client.md)                                 | Client routing, JWT auth guard, data fetching        |
+| [`features/storage.md`](./features/storage.md)                               | S3 file browser, uploads, rate limits                |
+| [`features/passkey-authentication.md`](./features/passkey-authentication.md) | WebAuthn/FIDO2 passwordless authentication           |
+| [`features/ai-inference.md`](./features/ai-inference.md)                     | Unified LLM API with Zod structured output           |
+| [`kv.md`](./kv.md)                                                           | Keyv key-value storage (SQLite or Postgres backend)  |
 
-- **[Todos API](./features/todos.md)** – CRUD contract, validation, and React integration
-- **[Background Jobs](./features/jobs.md)** – queue adapter (pg-boss on Postgres, honker on SQLite), dynamic registration, and job API
-- **[Client](./features/client.md)** – Routing, auth guard, and data fetching patterns
-- **[Storage](./features/storage.md)** – S3-backed file browser, secure shares, and rate limits
-- **[Passkey Authentication](./features/passkey-authentication.md)** – WebAuthn/FIDO2 passwordless authentication
-- **[AI Inference](./features/ai-inference.md)** – Unified LLM API with Zod structured output
-- **[KV Storage](./kv.md)** – Keyv-based key-value storage (SQLite or PostgreSQL backend)
+## Reference
 
-### Examples & Reference
+| Document                                                 | What it covers                                      |
+| -------------------------------------------------------- | --------------------------------------------------- |
+| [`examples/api-requests.md`](./examples/api-requests.md) | Copy-ready `curl` recipes for every endpoint        |
+| [`sync-guide.md`](./sync-guide.md)                       | Keeping child projects in sync with the boilerplate |
+| [`sentry-source-maps.md`](./sentry-source-maps.md)       | Source map uploads for readable Sentry traces       |
+| [`CHANGELOG.md`](./CHANGELOG.md)                         | Documentation changes over time                     |
 
-- **[API Request Recipes](./examples/api-requests.md)** – Copy-ready curl snippets
-- **[Changelog](./CHANGELOG.md)** – Documentation changes over time
+## Tech stack at a glance
 
-## Project Overview
+| Area    | Tech                                                             |
+| ------- | ---------------------------------------------------------------- |
+| Server  | Express 5, TypeScript, Prisma 7, pg-boss / honker, Pino, Sentry  |
+| Client  | React 19, Vite 7, React Router 7, React Query, Zustand, Tailwind |
+| Auth    | JWT + Passkeys (WebAuthn)                                        |
+| Tooling | Vite+ (Oxlint/Oxfmt), Vitest + Supertest, Playwright, pnpm       |
 
-This boilerplate ships a secure Express 5 + TypeScript server with a domain-driven architecture inside `packages/core` + `apps/web/src/server` and a Vite-powered React 19 client inside `packages/shell` + `apps/web/src/client`.
+## API surface
 
-### Architecture Highlights
-
-- **Feature Modules** – Self-contained domains with routes, services, and jobs
-- **App vs Shared** – `app/` for domain features, `shared/` for reusable modules
-- **Core Infrastructure** – Modularized systems for jobs, logging, errors, storage, and AI
-- **Functional Route Handlers** – Simple async functions returning values (auto-serialized)
-
-### Key Capabilities
-
-- **Todo lifecycle** – Validation via Zod, persistence through Prisma, Boom error handling
-- **Background processing** – dual-engine job queue (pg-boss on Postgres, honker on SQLite) with dynamic handler registration
-- **Full-stack DX** – TypeScript, Vite+ (Oxlint/Oxfmt), Vitest, Playwright, Tailwind UI
-
-## Tech Stack
-
-| Area    | Technologies                                                       |
-| ------- | ------------------------------------------------------------------ |
-| Server  | Node 18+, Express 5, Prisma, pg-boss / honker, Pino, Sentry, Boom  |
-| Client  | React 19, Vite 7, React Router 7, React Query 5, Zustand, Tailwind |
-| Tooling | TypeScript 5.9, Vite+ (Oxlint/Oxfmt), Vitest + Supertest, pnpm     |
-| AI      | @earendil-works/pi-ai (unified LLM API with Zod structured output) |
-
-## API Surface
-
-| Prefix             | Purpose                        | Auth   |
-| ------------------ | ------------------------------ | ------ |
-| `/api/v1/todos`    | CRUD operations                | JWT    |
-| `/api/v1/auth`     | Login, logout, user management | Mixed  |
-| `/api/v1/storage`  | File storage operations        | JWT    |
-| `/api/v1/jobs`     | Background job management      | JWT    |
-| `/api/v1/passkeys` | Passkey registration/auth      | Public |
-| `/api/v1/settings` | App key-value settings         | JWT    |
-| `GET /health`      | Health probe                   | None   |
-
-## Quick Architecture Diagram
-
-```
-HTTP Request
-    ↓
-Middlewares (logging, auth, validation)
-    ↓
-createRouter (auto-wraps handlers)
-    ↓
-Route Handler (async function → return value)
-    ↓
-Service (business logic + Prisma queries)
-    ↓
-Database (SQLite or PostgreSQL)
-
-Background Jobs:
-Feature.jobs.ts → registerJobHandler() → worker.ts → handler execution
-```
-
-## Core Modules
-
-| Module      | Location                   | Purpose                                             |
-| ----------- | -------------------------- | --------------------------------------------------- |
-| AI          | `@groot/core/ai/`          | Unified LLM client with Zod schema conversion       |
-| Errors      | `@groot/core/errors/`      | Boom factory, error codes, Prisma error handler     |
-| Jobs        | `@groot/jobs/server/`      | Queue client, queries, worker, dynamic registration |
-| KV          | `@groot/core/kv/`          | Keyv key-value storage (SQLite or PostgreSQL)       |
-| Logger      | `@groot/core/logger/`      | Pino with AsyncLocalStorage context                 |
-| Storage     | `@groot/core/storage/`     | S3 file storage service                             |
-| Middlewares | `@groot/core/middlewares/` | Auth, validation, rate-limiting, error handling     |
-| Utils       | `@groot/core/utils/`       | `createRouter`, `parseId`, validation helpers       |
-
-## Next Steps
-
-1. Read [Architecture Guide](./guides/architecture.md) for detailed patterns
-2. Check [Setup Guide](./setup-guide.md) for environment configuration
-3. Explore feature docs for specific implementation details
+| Prefix             | Purpose                        | Auth                     |
+| ------------------ | ------------------------------ | ------------------------ |
+| `/api/v1/auth`     | Login, logout, user management | Public / JWT / admin key |
+| `/api/v1/passkey`  | Passkey registration / login   | Public + JWT             |
+| `/api/v1/todos`    | Todo CRUD                      | JWT                      |
+| `/api/v1/jobs`     | Background job management      | JWT                      |
+| `/api/v1/storage`  | S3 file operations             | JWT                      |
+| `/api/v1/settings` | App key-value settings         | JWT                      |
+| `GET /health`      | Health probe                   | None                     |

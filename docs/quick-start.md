@@ -1,123 +1,95 @@
-# Quick Start Guide
+# Quick start
 
-## What You Got
+Get the app running, create your first user, and scaffold your first feature.
 
-Your boilerplate includes everything needed for a production-ready SaaS:
+## What's in the box
 
-### Backend
+| Area  | Capabilities                                                          |
+| ----- | --------------------------------------------------------------------- |
+| Auth  | JWT login + protected routes, Passkey/WebAuthn, admin user management |
+| API   | Feature-module pattern (`routes` + `service` + `schema`), Boom errors |
+| Jobs  | Background queue (pg-boss / honker) with dynamic handler registration |
+| Data  | Prisma (SQLite default / Postgres), Keyv key-value store              |
+| Files | S3 storage (uploads, downloads, folders, renames)                     |
+| AI    | Unified LLM API with Zod structured output                            |
+| Infra | Pino logging, Sentry error tracking, rate limiting                    |
+| UI    | Radix + Tailwind component library, layout primitives, API client     |
 
-- **JWT Authentication** - Login, logout, protected routes
-- **Passkey/WebAuthn** - Passwordless biometric authentication
-- **Boom Error Handling** - Standardized HTTP errors
-- **Enhanced Logging** - Pino with AsyncLocalStorage context
-- **Background Jobs** - dual-engine queue (pg-boss on Postgres, honker on SQLite) with dynamic registration
-- **Key-Value Store** - Keyv for caching and sessions
-- **File Storage** - S3-compatible storage
-- **AI Integration** - Unified LLM API with Zod output
+## 1. Set up the environment
 
-### Frontend
-
-- **26 UI Components** - Tables, forms, modals, alerts, etc.
-- **Design System** - Stripe-inspired, data-first design
-- **Enhanced API Client** - Type-safe, auto 401 handling
-- **Layout Components** - PageLayout, PageHeader, etc.
-
----
-
-## Get Started in 4 Steps
-
-### 1. Setup Environment
-
-#### Option A: Automated Setup (Recommended)
+### Automated (recommended)
 
 ```bash
 pnpm groot:setup
 ```
 
-This will:
+This installs the global CLIs (varlock, portless), sets up git hooks
+(lint-staged + gitleaks), prompts for your app name and propagates it to
+`config.yml`, `package.json`, and `.env.schema`, then installs deps and
+generates the Prisma client.
 
-- Install global CLIs (varlock, portless)
-- Set up git hooks (lint-staged + gitleaks via Vite+)
-- Prompt for your app name and propagate it to `config.yml`, `package.json`, and `.env.schema` (Doppler project)
-- Install dependencies and generate the Prisma client
+> Secrets are managed by **varlock + Doppler** — set `DOPPLER_TOKEN`, or
+> configure secrets on your hosting platform. In development, varlock provides
+> working defaults from `.env.schema`.
 
-#### Option B: Manual Setup
-
-```bash
-# Secrets are managed by varlock (Doppler). Set DOPPLER_TOKEN,
-# or set secrets directly on your hosting platform.
-# In development, varlock provides working defaults from .env.schema.
-#
-# Configure your app name in config.yml (app.name, passkey.rpName)
-# and update the Doppler project in .env.schema if using Doppler.
-```
-
-> **Security Note**: Always use strong, randomly generated secrets in production!
-> Generate with: `openssl rand -base64 48 | tr -d '/+=' | cut -c1-64`
-
-### 2. Install & Generate
+### Manual
 
 ```bash
-# Install dependencies
+cp .env.schema .env
 pnpm install
-
-# Generate Prisma client
 pnpm prisma generate
-
-# Apply database migrations
 pnpm db:migrate
 ```
 
-### 3. Install Portless (One-Time)
+> **Production secrets:** always use strong, random values.
+> `openssl rand -base64 48 | tr -d '/+=' | cut -c1-64`
+
+## 2. Install portless (one-time)
 
 ```bash
-# Install portless globally for local HTTPS
 npm install -g portless
 ```
 
-On first run, portless will prompt you to trust a local CA certificate (requires sudo). This enables `https://*.localhost` with no browser warnings. See [Portless & HTTPS Guide](./guides/portless-https.md) for details.
+On the first `pnpm dev`, portless prompts you to trust a local CA certificate
+(requires sudo), enabling `https://*.localhost` with no browser warnings.
+See [Portless & HTTPS](./guides/portless-https.md).
 
-### 4. Start Development
+## 3. Start developing
 
 ```bash
-# Start dev server
 pnpm dev
-
-# Server runs on https://groot.localhost
+# → https://groot.localhost
 ```
 
----
-
-## Create Your First User
+## Create your first user
 
 ```bash
-# Create a user (admin endpoint)
+# Admin-only (uses X-Admin-Auth-Key)
 curl -X POST https://groot.localhost/api/v1/auth/users \
   -H "Content-Type: application/json" \
   -H "X-Admin-Auth-Key: your-admin-key" \
   -d '{"email":"test@example.com","password":"demo@example.com"}'
 
-# Login
+# Log in → returns { token, user }
 curl -X POST https://groot.localhost/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"demo@example.com"}'
 ```
 
----
+## Create your first feature
 
-## Create Your First Feature
+A feature is a self-contained module: `routes` + `service` + `schema`
+(+ optional `jobs`).
 
-Features are self-contained modules with routes, services, and validation:
-
-### 1. Create the Feature Directory
+### 1. Scaffold the module
 
 ```bash
 mkdir -p apps/web/src/server/api/myfeature
 ```
 
-### 2. Define Routes
+### 2. Define routes
 
-```typescript
+```ts
 // apps/web/src/server/api/myfeature/myfeature.routes.ts
 import type { Request, Response } from "express";
 import { createRouter } from "@groot/core/utils/router.utils";
@@ -127,194 +99,77 @@ import { createSchema } from "./myfeature.schema";
 
 const router = createRouter();
 
-router.get("/", async () => {
-  return await service.findAll();
-});
+router.get("/", async () => service.findAll());
 
 router.post("/", async (req: Request, res: Response) => {
   const payload = parseBody(req, createSchema);
   res.status(201);
-  return await service.create({ data: payload });
+  return service.create({ data: payload });
 });
 
 router.get("/:id", async (req: Request) => {
   const id = parseId(req.params.id);
-  return await service.findById({ id });
+  return service.findById({ id });
 });
 
 export default router;
 ```
 
-### 4. Register Routes
+### 3. Register the routes
 
-```typescript
+```ts
 // apps/web/src/server/routes.ts
 import myFeatureRoutes from "./api/myfeature/myfeature.routes";
 
 export function registerRoutes(app: Express): void {
-  // ... existing routes
+  // ...
   protectedRouter.use("/myfeature", myFeatureRoutes);
 }
 ```
 
----
+See [Development workflow](./guides/development.md) for the service and schema
+files, and [Architecture](./guides/architecture.md) for the full pattern.
 
-## Use the Auth System
+## Use the API client
 
-```tsx
-// apps/web/src/client/pages/Login.tsx
-import { useState } from "react";
-import { useAuthStore } from "@groot/shell/store/auth";
-import { Button } from "@groot/ui/button";
-import { Input } from "@groot/ui/input";
-import { Label } from "@groot/ui/label";
-
-export function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { login, isLoading, error } = useAuthStore();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(email, password);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Logging in..." : "Login"}
-      </Button>
-    </form>
-  );
-}
-```
-
----
-
-## Use the Enhanced API Client
-
-```typescript
+```ts
 import { apiClient } from "@groot/shell/lib/api";
 
-// GET request
 const data = await apiClient.get<MyType>("/todos");
-
-// POST request
-const newItem = await apiClient.post<MyType>("/todos", { title: "New Todo" });
-
-// PUT request
+const created = await apiClient.post<MyType>("/todos", { title: "New" });
 const updated = await apiClient.put<MyType>("/todos/1", { completed: true });
-
-// DELETE request
 await apiClient.delete("/todos/1");
 ```
 
----
+`apiClient` is a shared Axios instance that injects the JWT and handles `401`
+(logout). See [Client](./features/client.md).
 
-## Available Components
+## Common commands
 
-### Layout
+| Task             | Command                |
+| ---------------- | ---------------------- |
+| Dev server       | `pnpm dev`             |
+| Apply migrations | `pnpm db:migrate`      |
+| Generate Prisma  | `pnpm prisma generate` |
+| Build            | `pnpm build`           |
+| Run prod build   | `pnpm start`           |
+| Lint + format    | `pnpm check`           |
+| Unit tests       | `pnpm test`            |
+| Tests (both DBs) | `pnpm test:all`        |
+| E2E tests        | `pnpm test:e2e`        |
 
-- `PageLayout` - Complete page wrapper
-- `PageHeader` - Page title & actions
-- `PageContainer` - Max-width container
-- `Section` - Content sections
+## Production checklist
 
-### UI Components
-
-- `Button` - 6 variants
-- `Badge` - 7 variants
-- `Card` - Card layouts
-- `Table` - Data tables
-- `Form` - React Hook Form integration
-- `Input`, `Textarea`, `Select` - Form inputs
-- `Checkbox`, `Switch` - Toggles
-- `Dialog`, `Sheet` - Modals & drawers
-- `Tabs` - Tab navigation
-- `Alert` - Status messages
-- `Breadcrumb` - Navigation
-- `Pagination` - Page navigation
-- `Progress` - Progress bars
-- `Popover`, `Dropdown Menu` - Menus
-- `Separator` - Visual dividers
-- `LoadingSpinner`, `LoadingSkeleton` - Loading states
-- `EmptyState`, `ErrorState` - Empty & error states
-
----
-
-## Common Commands
-
-```bash
-# Development
-pnpm dev              # Start dev server
-
-# Database
-pnpm prisma generate  # Generate Prisma client
-pnpm db:migrate        # Apply pending migrations (migrate deploy)
-
-# Build
-pnpm build            # Build for production
-pnpm start            # Run production build
-
-# Code Quality
-pnpm lint             # Lint code
-pnpm format           # Format code
-pnpm check            # Lint and format check
-
-# Testing
-pnpm test             # Run tests (SQLite by default)
-pnpm test:sqlite      # Run tests on SQLite
-pnpm test:postgres    # Run tests on PostgreSQL
-pnpm test:all         # Run tests on both engines
-pnpm test:watch       # Watch mode
-pnpm test:e2e         # E2E tests
-```
-
----
-
-## Production Checklist
-
-Before deploying to production:
+Before deploying:
 
 - [ ] Run `pnpm groot:setup` to configure your app
 - [ ] Set `DOPPLER_TOKEN` (or configure secrets on your hosting platform)
-- [ ] Set `DATABASE_ENGINE` (`sqlite` or `postgres`) and `DATABASE_URL` to your production database
+- [ ] Set `DATABASE_ENGINE` (`sqlite`/`postgres`) and `DATABASE_URL` to your production database
+- [ ] Set `JWT_SECRET_KEY` and `ADMIN_AUTH_KEY` (strong random values)
+- [ ] Configure passkey settings in `config.yml` (`passkey.rpId`, `passkey.rpName`, `passkey.origin`)
 - [ ] Set `SENTRY_DSN` for error tracking (optional)
-- [ ] Configure passkey environment (`RP_ID`, `RP_NAME`, `RP_ORIGIN`)
 - [ ] Set `NODE_ENV=production`
-- [ ] Run `pnpm build` to verify build succeeds
-- [ ] Run `pnpm test` to verify tests pass
+- [ ] `pnpm build` succeeds
+- [ ] `pnpm test` passes
 
----
-
-**Ready to ship!**
-
-Your boilerplate is production-ready with:
-
-- JWT and Passkey authentication
-- 26 UI components
-- Background jobs system
-- Error handling & logging
-- Type-safe API client
-- AI integration
-- File storage
+→ Next: [Architecture](./guides/architecture.md) and [API request recipes](./examples/api-requests.md).

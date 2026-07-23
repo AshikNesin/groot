@@ -1,5 +1,7 @@
 # Development Workflow
 
+Day-to-day commands, coding conventions, and the steps for adding a new feature end to end.
+
 ## Core Commands
 
 ```bash
@@ -21,13 +23,15 @@ pnpm db:migrate        # Apply pending migrations (migrate deploy)
 
 ## Coding Conventions
 
-- **TypeScript everywhere** – Path aliases defined in `tsconfig.json` (`@groot/core/*` for server, `@groot/shell/*` for client)
-- **Validation first** – Use `parseBody`, `parseQuery`, and `parseParams` in route handlers.
-- **Return values** – Route handlers return values directly, `createRouter` handles serialization
-- **Boom errors** – Use `Boom.notFound()`, `Boom.badRequest()`, etc. for HTTP errors
-- **Logging** – Use logger from `@groot/core/logger` for structured events; avoid `console.log`
-- **Minimal comments** – Favor clear code over extensive documentation
-- **Auth guard** – Use `jwtAuthMiddleware` for protected routes
+| Convention            | Detail                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| TypeScript everywhere | Path aliases in `tsconfig.json`: `@groot/core/*` (server), `@groot/shell/*` (client) |
+| Validate first        | Use `parseBody`, `parseQuery`, `parseParams` in route handlers                       |
+| Return values         | Handlers return values directly; `createRouter` handles serialization                |
+| Boom errors           | `Boom.notFound()`, `Boom.badRequest()`, etc. for HTTP errors                         |
+| Logging               | Use `@groot/core/logger`; avoid `console.log`                                        |
+| Minimal comments      | Favor clear code over extensive documentation                                        |
+| Auth guard            | Use `jwtAuthMiddleware` for protected routes                                         |
 
 ## Adding a New Feature
 
@@ -188,11 +192,13 @@ export function registerJobHandlers(): void {
 
 ## Client Development Tips
 
-- Use React Router routes defined in `App.tsx`
-- Fetch data through hooks in `hooks/api` with React Query
-- Store auth state via `useAuthStore` (Zustand)
-- Use UI components from `@groot/ui`
-- Use layout components from `@groot/shell/components/layout`
+| Concern           | Where                              |
+| ----------------- | ---------------------------------- |
+| Routes            | `App.tsx` (React Router)           |
+| Data fetching     | Hooks in `hooks/api` (React Query) |
+| Auth state        | `useAuthStore` (Zustand)           |
+| UI components     | `@groot/ui`                        |
+| Layout components | `@groot/shell/components/layout`   |
 
 ## Iteration Loop
 

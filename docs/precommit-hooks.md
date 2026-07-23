@@ -1,6 +1,7 @@
-# Git Hooks & Secret Detection
+# Git hooks & secret detection
 
-This project uses Vite+ git hooks with [gitleaks](https://github.com/gitleaks/gitleaks) to prevent secrets from being committed to the repository.
+Every commit runs secret detection (gitleaks) and staged lint/format (Vite+).
+This keeps secrets out of the repo and code style consistent — automatically.
 
 ## What Gets Checked
 

@@ -1,5 +1,7 @@
 # Testing Guide
 
+How to run the test suite, mock server dependencies, and keep tests passing on both database engines.
+
 Vitest powers the unit/integration tests while Supertest handles HTTP assertions. Tests are centralized in the `tests/` directory.
 
 ## Commands
