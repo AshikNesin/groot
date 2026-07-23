@@ -124,6 +124,12 @@ Import the singleton directly from `@groot/core/database`.
 Only `packages/core/src/database/client.ts` should create the Prisma client
 instance.
 
+**Migrations are Prisma-only.** All schema changes must go through Prisma's
+migration tooling (`pnpm db:migrate:create` → `pnpm prisma migrate dev`). Never
+hand-write SQL migrations or execute raw DDL/DDL-like queries (e.g. via
+`$executeRaw`/`$queryRaw`) to alter schema. Prisma generates the SQL for us —
+this keeps the SQLite and PostgreSQL engines in parity and avoids drift.
+
 ## Common Commands (HOW)
 
 ```bash
@@ -150,7 +156,7 @@ pnpm groot:sync       # Apply safe boilerplate changes
 - **Frontend data hooks**: use `apiClient` from `@groot/shell/lib/api` (not raw axios).
 - **Routes**: `createRouter()` with inline async handlers; **services**: business logic calling Prisma directly.
 - **Errors**: `Boom` factory methods from `@groot/core/errors`.
-- **Database migrations**: never use `prisma db push` for schema changes. Use `pnpm db:migrate:create` to generate a migration, then `pnpm prisma migrate dev` to apply locally; deploys auto-run `pnpm db:migrate` (migrate deploy) via the `prestart` hook.
+- **Database migrations**: never use `prisma db push` for schema changes, and **never hand-write SQL** to alter schema — use Prisma exclusively. Use `pnpm db:migrate:create` to generate a migration, then `pnpm prisma migrate dev` to apply locally; deploys auto-run `pnpm db:migrate` (migrate deploy) via the `prestart` hook.
 - **Validation**: Zod via `parseBody(req, schema)` / `parseQuery(req, schema)` / `parseParams(req, schema)` inside route handlers.
 - **Exports**: prefer named exports (use `* as` for services).
 - **Async**: always async/await, never raw Promises.
