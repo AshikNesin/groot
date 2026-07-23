@@ -1,6 +1,6 @@
 # Database Migrations Guide
 
-This guide covers the Prisma migration-based deployment workflow for managing database schema changes.
+How schema changes flow from a local Prisma edit to a production deployment, using Prisma Migrate.
 
 > **Engine note:** The default database is **SQLite** (`DATABASE_ENGINE=sqlite`).
 > Set `DATABASE_ENGINE=postgres` to use PostgreSQL. The schema is split into
@@ -11,12 +11,7 @@ This guide covers the Prisma migration-based deployment workflow for managing da
 
 ## Overview
 
-This project uses Prisma Migrate for database schema management. This approach:
-
-- Generates SQL migration files from schema changes
-- Tracks applied migrations in the `_prisma_migrations` table
-- Ensures consistent schema state across environments
-- Enables safe, version-controlled deployments
+Prisma Migrate generates versioned SQL files from schema changes and tracks them in the `_prisma_migrations` table, so every environment converges on the same schema state.
 
 ## Development Workflow
 

@@ -1,54 +1,54 @@
 # Architecture Guide
 
-This project uses a domain-driven, feature-based architecture with clear separation between app-specific and shared modules.
+How the server and client code is organized, and the conventions that keep feature modules consistent across the codebase.
 
 ## High-Level Structure
 
 ```
-packages/core/src/          # Boilerplate (synced)
-├── shared/           # Reusable feature modules
-└── core/             # Infrastructure and utilities
+packages/core/src/             # Boilerplate (synced)
+├── auth/, passkey/, settings/, notification/, storage/  # Reusable feature modules
+├── ai/, kv/, logger/, database/, config/, errors/        # Infrastructure and utilities
+├── middlewares/                                          # Auth, validation, rate-limiting
+└── utils/                                                # Router + controller helpers
 
-apps/web/src/server/          # App-owned (not synced)
-├── app/              # App-specific domain modules
-├── routes.ts         # Central route registration
-└── index.ts          # Server entry point
+apps/web/src/server/           # App-owned (not synced)
+├── api/                       # App-specific domain modules (e.g. todo/)
+├── routes.ts                  # Central route registration
+└── index.ts                   # Server entry point
 ```
 
 ## Server Layers
 
-### 1. Feature Modules (`app/` and `shared/`)
+### 1. Feature Modules
 
 Each feature is a self-contained module with all its components:
 
 ```
 feature/
-├── feature.routes.ts      # Route definitions + inline request handlers
-├── feature.service.ts     # Business logic (calls Prisma directly)
-├── feature.schema.ts  # Zod schemas
-├── feature.jobs.ts        # Background jobs (optional)
-└── feature.utils.ts       # Optional utilities (e.g. webauthn)
+├── feature.routes.ts   # Route definitions + inline request handlers
+├── feature.service.ts  # Business logic (calls Prisma directly)
+├── feature.schema.ts   # Zod schemas
+├── feature.jobs.ts     # Background jobs (optional)
+└── feature.utils.ts    # Optional utilities (e.g. webauthn)
 ```
 
-**App vs Shared:**
+App-specific domains (e.g. `todo/`) live in `apps/web/src/server/api/`. Reusable, synced features (auth, passkey, storage, settings, ai) live directly in `packages/core/src/`.
 
-- `app/` - Domain-specific features (e.g., `todo/`)
-- `shared/` - Reusable features (auth, storage, jobs, settings, ai)
+### 2. Core Infrastructure (`packages/core/src/`)
 
-### 2. Core Infrastructure (`core/`)
+| Directory                                         | Purpose                                              |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| `ai/`                                             | Unified LLM client with Zod structured output        |
+| `auth/`, `passkey/`, `settings/`, `notification/` | Reusable feature modules (routes + service + schema) |
+| `database/`                                       | Prisma client + engine selection                     |
+| `errors/`                                         | Boom HTTP errors, error codes, Prisma error handler  |
+| `kv/`                                             | Keyv-based key-value storage                         |
+| `logger/`                                         | Pino logger with AsyncLocalStorage context           |
+| `middlewares/`                                    | Auth, validation, rate-limiting, error handling      |
+| `storage/`                                        | S3 storage service                                   |
+| `utils/`                                          | Router helper, controller utilities                  |
 
-| Directory      | Purpose                                             |
-| -------------- | --------------------------------------------------- |
-| `ai/`          | Unified LLM client with Zod structured output       |
-| `errors/`      | Boom HTTP errors, error codes, Prisma error handler |
-| `job/`         | Job queue (client, queries, queue, worker)          |
-| `kv/`          | Keyv-based key-value storage                        |
-| `logger/`      | Pino logger with AsyncLocalStorage context          |
-| `middlewares/` | Auth, validation, rate-limiting, error handling     |
-| `storage/`     | S3 storage service                                  |
-| `utils/`       | Router helper, controller utilities                 |
-
-### 3. Request Flow
+### Request Flow
 
 ```
 HTTP Request
@@ -68,7 +68,7 @@ Response (auto-serialized by handle middleware)
 
 ### createRouter Utility
 
-Routes use `createRouter()` which automatically wraps handlers:
+`createRouter()` wraps every handler with the serialization/error middleware:
 
 ```typescript
 import { createRouter } from "@groot/core/utils/router.utils";
@@ -94,7 +94,7 @@ export default router;
 
 ### Inline Route Handlers
 
-Route handlers are simple async functions defined directly in the routes file. They parse requests, call services, and return values:
+Handlers are plain async functions defined directly in the routes file — parse the request, call the service, return the value:
 
 ```typescript
 export async function getAll() {
@@ -127,11 +127,11 @@ export async function findById({ id }: { id: number }) {
 }
 ```
 
-No base classes, no manual response handling - just return values. Services call Prisma directly; no separate model layer.
+No base classes, no manual response handling — just return values. Services call Prisma directly; there's no separate model layer.
 
-### Validation Middleware
+### Validation
 
-Zod schemas validate requests:
+Zod schemas in `*.schema.ts` validate requests. Handlers read validated data via typed helpers — `parseBody`, `parseQuery`, `parseParams` — from `@groot/core/utils/controller.utils`:
 
 ```typescript
 import { createTodoSchema } from "./todo.schema";
@@ -139,11 +139,9 @@ import { createTodoSchema } from "./todo.schema";
 router.post("/", controller.create);
 ```
 
-Controllers use typed helpers (`parseBody`, `parseQuery`, `parseParams`) to read validated data securely:
-
 ### Error Handling
 
-Use `Boom` for HTTP errors:
+`Boom` produces standardized HTTP errors:
 
 ```typescript
 import { Boom } from "@groot/core/errors";
@@ -153,11 +151,11 @@ if (!todo) {
 }
 ```
 
-Prisma errors are automatically transformed by `PrismaHandler`.
+Prisma errors are transformed automatically by `PrismaHandler`.
 
 ## Background Job System
 
-Built on an engine-selected queue adapter — [pg-boss](https://github.com/timgit/pg-boss) on Postgres, [honker](https://github.com/russellromney/honker) on SQLite — behind a shared `JobQueueAdapter` interface (see [Database Engines](../database-engines.md#job-queue-adapter)). Modular structure:
+An engine-selected queue adapter — [pg-boss](https://github.com/timgit/pg-boss) on Postgres, [honker](https://github.com/russellromney/honker) on SQLite — sits behind a shared `JobQueueAdapter` interface (see [Database Engines](../database-engines.md#job-queue-adapter)):
 
 | File (in `packages/jobs/src/server/`) | Purpose                                        |
 | ------------------------------------- | ---------------------------------------------- |
@@ -196,9 +194,9 @@ export function registerJobHandlers(): void {
 }
 ```
 
-## Logger System
+## Logger
 
-Pino-based logging with context management:
+Pino-based logging with AsyncLocalStorage context for request tracing:
 
 ```typescript
 import { logger, createContextLogger } from "@groot/core/logger";
@@ -211,11 +209,9 @@ const log = createContextLogger("todo-service");
 log.debug("Processing todo", { todoId });
 ```
 
-Uses AsyncLocalStorage for request tracing.
-
 ## Key-Value Store
 
-Keyv with a SQLite or PostgreSQL adapter (selected by `DATABASE_ENGINE`):
+Keyv, backed by SQLite or PostgreSQL depending on `DATABASE_ENGINE`:
 
 ```typescript
 import kv, { createNamespaceKv } from "@groot/core/kv";
@@ -231,20 +227,15 @@ await cacheKv.set("user:123", userData);
 
 ## Authentication Flow
 
-1. **Public Routes** (`/api/v1/auth`, `/api/v1/passkey`, `/api/v1/public/*`)
-   - No auth required
-
-2. **Protected Routes** (`/api/v1/*` except public)
-   - JWT token via `Authorization: Bearer <token>`
-   - Validated by `jwtAuthMiddleware`
-
-3. **Admin Routes**
-   - Additional `X-Admin-Auth-Key` header
-   - Validated by `adminAuthMiddleware`
+| Layer     | Routes                                                | Requirement                                                             |
+| --------- | ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| Public    | `/api/v1/auth`, `/api/v1/passkey`, `/api/v1/public/*` | None                                                                    |
+| Protected | `/api/v1/*` (all else)                                | JWT via `Authorization: Bearer <token>`, checked by `jwtAuthMiddleware` |
+| Admin     | Subset of protected routes                            | Additional `X-Admin-Auth-Key` header, checked by `adminAuthMiddleware`  |
 
 ## Route Registration
 
-Centralized in `routes.ts`:
+All routes are wired centrally in `routes.ts`:
 
 ```typescript
 export function registerRoutes(app: Express): void {
@@ -266,25 +257,31 @@ export function registerRoutes(app: Express): void {
 
 ## Client Architecture
 
-1. **Routing** – React Router 7 in `apps/web/src/client/App.tsx`
-2. **State** – Zustand stores (`@groot/shell/store/auth`)
-3. **Data Fetching** – React Query + Axios (`@groot/shell/lib/api`)
-4. **UI** – Tailwind + Radix primitives (`@groot/ui`)
+| Concern       | Approach                                      |
+| ------------- | --------------------------------------------- |
+| Routing       | React Router 7, `apps/web/src/client/App.tsx` |
+| State         | Zustand stores (`@groot/shell/store/auth`)    |
+| Data fetching | React Query + Axios (`@groot/shell/lib/api`)  |
+| UI            | Tailwind + Radix primitives (`@groot/ui`)     |
 
 ## Adding a New Feature
 
-1. Create feature directory in `apps/web/src/server/api/` (app-specific) or `packages/core/src/` (reusable)
-2. Add files: routes (with inline handlers), service, validation
-3. Register routes in `routes.ts`
-4. Register jobs in `registerJobHandlers()` if needed
-5. Add environment variables to `.env.schema`
+1. Create the feature directory under `apps/web/src/server/api/` (app-specific) or `packages/core/src/` (reusable)
+2. Add `feature.routes.ts` (with inline handlers), `feature.service.ts`, and `feature.schema.ts`
+3. Register the routes in `routes.ts`
+4. Register jobs in `registerJobHandlers()` if the feature has any
+5. Add new environment variables to `.env.schema`
 6. Write tests in `tests/server/`
+
+See [Development Workflow](./development.md) for the full walkthrough.
 
 ## Design Principles
 
-- **Feature Isolation**: Each feature is self-contained
-- **Functional Controllers**: Simple functions, no classes
-- **Automatic Serialization**: Return values, not response objects
-- **Centralized Registration**: One place for routes and jobs
-- **Standardized Errors**: Boom factory methods throughout
-- **Validated Inputs**: Zod schemas at system boundaries
+| Principle                | What it means                                |
+| ------------------------ | -------------------------------------------- |
+| Feature isolation        | Each feature is self-contained               |
+| Functional controllers   | Simple functions, no classes                 |
+| Automatic serialization  | Handlers return values, not response objects |
+| Centralized registration | One place for routes and jobs                |
+| Standardized errors      | `Boom` factory methods throughout            |
+| Validated inputs         | Zod schemas at every system boundary         |

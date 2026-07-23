@@ -1,137 +1,173 @@
-# Setup Guide
+# Setup guide
 
-Follow these steps to boot the Express API, job queue, and React client locally or in production.
+Everything you need to boot the Express API, job queue, and React client —
+locally and in production.
 
 ## Prerequisites
 
-- Node.js 18+
-- pnpm (the repo is configured for pnpm scripts)
-- portless (Install globally: `npm install -g portless`) — see [Portless & HTTPS Guide](./guides/portless-https.md)
-- **SQLite** (default engine): nothing to install — [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) ships a prebuilt native binary.
-- **PostgreSQL** (optional): a PostgreSQL instance reachable via `DATABASE_URL` — see [Database Engines](./database-engines.md) for how to opt in via `DATABASE_ENGINE=postgres`.
-- OpenSSL or another tool for generating basic auth credentials
+- **Node.js 18+**
+- **pnpm** (the repo's scripts assume pnpm)
+- **portless** (install globally: `npm install -g portless`) — provides local
+  HTTPS. See [Portless & HTTPS](./guides/portless-https.md).
+- **SQLite** (default engine): nothing to install — `better-sqlite3` ships a
+  prebuilt native binary.
+- **PostgreSQL** (optional): a reachable instance via `DATABASE_URL`. Opt in
+  with `DATABASE_ENGINE=postgres` — see [Database Engines](./database-engines.md).
 
-## Quick Setup
+## Quick setup
 
-### Automated Setup (Recommended)
-
-Run the setup script to configure your project:
+### Automated (recommended)
 
 ```bash
 pnpm groot:setup
 ```
 
-This script will:
+This installs the global CLIs (varlock, portless), sets up git hooks
+(lint-staged + gitleaks via Vite+), prompts for your app name and propagates it
+to `config.yml`, `package.json`, and `.env.schema`, then installs deps and
+generates the Prisma client.
 
-- Install global CLIs (varlock, portless)
-- Set up git hooks (lint-staged + gitleaks via Vite+)
-- Prompt for your app name and update `config.yml`, `package.json`, and `.env.schema` (Doppler project)
-- Install dependencies and generate the Prisma client
+Secrets are managed via **varlock + Doppler** — no local `.env` editing needed
+in development (varlock provides working defaults from `.env.schema`).
 
-Secrets are managed via varlock + Doppler — no local `.env` file needed in development.
+### Manual
 
-### Manual Setup
+Copy `.env.schema` to `.env` and configure the keys below (validated in
+`packages/core/src/env.ts`).
 
-Copy `.env.schema` to `.env` and populate these keys (validated in `packages/core/src/env.ts`):
+#### Core
 
-| Variable                                      | Description                                                                                                                                                      |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`                                    | `development`, `production`, or `test`                                                                                                                           |
-| `PORT`                                        | HTTP port for Express (default `3000`)                                                                                                                           |
-| `DATABASE_ENGINE`                             | `sqlite` (default) or `postgres`. Selects the Prisma driver adapter, the KV backend, and the job queue. See [Database Engines](./database-engines.md).           |
-| `DATABASE_URL`                                | SQLite file path (e.g. `file:./data/dev.db`) or a PostgreSQL connection string, depending on `DATABASE_ENGINE`. Used by Prisma, the KV store, and the job queue. |
-| `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD` | Credentials enforced by `basicAuthMiddleware` for all `/api/v1` routes                                                                                           |
+| Variable          | Description                                                                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`        | `development`, `production`, or `test`                                                                                                         |
+| `PORT`            | HTTP port for Express (default `3000`; set automatically by hosts like Coolify)                                                                |
+| `DATABASE_ENGINE` | `sqlite` (default) or `postgres`. Selects the Prisma driver adapter, KV backend, and job queue. See [Database Engines](./database-engines.md). |
+| `DATABASE_URL`    | SQLite file path (e.g. `file:./data/dev.db`) or a Postgres connection string, depending on `DATABASE_ENGINE`. Used by Prisma, KV, and jobs.    |
+| `DOPPLER_TOKEN`   | (Production) varlock uses this to fetch secrets from Doppler. Optional in dev.                                                                 |
 
-### Authentication Variables
+#### Authentication
 
 | Variable         | Description                                           |
 | ---------------- | ----------------------------------------------------- |
-| `JWT_SECRET_KEY` | Secret key for signing JWT tokens (min 32 characters) |
-| `ADMIN_AUTH_KEY` | Key for admin-only routes (X-Admin-Auth-Key header)   |
+| `JWT_SECRET_KEY` | Secret for signing JWT tokens (min 32 characters)     |
+| `ADMIN_AUTH_KEY` | Key for admin-only routes (`X-Admin-Auth-Key` header) |
 
-### Passkey (WebAuthn) Variables
+> Auth is **JWT-based**. There is no basic-auth layer. See
+> [Client auth](./features/client.md) for the request flow.
 
-| Variable    | Description                                                        |
-| ----------- | ------------------------------------------------------------------ |
-| `RP_ID`     | Relying Party ID (e.g., `localhost` for dev, your domain for prod) |
-| `RP_NAME`   | Display name for passkey prompts                                   |
-| `RP_ORIGIN` | Full origin URL (e.g., `https://groot.localhost`)                  |
+#### Passkey (WebAuthn)
 
-### File Storage (S3) Variables
+Passkey settings live in **`config.yml`** (`passkey:` section), not env vars:
 
-| Variable                | Description                       |
-| ----------------------- | --------------------------------- |
-| `AWS_ACCESS_KEY_ID`     | AWS access key for S3             |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3             |
-| `AWS_REGION`            | AWS region (default: `us-east-1`) |
-| `AWS_DEFAULT_S3_BUCKET` | S3 bucket name for file storage   |
+```yaml
+passkey:
+  rpName: "Groot" # shown in passkey prompts
+  rpId: "localhost" # Relying Party ID (your domain in prod)
+  origin: "https://groot.localhost" # full origin URL
+```
 
-### Job Queue Variables
+See [Passkey authentication](./features/passkey-authentication.md) and
+[Config](./config.md).
 
-| Variable                              | Description                                                 |
-| ------------------------------------- | ----------------------------------------------------------- |
-| `ENABLE_JOB_QUEUE`                    | Enable/disable job processing (default: `true`)             |
-| `JOB_CONCURRENCY`                     | Number of workers registered per job (default `5`)          |
-| `JOB_POLL_INTERVAL`                   | Worker polling interval in milliseconds (default `2000`)    |
-| `JOB_ARCHIVE_COMPLETED_AFTER_SECONDS` | Archive window (pg-boss only; default `86400`)              |
-| `JOB_DELETE_ARCHIVED_AFTER_SECONDS`   | Deletion window (pg-boss only; default `604800`)            |
-| `JOB_MONITOR_STATE_INTERVAL`          | Interval for emitting queue state metrics (default `30000`) |
+#### File storage (S3)
 
-### Monitoring Variables
+| Variable                | Description                      |
+| ----------------------- | -------------------------------- |
+| `AWS_ACCESS_KEY_ID`     | AWS access key for S3            |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3            |
+| `AWS_REGION`            | AWS region (default `us-east-1`) |
+| `AWS_DEFAULT_S3_BUCKET` | S3 bucket name for file storage  |
 
-| Variable         | Description                                                                    |
-| ---------------- | ------------------------------------------------------------------------------ |
-| `SENTRY_DSN`     | Optional URL for capturing backend errors in Sentry                            |
-| `SENTRY_RELEASE` | Release version for Sentry (optional)                                          |
-| `LOG_LEVEL`      | Logging verbosity: `trace`, `debug`, `info`, `warn`, `error` (default: `info`) |
+In dev/test a local mock is used; the `AWS_*` values are still required
+(anything that reads the bucket name directly).
 
-## Local Development
+#### Monitoring
+
+| Variable            | Description                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| `SENTRY_DSN`        | Optional URL for capturing backend errors in Sentry                                         |
+| `SENTRY_RELEASE`    | Release version for Sentry (optional)                                                       |
+| `SENTRY_AUTH_TOKEN` | Build-time token for source map uploads (see [Sentry source maps](./sentry-source-maps.md)) |
+| `LOG_LEVEL`         | Verbosity: `trace`/`debug`/`info`/`warn`/`error` (default `info`)                           |
+
+> **Job queue settings live in `config.yml`** (`jobs:` section), not env vars.
+> See [Config](./config.md).
+
+## Local development
 
 ```bash
 pnpm install
 pnpm db:migrate          # apply baseline + pending migrations
-pnpm dev                  # runs server + Vite dev middleware
+pnpm dev                 # Express + Vite dev middleware, over HTTPS
 ```
 
-> **First time?** On first `pnpm dev`, portless will prompt you to trust a local CA certificate (requires sudo). See [Portless & HTTPS Guide](./guides/portless-https.md) for details.
+- Visit **`https://groot.localhost`** for the client (portless provides HTTPS).
+- Hit **`https://groot.localhost/health`** (no auth) to confirm the API is live.
+- To bypass portless and use plain HTTP: `PORTLESS=0 pnpm dev` → `http://localhost:3000`.
 
-- Visit `https://groot.localhost` for the client (portless provides HTTPS automatically).
-- Hit `https://groot.localhost/health` without auth to confirm the API is live.
-- Interact with `/api/v1/todos` or `/api/v1/jobs` using basic auth headers (`Authorization: Basic base64(username:password)`).
-- To bypass portless and use plain HTTP, run: `PORTLESS=0 pnpm dev` (server will be available at `http://localhost:3000`)
+> **First run?** portless will prompt you to trust a local CA certificate
+> (requires sudo). See [Portless & HTTPS](./guides/portless-https.md).
 
-## Production Build
+## Production build
 
 ```bash
-pnpm build        # Builds client (Vite) and bundles server (scripts/build.mjs)
-pnpm start        # Serves dist/bundle.js with NODE_ENV=production
+pnpm build        # builds the client (Vite) and bundles the server (esbuild)
+pnpm start        # serves dist/bundle.js with NODE_ENV=production
 ```
 
-In production mode the server:
+In production the server:
 
-- Serves the prebuilt client from `dist/`
-- Enables gzip via `compression`
-- Boots the job queue (`initJobQueue()` + `startWorkers()`) immediately when the HTTP listener starts. On SQLite the queue runs on [honker](https://github.com/russellromney/honker); on Postgres on [pg-boss](https://github.com/timgit/pg-boss) — see [Database Engines](./database-engines.md).
+- Serves the prebuilt client from `dist/`.
+- Enables gzip via `compression`.
+- Boots the job queue (`initJobQueue()` + `startWorkers()`) when the HTTP
+  listener starts. On SQLite the queue runs on
+  [honker](https://github.com/russellromney/honker); on Postgres on
+  [pg-boss](https://github.com/timgit/pg-boss) — see
+  [Database Engines](./database-engines.md).
+- Runs `prisma migrate deploy` via the `prestart` hook on startup.
 
 ## Database & Prisma
 
-- The database engine defaults to **SQLite** (`DATABASE_ENGINE=sqlite`); set `DATABASE_ENGINE=postgres` to use PostgreSQL. See [Database Engines](./database-engines.md) for the full matrix (driver adapter, KV backend, job queue).
-- Prisma client is generated automatically via `pnpm install` (`postinstall` runs `prisma generate`). The generated client embeds the datasource provider, so **switching engines requires regenerating the client** — `pnpm prisma generate` (or any `pnpm dev` / `pnpm test`, which regenerate for the active engine).
-- Two schema files are maintained in parity: `apps/web/prisma/schema.sqlite.prisma` and `apps/web/prisma/schema.postgres.prisma` (a test guards they stay in sync).
-- To re-sync schema changes: `pnpm db:migrate:create` (then `pnpm prisma migrate dev` to apply locally).
-- The Prisma client emitted into `packages/core/generated/prisma` feeds both HTTP handlers and job processors.
+- The engine defaults to **SQLite** (`DATABASE_ENGINE=sqlite`); set
+  `DATABASE_ENGINE=postgres` for PostgreSQL. See
+  [Database Engines](./database-engines.md) for the full matrix.
+- The Prisma client is generated automatically via `pnpm install` (`postinstall`
+  runs `prisma generate`). The generated client embeds the datasource provider,
+  so **switching engines requires regenerating the client** (`pnpm prisma
+generate`, or any `pnpm dev`/`pnpm test`).
+- Two schema files are kept in parity: `apps/web/prisma/schema.sqlite.prisma`
+  and `apps/web/prisma/schema.postgres.prisma` (a test guards they stay in sync).
+- To evolve the schema: `pnpm db:migrate:create` (then `pnpm prisma migrate dev`
+  to apply). See [Database migrations](./guides/database-migrations.md).
+- The generated client (in `packages/core/generated/prisma`) feeds both HTTP
+  handlers and job processors.
 
-## Background Job Queue
+## Background job queue
 
-- Configuration comes from `core/job/config.ts` (or `config.yml` `jobs:`).
-- Workers register when `startWorkers()` runs inside `apps/web/src/server/index.ts`.
-- The queue adapter is chosen by `DATABASE_ENGINE`: pg-boss on Postgres, honker on SQLite. Application code is engine-agnostic — handlers receive a normalized `JobContext`.
-- On Postgres, ensure your role can create the `pgboss` schema; pg-boss bootstraps its tables at startup. On SQLite, honker creates its `_honker_*` tables lazily after Prisma migrates.
+- Configuration comes from `config.yml` (`jobs:` section) — see
+  [Config](./config.md).
+- Workers register when `startWorkers()` runs in `apps/web/src/server/index.ts`.
+- The adapter is chosen by `DATABASE_ENGINE`: pg-boss on Postgres, honker on
+  SQLite. Application code is engine-agnostic — handlers receive a normalized
+  `JobContext`.
+- On Postgres, ensure your role can create the `pgboss` schema (pg-boss
+  bootstraps its tables at startup). On SQLite, honker creates its `_honker_*`
+  tables lazily after Prisma migrates.
 
-## Verifying the Stack
+See [Background jobs](./features/jobs.md) for the full API.
 
-1. `curl https://groot.localhost/health`
-2. `curl -u username:password https://groot.localhost/api/v1/todos`
-3. `curl -u username:password -X POST https://groot.localhost/api/v1/jobs -H 'Content-Type: application/json' -d '{"jobName":"todo-summary","data":{}}'`
+## Verify the stack
 
-Successful responses confirm Express, Prisma, the job queue, and the auth guard are functioning.
+```bash
+curl https://groot.localhost/health
+# then log in and use the token:
+TOKEN=$(curl -s -X POST https://groot.localhost/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}' | jq -r .token)
+curl -H "Authorization: Bearer $TOKEN" https://groot.localhost/api/v1/todos
+curl -H "Authorization: Bearer $TOKEN" -X POST https://groot.localhost/api/v1/jobs \
+  -H "Content-Type: application/json" -d '{"jobName":"todo-summary","data":{}}'
+```
+
+Successful responses confirm Express, Prisma, the job queue, and the JWT guard
+are all working.

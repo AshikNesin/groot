@@ -104,19 +104,29 @@ curl -H "Authorization: Bearer <token>" \
 
 ## Job API Endpoints
 
-| Endpoint                        | Method | Description                       |
-| ------------------------------- | ------ | --------------------------------- |
-| `/api/v1/jobs`                  | POST   | Queue a new job                   |
-| `/api/v1/jobs/schedule`         | POST   | Schedule a job with cron          |
-| `/api/v1/jobs/available`        | GET    | List valid job names              |
-| `/api/v1/jobs`                  | GET    | Filter jobs by state/name         |
-| `/api/v1/jobs/stats`            | GET    | Aggregated counts per queue/state |
-| `/api/v1/jobs/state/failed`     | DELETE | Purge all failed jobs             |
-| `/api/v1/jobs/:name/:id`        | GET    | Inspect specific job              |
-| `/api/v1/jobs/:name/:id/retry`  | POST   | Retry a failed job                |
-| `/api/v1/jobs/:name/:id/cancel` | POST   | Cancel a queued job               |
+All endpoints are under `/api/v1/jobs` and require JWT authentication.
 
-All endpoints require JWT authentication.
+| Method | Path                        | Description                       |
+| ------ | --------------------------- | --------------------------------- |
+| POST   | `/`                         | Create a job                      |
+| POST   | `/schedule`                 | Schedule a job with cron          |
+| POST   | `/bulk-rerun`               | Rerun multiple jobs               |
+| GET    | `/schedule`                 | List scheduled jobs               |
+| PUT    | `/schedule/:jobName`        | Edit a scheduled job              |
+| DELETE | `/schedule/:jobName`        | Cancel a scheduled job            |
+| GET    | `/stats`                    | Aggregated counts per queue/state |
+| GET    | `/available`                | List valid job names              |
+| DELETE | `/state/:state`             | Purge all jobs in a state         |
+| GET    | `/status/failed`            | List failed jobs                  |
+| GET    | `/state/:state`             | List jobs in a state              |
+| GET    | `/`                         | List all jobs                     |
+| GET    | `/:queueName/:jobId`        | Inspect a specific job            |
+| GET    | `/:queueName/:jobId/logs`   | Fetch job logs                    |
+| DELETE | `/:queueName/:jobId`        | Delete a job                      |
+| POST   | `/:queueName/:jobId/retry`  | Retry a failed job                |
+| POST   | `/:queueName/:jobId/cancel` | Cancel a queued job               |
+| POST   | `/:queueName/:jobId/resume` | Resume a paused job               |
+| POST   | `/:queueName/:jobId/rerun`  | Rerun a completed job             |
 
 ## Configuration
 

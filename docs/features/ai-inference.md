@@ -1,20 +1,22 @@
 # AI Inference
 
-The groot boilerplate provides built-in AI inference capabilities powered by [`@earendil-works/pi-ai`](https://github.com/earendil-works/pi). This provides a unified API to interact with various Large Language Models (LLMs) such as OpenAI, and many more.
+Built-in LLM access via [`@earendil-works/pi-ai`](https://github.com/earendil-works/pi), giving you one API across providers (OpenAI, Anthropic, and more).
 
-The AI adapter simplifies the developer experience for common operations like text completion, streaming, and extracting structured data using Zod schemas.
+The adapter simplifies common operations: text completion, streaming, and structured data extraction using Zod schemas.
 
 ## Overview
 
-The core adapter is located in `packages/core/src/ai/`. It provides an `AI` class that you can instantiate with a specific provider and model.
+The core adapter lives in `packages/core/src/ai/`. It exports an `AI` class you instantiate with a provider and model.
 
 ### Key Features
 
-- **Unified API**: Switch providers and models without changing your application code.
-- **Streaming Support**: Stream responses chunk-by-chunk for better UX.
-- **Structured Output**: Extract typed, structured data from LLMs easily using Zod schemas. The adapter automatically handles converting the Zod schema to a tool definition and validating the response.
-- **Native Env Vars**: API keys are read automatically from environment variables (e.g., `OPENAI_API_KEY`). No extra configuration needed.
-- **Escape Hatch**: Full access to the underlying `pi-ai` primitives when you need advanced control.
+| Feature           | What it gives you                                                                 |
+| ----------------- | --------------------------------------------------------------------------------- |
+| Unified API       | Switch providers/models without changing application code                         |
+| Streaming         | Stream responses chunk-by-chunk                                                   |
+| Structured output | Extract typed data from LLMs via Zod schemas (auto-converted to tool definitions) |
+| Native env vars   | API keys are read automatically (e.g. `OPENAI_API_KEY`) — no extra config         |
+| Escape hatch      | Full access to the underlying `pi-ai` primitives when you need more control       |
 
 ## Basic Usage
 
@@ -111,24 +113,6 @@ const response = await complete(model, {
   systemPrompt: "You are a helpful assistant",
 });
 ```
-
-## Example Usage
-
-The core adapter is a library — instantiate it wherever you need AI in your app code:
-
-```typescript
-import { AI } from "@groot/core/ai";
-
-const ai = new AI({ provider: "openai", model: "gpt-4o-mini" });
-const text = await ai.complete({ prompt: "Translate 'hello world' to French." });
-// Returns: "Bonjour le monde"
-```
-
-> **Note:** The boilerplate ships only the core adapter (`packages/core/src/ai/`).
-> Chat endpoints, usage tracking, and conversation persistence are app-level
-> concerns — build them in `apps/web/src/server/api/<your-feature>/` using the adapter.
-
-Check `packages/core/src/ai/client.ts` to see the full adapter API.
 
 ## Environment Variables
 

@@ -1,19 +1,10 @@
 # Passkey Authentication
 
-Passkey authentication provides secure, passwordless login using biometric authentication (Face ID, Touch ID, Windows Hello) or hardware security keys.
+Passkey authentication adds passwordless login via WebAuthn (Face ID, Touch ID, Windows Hello, or a hardware security key) on top of the existing password flow.
 
 ## Overview
 
-Passkey authentication uses the WebAuthn standard to provide a more secure and user-friendly alternative to traditional password-based authentication. Users can register multiple passkeys on different devices and use any of them to sign in.
-
-### Key Features
-
-- **Passwordless Authentication** - Sign in using biometrics or device PINs
-- **Multiple Passkeys** - Users can register unlimited passkeys across different devices
-- **Enhanced Security** - Uses public-key cryptography and challenge-response authentication
-- **Cross-Device Support** - Works with platform authenticators (Face ID, Touch ID, Windows Hello) and security keys (YubiKey, etc.)
-- **Backup Detection** - Automatically detects and reports backed-up credentials
-- **User-Friendly Management** - Easily add, rename, and delete passkeys
+WebAuthn replaces passwords with public-key cryptography and a challenge-response handshake. Users can register any number of passkeys across their devices and sign in with any of them.
 
 ## How It Works
 
@@ -43,39 +34,31 @@ Passkey authentication uses the WebAuthn standard to provide a more secure and u
 - Modern browser with WebAuthn support
 - Platform authenticator (Face ID, Touch ID, Windows Hello) or security key
 
-### Environment Variables
+### Relying Party Configuration
 
-Add these environment variables to configure the Relying Party (RP):
+The Relying Party (RP) settings live under `passkey:` in `config.yml` (see [Config System](../config.md)):
 
-```bash
-# Relying Party Name (shown to users during registration)
-RP_NAME="Groot"
+| Key              | Default                     | Description                              |
+| ---------------- | --------------------------- | ---------------------------------------- |
+| `passkey.rpName` | `"Groot"`                   | Name shown to users during registration  |
+| `passkey.rpId`   | `"localhost"`               | Your domain (`"yourdomain.com"` in prod) |
+| `passkey.origin` | `"https://groot.localhost"` | Full expected origin of the frontend     |
 
-# Relying Party ID (your domain)
-# For localhost development: "localhost"
-# For production: "yourdomain.com"
-RP_ID="localhost"
-
-# Expected origin (full URL of your frontend)
-# For development: "https://groot.localhost"
-# For production: "https://yourdomain.com"
-ORIGIN="https://groot.localhost"
-```
-
-**Note**: These are already defined in `.env.schema` with defaults suitable for development.
+For production, override them in your environment-specific `config.yml` section (e.g. `production.passkey.rpId`).
 
 ### Database Migration
 
-The User and Passkey models are already in your Prisma schema. Run migration:
+The `User` and `Passkey` models already ship in the Prisma schema. If you change them, generate and apply a migration:
 
 ```bash
-npx prisma migrate dev --name add_passkey_model
+pnpm db:migrate:create --name add_passkey_model
+pnpm prisma migrate dev
 ```
 
-Or push the schema to your database:
+In production, apply pending migrations with:
 
 ```bash
-npx prisma migrate deploy
+pnpm db:migrate
 ```
 
 ## Usage
@@ -108,34 +91,28 @@ try {
 
 #### Managing Passkeys
 
-```typescript
-import { PasskeyManager } from '@groot/shell/components/PasskeyManager';
+```tsx
+import { PasskeyManager } from "@groot/shell/components/PasskeyManager";
 
 // In your settings page
-<PasskeyManager />
+<PasskeyManager />;
 ```
 
 ### For Developers
 
 #### Backend API Endpoints
 
-All passkey endpoints are prefixed with `/api/v1/passkey`:
+All passkey endpoints are prefixed with `/api/v1/passkey`.
 
-**Registration Endpoints** (requires authentication):
-
-- `POST /register/options` - Generate registration options for creating a new passkey
-- `POST /register/verify` - Verify registration response and save the passkey
-
-**Authentication Endpoints** (public):
-
-- `POST /login/options` - Generate authentication options for passkey login
-- `POST /login/verify` - Verify authentication response and return JWT token
-
-**Management Endpoints** (requires authentication):
-
-- `GET /list` - List all passkeys for the authenticated user
-- `PATCH /:id` - Update a passkey's name
-- `DELETE /:id` - Delete a passkey
+| Method | Path                | Auth     | Description                                     |
+| ------ | ------------------- | -------- | ----------------------------------------------- |
+| POST   | `/register/options` | required | Generate registration options for a new passkey |
+| POST   | `/register/verify`  | required | Verify registration and save the passkey        |
+| POST   | `/login/options`    | public   | Generate authentication options for login       |
+| POST   | `/login/verify`     | public   | Verify authentication and return a JWT token    |
+| GET    | `/list`             | required | List the authenticated user's passkeys          |
+| PATCH  | `/:id`              | required | Rename a passkey                                |
+| DELETE | `/:id`              | required | Delete a passkey                                |
 
 #### Frontend Integration
 
@@ -181,155 +158,40 @@ export function SettingsPage() {
 
 ## Security Features
 
-### Challenge-Response Authentication
-
-Every authentication request uses a unique challenge to prevent replay attacks. The challenge is stored server-side and validated only once.
-
-### Signature Counter Validation
-
-Each passkey maintains a signature counter that increments with each use. The server validates this counter to detect cloned credentials.
-
-### Public-Key Cryptography
-
-Private keys never leave the user's device. Only public keys are stored on the server, making credential theft ineffective.
-
-### Origin Validation
-
-The system validates that authentication requests come from the expected origin (domain), preventing phishing attacks.
-
-### User Verification
-
-The system requires user verification (biometric or PIN) during both registration and authentication.
+| Feature                      | What it means                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| Challenge-response           | Every request uses a one-time, server-stored challenge to block replay attacks |
+| Signature counter validation | Each passkey's use counter is checked to detect cloned credentials             |
+| Public-key cryptography      | Only public keys are stored server-side; private keys never leave the device   |
+| Origin validation            | Requests are checked against `passkey.origin` to prevent phishing              |
+| User verification            | Registration and login both require biometric or PIN verification              |
 
 ## Browser Support
 
-Passkey authentication is supported in:
+| Browser     | Minimum version                       |
+| ----------- | ------------------------------------- |
+| Chrome/Edge | 67+ (desktop), 70+ (Android)          |
+| Safari      | 14+ (macOS), 14.5+ (iOS)              |
+| Firefox     | 60+ (with `security.webauthn.enable`) |
 
-- **Chrome/Edge**: 67+ (desktop), 70+ (Android)
-- **Safari**: 14+ (macOS), 14.5+ (iOS)
-- **Firefox**: 60+ (with security.webauthn.enable enabled)
-
-The system automatically detects support using `passkeyService.isPlatformAuthenticatorAvailable()`.
+Check support at runtime with `passkeyService.isPlatformAuthenticatorAvailable()`.
 
 ## Troubleshooting
 
-### Registration Fails
-
-**Issue**: Unable to register a new passkey.
-
-**Solutions**:
-
-1. Check browser console for errors
-2. Ensure RP_ID matches your domain (or "localhost" for development)
-3. Verify ORIGIN environment variable is set correctly
-4. Try a different authenticator (security key vs. platform authenticator)
-
-### Authentication Fails
-
-**Issue**: Can't log in with an existing passkey.
-
-**Solutions**:
-
-1. Ensure the passkey hasn't been deleted
-2. Check that the device/authenticator is still available
-3. Verify RP_ID and ORIGIN haven't changed
-4. Try deleting and re-registering the passkey
-
-### "NotAllowedError"
-
-**Issue**: Browser shows "NotAllowedError" or operation was cancelled.
-
-**Solutions**:
-
-1. User may have cancelled the operation - try again
-2. Check if passkey is already registered (duplicate registration)
-3. Ensure user gesture (button click) initiated the request
-4. For platform authenticators, check device biometric settings
-
-### Challenge Not Found Error
-
-**Issue**: Server returns "Challenge not found or expired".
-
-**Solutions**:
-
-1. Complete the registration/authentication within a reasonable time
-2. Don't refresh the page during the process
-3. In production, consider using Redis for challenge storage instead of in-memory
+| Symptom                           | Likely cause                                                     | Fix                                                                       |
+| --------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Registration fails                | `passkey.rpId`/`passkey.origin` mismatch, or wrong authenticator | Confirm `config.yml` values match the domain; try another authenticator   |
+| Login fails with existing passkey | Passkey deleted, device unavailable, or RP config changed        | Re-check `passkey.rpId`/`passkey.origin`; re-register if needed           |
+| `NotAllowedError`                 | User cancelled, duplicate registration, or missing user gesture  | Retry from a real click handler; check for an existing registration       |
+| "Challenge not found or expired"  | Flow took too long, page was refreshed, or server restarted      | Complete registration/login promptly; see Production Considerations below |
 
 ## Production Considerations
 
-### Challenge Storage
+**Challenge storage** — Challenges are held in an in-memory store (see the passkey service). This works for a single instance; with multiple server instances or restarts mid-flow, back it with Redis or a DB table with expiration instead.
 
-The current implementation uses in-memory storage for challenges. For production with multiple server instances:
+**HTTPS** — WebAuthn requires HTTPS in production (localhost is exempt). Make sure `passkey.origin` uses `https://` and `passkey.rpId` matches your real domain.
 
-1. **Use Redis**:
-
-```typescript
-// Example using Redis
-import Redis from "ioredis";
-const redis = new Redis(process.env.REDIS_URL);
-
-// Store challenge
-await redis.setex(`passkey:challenge:${userId}`, 300, challenge); // 5 min expiry
-
-// Retrieve challenge
-const challenge = await redis.get(`passkey:challenge:${userId}`);
-```
-
-2. **Use Database**: Store challenges in a dedicated table with expiration
-
-### HTTPS Requirement
-
-WebAuthn requires HTTPS in production (except localhost). Ensure:
-
-- SSL certificate is valid
-- ORIGIN environment variable uses `https://`
-- RP_ID matches your domain
-
-### Domain Configuration
-
-For production deployment:
-
-```bash
-# Production environment variables
-RP_NAME="Your App Name"
-RP_ID="yourdomain.com"
-ORIGIN="https://yourdomain.com"
-```
-
-### Monitoring
-
-Monitor these metrics:
-
-- Passkey registration success/failure rates
-- Authentication success/failure rates
-- Challenge expiration rates
-- Counter validation failures (potential cloning attempts)
-
-### Backup Authentication
-
-Always maintain password-based authentication as a backup:
-
-- Users who lose their devices can still access accounts
-- Provides fallback for unsupported browsers
-- Allows account recovery
-
-## Best Practices
-
-### For Users
-
-1. **Register multiple passkeys** - Add passkeys on multiple devices for redundancy
-2. **Use descriptive names** - Name passkeys like "Work MacBook" or "Personal iPhone"
-3. **Keep backups** - If using iCloud Keychain or similar, ensure backups are enabled
-4. **Don't delete last passkey** - Keep at least one passkey or ensure password still works
-
-### For Developers
-
-1. **Graceful degradation** - Always show password login as fallback
-2. **Clear error messages** - Provide helpful guidance when operations fail
-3. **Test cross-browser** - Verify functionality in all major browsers
-4. **Monitor usage** - Track passkey adoption and authentication success rates
-5. **Update dependencies** - Keep @simplewebauthn packages up to date
+**Fallback** — Keep password login available; passkeys should be additive, not a replacement, so users aren't locked out if they lose all devices.
 
 ## Resources
 
@@ -337,7 +199,3 @@ Always maintain password-based authentication as a backup:
 - [SimpleWebAuthn Documentation](https://simplewebauthn.dev/)
 - [W3C WebAuthn Specification](https://www.w3.org/TR/webauthn-2/)
 - [Passkeys.dev](https://passkeys.dev/)
-
-## API Reference
-
-See the comprehensive API reference with request/response examples in the source code comments or generate API documentation using your preferred tool.

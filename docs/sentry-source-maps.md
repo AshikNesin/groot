@@ -1,6 +1,7 @@
-# Sentry Source Maps Setup
+# Sentry source maps
 
-This guide covers configuring source map uploads so Sentry shows original TypeScript file paths in error stack traces instead of bundled references like `dist/bundle.js:942:12`.
+Configure source map uploads so Sentry shows original TypeScript file paths in
+error stack traces instead of bundled references like `dist/bundle.js:942:12`.
 
 ## Prerequisites
 

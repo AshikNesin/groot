@@ -1,142 +1,166 @@
-# API Request Recipes
+# API request recipes
 
-Copy these curl snippets to exercise the API quickly. Replace `user:pass` with your basic auth credentials.
+Copy-ready `curl` snippets for every endpoint. Replace `<jwt-token>` with the
+JWT returned by `/api/v1/auth/login`, and `<admin-key>` with your
+`ADMIN_AUTH_KEY`.
 
-## Health Check
+> Most `/api/v1/*` routes are **JWT-protected**. Get a token first, then pass
+> it via `Authorization: Bearer <jwt-token>`. User creation is the one
+> admin-only operation (`X-Admin-Auth-Key`).
+
+## Get a token (login first)
+
+```bash
+# Login → returns { token, user }
+TOKEN=$(curl -s -X POST https://groot.localhost/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}' \
+  | jq -r .token)
+```
+
+## Health check
 
 ```bash
 curl https://groot.localhost/health
 ```
 
-## Todos
+## Todos (JWT)
 
 ```bash
 # List
-curl -u user:pass https://groot.localhost/api/v1/todos
+curl -H "Authorization: Bearer $TOKEN" https://groot.localhost/api/v1/todos
 
 # Create
-curl -u user:pass -X POST https://groot.localhost/api/v1/todos \
+curl -H "Authorization: Bearer $TOKEN" -X POST https://groot.localhost/api/v1/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Draft documentation"}'
 
 # Toggle completion
-curl -u user:pass -X PUT https://groot.localhost/api/v1/todos/1 \
+curl -H "Authorization: Bearer $TOKEN" -X PUT https://groot.localhost/api/v1/todos/1 \
   -H "Content-Type: application/json" \
   -d '{"completed":true}'
 
 # Delete
-curl -u user:pass -X DELETE https://groot.localhost/api/v1/todos/1
+curl -H "Authorization: Bearer $TOKEN" -X DELETE https://groot.localhost/api/v1/todos/1
 ```
 
-## Jobs
+## Jobs (JWT)
 
 ```bash
-# Queue todo-summary job
-curl -u user:pass -X POST https://groot.localhost/api/v1/jobs \
+# Queue a job immediately
+curl -H "Authorization: Bearer $TOKEN" -X POST https://groot.localhost/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{"jobName":"todo-summary","data":{}}'
 
-# Schedule nightly cleanup
-curl -u user:pass -X POST https://groot.localhost/api/v1/jobs/schedule \
+# Schedule with cron (nightly at 3am)
+curl -H "Authorization: Bearer $TOKEN" -X POST https://groot.localhost/api/v1/jobs/schedule \
   -H "Content-Type: application/json" \
   -d '{"jobName":"todo-cleanup","cron":"0 3 * * *","data":{"daysToKeep":45}}'
 
 # Inspect failed jobs
-curl -u user:pass "https://groot.localhost/api/v1/jobs/status/failed?limit=20"
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://groot.localhost/api/v1/jobs/state/failed?limit=20"
 
 # Retry a specific job
-curl -u user:pass -X POST https://groot.localhost/api/v1/jobs/todo-cleanup/job-123/retry
+curl -H "Authorization: Bearer $TOKEN" -X POST \
+  https://groot.localhost/api/v1/jobs/todo-cleanup/job-123/retry
 
 # Delete a job
-curl -u user:pass -X DELETE https://groot.localhost/api/v1/jobs/todo-cleanup/job-123
+curl -H "Authorization: Bearer $TOKEN" -X DELETE \
+  https://groot.localhost/api/v1/jobs/todo-cleanup/job-123
 ```
 
-## Storage
+## Storage (JWT)
 
 ```bash
-# List files (with optional prefix filter)
-curl -u user:pass "https://groot.localhost/api/v1/storage/files?prefix=docs/&delimiter=/"
+# List files (optional prefix filter)
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://groot.localhost/api/v1/storage/files?prefix=docs/&delimiter=/"
 
-# Upload a single file
-curl -u user:pass -F "file=@document.pdf" -F "filePath=docs/document.pdf" \
+# Upload a single file (multipart)
+curl -H "Authorization: Bearer $TOKEN" \
+  -F "file=@document.pdf" -F "filePath=docs/document.pdf" \
   https://groot.localhost/api/v1/storage/files/upload
 
-# Upload multiple files (bulk)
-curl -u user:pass -F "files=@file1.pdf" -F "files=@file2.pdf" \
+# Bulk upload (up to 50 files)
+curl -H "Authorization: Bearer $TOKEN" \
+  -F "files=@file1.pdf" -F "files=@file2.pdf" \
   https://groot.localhost/api/v1/storage/files/bulk-upload
 
-# Download a file
-curl -u user:pass "https://groot.localhost/api/v1/storage/files/download?filePath=docs/document.pdf" -o document.pdf
+# Download
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://groot.localhost/api/v1/storage/files/download?filePath=docs/document.pdf" -o document.pdf
 
-# Get file metadata
-curl -u user:pass "https://groot.localhost/api/v1/storage/files/metadata?filePath=docs/document.pdf"
+# File metadata
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://groot.localhost/api/v1/storage/files/metadata?filePath=docs/document.pdf"
 
 # Create a folder
-curl -u user:pass -X POST https://groot.localhost/api/v1/storage/folders \
+curl -H "Authorization: Bearer $TOKEN" -X POST https://groot.localhost/api/v1/storage/folders \
   -H "Content-Type: application/json" \
   -d '{"folderPath":"archive/2024/"}'
 
 # Rename a file
-curl -u user:pass -X PUT https://groot.localhost/api/v1/storage/files/rename \
+curl -H "Authorization: Bearer $TOKEN" -X PUT https://groot.localhost/api/v1/storage/files/rename \
   -H "Content-Type: application/json" \
   -d '{"oldPath":"docs/old.pdf","newPath":"docs/new.pdf"}'
 
 # Delete files
-curl -u user:pass -X DELETE https://groot.localhost/api/v1/storage/files \
+curl -H "Authorization: Bearer $TOKEN" -X DELETE https://groot.localhost/api/v1/storage/files \
   -H "Content-Type: application/json" \
   -d '{"filePaths":["docs/document.pdf"]}'
 ```
 
-## Auth User Management (Admin)
+## Auth & user management
 
 ```bash
-# Create a new user (requires admin auth key)
+# Create a new user (admin-only — uses X-Admin-Auth-Key, NOT JWT)
 curl -X POST https://groot.localhost/api/v1/auth/users \
   -H "Content-Type: application/json" \
-  -H "X-Admin-Auth-Key: your-admin-key" \
+  -H "X-Admin-Auth-Key: $ADMIN_KEY" \
   -d '{"email":"newuser@example.com","password":"secure-password"}'
 
-# List all users (requires admin auth key)
-curl -H "X-Admin-Auth-Key: your-admin-key" \
-  https://groot.localhost/api/v1/auth/users
+# List all users (admin-only)
+curl -H "X-Admin-Auth-Key: $ADMIN_KEY" https://groot.localhost/api/v1/auth/users
 
-# Login
-curl -X POST https://groot.localhost/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password"}'
+# Current user (JWT)
+curl -H "Authorization: Bearer $TOKEN" https://groot.localhost/api/v1/auth/me
 
-# Get current user (requires JWT from login)
-curl -H "Authorization: Bearer your-jwt-token" \
-  https://groot.localhost/api/v1/auth/me
-
-# Logout (requires JWT)
-curl -X POST -H "Authorization: Bearer your-jwt-token" \
-  https://groot.localhost/api/v1/auth/logout
+# Logout (JWT)
+curl -H "Authorization: Bearer $TOKEN" -X POST https://groot.localhost/api/v1/auth/logout
 ```
 
-## App Settings
+## Passkeys (WebAuthn)
+
+Passkey flows are interactive (browser mediation), so they're driven from the
+client service rather than `curl`. See
+[Passkey authentication](../features/passkey-authentication.md) for the
+endpoints (`/api/v1/passkey/register/*`, `/login/*`, `/list`).
+
+## App settings (JWT)
 
 ```bash
-# Get all settings
-curl https://groot.localhost/api/v1/settings
+# All settings
+curl -H "Authorization: Bearer $TOKEN" https://groot.localhost/api/v1/settings
 
-# Get specific setting
-curl https://groot.localhost/api/v1/settings/app-name
+# A single setting
+curl -H "Authorization: Bearer $TOKEN" https://groot.localhost/api/v1/settings/app-name
 
 # Update a setting
-curl -X PUT https://groot.localhost/api/v1/settings/app-name \
+curl -H "Authorization: Bearer $TOKEN" -X PUT https://groot.localhost/api/v1/settings/app-name \
   -H "Content-Type: application/json" \
   -d '{"value":"My App"}'
 
 # Delete a setting
-curl -X DELETE https://groot.localhost/api/v1/settings/app-name
+curl -H "Authorization: Bearer $TOKEN" -X DELETE https://groot.localhost/api/v1/settings/app-name
 ```
 
-## Combined Workflow
+## Combined workflow
 
-1. Create todos via the first snippet.
-2. Trigger `todo-summary` to log aggregate stats.
-3. Run `todo-cleanup` after marking tasks complete.
-4. Refresh the React client (`/todos`) to verify updates.
+1. Create todos via the snippet above.
+2. Queue `todo-summary` to log aggregate stats.
+3. Schedule `todo-cleanup` to prune completed todos.
+4. Open `/todos` in the client to verify.
 
-Store these commands in an `.http` file or REST client of your choice for faster iteration.
+> Tip: drop these into an `.http` file (VS Code REST client, JetBrains) for
+> faster iteration.

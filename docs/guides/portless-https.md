@@ -1,5 +1,7 @@
 # Portless & HTTPS Setup
 
+How local dev gets a stable `https://groot.localhost` URL instead of a random port, and how to fix trust/HMR issues when it doesn't.
+
 This project uses [portless](https://github.com/vercel-labs/portless) to replace port numbers with stable, named `.localhost` URLs during local development. HTTPS with HTTP/2 is enabled by default.
 
 When you run `pnpm dev`, the dev script uses portless:
@@ -86,7 +88,7 @@ Open `https://groot.localhost` in your browser — it should load with a valid H
 
 The `pnpm dev` script wraps the dev server through portless:
 
-```
+```bash
 portless run --name groot varlock run -- tsx scripts/dev.ts
 ```
 
@@ -109,11 +111,13 @@ No manual HMR configuration needed.
 
 ### Passkey (WebAuthn) Integration
 
-If you use passkey authentication, update your `.env` to match the portless URL:
+If you use passkey authentication, set the Relying Party origin in `config.yml`
+to match the portless URL:
 
-```env
-RP_ID=groot.localhost
-RP_ORIGIN=https://groot.localhost
+```yaml
+passkey:
+  rpId: groot.localhost
+  origin: https://groot.localhost
 ```
 
 > [!IMPORTANT]

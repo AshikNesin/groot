@@ -1,105 +1,139 @@
+<div align="center">
+
 # Groot
 
-Starter kit for building web apps with a reliable, minimal tech stack.
+**A minimal, reliable Express + React + Prisma boilerplate.**
 
-No framework churn. No over-abstraction. Just Express + React + Prisma — with SQLite (default) or PostgreSQL — wired together so you can ship.
+No framework churn. No over-abstraction. SQLite (default) or PostgreSQL, wired
+so you can ship.
 
-## Tech Stack
+<p>
+  <img src="https://img.shields.io/badge/TypeScript-5.9-blue?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Node-18+-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node" />
+  <img src="https://img.shields.io/badge/Express-5-000000?style=flat-square&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Prisma-7-2D3748?style=flat-square&logo=prisma&logoColor=white" alt="Prisma" />
+  <img src="https://img.shields.io/badge/pnpm-pnpm?style=flat-square&logo=pnpm&logoColor=white" alt="pnpm" />
+</p>
 
-| Layer   | What                                                   |
-| ------- | ------------------------------------------------------ |
-| Server  | Express 5, TypeScript, Prisma, pg-boss / honker, Pino  |
-| Client  | React 19, Vite 7, React Router 7, React Query, Zustand |
-| Auth    | JWT + Passkeys (WebAuthn)                              |
-| Tooling | Vite+ (Oxlint, Oxfmt, Vitest), Playwright, pnpm        |
+</div>
 
-## Get Started
+---
+
+groot ships JWT + Passkey auth, background jobs, S3 file storage, AI inference,
+and a full UI component library — all on a server-primary monolith you can
+deploy as a single process.
+
+## Quick start
 
 ```bash
-cp .env.schema .env         # configure secrets
+cp .env.schema .env        # working dev defaults; configure secrets for prod
 pnpm install
-pnpm prisma generate
-pnpm db:migrate        # apply baseline + pending migrations
-pnpm dev                    # https://<appname>.localhost via portless
+pnpm db:migrate            # apply baseline + pending migrations
+pnpm dev                   # https://groot.localhost via portless
 ```
+
+The first `pnpm dev` prompts you to trust a local HTTPS certificate (portless).
+See [Portless & HTTPS](./docs/guides/portless-https.md) for details.
 
 → **[Full setup guide](./docs/setup-guide.md)** • **[Quick start](./docs/quick-start.md)**
 
-## What's Included
+## Tech stack
 
-- JWT + Passkey auth with protected routes
-- Background jobs via pg-boss (Postgres) or honker (SQLite)
-- S3 file storage with secure sharing
-- AI inference with Zod structured output
-- Key-value store (Keyv — SQLite or Postgres backend)
-- UI component library (Radix + Tailwind)
-- Request logging, error tracking (Sentry), rate limiting
-- Pre-commit hooks with secret detection
+| Layer   | Technology                                                       |
+| ------- | ---------------------------------------------------------------- |
+| Server  | Express 5, TypeScript, Prisma 7, pg-boss / honker, Pino, Sentry  |
+| Client  | React 19, Vite 7, React Router 7, React Query, Zustand, Tailwind |
+| Auth    | JWT + Passkeys (WebAuthn)                                        |
+| Storage | AWS S3                                                           |
+| AI      | [`@earendil-works/pi-ai`](https://github.com/earendil-works/pi)  |
+| Tooling | Vite+ (Oxlint, Oxfmt), Vitest, Playwright, pnpm                  |
 
-## Project Structure
+## How it works
 
-This is a **server-primary monolith**: one deployable process (`node dist/bundle.js`) that also serves the built client as static assets. The repo root _is_ the backend app's home — backend-owned files at root aren't leaked out of `server/`, they live where their tools expect to find them.
+A **server-primary monolith**: one deployable process (`node dist/bundle.js`)
+that also serves the built client as static assets.
 
 ```
-├── server/src/              # Backend application code
-│   ├── app/<feature>/        # Feature endpoints (per-feature thin shell)
-│   ├── shared/<feature>/     # Feature modules: controller + routes +
-│   │                         #   service + validation + model
-│   ├── core/                 # Cross-cutting infra (config, errors, job,
-│   │                         #   kv, logger, middlewares, storage, utils)
-│   └── generated/prisma/     # Prisma Client output (generated, not hand-edited)
-├── client/src/               # Frontend application code (Vite build)
-│   ├── app/<feature>/{pages,hooks}/
-│   ├── core/{components,hooks,lib,services,store,types}/
-│   └── ui/                   # shadcn primitives, exported via the `@/ui` barrel
-├── docs/
-│
-├── prisma/                   # Schema + migrations + seed  ─┐
-├── prisma.config.ts          # Prisma CLI config            │  pinned to root
-├── config.yml                # Operator config (like .env)  │  by their tooling /
-├── Procfile                  # Deploy process definition   │  deploy expectations
-├── tsconfig.json             # Server tsconfig             ─┘
-└── vite.config.ts            # Client build config (root = Vite's CWD)
+Request → Express (apps/web/src/server)
+             │
+             ├─→ middlewares (logging, JWT, rate-limit, error)
+             ├─→ createRouter (auto-wraps async handlers)
+             ├─→ route handler (returns a value → auto-serialized)
+             └─→ service (business logic) → Prisma → SQLite / PostgreSQL
+
+Background jobs:
+  feature.jobs.ts → registerJobHandler() → worker → adapter (pg-boss / honker)
 ```
 
-**Why backend files live at root, not in `server/`:**
+### Workspace layout
 
-- `prisma/` + `prisma.config.ts` — the Prisma CLI resolves schema/migration paths relative to CWD; `schema.prisma`'s `output: "../server/src/generated/prisma"` is relative to the schema file. Moving it breaks the CLI. The generated client _does_ land inside `server/src/generated/` — only the schema definition sits at root.
-- `config.yml` — operator-facing per-environment config, read by `server/src/core/config/config.loader.ts` via `resolve(process.cwd(), "config.yml")`. Same role as `.env`: belongs where the person deploying expects it.
-- `Procfile` — Railway/Heroku/nixpacks look for it at root.
-- `tsconfig.json` / `vite.config.ts` — each build tool runs from repo root.
+A pnpm workspace. `packages/` is boilerplate (synced to child projects);
+`apps/` is app-owned (not synced).
 
-The asymmetry (server code at root **and** in `server/`; client code only in `client/`) mirrors the deployment asymmetry: the server is the process, the client is a static asset that process serves.
+```
+apps/web/                  # App-owned — NOT synced
+  src/client/              # React app (App.tsx, pages/)
+  src/server/              # Express app (index.ts, routes.ts, api/<feature>/)
+  prisma/                  # schema.{sqlite,postgres}.prisma + migrations
+
+packages/                  # Boilerplate — always synced
+  ui/        @groot/ui      # shadcn/ui primitives (button, dialog, input, …)
+  shell/     @groot/shell   # client infra (Layout, apiClient, stores, hooks)
+  core/      @groot/core    # server infra + reusable features + database
+  jobs/      @groot/jobs    # job queue adapter + dashboard (server/ + client/)
+```
+
+**Dependency rule:** `packages/` never imports from `apps/`. `apps/` imports
+from `packages/`.
+
+Backend-owned files (`prisma/`, `config.yml`, `Procfile`, `tsconfig.json`,
+`vite.config.ts`) live at the repo root because that's where their tooling
+expects them — see [Architecture](./docs/guides/architecture.md) for why.
+
+## What's included
+
+- **JWT + Passkey auth** with protected routes
+- **Background jobs** — pg-boss (Postgres) or honker (SQLite), behind one adapter
+- **S3 file storage** with uploads, downloads, folders, renames
+- **AI inference** with Zod structured output
+- **Key-value store** (Keyv — SQLite or Postgres backend)
+- **UI component library** (Radix + Tailwind)
+- **Request logging, error tracking (Sentry), rate limiting**
+- **Pre-commit hooks** with secret detection (gitleaks)
 
 ## Scripts
 
-```bash
-pnpm dev              # dev server (HTTPS via portless)
-pnpm build            # production build
-pnpm start            # run production build
-pnpm check            # lint + format + typecheck
-pnpm test             # run tests
-pnpm test:e2e         # playwright e2e tests
-pnpm test:all         # run tests on both SQLite and PostgreSQL
-```
+| Command           | What it does                                    |
+| ----------------- | ----------------------------------------------- |
+| `pnpm dev`        | Dev server (Express + Vite, HTTPS via portless) |
+| `pnpm build`      | Build client (Vite) + bundle server (esbuild)   |
+| `pnpm start`      | Run the production build                        |
+| `pnpm check`      | Lint + format (Vite+)                           |
+| `pnpm test`       | Vitest unit tests (SQLite by default)           |
+| `pnpm test:e2e`   | Playwright E2E tests                            |
+| `pnpm test:all`   | Run tests on both SQLite and PostgreSQL         |
+| `pnpm db:migrate` | Apply pending migrations                        |
 
-## Docs
+## Documentation
 
-| Topic                | Link                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| Quick start          | [docs/quick-start.md](./docs/quick-start.md)                                         |
-| Setup guide          | [docs/setup-guide.md](./docs/setup-guide.md)                                         |
-| Architecture         | [docs/guides/architecture.md](./docs/guides/architecture.md)                         |
-| Development workflow | [docs/guides/development.md](./docs/guides/development.md)                           |
-| Portless & HTTPS     | [docs/guides/portless-https.md](./docs/guides/portless-https.md)                     |
-| Database migrations  | [docs/guides/database-migrations.md](./docs/guides/database-migrations.md)           |
-| Database engines     | [docs/database-engines.md](./docs/database-engines.md)                               |
-| Testing              | [docs/guides/testing.md](./docs/guides/testing.md)                                   |
-| Background jobs      | [docs/features/jobs.md](./docs/features/jobs.md)                                     |
-| File storage (S3)    | [docs/features/storage.md](./docs/features/storage.md)                               |
-| Passkey auth         | [docs/features/passkey-authentication.md](./docs/features/passkey-authentication.md) |
-| AI inference         | [docs/features/ai-inference.md](./docs/features/ai-inference.md)                     |
-| All docs             | [docs/README.md](./docs/README.md)                                                   |
+| Topic                | Document                                                                               |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| Quick start          | [`docs/quick-start.md`](./docs/quick-start.md)                                         |
+| Setup guide          | [`docs/setup-guide.md`](./docs/setup-guide.md)                                         |
+| Architecture         | [`docs/guides/architecture.md`](./docs/guides/architecture.md)                         |
+| Development workflow | [`docs/guides/development.md`](./docs/guides/development.md)                           |
+| Database engines     | [`docs/database-engines.md`](./docs/database-engines.md)                               |
+| Database migrations  | [`docs/guides/database-migrations.md`](./docs/guides/database-migrations.md)           |
+| Testing              | [`docs/guides/testing.md`](./docs/guides/testing.md)                                   |
+| Portless & HTTPS     | [`docs/guides/portless-https.md`](./docs/guides/portless-https.md)                     |
+| Background jobs      | [`docs/features/jobs.md`](./docs/features/jobs.md)                                     |
+| File storage (S3)    | [`docs/features/storage.md`](./docs/features/storage.md)                               |
+| Passkey auth         | [`docs/features/passkey-authentication.md`](./docs/features/passkey-authentication.md) |
+| AI inference         | [`docs/features/ai-inference.md`](./docs/features/ai-inference.md)                     |
+| API request recipes  | [`docs/examples/api-requests.md`](./docs/examples/api-requests.md)                     |
+| All docs             | [`docs/README.md`](./docs/README.md)                                                   |
 
 ## License
 

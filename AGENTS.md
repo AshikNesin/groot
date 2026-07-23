@@ -43,7 +43,7 @@ sync from via `pnpm groot:sync`.
 | Frontend     | React 19, TypeScript, Vite 7, React Router 7, Zustand, React Query    |
 | UI           | Radix UI primitives, Tailwind CSS, shadcn/ui patterns                 |
 | Tooling      | Vite+ (Oxlint, Oxfmt), Vitest, Playwright, pnpm                       |
-| AI           | @mariozechner/pi-ai (unified LLM API with Zod output)                 |
+| AI           | @earendil-works/pi-ai (unified LLM API with Zod output)               |
 
 ## Workspace Layout (WHAT)
 

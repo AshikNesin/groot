@@ -1,19 +1,15 @@
 # KV (Key-Value) Storage System
 
-This project uses [Keyv](https://github.com/jaredwray/keyv) for key-value storage, perfect for caching, session storage, or any temporary data needs. The backend is selected by `DATABASE_ENGINE` to match the Prisma adapter:
+Simple key-value storage for caching, sessions, and other temporary data, backed by [Keyv](https://github.com/jaredwray/keyv).
 
-- **SQLite** (default) — [`@keyv/sqlite`](https://github.com/jaredwray/keyv/tree/main/packages/sqlite)
-- **PostgreSQL** — [`@keyv/postgres`](https://github.com/jaredwray/keyv/tree/main/packages/postgres)
+The backend is selected by `DATABASE_ENGINE` to match the Prisma adapter:
 
-Both adapters implement the same Keyv interface, so the rest of the code is engine-agnostic. Both packages are always installed (dual-engine support). See [Database Engines](./database-engines.md) for the engine matrix.
+| Engine           | Adapter                                                                           |
+| ---------------- | --------------------------------------------------------------------------------- |
+| SQLite (default) | [`@keyv/sqlite`](https://github.com/jaredwray/keyv/tree/main/packages/sqlite)     |
+| PostgreSQL       | [`@keyv/postgres`](https://github.com/jaredwray/keyv/tree/main/packages/postgres) |
 
-## Installation
-
-The KV system uses these packages (already installed):
-
-- `keyv` - The core Keyv library
-- `@keyv/postgres` - PostgreSQL adapter for Keyv
-- `@keyv/sqlite` - SQLite adapter for Keyv
+Both adapters implement the same Keyv interface, so the rest of the code is engine-agnostic, and both packages are always installed (dual-engine support). See [Database Engines](./database-engines.md) for the engine matrix.
 
 ## Usage
 
@@ -174,7 +170,9 @@ if (value && isExpired(value.timestamp)) {
 
 ## Notes
 
-1. All values are stored as strings in the database. Complex objects are automatically serialized/deserialized using JSON.stringify/JSON.parse.
-2. Namespaces are implemented by prefixing keys with "namespace:key".
-3. The Keyv table is managed by the @keyv/postgres package, not by Prisma directly (marked with @@ignore in the schema).
-4. For production use, consider implementing connection pooling and other optimizations for your specific needs.
+| Detail              | Behavior                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| Value serialization | Values are stored as strings; complex objects are serialized/deserialized via JSON |
+| Namespacing         | Implemented by prefixing keys, e.g. `namespace:key`                                |
+| Postgres table      | Managed by `@keyv/postgres`, not Prisma (marked `@@ignore` in the schema)          |
+| Production          | Consider connection pooling and other tuning for your workload                     |

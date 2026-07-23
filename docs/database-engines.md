@@ -1,8 +1,8 @@
-# Database engines: SQLite (default) and PostgreSQL
+# Database engines
 
-This branch (`feat/sqlite-migration`) makes the app run on **either** SQLite or
-PostgreSQL, selected by the `DATABASE_ENGINE` env var. SQLite is the default
-(zero-infra local dev); set `DATABASE_ENGINE=postgres` to opt into Postgres.
+groot runs on **either** SQLite (default) or PostgreSQL, selected by the
+`DATABASE_ENGINE` env var. SQLite gives you zero-infra local dev; set
+`DATABASE_ENGINE=postgres` to opt into Postgres.
 
 The job queue runs on both engines: pg-boss on Postgres, honker on SQLite
 (see [Jobs](#jobs-dual-engine-pg-boss-on-postgres-honker-on-sqlite)).
@@ -227,24 +227,19 @@ leaves them as runtime requires (it has no `.node` loader).
 > tree re-resolution. Adding packages required
 > `--config.trustPolicy=none` to get past that. Pre-existing repo condition.
 
-## Verification
+## Verifying your setup
 
-- `pnpm check` (oxlint + oxfmt): 0 errors.
-- `tsc --noEmit`: clean (the pre-existing pg-boss constructor overload error
-  is gone — the adapter casts through the loose options type).
-- `pnpm test` (vitest, 13 files / 133 tests): **all pass**, including the
-  schema-parity test, the KV test, and 4 new honker-adapter integration tests
-  (enqueue/ack, retry→dead-letter, stats, scheduling).
-- `pnpm build`: succeeds.
-- **SQLite runtime smoke test** (`file:./tmp/jobs-smoke.db`): migrated + seeded,
-  then `POST /api/v1/auth/login` (JWT), `POST /api/v1/jobs` to enqueue
-  `todo-summary` and `todo-cleanup`, confirmed the honker workers claimed and
-  ran both handlers (logs: `Starting job` → `Todo summary generated` /
-  `Todo cleanup completed` → `Job ... completed`), `JobLog` rows persisted via
-  Prisma, and `_honker_live` emptied on ack.
-- **Postgres client parity**: `DATABASE_ENGINE=postgres prisma generate`
-  produces a client with identical `runtime.JsonValue` types for `transports`
-  and `data` — confirming the generated client is type-identical across engines.
+```bash
+pnpm test:sqlite     # ./tmp/test.db
+pnpm test:postgres   # needs DATABASE_URL pointing at a Postgres instance
+pnpm test:all        # both, sequentially
+```
+
+CI runs both engines on every PR and push to `main` via a matrix workflow.
+The honker-adapter test is SQLite-only (the adapter opens a SQLite file) and is
+skipped on Postgres. To confirm the generated client is type-identical across
+engines, `DATABASE_ENGINE=postgres prisma generate` produces a client with the
+same `runtime.JsonValue` types for `Json`-backed fields like `transports`.
 
 ## Gotchas
 

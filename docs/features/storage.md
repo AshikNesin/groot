@@ -1,6 +1,6 @@
 # Storage Feature
 
-The storage feature provides a lightweight AWS S3 file browser with folder navigation, uploads, downloads, deletions, and renames.
+A lightweight S3 file browser with folder navigation, uploads, downloads, deletions, and renames.
 
 > **Note:** The boilerplate ships S3 file management only. Password-protected,
 > time-limited public file sharing was removed as an opinionated feature —
@@ -10,12 +10,8 @@ The storage feature provides a lightweight AWS S3 file browser with folder navig
 ## Architecture Overview
 
 ```
-Client (Storage page)
-  ↳ React Query hooks (`useStorage.ts`)
-      ↳ Axios `/api/v1/storage/*`
-          ↳ Express routes (shared/storage/)
-              ↳ Routes → Services
-                  ↳ Core S3 wrapper (core/storage)
+Storage page → useStorage.ts (React Query) → /api/v1/storage/* (axios)
+  → Express routes → services → core S3 wrapper (core/storage)
 ```
 
 ## Module Structure
