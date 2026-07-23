@@ -82,3 +82,124 @@ model JobLog {
   @@index([timestamp])
   @@map("job_logs")
 }
+
+// Honker job-queue tables. honker (@russellthehippo/honker-node, the SQLite
+// queue) creates these at runtime via CREATE TABLE ... IF NOT EXISTS. They are
+// mirrored here so Prisma's migration history stays in sync with the runtime
+// schema — otherwise `prisma migrate dev` reports drift against tables it never
+// created and tries to drop them. @@ignore keeps Prisma from generating DDL for
+// these models; the canonical table/index definitions live in migration
+// 20260316000000_honker_tables. The 3 partial (WHERE-predicate) indexes honker
+// uses on _honker_live can't be expressed in Prisma syntax, so they exist only
+// in the migration SQL (the @@index directives here omit them on purpose).
+// honker is SQLite-only, so these models have no postgres counterpart.
+model HonkerLive {
+  id             Int      @id @default(autoincrement())
+  queue          String
+  payload        String
+  state          String   @default("pending")
+  priority       Int      @default(0)
+  runAt          Int      @default(dbgenerated("unixepoch()")) @map("run_at")
+  workerId       String?  @map("worker_id")
+  claimExpiresAt Int?     @map("claim_expires_at")
+  attempts       Int      @default(0)
+  maxAttempts    Int      @default(3) @map("max_attempts")
+  createdAt      Int      @default(dbgenerated("unixepoch()")) @map("created_at")
+  expiresAt      Int?     @map("expires_at")
+
+  @@map("_honker_live")
+  @@ignore
+}
+
+model HonkerDead {
+  id          Int     @id
+  queue       String
+  payload     String
+  priority    Int     @default(0)
+  runAt       Int     @default(0) @map("run_at")
+  attempts    Int     @default(0)
+  maxAttempts Int     @default(0) @map("max_attempts")
+  lastError   String? @map("last_error")
+  createdAt   Int     @default(dbgenerated("unixepoch()")) @map("created_at")
+  diedAt      Int     @default(dbgenerated("unixepoch()")) @map("died_at")
+
+  @@map("_honker_dead")
+  @@ignore
+}
+
+model HonkerNotification {
+  id        Int    @id @default(autoincrement())
+  channel   String
+  payload   String
+  createdAt Int    @default(dbgenerated("unixepoch()")) @map("created_at")
+
+  @@index([channel, id], map: "_honker_notifications_recent")
+  @@map("_honker_notifications")
+  @@ignore
+}
+
+model HonkerLock {
+  name      String @id
+  owner     String
+  expiresAt Int    @map("expires_at")
+
+  @@map("_honker_locks")
+  @@ignore
+}
+
+model HonkerRateLimit {
+  name        String
+  windowStart Int @map("window_start")
+  count       Int @default(0)
+
+  @@id([name, windowStart])
+  @@map("_honker_rate_limits")
+  @@ignore
+}
+
+model HonkerSchedulerTask {
+  name        String  @id
+  queue       String
+  cronExpr    String  @map("cron_expr")
+  payload     String
+  priority    Int     @default(0)
+  expiresS    Int?    @map("expires_s")
+  nextFireAt  Int     @map("next_fire_at")
+  enabled     Int     @default(1)
+  maxAttempts Int     @default(3) @map("max_attempts")
+
+  @@map("_honker_scheduler_tasks")
+  @@ignore
+}
+
+model HonkerResult {
+  jobId     Int     @id @map("job_id")
+  value     String?
+  createdAt Int     @default(dbgenerated("unixepoch()")) @map("created_at")
+  expiresAt Int?    @map("expires_at")
+
+  @@map("_honker_results")
+  @@ignore
+}
+
+model HonkerStream {
+  offset    Int    @id @default(autoincrement())
+  topic     String
+  key       String?
+  payload   String
+  createdAt Int    @default(dbgenerated("unixepoch()")) @map("created_at")
+
+  @@index([topic, offset], map: "_honker_stream_topic")
+  @@map("_honker_stream")
+  @@ignore
+}
+
+model HonkerStreamConsumer {
+  name   String
+  topic  String
+  offset Int    @default(0)
+
+  @@id([name, topic])
+  @@map("_honker_stream_consumers")
+  @@ignore
+}

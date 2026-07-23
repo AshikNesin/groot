@@ -18,7 +18,7 @@ function readSchema(name: string): string {
 
 /** Extract the model definitions (everything after the datasource/generator blocks). */
 function modelSection(content: string): string {
-  // Drop generator + datasource blocks and comments, keep model/enum blocks.
+  // Drop generator + datasource blocks, then keep only model/enum blocks.
   const lines = content.split("\n");
   const kept: string[] = [];
   let inConfigBlock = false;
@@ -34,11 +34,42 @@ function modelSection(content: string): string {
     }
     kept.push(line);
   }
-  return kept
-    .join("\n")
+  return stripIgnoredModels(kept.join("\n"))
     .replace(/^\s*\/\/.*$/gm, "") // strip line comments
     .replace(/\n{2,}/g, "\n\n")
     .trim();
+}
+
+/**
+ * Remove `model X { ... }` blocks that carry `@@ignore`. Such models describe
+ * runtime-managed infrastructure tables (e.g. keyv, and the honker job-queue
+ * tables which are SQLite-only) that are intentionally not Prisma-owned, so
+ * they are excluded from the cross-engine parity comparison.
+ */
+function stripIgnoredModels(text: string): string {
+  const out: string[] = [];
+  let buffer: string[] = [];
+  let inModel = false;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!inModel && /^model\s/.test(trimmed)) {
+      inModel = true;
+      buffer = [line];
+      continue;
+    }
+    if (inModel) {
+      buffer.push(line);
+      if (trimmed === "}") {
+        const block = buffer.join("\n");
+        if (!/@@ignore/.test(block)) out.push(block);
+        inModel = false;
+        buffer = [];
+      }
+      continue;
+    }
+    out.push(line);
+  }
+  return out.join("\n");
 }
 
 describe("Prisma schema parity (sqlite ↔ postgres)", () => {
