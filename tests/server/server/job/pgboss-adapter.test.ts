@@ -66,24 +66,31 @@ runIfPostgres("PgBossAdapter (PostgreSQL job queue)", () => {
 
   it("enqueues a job and a worker receives and acks it", async () => {
     const received: JobContext[] = [];
-    let resolveWork!: () => void;
-    const workDone = new Promise<void>((r) => (resolveWork = r));
-
+    // Don't block on the worker callback firing — pg-boss's worker wakeup
+    // (NOTIFY when the built-in connection is used, else polling) is timing-
+    // dependent and missed NOTIFies can delay the first pickup past a fixed
+    // timeout. Instead, capture the delivered job and then poll for the
+    // observable outcome: the job reaching the terminal `completed` state.
+    // Same resilient pattern as the retry test below.
     await adapter.work(Q, { pollingIntervalSeconds: 1, batchSize: 1 }, async (jobs) => {
       received.push(...jobs);
-      resolveWork();
     });
 
     const jobId = await adapter.send(Q, { msg: "hello" });
     expect(typeof jobId).toBe("string");
 
-    await workDone;
+    await waitFor(
+      async () => adapter.getJobById(Q, jobId!),
+      (job) => job?.state === "completed",
+      { timeoutMs: 15000 },
+    );
+
     expect(received).toHaveLength(1);
     expect(received[0].name).toBe(Q);
     expect(received[0].data).toEqual({ msg: "hello" });
 
     await adapter.offWork(Q);
-  }, 15000);
+  }, 30000);
 
   it("retries a failing job then marks it failed after retries exhaust", async () => {
     let attempts = 0;
