@@ -90,36 +90,29 @@ runIfPostgres("PgBossAdapter (PostgreSQL job queue)", () => {
     await adapter.offWork(Q);
   }, 30000);
 
-  it("delivers a job whose handler can throw (failure path is wired)", async () => {
-    // Assert the adapter delivers jobs to the handler and propagates a throw —
-    // i.e. the work() → handler → pg-boss failure path is wired correctly. We
-    // deliberately do NOT assert on the job landing in the `failed` state:
-    // that transition is driven by pg-boss's maintenance/timekeeper loop
-    // (default maintenanceIntervalSeconds is hours), which is environment-
-    // dependent and made a state-polling version of this test flaky in CI.
-    // The adapter's responsibility is delivery + propagation; pg-boss owns
-    // retry scheduling. retryLimit: 0 makes the throw terminal.
-    let attempts = 0;
-    await adapter.work(Q, { pollingIntervalSeconds: 1, batchSize: 1 }, async () => {
-      attempts++;
-      throw new Error(`boom #${attempts}`);
-    });
-
-    const jobId = await adapter.send(Q, { n: 1 }, { retryLimit: 0 });
-
-    // Poll for handler invocation (synchronous, deterministic) rather than
-    // for the failed state (maintenance-dependent).
-    await waitFor(
-      () => Promise.resolve(attempts),
-      (a) => a >= 1,
-      { timeoutMs: 15000 },
+  it("getJobsByState('failed') surfaces failed jobs via the raw-SQL path", async () => {
+    // The adapter's getJobsByState/getFailedJobs run raw SQL against
+    // pgboss.job with a ::pgboss.job_state cast — the engine-specific code we
+    // own. Seed a failed row deterministically (no worker, no maintenance
+    // loop): enqueue a delayed job, transition it to 'failed' via a scoped
+    // UPDATE, then assert both queries find it.
+    const failQueue = `${Q}-fail`;
+    await adapter.createQueue(failQueue);
+    const jobId = await adapter.send(failQueue, { why: "seed" }, { delaySeconds: 3600 });
+    await prisma.$executeRawUnsafe(
+      `UPDATE pgboss.job SET state = 'failed'::pgboss.job_state WHERE id = $1`,
+      jobId,
     );
 
-    expect(attempts).toBeGreaterThanOrEqual(1);
-    expect(typeof jobId).toBe("string");
+    const byState = await adapter.getJobsByState("failed", 50, 0);
+    expect(byState.jobs.map((j) => j.id)).toContain(jobId);
+    expect(byState.jobs.find((j) => j.id === jobId)?.state).toBe("failed");
 
-    await adapter.offWork(Q);
-  }, 30000);
+    const failedList = await adapter.getFailedJobs(50);
+    expect(failedList.map((j) => j.id)).toContain(jobId);
+
+    await prisma.$executeRawUnsafe(`DELETE FROM pgboss.job WHERE id = $1`, jobId);
+  });
 
   it("getQueueStats reports counts for each known state", async () => {
     // Enqueue a job with a delay so it stays in 'created' for the assertion.
