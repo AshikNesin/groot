@@ -101,18 +101,25 @@ runIfPostgres("PgBossAdapter (PostgreSQL job queue)", () => {
 
     await adapter.send(Q, { n: 1 }, { retryLimit: 2, retryDelay: 1, retryBackoff: false });
 
-    // Wait for the job to land in the failed state. Retries are driven by
-    // pg-boss's maintenance loop, which lags the worker poll, so allow a
-    // generous margin (2 attempts × ~1s retryDelay + maintenance slack).
-    await waitFor(
+    // Wait for the job to land in the terminal `failed` state after retries
+    // exhaust. Retries are driven by pg-boss's maintenance loop, which lags
+    // the worker poll, so allow a generous margin (2 attempts × ~1s retryDelay
+    // + maintenance slack).
+    //
+    // Assert directly on the waitFor result instead of re-querying afterward:
+    // pg-boss's archive/maintenance (deleteAfterSeconds/retentionSeconds
+    // defaults) can remove a failed row between two sequential queries, so a
+    // follow-up getFailedJobs() raced empty in CI even though the job had
+    // reached `failed`. waitFor returns the {jobs,total} that satisfied the
+    // predicate, so we assert on that snapshot.
+    const failed = await waitFor(
       () => adapter.getJobsByState("failed", 10, 0),
       (r) => r.total >= 1,
       { timeoutMs: 25000 },
     );
 
-    const failed = await adapter.getFailedJobs(10);
-    expect(failed.length).toBeGreaterThanOrEqual(1);
-    expect(failed[0].state).toBe("failed");
+    expect(failed.jobs.length).toBeGreaterThanOrEqual(1);
+    expect(failed.jobs[0].state).toBe("failed");
 
     await adapter.offWork(Q);
   }, 30000);
