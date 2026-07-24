@@ -91,6 +91,21 @@ async function main() {
         ...process.env,
         NODE_ENV: "development",
         DATABASE_URL: connectionString,
+        // Cap the native (Rust/tokio) thread pools used by the dev server's
+        // in-process Vite/Rolldown engine and the honker job-queue addon. Both
+        // ship tokio runtimes whose blocking-thread pool defaults to 512, and
+        // rolldown's watcher fans out one blocking task per module transform.
+        // Over a long HMR session the pool grows toward that 512 ceiling and
+        // the threads are retained for the process lifetime — we measured ~520
+        // threads (≈50 MB of stack RSS alone) on a 2-core VM, which is pure
+        // waste. These env vars cap the pools to something proportional to the
+        // machine without hurting dev throughput on a small box. They only
+        // apply to dev; the production bundle (pnpm start) runs the compiled
+        // server without the bundler, so this is dev-only tuning.
+        ROLLDOWN_MAX_BLOCKING_THREADS: process.env.ROLLDOWN_MAX_BLOCKING_THREADS ?? "8",
+        ROLLDOWN_WORKER_THREADS: process.env.ROLLDOWN_WORKER_THREADS ?? "2",
+        TOKIO_WORKER_THREADS: process.env.TOKIO_WORKER_THREADS ?? "2",
+        RAYON_NUM_THREADS: process.env.RAYON_NUM_THREADS ?? "2",
       },
     },
   );
