@@ -12,6 +12,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
 import { PgBossAdapter } from "@groot/jobs/server/pgboss-adapter";
 import type { JobContext } from "@groot/jobs/server/adapter";
 import { isPostgres } from "@groot/core/database/engine";
+import { prisma } from "@groot/core/database";
 
 // runIfPostgres mirrors the honker pattern: skip the whole suite on SQLite so
 // `pnpm test:sqlite` stays green without a running Postgres.
@@ -45,19 +46,16 @@ runIfPostgres("PgBossAdapter (PostgreSQL job queue)", () => {
     adapter = new PgBossAdapter();
     await adapter.start();
     await adapter.createQueue(Q);
-    // Clear jobs in EVERY state left from a prior run, so counts are
-    // deterministic and a stale 'active'/'retry' row from a timed-out test
-    // can't leak into the next test's worker. adapter.stop() in afterEach
-    // tears down workers; this guarantees a clean table on the way in.
+    // Clear ONLY this suite's queue so a stale 'active'/'retry' row from a
+    // prior test can't leak into the next test's worker. adapter.stop() in
+    // afterEach tears down workers; this guarantees a clean queue on the way in.
     //
-    // NOTE: pg-boss's job_state enum has 6 values (no "expired" — that's a
-    // honker-only concept). Purging "expired" would throw an enum cast error,
-    // so we enumerate exactly the states pg-boss knows about here.
-    await Promise.all(
-      ["created", "retry", "active", "completed", "cancelled", "failed"].map((s) =>
-        adapter.purgeJobsByState(s),
-      ),
-    );
+    // IMPORTANT: scope the delete to `name = Q`. This suite and the
+    // adapter-parity suite run concurrently against the SAME Postgres test DB.
+    // purgeJobsByState(state) is GLOBAL (no queue filter), so calling it here
+    // would wipe the parity suite's seeded rows mid-test and flake that suite.
+    // A queue-scoped raw delete keeps each suite's cleanup to itself.
+    await prisma.$executeRawUnsafe(`DELETE FROM pgboss.job WHERE name = $1`, Q);
   });
 
   afterEach(async () => {
