@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { parseAsString, useQueryState } from "nuqs";
 import { apiClient } from "@groot/shell/lib/api";
 import { toast } from "sonner";
+import { useConfirm } from "@groot/ui/confirm";
 import {
   useCreateFolder,
   useDeleteFiles,
@@ -57,6 +58,7 @@ export function useStorageActions() {
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ key: string; name: string } | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const confirm = useConfirm();
 
   const { data: files = [], isLoading, refetch: refetchFiles } = useStorageFiles(currentPath);
   const uploadFile = useUploadFile();
@@ -147,7 +149,15 @@ export function useStorageActions() {
 
   const handleDeleteSelected = async () => {
     if (selectedFiles.size === 0) return;
-    if (!confirm(`Delete ${selectedFiles.size} file(s)?`)) return;
+    if (
+      !(await confirm({
+        title: `Delete ${selectedFiles.size} file${selectedFiles.size === 1 ? "" : "s"}?`,
+        description: "Selected files will be permanently removed.",
+        confirmLabel: "Delete",
+        destructive: true,
+      }))
+    )
+      return;
 
     try {
       await deleteFiles.mutateAsync(Array.from(selectedFiles));
@@ -160,7 +170,15 @@ export function useStorageActions() {
   };
 
   const handleDeleteFolder = async (folderKey: string) => {
-    if (!confirm(`Delete folder "${folderKey}" and all its contents?`)) return;
+    if (
+      !(await confirm({
+        title: `Delete folder "${folderKey}"?`,
+        description: "The folder and everything inside it will be permanently deleted.",
+        confirmLabel: "Delete",
+        destructive: true,
+      }))
+    )
+      return;
     try {
       await deleteFolder.mutateAsync(folderKey);
       toast.success("Folder deleted", { description: folderKey });

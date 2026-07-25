@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useConfirm } from "@groot/ui/confirm";
 
 /**
  * Owns the job-detail page's data + actions. The job is fetched via React
@@ -16,6 +17,7 @@ export function useJobDetail() {
   const { queueName, jobId } = useParams<{ queueName: string; jobId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const jobQuery = useQuery({
     queryKey: ["job", queueName, jobId],
@@ -111,7 +113,12 @@ export function useJobDetail() {
   const deleteJob = async () => {
     if (!job) return;
     if (
-      !window.confirm("Are you sure you want to delete this job? This action cannot be undone.")
+      !(await confirm({
+        title: "Delete this job?",
+        description: "This action cannot be undone.",
+        confirmLabel: "Delete",
+        destructive: true,
+      }))
     ) {
       return;
     }

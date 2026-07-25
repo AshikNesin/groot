@@ -29,24 +29,31 @@ import type {
 } from "./adapter";
 import type { GetJobsOptions } from "./types";
 
-// Column set mirrored from the client `Job` type (pg-boss snake_case → camelCase
-// without the underscores, to stay byte-compatible with the dashboard).
+// Raw-SQL column projection. Aliases MUST align, field-for-field, with the
+// pg-boss `JobWithMetadata` type that {@link normalizeBossJob} reads: the same
+// query feeds two callers — the raw-SQL dashboard paths (getJobs /
+// getJobsByState / getFailedJobs) and getJobById (pg-boss's own accessor).
+// getJobById yields rows already keyed in pg-boss's camelCase; the raw SQL
+// here aliases snake_case columns to that identical camelCase so
+// normalizeBossJob works unchanged for both. (Double-quoting the aliases is
+// required so Postgres preserves case — bare lowercase aliases would fold to
+// lowercase keys and silently drop every field normalizeBossJob reads.)
 const JOB_SELECT_COLUMNS = `SELECT
   id, name, priority, data, state,
-  retry_limit as retrylimit,
-  retry_count as retrycount,
-  retry_delay as retrydelay,
-  retry_backoff as retrybackoff,
-  start_after as startafter,
-  started_on as startedon,
-  singleton_key as singletonkey,
-  singleton_on as singletonon,
-  expire_seconds as expirein,
-  created_on as createdon,
-  completed_on as completedon,
-  keep_until as keepuntil,
+  retry_limit as "retryLimit",
+  retry_count as "retryCount",
+  retry_delay as "retryDelay",
+  retry_backoff as "retryBackoff",
+  start_after as "startAfter",
+  started_on as "startedOn",
+  singleton_key as "singletonKey",
+  singleton_on as "singletonOn",
+  expire_seconds as "expireInSeconds",
+  created_on as "createdOn",
+  completed_on as "completedOn",
+  keep_until as "keepUntil",
   output,
-  dead_letter as deadletter,
+  dead_letter as "deadLetter",
   policy`;
 
 function normalizeBossJob(job: JobWithMetadata): QueueJob {
