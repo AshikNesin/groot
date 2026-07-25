@@ -133,14 +133,14 @@ export function CommandPaletteDialog({ groups }: { groups?: CommandGroupEntry[] 
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             {resolvedGroups.map((group, idx) => (
-              <React.Fragment key={group.heading}>
+              <React.Fragment key={`${group.heading}-${idx}`}>
                 {idx > 0 && <CommandSeparator />}
                 <CommandGroup heading={group.heading}>
-                  {group.items.map((entry) => {
+                  {group.items.map((entry, itemIdx) => {
                     const Icon = entry.icon;
                     return (
                       <CommandItem
-                        key={entry.label}
+                        key={`${entry.label}-${itemIdx}`}
                         onSelect={() => runCommand(entry.onSelect)}
                         className={
                           entry.variant === "destructive"

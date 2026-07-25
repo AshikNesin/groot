@@ -48,13 +48,6 @@ export interface UserMenuItem {
   variant?: "default" | "destructive";
 }
 
-const DEFAULT_USER_MENU: UserMenuItem[] = [
-  { label: "Storage", icon: HardDrive, to: "/storage" },
-  { label: "Jobs", icon: Briefcase, to: "/jobs" },
-  { label: "Settings", icon: SettingsIcon, to: "/settings" },
-  { separatorBefore: true, label: "Log out", icon: LogOut, variant: "destructive" },
-];
-
 export interface LayoutProps {
   /**
    * Custom header / nav. When omitted, the default shell sidebar renders
@@ -107,7 +100,9 @@ export function Layout({
 
   // When a custom header is supplied the default sidebar (and its offset /
   // mobile bar) is disabled so the header owns the full top of the page.
-  const useDefaultSidebar = header === undefined;
+  // Uses a nullish check so both `undefined` (omitted) and `null` (explicitly
+  // cleared) render the default sidebar — matching the `{header ?? ...}` JSX.
+  const useDefaultSidebar = header == null;
 
   // Mobile drawer state.
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -143,7 +138,18 @@ export function Layout({
     navigate("/login");
   };
 
-  const resolvedUserMenu = userMenuItems ?? DEFAULT_USER_MENU;
+  const resolvedUserMenu: UserMenuItem[] = userMenuItems ?? [
+    { label: "Storage", icon: HardDrive, to: "/storage" },
+    { label: "Jobs", icon: Briefcase, to: "/jobs" },
+    { label: "Settings", icon: SettingsIcon, to: "/settings" },
+    {
+      separatorBefore: true,
+      label: "Log out",
+      icon: LogOut,
+      onSelect: handleLogout,
+      variant: "destructive",
+    },
+  ];
 
   const userMenuFooter = (
     <DropdownMenu>
@@ -175,8 +181,8 @@ export function Layout({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="w-52">
-        {resolvedUserMenu.map((item) => (
-          <UserMenuRow key={item.label} item={item} onLogout={handleLogout} navigate={navigate} />
+        {resolvedUserMenu.map((item, index) => (
+          <UserMenuRow key={`${item.label}-${index}`} item={item} navigate={navigate} />
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -223,7 +229,7 @@ export function Layout({
                 <PanelLeft className="size-4" />
               )}
             </Button>
-            <Link to="/" className="text-sm font-semibold tracking-tight">
+            <Link to={brand?.to ?? "/"} className="text-sm font-semibold tracking-tight">
               {brand?.label ?? "Groot"}
             </Link>
             <div className="ml-auto">
@@ -241,41 +247,31 @@ export function Layout({
 }
 
 /** Renders one user-menu row, honoring `to` / `href` / `onSelect` + separators. */
-function UserMenuRow({
-  item,
-  onLogout,
-  navigate,
-}: {
-  item: UserMenuItem;
-  onLogout: () => void;
-  navigate: (to: string) => void;
-}) {
+function UserMenuRow({ item, navigate }: { item: UserMenuItem; navigate: (to: string) => void }) {
   const Icon = item.icon;
   const handleClick = () => {
     if (item.onSelect) item.onSelect();
     else if (item.to) navigate(item.to);
   };
-  const content = (
-    <DropdownMenuItem
-      onClick={item.href ? undefined : handleClick}
-      className={cn(
-        item.variant === "destructive" &&
-          "text-destructive focus:text-destructive focus:bg-destructive/10",
-      )}
-    >
-      {Icon ? <Icon className="mr-2 h-4 w-4" /> : null}
-      <span>{item.label}</span>
-    </DropdownMenuItem>
+  const itemClassName = cn(
+    item.variant === "destructive" &&
+      "text-destructive focus:text-destructive focus:bg-destructive/10",
   );
   return (
     <>
       {item.separatorBefore && <DropdownMenuSeparator />}
       {item.href ? (
-        <a href={item.href} target="_blank" rel="noopener noreferrer">
-          {content}
-        </a>
+        <DropdownMenuItem asChild className={itemClassName}>
+          <a href={item.href} target="_blank" rel="noopener noreferrer">
+            {Icon ? <Icon className="mr-2 h-4 w-4" /> : null}
+            <span>{item.label}</span>
+          </a>
+        </DropdownMenuItem>
       ) : (
-        content
+        <DropdownMenuItem onClick={handleClick} className={itemClassName}>
+          {Icon ? <Icon className="mr-2 h-4 w-4" /> : null}
+          <span>{item.label}</span>
+        </DropdownMenuItem>
       )}
     </>
   );
