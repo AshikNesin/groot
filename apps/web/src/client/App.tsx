@@ -10,7 +10,7 @@ import { Jobs, JobDetail } from "@groot/jobs/client";
 import { Settings } from "@groot/shell/pages/settings/Settings";
 import { Login } from "@groot/shell/pages/auth/Login";
 import { Toaster } from "@groot/ui/sonner";
-import { ConfirmProvider } from "@groot/ui/confirm";
+import { ConfirmProvider } from "@groot/ui/primitives";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);

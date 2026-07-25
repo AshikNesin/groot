@@ -1,14 +1,16 @@
 "use client";
 
-import { Button } from "./button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./alert-dialog";
+import { AlertTriangle } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -18,19 +20,20 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AlertTriangle } from "lucide-react";
 
 /**
- * Imperative confirmation dialog — a styled replacement for `window.confirm()`.
- *
- * Mount {@link ConfirmProvider} once near the root of the app, then call
- * `confirm()` from any descendant:
+ * Imperative confirmation dialog — a thin convenience layer over the
+ * {@link AlertDialog} primitive (shadcn alert-dialog / Radix AlertDialog). It
+ * exposes a promise-returning `confirm()` so callers can replace
+ * `window.confirm()` without restructuring async handlers:
  *
  *   const confirm = useConfirm();
  *   if (!(await confirm({ title: "Delete job?", destructive: true }))) return;
  *
- * The promise resolves `true` on confirm and `false` on cancel / outside click
- * / Escape. A single Dialog backs every call; a later `confirm()` supersedes
+ * Semantics follow Radix AlertDialog: the dialog can ONLY be closed by the
+ * action/cancel buttons or Escape (not by clicking the overlay), so a
+ * confirmation can never be dismissed accidentally. The promise resolves
+ * `true` on confirm, `false` on cancel/Escape. A later `confirm()` supersedes
  * an earlier, still-open one (resolving it `false`), so at most one is shown.
  */
 export type ConfirmOptions = {
@@ -50,7 +53,7 @@ const ConfirmContext = createContext<ConfirmFn | null>(null);
 
 type State = { open: boolean; options: ConfirmOptions | null };
 
-function ConfirmProvider({ children }: { children: ReactNode }) {
+export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>({ open: false, options: null });
   // Ref so the promise resolves even as React batches the open→false
   // transition, and so a superseding confirm() resolves its predecessor.
@@ -68,42 +71,45 @@ function ConfirmProvider({ children }: { children: ReactNode }) {
   const settle = useCallback((value: boolean) => {
     resolverRef.current?.(value);
     resolverRef.current = null;
-    // Keep `options` while closing so the Dialog animates out with its content
-    // intact (Radix unmounts content only after the exit animation finishes).
+    // Keep `options` while closing so the AlertDialog animates out with its
+    // content intact (Radix unmounts content only after the exit animation).
     setState((prev) => ({ open: false, options: prev.options }));
   }, []);
 
   const value = useMemo(() => confirm, [confirm]);
 
+  // AlertDialog's onOpenChange fires for Escape (and only Escape, since overlay
+  // clicks are blocked by the alert semantics). Escape == cancel.
   return (
     <ConfirmContext.Provider value={value}>
       {children}
-      <Dialog open={state.open} onOpenChange={(open) => !open && settle(false)}>
-        <DialogContent showCloseButton={false} dismissOnOutsideClick className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <AlertDialog open={state.open} onOpenChange={(open) => !open && settle(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
               {state.options?.destructive ? (
                 <AlertTriangle className="size-4 text-destructive" />
               ) : null}
               {state.options?.title ?? "Confirm"}
-            </DialogTitle>
+            </AlertDialogTitle>
             {state.options?.description ? (
-              <DialogDescription>{state.options.description}</DialogDescription>
+              <AlertDialogDescription>{state.options.description}</AlertDialogDescription>
             ) : null}
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => settle(false)}>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => settle(false)}>
               {state.options?.cancelLabel ?? "Cancel"}
-            </Button>
-            <Button
+            </AlertDialogCancel>
+            {/* AlertDialogAction auto-closes on click; settle(true) first. */}
+            <AlertDialogAction
               variant={state.options?.destructive ? "destructive" : "default"}
               onClick={() => settle(true)}
             >
               {state.options?.confirmLabel ?? "Confirm"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ConfirmContext.Provider>
   );
 }
@@ -112,13 +118,10 @@ function ConfirmProvider({ children }: { children: ReactNode }) {
  * Returns the imperative `confirm()` function backed by {@link ConfirmProvider}.
  * Must be called within a `ConfirmProvider` subtree.
  */
-function useConfirm(): ConfirmFn {
+export function useConfirm(): ConfirmFn {
   const ctx = useContext(ConfirmContext);
   if (!ctx) {
     throw new Error("useConfirm must be used within a <ConfirmProvider>");
   }
   return ctx;
 }
-
-export { ConfirmProvider, useConfirm };
-export type { ConfirmOptions };

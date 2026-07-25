@@ -22,8 +22,14 @@ page showed the right values. Fixed by aliasing the raw-SQL projection to
 camelCase (double-quoted so Postgres preserves case), matching the shape
 `normalizeBossJob` reads, so both paths agree.
 
-Also replaces every native `window.confirm()` in the jobs page (bulk re-run,
-purge-by-state, delete job, cancel scheduled job) and the storage page
-(delete files, delete folder) with a new shared `ConfirmProvider`/
-`useConfirm` from `@groot/ui` — a Radix Dialog-based confirmation with
-destructive styling, mounted once at the app root.
+Also replaces every native `window.confirm()` — jobs page (bulk re-run,
+purge-by-state, delete job, cancel scheduled job) and storage page (delete
+files, delete folder) — with a new shared `ConfirmProvider`/`useConfirm`, a
+thin imperative convenience layer over a Radix `AlertDialog` primitive (a port
+of shadcn's `alert-dialog`). Both live under `@groot/ui/primitives` so callers
+know they are composed/Radix-backed, not direct shadcn re-exports. Using
+AlertDialog gives correct confirm semantics: the dialog can ONLY be closed by
+the action/cancel buttons or Escape (not by clicking the overlay), so a
+confirmation can never be dismissed accidentally. `Button` now exports a named
+`ButtonProps` so the alert-dialog action/cancel slots compose with the shared
+button variants (destructive, outline).

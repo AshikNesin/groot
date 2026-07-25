@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useConfirm } from "@groot/ui/confirm";
+import { useConfirm } from "@groot/ui/primitives";
 
 /**
  * Owns the job-detail page's data + actions. The job is fetched via React

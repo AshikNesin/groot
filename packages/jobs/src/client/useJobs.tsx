@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { secondaryOptions } from "./constants";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useConfirm } from "@groot/ui/confirm";
+import { useConfirm } from "@groot/ui/primitives";
 
 const PAGE_SIZE = 50;
 // Operational view: always refetch on revisit/focus rather than serving the

@@ -16,7 +16,6 @@ export * from "./button";
 export * from "./card";
 export * from "./checkbox";
 export * from "./command";
-export { ConfirmProvider, useConfirm, type ConfirmOptions } from "./confirm";
 export * from "./dialog";
 export * from "./dropdown-menu";
 export * from "./form";

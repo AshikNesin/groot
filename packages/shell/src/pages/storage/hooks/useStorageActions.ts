@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { parseAsString, useQueryState } from "nuqs";
 import { apiClient } from "@groot/shell/lib/api";
 import { toast } from "sonner";
-import { useConfirm } from "@groot/ui/confirm";
+import { useConfirm } from "@groot/ui/primitives";
 import {
   useCreateFolder,
   useDeleteFiles,
