@@ -1,14 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
 import { HonkerAdapter } from "@groot/jobs/server/honker-adapter";
 import type { JobContext } from "@groot/jobs/server/adapter";
-import { resolveSqlitePath } from "@groot/core/database/client";
 import { isSqlite } from "@groot/core/database/engine";
 
 // These tests exercise the honker adapter against a real SQLite file. They
 // prove enqueue → claim → deliver → ack/retry/dead-letter end-to-end on
 // SQLite, which is the whole point of the dual-engine jobs work. Skipped on
 // Postgres — honker is the SQLite-only adapter.
-const DB_PATH = resolveSqlitePath("file:./tmp/honker-adapter-test.db");
 
 // runIfSqlite wraps a describe so the whole suite is skipped on Postgres. The
 // adapter hard-codes a SQLite file path, so importing/instantiating it on

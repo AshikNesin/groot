@@ -2,7 +2,7 @@ import type { Request } from "express";
 import * as queue from "./queue";
 import * as queries from "./queries";
 import { prisma } from "@groot/core/database";
-import type { GetJobsByStateOptions, GetJobsOptions, RerunJobOptions } from "./types";
+import type { GetJobsByStateOptions } from "./types";
 import {
   createJobSchema,
   scheduleJobSchema,
