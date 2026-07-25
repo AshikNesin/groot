@@ -46,6 +46,8 @@ export interface UserMenuItem {
   /** Render a `DropdownMenuSeparator` above this item. */
   separatorBefore?: boolean;
   variant?: "default" | "destructive";
+  /** Stable React key. Defaults to `label`; set when labels may duplicate. */
+  id?: string;
 }
 
 export interface LayoutProps {
@@ -181,8 +183,8 @@ export function Layout({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="w-52">
-        {resolvedUserMenu.map((item, index) => (
-          <UserMenuRow key={`${item.label}-${index}`} item={item} navigate={navigate} />
+        {resolvedUserMenu.map((item) => (
+          <UserMenuRow key={item.id ?? item.label} item={item} navigate={navigate} />
         ))}
       </DropdownMenuContent>
     </DropdownMenu>

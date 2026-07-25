@@ -29,12 +29,16 @@ export interface CommandItemEntry {
   icon?: LucideIcon;
   onSelect: () => void;
   variant?: "default" | "destructive";
+  /** Stable React key. Defaults to `label`; set when labels may duplicate. */
+  id?: string;
 }
 
 /** A labeled group of commands in the palette. */
 export interface CommandGroupEntry {
   heading: string;
   items: CommandItemEntry[];
+  /** Stable React key. Defaults to `heading`; set when headings may duplicate. */
+  id?: string;
 }
 
 /** Button that opens the shared command palette dialog. */
@@ -133,14 +137,14 @@ export function CommandPaletteDialog({ groups }: { groups?: CommandGroupEntry[] 
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             {resolvedGroups.map((group, idx) => (
-              <React.Fragment key={`${group.heading}-${idx}`}>
+              <React.Fragment key={group.id ?? group.heading}>
                 {idx > 0 && <CommandSeparator />}
                 <CommandGroup heading={group.heading}>
-                  {group.items.map((entry, itemIdx) => {
+                  {group.items.map((entry) => {
                     const Icon = entry.icon;
                     return (
                       <CommandItem
-                        key={`${entry.label}-${itemIdx}`}
+                        key={entry.id ?? entry.label}
                         onSelect={() => runCommand(entry.onSelect)}
                         className={
                           entry.variant === "destructive"
