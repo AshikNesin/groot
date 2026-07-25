@@ -1,5 +1,12 @@
 # @groot/jobs
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`b9906ec`](https://github.com/AshikNesin/groot/commit/b9906ec95ba2702d5f7f3176333e65be30a2ff8f)]:
+  - @groot/shell@0.6.0
+
 ## 0.7.0
 
 ### Minor Changes
