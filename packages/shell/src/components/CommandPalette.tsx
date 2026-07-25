@@ -8,6 +8,7 @@ import {
   Briefcase,
   LogOut,
   Search,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "@groot/shell/store/auth";
 import { useCommandPaletteStore } from "@groot/shell/store/command-palette";
@@ -21,6 +22,20 @@ import {
   CommandItem,
   CommandSeparator,
 } from "@groot/ui/command";
+
+/** A single selectable entry inside a command-palette group. */
+export interface CommandItemEntry {
+  label: string;
+  icon?: LucideIcon;
+  onSelect: () => void;
+  variant?: "default" | "destructive";
+}
+
+/** A labeled group of commands in the palette. */
+export interface CommandGroupEntry {
+  heading: string;
+  items: CommandItemEntry[];
+}
 
 /** Button that opens the shared command palette dialog. */
 export function CommandPaletteTrigger({ iconOnly = false }: { iconOnly?: boolean }) {
@@ -52,7 +67,7 @@ export function CommandPaletteTrigger({ iconOnly = false }: { iconOnly?: boolean
 }
 
 /** The actual command palette dialog — render this once at the app root. */
-export function CommandPaletteDialog() {
+export function CommandPaletteDialog({ groups }: { groups?: CommandGroupEntry[] }) {
   const open = useCommandPaletteStore((state) => state.open);
   const setOpen = useCommandPaletteStore((state) => state.setOpen);
   const navigate = useNavigate();
@@ -73,6 +88,42 @@ export function CommandPaletteDialog() {
     });
   };
 
+  const resolvedGroups: CommandGroupEntry[] = groups ?? [
+    {
+      heading: "Navigation",
+      items: [
+        {
+          label: "Dashboard",
+          icon: LayoutDashboard,
+          onSelect: () => runCommand(() => navigate("/")),
+        },
+        { label: "Todos", icon: CheckSquare, onSelect: () => runCommand(() => navigate("/todos")) },
+        {
+          label: "Storage",
+          icon: HardDrive,
+          onSelect: () => runCommand(() => navigate("/storage")),
+        },
+        { label: "Jobs", icon: Briefcase, onSelect: () => runCommand(() => navigate("/jobs")) },
+        {
+          label: "Settings",
+          icon: Settings,
+          onSelect: () => runCommand(() => navigate("/settings")),
+        },
+      ],
+    },
+    {
+      heading: "Account",
+      items: [
+        {
+          label: "Logout",
+          icon: LogOut,
+          onSelect: handleLogout,
+          variant: "destructive",
+        },
+      ],
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="overflow-hidden p-0 shadow-2xl [&>button]:hidden">
@@ -81,38 +132,30 @@ export function CommandPaletteDialog() {
           <CommandInput placeholder="Type a command or search..." />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup heading="Navigation">
-              <CommandItem onSelect={() => runCommand(() => navigate("/"))}>
-                <LayoutDashboard />
-                <span>Dashboard</span>
-              </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => navigate("/todos"))}>
-                <CheckSquare />
-                <span>Todos</span>
-              </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => navigate("/storage"))}>
-                <HardDrive />
-                <span>Storage</span>
-              </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => navigate("/jobs"))}>
-                <Briefcase />
-                <span>Jobs</span>
-              </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => navigate("/settings"))}>
-                <Settings />
-                <span>Settings</span>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading="Account">
-              <CommandItem
-                onSelect={handleLogout}
-                className="text-destructive data-[selected=true]:text-destructive"
-              >
-                <LogOut />
-                <span>Logout</span>
-              </CommandItem>
-            </CommandGroup>
+            {resolvedGroups.map((group, idx) => (
+              <React.Fragment key={group.heading}>
+                {idx > 0 && <CommandSeparator />}
+                <CommandGroup heading={group.heading}>
+                  {group.items.map((entry) => {
+                    const Icon = entry.icon;
+                    return (
+                      <CommandItem
+                        key={entry.label}
+                        onSelect={() => runCommand(entry.onSelect)}
+                        className={
+                          entry.variant === "destructive"
+                            ? "text-destructive data-[selected=true]:text-destructive"
+                            : undefined
+                        }
+                      >
+                        {Icon ? <Icon /> : null}
+                        <span>{entry.label}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </React.Fragment>
+            ))}
           </CommandList>
         </Command>
       </DialogContent>

@@ -58,7 +58,6 @@ export function useStorageActions() {
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ key: string; name: string } | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
-  const bulkInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: files = [], isLoading, refetch: refetchFiles } = useStorageFiles(currentPath);
   const uploadFile = useUploadFile();
@@ -102,42 +101,35 @@ export function useStorageActions() {
   const clearSelection = () => setSelectedFiles(new Set());
 
   const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    uploadFile
-      .mutateAsync({ file, filePath: `${currentPath}${file.name}` })
-      .then(() => {
-        toast.success("Upload complete", { description: `${file.name} uploaded successfully` });
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("Upload failed", { description: "Unable to upload file" });
-      })
-      .finally(() => {
-        event.target.value = "";
-      });
-  };
-
-  const handleBulkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const filesList = event.target.files;
     if (!filesList || !filesList.length) return;
-    bulkUpload
-      .mutateAsync(filesList)
-      .then((result) => {
-        const successCount = result.uploadedFiles.length;
-        const failureCount = result.failedFiles.length;
-        const description = `${successCount} uploaded${
-          failureCount ? `, ${failureCount} failed` : ""
-        }`;
-        if (failureCount) {
-          toast.error("Bulk upload complete", { description });
-        } else {
-          toast.success("Bulk upload complete", { description });
-        }
-      })
+    // Route single-file uploads through uploadFile; multi-file through bulkUpload
+    // so the picker accepts both without a second trigger.
+    const run =
+      filesList.length === 1
+        ? uploadFile
+            .mutateAsync({ file: filesList[0], filePath: `${currentPath}${filesList[0].name}` })
+            .then(() => {
+              toast.success("Upload complete", {
+                description: `${filesList[0].name} uploaded successfully`,
+              });
+            })
+        : bulkUpload.mutateAsync(filesList).then((result) => {
+            const successCount = result.uploadedFiles.length;
+            const failureCount = result.failedFiles.length;
+            const description = `${successCount} uploaded${
+              failureCount ? `, ${failureCount} failed` : ""
+            }`;
+            if (failureCount) {
+              toast.error("Bulk upload complete", { description });
+            } else {
+              toast.success("Bulk upload complete", { description });
+            }
+          });
+    run
       .catch((error) => {
         console.error(error);
-        toast.error("Bulk upload failed", { description: "Unable to upload files" });
+        toast.error("Upload failed", { description: "Unable to upload file(s)" });
       })
       .finally(() => {
         event.target.value = "";
@@ -226,7 +218,6 @@ export function useStorageActions() {
     renameTarget,
     setRenameTarget,
     uploadInputRef,
-    bulkInputRef,
     createFolder,
     renameFile,
     navigateToFolder,
@@ -234,7 +225,6 @@ export function useStorageActions() {
     selectAllFiles,
     clearSelection,
     handleUpload,
-    handleBulkUpload,
     handleDeleteFile,
     handleDeleteSelected,
     handleDeleteFolder,

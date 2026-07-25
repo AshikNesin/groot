@@ -13,6 +13,7 @@ type Props = {
   onDeleteFolder: (key: string) => void;
   onDeleteFile: (key: string) => void;
   onRename: (key: string, name: string) => void;
+  onView?: (file: StorageFile) => void;
 };
 
 /** Desktop table row for a single file/folder. */
@@ -24,6 +25,7 @@ export function DesktopFileRow({
   onDeleteFolder,
   onDeleteFile,
   onRename,
+  onView,
 }: Props) {
   return (
     <tr className={`border-t hover:bg-muted/40 ${selected ? "bg-info/10" : ""}`}>
@@ -62,7 +64,11 @@ export function DesktopFileRow({
           </div>
         ) : (
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => handleView(file.key)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (onView ? onView(file) : handleView(file.key))}
+            >
               View
             </Button>
             <Button variant="ghost" size="sm" onClick={() => handleDownload(file.key, file.name)}>
