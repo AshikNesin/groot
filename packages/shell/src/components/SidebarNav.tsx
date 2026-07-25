@@ -18,9 +18,19 @@ export type NavIcon = "dashboard" | "check-square" | "hard-drive" | "briefcase" 
 export interface NavItem {
   name: string;
   href: string;
-  icon: NavIcon;
+  /** String key (resolved via the built-in icon map) or a LucideIcon directly. */
+  icon: NavIcon | LucideIcon;
   exact?: boolean;
   badge?: ReactNode;
+}
+
+export interface SidebarBrand {
+  /** Brand label shown next to the logo mark. */
+  label: string;
+  /** Logo mark icon; defaults to `LayoutDashboard`. */
+  icon?: LucideIcon;
+  /** Link destination; defaults to `/`. */
+  to?: string;
 }
 
 const ICONS: Record<NavIcon, LucideIcon> = {
@@ -29,6 +39,17 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   "hard-drive": HardDrive,
   briefcase: Briefcase,
   settings: SettingsIcon,
+};
+
+/** Resolve a NavItem.icon (string key or component) to a LucideIcon. */
+function resolveIcon(icon: NavIcon | LucideIcon): LucideIcon {
+  return typeof icon === "string" ? (ICONS[icon] ?? LayoutDashboard) : icon;
+}
+
+const DEFAULT_BRAND: Required<SidebarBrand> = {
+  label: "Groot",
+  icon: LayoutDashboard,
+  to: "/",
 };
 
 interface SidebarNavProps {
@@ -41,6 +62,8 @@ interface SidebarNavProps {
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
   footer?: ReactNode;
+  /** Brand block (logo + label). Defaults to the groot brand. */
+  brand?: SidebarBrand;
 }
 
 const ICON_BTN =
@@ -65,14 +88,19 @@ export function SidebarNav({
   collapsed,
   onCollapsedChange,
   footer,
+  brand = DEFAULT_BRAND,
 }: SidebarNavProps) {
   const isActive = (item: NavItem) =>
     item.exact
       ? pathname === item.href
       : pathname === item.href || pathname.startsWith(item.href + "/");
 
+  const BrandMark = brand.icon ?? DEFAULT_BRAND.icon;
+  const brandTo = brand.to ?? DEFAULT_BRAND.to;
+  const brandLabel = brand.label ?? DEFAULT_BRAND.label;
+
   const navLinks = items.map((item) => {
-    const Icon = ICONS[item.icon] ?? LayoutDashboard;
+    const Icon = resolveIcon(item.icon);
     const active = isActive(item);
     return (
       <Link
@@ -99,7 +127,7 @@ export function SidebarNav({
   });
 
   const iconNavLinks = items.map((item) => {
-    const Icon = ICONS[item.icon] ?? LayoutDashboard;
+    const Icon = resolveIcon(item.icon);
     const active = isActive(item);
     return (
       <Link
@@ -151,14 +179,14 @@ export function SidebarNav({
         <div className={cn("flex h-full flex-col", open ? "flex" : "hidden", "lg:hidden")}>
           <div className="flex h-14 shrink-0 items-center justify-between gap-1 px-3">
             <Link
-              to="/"
+              to={brandTo}
               onClick={() => onOpenChange(false)}
               className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight"
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <LayoutDashboard className="size-4" />
+                <BrandMark className="size-4" />
               </span>
-              <span className="truncate">Groot</span>
+              <span className="truncate">{brandLabel}</span>
             </Link>
 
             <div className="flex items-center gap-0.5">
@@ -198,13 +226,13 @@ export function SidebarNav({
         <div className={cn("hidden h-full flex-col", !collapsed ? "lg:flex" : "lg:hidden")}>
           <div className="flex h-14 shrink-0 items-center justify-between gap-1 px-3">
             <Link
-              to="/"
+              to={brandTo}
               className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight"
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <LayoutDashboard className="size-4" />
+                <BrandMark className="size-4" />
               </span>
-              <span className="truncate transition-opacity duration-200">Groot</span>
+              <span className="truncate transition-opacity duration-200">{brandLabel}</span>
             </Link>
 
             <div className="flex items-center gap-0.5">

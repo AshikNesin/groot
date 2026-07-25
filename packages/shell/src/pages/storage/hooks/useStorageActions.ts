@@ -3,7 +3,6 @@ import { parseAsString, useQueryState } from "nuqs";
 import { apiClient } from "@groot/shell/lib/api";
 import { toast } from "sonner";
 import {
-  useBulkUpload,
   useCreateFolder,
   useDeleteFiles,
   useDeleteFolder,
@@ -58,11 +57,9 @@ export function useStorageActions() {
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ key: string; name: string } | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
-  const bulkInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: files = [], isLoading, refetch: refetchFiles } = useStorageFiles(currentPath);
   const uploadFile = useUploadFile();
-  const bulkUpload = useBulkUpload();
   const deleteFiles = useDeleteFiles();
   const deleteFolder = useDeleteFolder();
   const createFolder = useCreateFolder();
@@ -102,42 +99,36 @@ export function useStorageActions() {
   const clearSelection = () => setSelectedFiles(new Set());
 
   const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    uploadFile
-      .mutateAsync({ file, filePath: `${currentPath}${file.name}` })
-      .then(() => {
-        toast.success("Upload complete", { description: `${file.name} uploaded successfully` });
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("Upload failed", { description: "Unable to upload file" });
-      })
-      .finally(() => {
-        event.target.value = "";
-      });
-  };
-
-  const handleBulkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const filesList = event.target.files;
     if (!filesList || !filesList.length) return;
-    bulkUpload
-      .mutateAsync(filesList)
-      .then((result) => {
-        const successCount = result.uploadedFiles.length;
-        const failureCount = result.failedFiles.length;
-        const description = `${successCount} uploaded${
-          failureCount ? `, ${failureCount} failed` : ""
-        }`;
-        if (failureCount) {
-          toast.error("Bulk upload complete", { description });
+    const files = Array.from(filesList);
+    // Upload each file with the current folder prefix so multi-file uploads
+    // land in the same folder as single-file uploads. (The bulk-upload endpoint
+    // ignores folder targeting, so per-file uploads are used for correctness.)
+    Promise.allSettled(
+      files.map((file) => uploadFile.mutateAsync({ file, filePath: `${currentPath}${file.name}` })),
+    )
+      .then((results) => {
+        const successCount = results.filter((r) => r.status === "fulfilled").length;
+        const failureCount = results.length - successCount;
+        if (files.length === 1) {
+          if (failureCount) {
+            toast.error("Upload failed", { description: "Unable to upload file" });
+          } else {
+            toast.success("Upload complete", {
+              description: `${files[0].name} uploaded successfully`,
+            });
+          }
         } else {
-          toast.success("Bulk upload complete", { description });
+          const description = `${successCount} uploaded${
+            failureCount ? `, ${failureCount} failed` : ""
+          }`;
+          if (failureCount) {
+            toast.error("Bulk upload complete", { description });
+          } else {
+            toast.success("Bulk upload complete", { description });
+          }
         }
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("Bulk upload failed", { description: "Unable to upload files" });
       })
       .finally(() => {
         event.target.value = "";
@@ -226,7 +217,6 @@ export function useStorageActions() {
     renameTarget,
     setRenameTarget,
     uploadInputRef,
-    bulkInputRef,
     createFolder,
     renameFile,
     navigateToFolder,
@@ -234,7 +224,6 @@ export function useStorageActions() {
     selectAllFiles,
     clearSelection,
     handleUpload,
-    handleBulkUpload,
     handleDeleteFile,
     handleDeleteSelected,
     handleDeleteFolder,

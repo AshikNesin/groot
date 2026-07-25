@@ -11,10 +11,18 @@ type Props = {
   onToggle: (key: string) => void;
   onNavigate: (key: string) => void;
   onDeleteFolder: (key: string) => void;
+  onView?: (file: StorageFile) => void;
 };
 
 /** Mobile card view for a single file/folder. */
-export function MobileFileCard({ file, selected, onToggle, onNavigate, onDeleteFolder }: Props) {
+export function MobileFileCard({
+  file,
+  selected,
+  onToggle,
+  onNavigate,
+  onDeleteFolder,
+  onView,
+}: Props) {
   return (
     <div className={`space-y-3 rounded-lg border p-4 ${selected ? "bg-info/10" : ""}`}>
       <div className="flex items-start justify-between">
@@ -72,7 +80,7 @@ export function MobileFileCard({ file, selected, onToggle, onNavigate, onDeleteF
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleView(file.key)}
+            onClick={() => (onView ? onView(file) : handleView(file.key))}
             className="flex-1"
           >
             View

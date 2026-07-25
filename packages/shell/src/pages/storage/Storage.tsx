@@ -5,8 +5,17 @@ import { DesktopFileRow } from "./components/DesktopFileRow";
 import { MobileFileCard } from "./components/MobileFileCard";
 import { RenameDialog } from "./components/RenameDialog";
 import { useStorageActions } from "./hooks/useStorageActions";
+import type { StorageFile } from "./hooks/useStorage";
 
-export function Storage() {
+interface StorageProps {
+  /**
+   * Override the default "open in new tab" view behavior with an in-app
+   * viewer. Receives the file being viewed.
+   */
+  onView?: (file: StorageFile) => void;
+}
+
+export function Storage({ onView }: StorageProps = {}) {
   const s = useStorageActions();
 
   return (
@@ -56,13 +65,12 @@ export function Storage() {
 
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2">
-          <input ref={s.uploadInputRef} type="file" className="hidden" onChange={s.handleUpload} />
           <input
-            ref={s.bulkInputRef}
+            ref={s.uploadInputRef}
             type="file"
             className="hidden"
             multiple
-            onChange={s.handleBulkUpload}
+            onChange={s.handleUpload}
           />
 
           <Button onClick={() => s.uploadInputRef.current?.click()}>
@@ -117,6 +125,7 @@ export function Storage() {
                   onToggle={s.toggleFileSelection}
                   onNavigate={s.navigateToFolder}
                   onDeleteFolder={s.handleDeleteFolder}
+                  onView={onView}
                 />
               ))}
             </div>
@@ -144,6 +153,7 @@ export function Storage() {
                       onDeleteFolder={s.handleDeleteFolder}
                       onDeleteFile={s.handleDeleteFile}
                       onRename={s.startRename}
+                      onView={onView}
                     />
                   ))}
                 </tbody>
