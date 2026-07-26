@@ -109,18 +109,15 @@ export function Layout({
   // Mobile drawer state.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Desktop collapse state, persisted across reloads.
-  const [collapsed, setCollapsed] = useState(false);
+  // Lazy initializer reads localStorage synchronously to prevent hydration flash.
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+  });
 
   const handleCollapsedChange = (next: boolean) => {
     setCollapsed(next);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
   };
-
-  // Hydrate the collapsed preference once on mount.
-  useEffect(() => {
-    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-    if (stored === "true") setCollapsed(true);
-  }, []);
 
   // Global ⌘K / Ctrl+K handler for the command palette.
   useEffect(() => {
@@ -240,7 +237,13 @@ export function Layout({
           </header>
         )}
 
-        <main className={cn("w-full", padded && "px-4 pb-10 pt-6 sm:px-6 lg:px-8", mainClassName)}>
+        <main
+          className={cn(
+            "w-full min-h-[calc(100vh-3.5rem)]",
+            padded && "px-4 pb-10 pt-6 sm:px-6 lg:px-8",
+            mainClassName,
+          )}
+        >
           <Outlet />
         </main>
       </div>
