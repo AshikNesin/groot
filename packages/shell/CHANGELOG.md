@@ -1,5 +1,12 @@
 # @groot/shell
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [[`90c30e0`](https://github.com/AshikNesin/groot/commit/90c30e02b09c3e355bd8a0aa0f431006dd55431b)]:
+  - @groot/ui@0.3.0
+
 ## 0.6.1
 
 ### Patch Changes
