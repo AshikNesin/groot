@@ -1,5 +1,51 @@
 # Changelog
 
+## 2.4.1
+
+### Patch Changes
+
+- [#100](https://github.com/AshikNesin/groot/pull/100) [`2615915`](https://github.com/AshikNesin/groot/commit/261591505814484e5e90f219e8e48c22a787b1c4) Thanks [@AshikNesin](https://github.com/AshikNesin)! - fix(build): assert bundled Prisma provider matches DATABASE_ENGINE
+
+  The generated Prisma client is bundled into dist/bundle.js, so the database
+  engine is baked in at build time. If the build environment resolves a different
+  DATABASE_ENGINE than the runtime one, the driver adapter and the bundled client
+  disagree and the server crashes on boot ("The Driver Adapter `@prisma/adapter-pg`
+  ... is not compatible with the provider `sqlite`").
+
+  The build now asserts the bundled `activeProvider` matches `DATABASE_ENGINE`
+  after esbuild runs, turning this class of mismatch into a build failure instead
+  of a boot crash. The check is engine-agnostic and works for both sqlite and
+  postgres builds.
+
+- [#102](https://github.com/AshikNesin/groot/pull/102) [`011c6d5`](https://github.com/AshikNesin/groot/commit/011c6d5595ea9e4fff8911f56e497e497aecb380) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Fix pg-boss jobs list showing blank metadata; replace native confirm with a styled dialog
+
+  The jobs dashboard table was missing data for pg-boss (Postgres) jobs: the
+  "Started" column showed "—", "Created" showed "N/A", retry counts read 0, and
+  expire/keep-until/dead-letter were empty — for _every_ job in the list (active
+  jobs most visibly, since they always have a `started_on`). The stats counts at
+  the top of the page were correct; only the per-row metadata was broken.
+
+  Root cause: the raw-SQL dashboard queries (`getJobs`/`getJobsByState`/
+  `getFailedJobs`) aliased columns to lower-case keys (`startedon`), but the
+  shared `normalizeBossJob` reads pg-boss's camelCase shape (`startedOn`), so
+  every camelCase field resolved to `undefined` → null/empty/0. Only
+  `getJobById` (pg-boss's own accessor) was correct, which is why the detail
+  page showed the right values. Fixed by aliasing the raw-SQL projection to
+  camelCase (double-quoted so Postgres preserves case), matching the shape
+  `normalizeBossJob` reads, so both paths agree.
+
+  Also replaces every native `window.confirm()` — jobs page (bulk re-run,
+  purge-by-state, delete job, cancel scheduled job) and storage page (delete
+  files, delete folder) — with a new shared `ConfirmProvider`/`useConfirm`, a
+  thin imperative convenience layer over a Radix `AlertDialog` primitive (a port
+  of shadcn's `alert-dialog`). Both live under `@groot/ui/primitives` so callers
+  know they are composed/Radix-backed, not direct shadcn re-exports. Using
+  AlertDialog gives correct confirm semantics: the dialog can ONLY be closed by
+  the action/cancel buttons or Escape (not by clicking the overlay), so a
+  confirmation can never be dismissed accidentally. `Button` now exports a named
+  `ButtonProps` so the alert-dialog action/cancel slots compose with the shared
+  button variants (destructive, outline).
+
 ## 2.4.0
 
 ### Minor Changes
