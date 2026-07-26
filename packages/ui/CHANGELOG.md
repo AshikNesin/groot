@@ -1,5 +1,11 @@
 # @groot/ui
 
+## 0.3.0
+
+### Minor Changes
+
+- [#103](https://github.com/AshikNesin/groot/pull/103) [`90c30e0`](https://github.com/AshikNesin/groot/commit/90c30e02b09c3e355bd8a0aa0f431006dd55431b) Thanks [@exe-dev-github-integration](https://github.com/apps/exe-dev-github-integration)! - Add `GrootUIProvider` — a single root provider composing `ConfirmProvider` and the `Toaster`. App authors now mount one `<GrootUIProvider>` instead of remembering to wire up each cross-cutting UI provider individually (previously a hidden, transitive requirement for any consumer of `useConfirm()`). The individual exports remain available for callers that need finer control.
+
 ## 0.2.2
 
 ### Patch Changes
