@@ -23,6 +23,35 @@ function getSentryRelease() {
 }
 
 /**
+ * The generated Prisma client is bundled into dist/bundle.js, so the database
+ * engine is baked in at build time. If the build environment resolves a
+ * different DATABASE_ENGINE than the runtime one, the driver adapter and the
+ * bundled client disagree and the server crashes on boot ("The Driver Adapter
+ * `@prisma/adapter-pg` ... is not compatible with the provider `sqlite`").
+ * Fail the build instead so the mismatch surfaces here rather than in
+ * production. The check is engine-agnostic: it compares whatever DATABASE_ENGINE
+ * resolves to against the bundled client's activeProvider, so it works for both
+ * sqlite and postgres builds.
+ */
+async function assertBundledEngine() {
+  const engine = (process.env.DATABASE_ENGINE ?? "sqlite").trim().toLowerCase();
+  const expected = engine === "sqlite" ? "sqlite" : "postgresql";
+  const bundle = await fs.readFile("dist/bundle.js", "utf-8");
+  const match = bundle.match(/"activeProvider":\s*"(\w+)"/);
+
+  if (!match) {
+    throw new Error("Could not find the bundled Prisma activeProvider in dist/bundle.js.");
+  }
+  if (match[1] !== expected) {
+    throw new Error(
+      `Bundled Prisma client targets "${match[1]}" but DATABASE_ENGINE=${engine} expects ` +
+        `"${expected}". Run 'prisma generate' with the same DATABASE_ENGINE as the build.`,
+    );
+  }
+  console.log(`✓ Bundled Prisma client matches DATABASE_ENGINE=${engine}`);
+}
+
+/**
  * Copy static assets from apps/web/src/server/public to dist/public so they
  * ship with the production bundle and can be served via express.static.
  * No-op if the dir doesn't exist.
@@ -105,6 +134,8 @@ async function build() {
       tsconfig: "tsconfig.json",
       logLevel: "info",
     });
+
+    await assertBundledEngine();
 
     // The Sentry plugin uploads the source map then deletes it when configured;
     // otherwise drop it here so the original source (which references env names
