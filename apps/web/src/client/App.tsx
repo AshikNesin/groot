@@ -9,8 +9,7 @@ import { Storage } from "@groot/shell/pages/storage/Storage";
 import { Jobs, JobDetail } from "@groot/jobs/client";
 import { Settings } from "@groot/shell/pages/settings/Settings";
 import { Login } from "@groot/shell/pages/auth/Login";
-import { Toaster } from "@groot/ui/sonner";
-import { ConfirmProvider } from "@groot/ui/primitives";
+import { GrootUIProvider } from "@groot/ui";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -22,7 +21,7 @@ function App() {
   return (
     <BrowserRouter>
       <NuqsAdapter>
-        <ConfirmProvider>
+        <GrootUIProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
@@ -42,8 +41,7 @@ function App() {
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          <Toaster />
-        </ConfirmProvider>
+        </GrootUIProvider>
       </NuqsAdapter>
     </BrowserRouter>
   );
