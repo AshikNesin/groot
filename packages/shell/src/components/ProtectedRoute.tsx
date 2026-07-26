@@ -11,7 +11,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const hasCheckedAuth = useAuthStore((state) => state.hasCheckedAuth);
 
   if (!hasCheckedAuth) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/40">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
