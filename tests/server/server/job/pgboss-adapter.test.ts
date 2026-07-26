@@ -114,6 +114,48 @@ runIfPostgres("PgBossAdapter (PostgreSQL job queue)", () => {
     await prisma.$executeRawUnsafe(`DELETE FROM pgboss.job WHERE id = $1`, jobId);
   });
 
+  it("getJobsByState/getJobs surface populated metadata for active jobs (raw-SQL path)", async () => {
+    // Regression: the raw-SQL dashboard queries (getJobsByState, getJobs,
+    // getFailedJobs) alias columns to keys that normalizeBossJob reads.
+    // An earlier version aliased to lower-case (startedon) while the
+    // normalizer read camelCase (startedOn), so EVERY field derived from a
+    // camelCase read — startedOn, createdOn, retryLimit, startAfter, expireIn,
+    // keepUntil, deadLetter — silently came back null/empty/0 for every job
+    // in the table (only getJobById, via pg-boss's own accessor, was correct).
+    // An active job therefore showed a blank "Started" column and 0 retries.
+    //
+    // Seed a genuine 'active' row (started_on set by the transition) and assert
+    // the dashboard queries return the populated metadata.
+    const jobId = await adapter.send(Q, { why: "active-meta" }, { expireInSeconds: 7200 });
+    await prisma.$executeRawUnsafe(
+      `UPDATE pgboss.job SET state = 'active'::pgboss.job_state, started_on = now() WHERE id = $1`,
+      jobId,
+    );
+
+    const byState = await adapter.getJobsByState("active", 50, 0);
+    const job = byState.jobs.find((j) => j.id === jobId);
+    expect(job).toBeTruthy();
+    // The fields that were silently dropped before the fix:
+    expect(job!.startedon).not.toBeNull();
+    expect(job!.createdon).not.toBe("");
+    expect(job!.retrylimit).toBe(3); // defaultJobOptions.retryLimit
+    expect(job!.expirein).not.toBe("");
+
+    // Same query via getJobs() — exercises the shared JOB_SELECT_COLUMNS too.
+    const viaGetJobs = await adapter.getJobs({ state: "active", limit: 50, offset: 0 });
+    const job2 = viaGetJobs.jobs.find((j) => j.id === jobId);
+    expect(job2?.startedon).not.toBeNull();
+    expect(job2?.createdon).not.toBe("");
+
+    // getJobById (pg-boss API path) must agree with the raw-SQL path so the
+    // table row and the detail page show the same values.
+    const byId = await adapter.getJobById(Q, jobId!);
+    expect(byId?.startedon).not.toBeNull();
+    expect(byId?.createdon).not.toBe("");
+
+    await prisma.$executeRawUnsafe(`DELETE FROM pgboss.job WHERE id = $1`, jobId);
+  });
+
   it("getQueueStats reports counts for each known state", async () => {
     // Enqueue a job with a delay so it stays in 'created' for the assertion.
     await adapter.send(Q, { x: 1 }, { delaySeconds: 3600 });

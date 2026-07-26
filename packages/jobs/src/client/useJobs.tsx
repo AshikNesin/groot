@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { secondaryOptions } from "./constants";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useConfirm } from "@groot/ui/primitives";
 
 const PAGE_SIZE = 50;
 // Operational view: always refetch on revisit/focus rather than serving the
@@ -36,6 +37,8 @@ export function useJobs() {
     endDate: parseAsString,
     datePreset: parseAsString.withDefault("all"),
   });
+
+  const confirm = useConfirm();
 
   // Dialog / draft / selection state (UI only)
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
@@ -242,7 +245,13 @@ export function useJobs() {
   const handleBulkRerun = async () => {
     if (selectedJobs.size === 0) return;
 
-    if (!window.confirm(`Are you sure you want to re-run ${selectedJobs.size} selected jobs?`)) {
+    if (
+      !(await confirm({
+        title: `Re-run ${selectedJobs.size} selected job${selectedJobs.size === 1 ? "" : "s"}?`,
+        description: "Each job will be enqueued again as a new job.",
+        confirmLabel: "Re-run",
+      }))
+    ) {
       return;
     }
 
@@ -311,9 +320,12 @@ export function useJobs() {
 
   const handlePurge = async (state: string) => {
     if (
-      !window.confirm(
-        `Are you sure you want to purge all ${state} jobs? This action cannot be undone.`,
-      )
+      !(await confirm({
+        title: `Purge all ${state} jobs?`,
+        description: "This permanently deletes every job in this state and cannot be undone.",
+        confirmLabel: "Purge",
+        destructive: true,
+      }))
     ) {
       return;
     }
@@ -389,7 +401,14 @@ export function useJobs() {
   };
 
   const handleCancelScheduledJob = async (jobName: string, key?: string) => {
-    if (!window.confirm(`Are you sure you want to cancel the scheduled job "${jobName}"?`)) {
+    if (
+      !(await confirm({
+        title: `Cancel scheduled job "${jobName}"?`,
+        description: "The schedule will stop running; already-queued jobs are unaffected.",
+        confirmLabel: "Cancel schedule",
+        destructive: true,
+      }))
+    ) {
       return;
     }
 
