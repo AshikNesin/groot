@@ -1,5 +1,15 @@
 # @groot/shell
 
+## 0.7.0
+
+### Minor Changes
+
+- [#105](https://github.com/AshikNesin/groot/pull/105) [`5efcd19`](https://github.com/AshikNesin/groot/commit/5efcd19c4d87de3afc47c32d8aae8fe2bd20e525) Thanks [@exe-dev-github-integration](https://github.com/apps/exe-dev-github-integration)! - Refine shell loading and hydration states: read the sidebar collapsed preference synchronously from `localStorage` (fixes the collapse flash on reload), give `<main>` a min-height for a stable footprint while content loads, and show a centered spinner during the initial auth check instead of a blank screen.
+
+### Patch Changes
+
+- [#107](https://github.com/AshikNesin/groot/pull/107) [`0051546`](https://github.com/AshikNesin/groot/commit/005154619ee39ca399a96bcea02ba0fbbcfd3e91) Thanks [@AshikNesin](https://github.com/AshikNesin)! - PageHeader actions now wrap on narrow viewports (fixes mobile overflow), and the vite client config dedupes its `@groot/*` alias list into a single const shared by the build and the test runner.
+
 ## 0.6.2
 
 ### Patch Changes

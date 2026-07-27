@@ -1,5 +1,12 @@
 # @groot/jobs
 
+## 0.7.4
+
+### Patch Changes
+
+- Updated dependencies [[`0051546`](https://github.com/AshikNesin/groot/commit/005154619ee39ca399a96bcea02ba0fbbcfd3e91), [`5efcd19`](https://github.com/AshikNesin/groot/commit/5efcd19c4d87de3afc47c32d8aae8fe2bd20e525)]:
+  - @groot/shell@0.7.0
+
 ## 0.7.3
 
 ### Patch Changes
