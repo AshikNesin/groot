@@ -24,6 +24,17 @@ function getSentryRelease() {
 const release = getSentryRelease();
 const authToken = process.env.SENTRY_AUTH_TOKEN;
 
+// Shared @groot/* + @ aliases for both the build and the client test runner.
+// Duplicated below they drift out of sync; a single source of truth prevents
+// the test resolver from resolving a different module shape than the build.
+const aliases = [
+  { find: "@groot/shell/index.css", replacement: path.resolve(packagesDir, "shell/src/index.css") },
+  { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
+  { find: "@groot/jobs/client", replacement: path.resolve(packagesDir, "jobs/src/client") },
+  { find: "@groot/shell", replacement: path.resolve(packagesDir, "shell/src") },
+  { find: "@", replacement: clientSrc },
+];
+
 export default defineConfig({
   // Git hooks configuration
   staged: {
@@ -49,16 +60,7 @@ export default defineConfig({
       : []),
   ],
   resolve: {
-    alias: [
-      {
-        find: "@groot/shell/index.css",
-        replacement: path.resolve(packagesDir, "shell/src/index.css"),
-      },
-      { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
-      { find: "@groot/jobs/client", replacement: path.resolve(packagesDir, "jobs/src/client") },
-      { find: "@groot/shell", replacement: path.resolve(packagesDir, "shell/src") },
-      { find: "@", replacement: clientSrc },
-    ],
+    alias: aliases,
   },
   build: {
     outDir: path.resolve(rootDir, "dist"),
@@ -142,11 +144,6 @@ export default defineConfig({
     exclude: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["../../tests/client/setup.ts"],
-    alias: [
-      { find: "@groot/ui", replacement: path.resolve(packagesDir, "ui/src") },
-      { find: "@groot/jobs/client", replacement: path.resolve(packagesDir, "jobs/src/client") },
-      { find: "@groot/shell", replacement: path.resolve(packagesDir, "shell/src") },
-      { find: "@", replacement: clientSrc },
-    ],
+    alias: aliases,
   },
 });
