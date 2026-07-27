@@ -63,7 +63,7 @@ export function Login() {
 
           {isDev && (
             <div className="mt-6 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">Demo credentials</span> —
+              <span className="font-medium text-foreground">Demo credentials:</span>
               demo@example.com / demo@example.com
             </div>
           )}
@@ -102,8 +102,8 @@ export function Login() {
             The boilerplate that ships like a product.
           </h2>
           <p className="mt-3 text-sm text-primary-foreground/70">
-            Everything you need to launch a full-stack SaaS — auth, storage, background jobs, and a
-            polished UI — without the busywork.
+            Everything you need to launch a full-stack SaaS (auth, storage, background jobs, and a
+            polished UI) without the busywork.
           </p>
           <ul className="mt-8 space-y-4">
             {FEATURES.map((f) => (
