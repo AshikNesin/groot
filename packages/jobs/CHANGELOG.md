@@ -1,5 +1,19 @@
 # @groot/jobs
 
+## 0.8.0
+
+### Minor Changes
+
+- [`e64cc32`](https://github.com/AshikNesin/groot/commit/e64cc32d34a41936bba0b00f7758059eb2d83723) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Add generic link resolution for job data fields.
+
+  - **JobDataLinkContext**: New `JobsProvider` + `useJobDataLink` hook so consuming apps can configure a `linkResolver` that maps `(key, value)` to `{ to, label? }`.
+  - **JobDataView**: Structured key-value renderer with recursive flattening (dot-notation keys). Linkable values render as `<Link>` with an ExternalLink icon.
+  - **JobJsonBlock**: Added Structured/JSON toggle — defaults to structured view when a linkResolver is configured, raw JSON otherwise.
+
+### Patch Changes
+
+- [`02a221b`](https://github.com/AshikNesin/groot/commit/02a221b8f8a83ba095a12dc986090fce897af10f) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Add job state label to the jobs table.
+
 ## 0.7.4
 
 ### Patch Changes

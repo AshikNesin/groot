@@ -1,5 +1,12 @@
 # @groot/web
 
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [[`e64cc32`](https://github.com/AshikNesin/groot/commit/e64cc32d34a41936bba0b00f7758059eb2d83723), [`02a221b`](https://github.com/AshikNesin/groot/commit/02a221b8f8a83ba095a12dc986090fce897af10f)]:
+  - @groot/jobs@0.8.0
+
 ## 0.2.15
 
 ### Patch Changes
