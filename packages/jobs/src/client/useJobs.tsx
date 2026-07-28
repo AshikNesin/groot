@@ -6,7 +6,7 @@ import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { secondaryOptions } from "./constants";
+import { secondaryOptions, STATE_TABS } from "./constants";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useConfirm } from "@groot/ui/primitives";
 
@@ -19,6 +19,11 @@ const STATS_KEY = ["jobs", "stats"] as const;
 const AVAILABLE_KEY = ["jobs", "available"] as const;
 const SCHEDULED_KEY = ["jobs", "scheduled"] as const;
 const LIST_KEY = ["jobs", "list"] as const;
+
+/** Human-readable, capitalized label for a job state (e.g. "Active", "Failed"). */
+function stateLabel(state: string): string {
+  return STATE_TABS.find((t) => t.value === state)?.label ?? state;
+}
 
 /**
  * All state, data-loading, and mutations for the Jobs page. Server data
@@ -321,7 +326,7 @@ export function useJobs() {
   const handlePurge = async (state: string) => {
     if (
       !(await confirm({
-        title: `Purge all ${state} jobs?`,
+        title: `Purge all ${stateLabel(state)} jobs?`,
         description: "This permanently deletes every job in this state and cannot be undone.",
         confirmLabel: "Purge",
         destructive: true,
@@ -333,7 +338,7 @@ export function useJobs() {
     try {
       const { deletedCount } = await jobsApi.purgeJobsByState(state);
       toast.success("Success", {
-        description: `Purged ${deletedCount} ${state} jobs`,
+        description: `Purged ${deletedCount} ${stateLabel(state)} jobs`,
       });
       invalidateJobs();
     } catch (error) {

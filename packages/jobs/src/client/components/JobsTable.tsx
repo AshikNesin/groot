@@ -13,7 +13,13 @@ import { formatDuration, formatLocaleDateTime, formatRelativeTime } from "@groot
 import { formatJobId } from "@groot/jobs/client/utils";
 import type { Job } from "@groot/jobs/client/types";
 import type { JobsQueryPatch } from "@groot/jobs/client/constants";
+import { STATE_TABS } from "@groot/jobs/client/constants";
 import { JobsTableSkeleton } from "./skeletons";
+
+/** Human-readable, capitalized label for a job state (e.g. "Active", "Failed"). */
+function stateLabel(state: string): string {
+  return STATE_TABS.find((t) => t.value === state)?.label ?? state;
+}
 import {
   AlertCircle,
   ChevronRight,
@@ -88,7 +94,7 @@ export function JobsTable({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">
-            {queryParams.state === "all" ? "All jobs" : `${queryParams.state} jobs`}
+            {queryParams.state === "all" ? "All jobs" : `${stateLabel(queryParams.state)} jobs`}
           </span>
           <span className="text-xs text-muted-foreground">
             {jobs.length} of {total}
@@ -109,7 +115,7 @@ export function JobsTable({
               className="text-destructive hover:text-destructive"
             >
               <Trash2 className="size-3.5" />
-              Purge {queryParams.state}
+              Purge {stateLabel(queryParams.state)}
             </Button>
           )}
         </div>
@@ -139,7 +145,9 @@ export function JobsTable({
             </div>
             <h3 className="text-sm font-medium text-foreground">No jobs found</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              {queryParams.state !== "all" ? `No ${queryParams.state} jobs` : "The queue is empty"}
+              {queryParams.state !== "all"
+                ? `No ${stateLabel(queryParams.state).toLowerCase()} jobs`
+                : "The queue is empty"}
             </p>
           </div>
         ) : (
