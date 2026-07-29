@@ -9,6 +9,8 @@ import {
   type CommandGroupEntry,
 } from "./CommandPalette";
 import { SidebarNav, type NavItem, type SidebarBrand } from "./SidebarNav";
+
+export type { NavItem };
 import {
   DropdownMenu,
   DropdownMenuContent,
