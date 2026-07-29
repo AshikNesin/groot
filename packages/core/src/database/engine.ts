@@ -4,8 +4,12 @@ import { ENV } from "varlock/env";
 /**
  * Which database engine this process is configured to use.
  *
- * `DATABASE_ENGINE=sqlite` (default) → a single local file via better-sqlite3.
- * `DATABASE_ENGINE=postgres`        → a PostgreSQL server via @prisma/adapter-pg.
+ * Inferred automatically from the `DATABASE_URL` scheme — there is no separate
+ * `DATABASE_ENGINE` knob to keep in sync:
+ *
+ * - `postgresql://...` / `postgres://...` → Postgres via @prisma/adapter-pg
+ * - anything else (`file:...`, a bare path, `:memory:`) → SQLite via
+ *   better-sqlite3
  *
  * The value is read once at module load and frozen. Every database-aware
  * module (Prisma client, KV store, prisma.config.ts, the dev/test scripts)
@@ -14,18 +18,19 @@ import { ENV } from "varlock/env";
  */
 export type DbEngine = "sqlite" | "postgres";
 
-function parseEngine(raw: string | undefined): DbEngine {
-  const v = (raw ?? "sqlite").trim().toLowerCase();
-  if (v === "postgres" || v === "postgresql" || v === "pg") return "postgres";
-  if (v === "sqlite") return "sqlite";
-  // Unknown value: fail loud rather than silently falling back — a typo in
-  // DATABASE_ENGINE should never accidentally point a prod-shaped Postgres URL
-  // at the SQLite code path (or vice versa).
-  throw new Error(
-    `DATABASE_ENGINE="${raw}" is not supported. Use "sqlite" (default) or "postgres".`,
-  );
+/**
+ * Derive the engine from the connection URL, not a separate env var.
+ *
+ * `postgresql://` and `postgres://` (the two URI schemes Prisma/Node use for
+ * Postgres) select Postgres. Everything else is treated as SQLite — a `file:`
+ * path, a bare filesystem path, or `:memory:`. When no URL is set we default
+ * to sqlite; callers that require a URL (e.g. Postgres) surface a clear error.
+ */
+function inferEngine(dbUrl: string | undefined): DbEngine {
+  if (!dbUrl) return "sqlite";
+  return dbUrl.trim().startsWith("postgres") ? "postgres" : "sqlite";
 }
 
-export const dbEngine: DbEngine = parseEngine(ENV.DATABASE_ENGINE);
+export const dbEngine: DbEngine = inferEngine(ENV.DATABASE_URL);
 export const isPostgres = dbEngine === "postgres";
 export const isSqlite = dbEngine === "sqlite";

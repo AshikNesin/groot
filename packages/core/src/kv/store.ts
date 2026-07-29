@@ -6,7 +6,7 @@ import { logger } from "@groot/core/logger";
 import { env } from "@groot/core/env";
 import { isPostgres } from "@groot/core/database/engine";
 
-// The KV store backend is selected by DATABASE_ENGINE to match the Prisma
+// The KV store backend is selected by the DATABASE_URL scheme to match the Prisma
 // adapter. Both @keyv/postgres and @keyv/sqlite implement the same Keyv
 // adapter interface, so the rest of the code is engine-agnostic.
 //

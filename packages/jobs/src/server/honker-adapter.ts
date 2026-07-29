@@ -3,7 +3,7 @@
  *
  * Wraps `@russellthehippo/honker-node`, a durable SQLite-backed queue with
  * retries, visibility timeouts, dead-letter rows, and cron scheduling. Selected
- * when `DATABASE_ENGINE=sqlite`.
+ * when a non-postgres (file:) DATABASE_URL.
  *
  * honker is push-driven: workers claim jobs via an async iterator woken by
  * `PRAGMA data_version` changes, so there is no polling loop in app code. Jobs

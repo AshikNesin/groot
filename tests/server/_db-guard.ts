@@ -75,8 +75,8 @@ export function assertTestDatabase(url: string | undefined): void {
       "TEST_DATABASE_URL is not set. Refusing to run tests — no DB is safer than the wrong DB.",
     );
   }
-  const engine = (process.env.DATABASE_ENGINE ?? "sqlite").toLowerCase();
-  if (engine === "postgres" || engine === "postgresql" || engine === "pg") {
+  // Infer the engine from TEST_DATABASE_URL's scheme, the same way engine.ts does.
+  if (url.trim().startsWith("postgres")) {
     assertPostgres(url);
   } else {
     assertSqlite(url);

@@ -6,9 +6,9 @@
  * hidden behind this interface. Two implementations ship:
  *
  *   - {@link PgBossAdapter}  — wraps pg-boss (PostgreSQL). Selected when
- *     `DATABASE_ENGINE=postgres`.
+ *     a `postgresql://` DATABASE_URL.
  *   - {@link HonkerAdapter}  — wraps `@russellthehippo/honker-node`, a durable
- *     SQLite-backed queue (SELECTed when `DATABASE_ENGINE=sqlite`).
+ *     SQLite-backed queue (SELECTed when a non-postgres (file:) DATABASE_URL..
  *
  * Both return jobs in the normalized {@link QueueJob} shape, which matches the
  * `Job` type the client dashboard already consumes (pg-boss column names

@@ -54,7 +54,7 @@ async function main() {
       await filesPromise;
 
       // Initialize the job queue after the server is listening. The queue
-      // adapter is selected by DATABASE_ENGINE: pg-boss on Postgres, honker on
+      // adapter is selected by the DATABASE_URL scheme: pg-boss on Postgres, honker on
       // SQLite. Both implement the JobQueueAdapter interface, so the rest of
       // the app is engine-agnostic.
       if (config.jobs.enabled) {

@@ -1,7 +1,7 @@
 /**
  * Pre-test orchestrator: ensures a test database exists and is migrated.
  *
- * Branches on DATABASE_ENGINE:
+ * Branches on the DATABASE_URL scheme (postgres → Postgres, else SQLite):
  *  - sqlite (default): delete any stale file (for --reset), mkdir tmp/, then
  *    `prisma migrate deploy` against it. No container to manage.
  *  - postgres: the caller provisions the test DB (CI service container, or an

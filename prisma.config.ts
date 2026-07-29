@@ -2,11 +2,11 @@ import { defineConfig } from "prisma/config";
 import { ENV } from "varlock/env";
 import { dbEngine } from "./packages/core/src/database/engine.ts";
 
-// The active Prisma schema + migrations directory are selected by
-// DATABASE_ENGINE (sqlite by default, postgres to opt in). Both schemas share
-// identical model definitions and Json-typed array/JSON columns, so the
-// generated client is type-identical regardless of engine — app code never
-// branches on the engine.
+// The active Prisma schema + migrations directory are selected by the
+// DATABASE_URL scheme (sqlite by default, postgres for a postgresql:// URL).
+// Both schemas share identical model definitions and Json-typed array/JSON
+// columns, so the generated client is type-identical regardless of engine —
+// app code never branches on the engine.
 const schemaPath =
   dbEngine === "postgres"
     ? "apps/web/prisma/schema.postgres.prisma"

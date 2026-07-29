@@ -2,7 +2,7 @@
  * pg-boss adapter — the PostgreSQL job queue implementation.
  *
  * Wraps `pg-boss` behind the {@link JobQueueAdapter} interface. Selected when
- * `DATABASE_ENGINE=postgres`. Single-job reads use pg-boss's own
+ * a `postgresql://` DATABASE_URL. Single-job reads use pg-boss's own
  * `getJobById()`; the cross-queue dashboard queries (global state counts,
  * paginated/state-filtered lists, purge-by-state) run raw SQL against the
  * `pgboss.job` table because pg-boss exposes no API for them — `findJobs`

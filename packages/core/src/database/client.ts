@@ -18,7 +18,7 @@ const isDev = ENV.NODE_ENV === "development";
  * Accepts `:memory:`, an optional `file:` prefix, a relative path (resolved
  * against `process.cwd()`), or an absolute path. The parent directory is
  * created on demand so a fresh checkout just works. Only used when
- * DATABASE_ENGINE=sqlite.
+ * DATABASE_URL with a file: scheme.
  */
 export function resolveSqlitePath(url: string): string {
   if (url === ":memory:") return ":memory:";

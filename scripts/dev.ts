@@ -1,11 +1,11 @@
 /**
  * Dev orchestrator script.
  *
- * Branches on DATABASE_ENGINE:
+ * Branches on the DATABASE_URL scheme (postgres → Postgres, else SQLite):
  *  - sqlite (default): mkdir the data dir, migrate, seed, start tsx.
- *  - postgres: the user runs their own Postgres and sets DATABASE_URL/
- *    DATABASE_ENGINE=postgres explicitly. We just migrate, seed, and start —
- *    no container management on our end.
+ *  - postgres: the user runs their own Postgres and sets a postgresql://
+ *    DATABASE_URL. We just migrate, seed, and start — no container management
+ *    on our end.
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
@@ -40,7 +40,7 @@ async function main() {
   if (isPostgres) {
     if (!connectionString) {
       throw new Error(
-        "DATABASE_ENGINE=postgres but DATABASE_URL is not set. Run your own Postgres and set DATABASE_URL (and DATABASE_URL_DIRECT if pooled).",
+        "DATABASE_URL is not set. Postgres needs a postgresql:// connection URL (e.g. postgresql://user:pass@host:port/db).",
       );
     }
     console.log("\n🗄️  Using PostgreSQL database\n");
