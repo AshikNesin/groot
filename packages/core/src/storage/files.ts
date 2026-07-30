@@ -5,33 +5,32 @@ import { env } from "@groot/core/env";
 /**
  * Storage core: one configured {@link Files} instance for the whole app.
  *
- * The adapter is chosen by environment so every call site stays identical
- * between local and remote — that is the whole point of the files-sdk
- * Adapter contract.
+ * The adapter is chosen by {@link env.STORAGE_DRIVER} (default `local`) so
+ * every call site stays identical between local and remote — that is the whole
+ * point of the files-sdk Adapter contract.
  *
- * - **Non-production** (development / test) → the local `fs` adapter. Bodies
- *   land under `./local/uploads` with a sidecar `.meta.json` per file.
- *   Not for production: no replication, no signing, no auth.
- * - **Production** → the `s3` adapter, scoped to `AWS_DEFAULT_S3_BUCKET`.
- *   Credentials are auto-loaded from the AWS chain (env vars, IAM role,
- *   shared profile), so no secrets are wired here.
+ * - **`local`** (default) → the local `fs` adapter. Bodies land under
+ *   `./local/uploads` with a sidecar `.meta.json` per file. Works in every
+ *   environment, including production, for single-node deployments.
+ * - **`s3`** → the `s3` adapter, scoped to `AWS_DEFAULT_S3_BUCKET`. Credentials
+ *   are auto-loaded from the AWS chain (env vars, IAM role, shared profile).
  *
- * The S3 adapter (files-sdk/s3) is imported dynamically in production only.
+ * The S3 adapter (files-sdk/s3) is imported dynamically only when selected.
  * This prevents the three `@aws-sdk/*` packages from being loaded into memory
- * in development and test, where S3 is never used.
+ * when `STORAGE_DRIVER=local`.
  *
  * Depend on this instance and the files-sdk method signatures — `upload`,
  * `download`, `head`, `exists`, `delete`, `copy`, `move`, `list`, `listAll`,
  * `url`, `signedUploadUrl`, `file`. See https://files-sdk.dev/api.
  */
 async function createFiles(): Promise<Files> {
-  if (env.NODE_ENV !== "production") {
+  if (env.STORAGE_DRIVER !== "s3") {
     return new Files({
       adapter: fs({ root: "./local/uploads" }),
     });
   }
 
-  // Dynamic import keeps @aws-sdk/* out of the dev/test module graph entirely.
+  // Dynamic import keeps @aws-sdk/* out of the module graph unless S3 is used.
   const { s3 } = await import("files-sdk/s3");
   return new Files({
     adapter: s3({
