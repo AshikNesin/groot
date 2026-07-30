@@ -1,5 +1,13 @@
 # @groot/core
 
+## 0.8.0
+
+### Minor Changes
+
+- [`c097350`](https://github.com/AshikNesin/groot/commit/c0973502ae2e731094876e05dcfc9b3db6b3ccfc) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Database engine is now inferred from the `DATABASE_URL` scheme (`postgresql://` → Postgres, `file:` / bare path → SQLite) instead of a separate `DATABASE_ENGINE` env var. The old knob is removed from `.env.schema`; existing consumers that relied on `DATABASE_ENGINE` should delete it (the scheme now drives `dbEngine`, `isPostgres`, and `isSqlite` everywhere).
+
+- [`c097350`](https://github.com/AshikNesin/groot/commit/c0973502ae2e731094876e05dcfc9b3db6b3ccfc) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Storage adapter is now selected by `STORAGE_DRIVER` (`local` | `s3`, default `local`) instead of branching on `NODE_ENV`. The local filesystem adapter is now valid in every environment, including production single-node deployments; S3 is only loaded when explicitly selected. AWS credentials are no longer marked `@required` in `.env.schema` — they apply only when `STORAGE_DRIVER=s3`.
+
 ## 0.7.1
 
 ### Patch Changes

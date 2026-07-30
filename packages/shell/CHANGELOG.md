@@ -1,5 +1,11 @@
 # @groot/shell
 
+## 0.8.0
+
+### Minor Changes
+
+- [`c097350`](https://github.com/AshikNesin/groot/commit/c0973502ae2e731094876e05dcfc9b3db6b3ccfc) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Re-export `NavItem` from `Layout` so app consumers can import it from the same path they pass `navItems` to.
+
 ## 0.7.0
 
 ### Minor Changes
