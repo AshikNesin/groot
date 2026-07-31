@@ -1,13 +1,16 @@
 import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Plus, Check, Trash2, Loader2, ListChecks, AlertCircle, RotateCcw } from "lucide-react";
+import { Plus, Check, Trash2, Loader2, ListChecks, RotateCcw } from "lucide-react";
 import { Button } from "@groot/ui/button";
 import { Card } from "@groot/ui/card";
 import { Checkbox } from "@groot/ui/checkbox";
+import { EmptyState, ErrorState } from "@groot/ui/empty-state";
 import { Form, FormField } from "@groot/ui/form";
 import { Input } from "@groot/ui/input";
 import { Badge } from "@groot/ui/badge";
+import { StatusBadge } from "@groot/ui/status-badge";
+import { Skeleton, SkeletonList } from "@groot/ui/loading-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -110,56 +113,53 @@ export function Todos() {
 
   return (
     <PageLayout title="Todos" description="Track your tasks" actions={actions} maxWidth="7xl">
-      {/* Summary strip. */}
+      {/* Summary strip. Skeletons while loading so bogus zeros don't flash. */}
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <Badge variant="secondary" className="gap-1.5">
-          <ListChecks className="size-3.5" />
-          {total} total
-        </Badge>
-        <Badge variant="secondary" className="gap-1.5">
-          <Check className="size-3.5" />
-          {completedCount} done
-        </Badge>
-        {total > 0 && (
-          <span className="text-xs">{Math.round((completedCount / total) * 100)}% complete</span>
+        {isLoading ? (
+          <>
+            <Skeleton className="h-5.5 w-20 rounded-4xl" />
+            <Skeleton className="h-5.5 w-18 rounded-4xl" />
+          </>
+        ) : (
+          <>
+            <Badge variant="secondary" className="gap-1.5">
+              <ListChecks className="size-3.5" />
+              {total} total
+            </Badge>
+            <Badge variant="secondary" className="gap-1.5">
+              <Check className="size-3.5" />
+              {completedCount} done
+            </Badge>
+            {total > 0 && (
+              <span className="text-xs">
+                {Math.round((completedCount / total) * 100)}% complete
+              </span>
+            )}
+          </>
         )}
       </div>
 
       {/* List. */}
       <Card className="overflow-hidden p-0">
         {isLoading ? (
-          <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" />
-            Loading todos...
-          </div>
+          <SkeletonList rows={5} />
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="size-6 text-destructive" />
-            </div>
-            <div>
-              <p className="font-medium text-foreground">Failed to load todos</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Unable to fetch your todo list. Please try again.
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RotateCcw className="size-4 mr-1" />
-              Retry
-            </Button>
-          </div>
+          <ErrorState
+            title="Failed to load todos"
+            description="Unable to fetch your todo list. Please try again."
+            action={
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RotateCcw className="size-4" />
+                Retry
+              </Button>
+            }
+          />
         ) : total === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-              <ListChecks className="size-6 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium text-foreground">No todos yet</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Create your first todo to get started.
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            icon={ListChecks}
+            title="No todos yet"
+            description="Create your first todo to get started."
+          />
         ) : (
           <ul className="divide-y divide-border">
             {todos?.map((todo) => (
@@ -181,16 +181,11 @@ export function Todos() {
                 >
                   {todo.title}
                 </span>
-                {!todo.completed && (
-                  <Badge variant="outline" className="hidden sm:inline-flex">
-                    Pending
-                  </Badge>
-                )}
-                {todo.completed && (
-                  <Badge variant="secondary" className="hidden sm:inline-flex">
-                    Done
-                  </Badge>
-                )}
+                <StatusBadge
+                  status={todo.completed ? "completed" : "pending"}
+                  label={todo.completed ? "Done" : "Pending"}
+                  className="hidden sm:inline-flex"
+                />
                 <Button
                   variant="ghost"
                   size="icon-sm"

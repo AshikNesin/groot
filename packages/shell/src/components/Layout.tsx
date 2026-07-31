@@ -270,13 +270,13 @@ function UserMenuRow({ item, navigate }: { item: UserMenuItem; navigate: (to: st
       {item.href ? (
         <DropdownMenuItem asChild className={itemClassName}>
           <a href={item.href} target="_blank" rel="noopener noreferrer">
-            {Icon ? <Icon className="mr-2 h-4 w-4" /> : null}
+            {Icon ? <Icon className="size-4" /> : null}
             <span>{item.label}</span>
           </a>
         </DropdownMenuItem>
       ) : (
         <DropdownMenuItem onClick={handleClick} className={itemClassName}>
-          {Icon ? <Icon className="mr-2 h-4 w-4" /> : null}
+          {Icon ? <Icon className="size-4" /> : null}
           <span>{item.label}</span>
         </DropdownMenuItem>
       )}

@@ -7,9 +7,9 @@ const SETTINGS_KEY = ["app-settings"] as const;
 
 /**
  * State + mutations for the AppSettings page. The settings list comes from a
- * React Query cache; the editable JSON/description drafts and dialog/selection
- * state stay local. The draft reset (setState-during-render) mirrors the
- * selected setting's server value so the editor re-syncs after a save/refetch.
+ * React Query cache; the editable JSON/description drafts and selection state
+ * stay local. The draft reset (setState-during-render) mirrors the selected
+ * setting's server value so the editor re-syncs after a save/refetch.
  */
 export function useAppSettings() {
   const queryClient = useQueryClient();
@@ -24,7 +24,6 @@ export function useAppSettings() {
   const [jsonValue, setJsonValue] = useState("");
   const [description, setDescription] = useState("");
   const [showNewSettingForm, setShowNewSettingForm] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: SETTINGS_KEY });
@@ -93,10 +92,7 @@ export function useAppSettings() {
   const confirmDelete = () => {
     if (!selectedKey) return;
     deleteMutation.mutate(selectedKey, {
-      onSuccess: () => {
-        setUserSelectedKey(null);
-        setShowDeleteDialog(false);
-      },
+      onSuccess: () => setUserSelectedKey(null),
     });
   };
 
@@ -126,14 +122,11 @@ export function useAppSettings() {
     setDescription,
     showNewSettingForm,
     setShowNewSettingForm,
-    showDeleteDialog,
-    setShowDeleteDialog,
     refresh: invalidate,
     isSaving: saveMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isCreating: createMutation.isPending,
     save,
-    requestDelete: () => setShowDeleteDialog(true),
     confirmDelete,
     createSetting,
   };

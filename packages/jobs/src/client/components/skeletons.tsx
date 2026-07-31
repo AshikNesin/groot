@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader } from "@groot/ui/card";
-import { Skeleton } from "@groot/ui/loading-skeleton";
+import { Card } from "@groot/ui/card";
+import { Skeleton, SkeletonCard, SkeletonTable } from "@groot/ui/loading-skeleton";
 import { cn } from "@groot/ui/lib/utils";
 
 /**
- * Reusable skeleton building blocks for the jobs UI. Centralised here so every
- * loading surface (list, detail, stats, scheduled) shares the same shapes and
- * can be updated in one place.
+ * Loading placeholders for the jobs UI, composed from the shared skeleton
+ * primitives in `@groot/ui`. Centralised here so every loading surface (list,
+ * detail, stats, scheduled) is assembled in one place.
  */
 
 /** A small label + value pair, matching the {@link JobOverview} field layout. */
@@ -15,24 +15,6 @@ function FieldSkeleton() {
       <Skeleton className="h-3 w-16" />
       <Skeleton className="h-4 w-20" />
     </div>
-  );
-}
-
-/** A Card titled via a skeleton, wrapping skeleton body content. */
-function CardSkeleton({
-  titleWidth = "w-20",
-  children,
-}: {
-  titleWidth?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className={cn("h-4", titleWidth)} />
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
   );
 }
 
@@ -56,60 +38,9 @@ export function JobsStatsSkeleton({ count = 7 }: { count?: number }) {
   );
 }
 
-/** A single jobs-table row skeleton, matching the {@link JobsTable} grid. */
-export function JobRowSkeleton() {
-  return (
-    <div className="grid grid-cols-12 items-center gap-4 px-4 py-3 sm:px-5">
-      <div className="col-span-5 flex items-center gap-3">
-        <Skeleton className="size-4 rounded" />
-        <Skeleton className="size-4 rounded" />
-        <div className="space-y-1.5">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-3 w-20" />
-        </div>
-      </div>
-      <div className="col-span-2">
-        <Skeleton className="h-5 w-20" />
-      </div>
-      <div className="col-span-2">
-        <Skeleton className="h-4 w-24" />
-      </div>
-      <div className="col-span-2">
-        <Skeleton className="h-4 w-24" />
-      </div>
-      <div className="col-span-1 flex justify-end">
-        <Skeleton className="size-4 rounded" />
-      </div>
-    </div>
-  );
-}
-
 /** Skeleton for the {@link JobsTable} header + rows while the list loads. */
 export function JobsTableSkeleton({ rows = 10 }: { rows?: number }) {
-  return (
-    <div>
-      <div className="grid grid-cols-12 gap-4 border-b border-border/60 px-4 py-2.5 sm:px-5">
-        <div className="col-span-5">
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <div className="col-span-2">
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <div className="col-span-2">
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <div className="col-span-2">
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <div className="col-span-1" />
-      </div>
-      <div className="divide-y divide-border/40">
-        {[...Array(rows)].map((_, i) => (
-          <JobRowSkeleton key={i.toString()} />
-        ))}
-      </div>
-    </div>
-  );
+  return <SkeletonTable columns={5} rows={rows} />;
 }
 
 /** Skeleton for the {@link ScheduledJobsPanel} while scheduled jobs load. */
@@ -121,17 +52,7 @@ export function ScheduledJobsSkeleton({ rows = 2 }: { rows?: number }) {
         <Skeleton className="h-3 w-16" />
       </div>
       <Card className="gap-0 overflow-hidden p-0">
-        <div className="divide-y divide-border/40">
-          {[...Array(rows)].map((_, i) => (
-            <div key={i.toString()} className="grid grid-cols-12 items-center gap-4 px-4 py-3">
-              <Skeleton className="col-span-3 h-4" />
-              <Skeleton className="col-span-3 h-4" />
-              <Skeleton className="col-span-2 h-4" />
-              <Skeleton className="col-span-3 h-4" />
-              <div className="col-span-1" />
-            </div>
-          ))}
-        </div>
+        <SkeletonTable columns={4} rows={rows} header={false} />
       </Card>
     </div>
   );
@@ -155,19 +76,19 @@ export function JobDetailSkeleton() {
         </div>
       </div>
       <div className="mt-8 space-y-6">
-        <CardSkeleton titleWidth="w-20">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+        <SkeletonCard titleWidth="w-20">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
               <FieldSkeleton key={i.toString()} />
             ))}
           </div>
-        </CardSkeleton>
-        <CardSkeleton titleWidth="w-16">
+        </SkeletonCard>
+        <SkeletonCard titleWidth="w-16">
           <Skeleton className="h-48 w-full" />
-        </CardSkeleton>
-        <CardSkeleton titleWidth="w-12">
+        </SkeletonCard>
+        <SkeletonCard titleWidth="w-12">
           <Skeleton className="h-40 w-full" />
-        </CardSkeleton>
+        </SkeletonCard>
       </div>
     </>
   );

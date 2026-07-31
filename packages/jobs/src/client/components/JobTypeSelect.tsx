@@ -41,7 +41,7 @@ export function JobTypeSelect({
           className="w-full justify-between h-10 px-3 text-sm font-normal"
         >
           <span className={value ? "" : "text-muted-foreground"}>{value || "Select job type"}</span>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+          <ChevronDown className="size-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">

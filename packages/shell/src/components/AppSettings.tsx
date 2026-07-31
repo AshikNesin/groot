@@ -1,15 +1,17 @@
 import { Button } from "@groot/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@groot/ui/dialog";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@groot/ui/card";
+import { EmptyState } from "@groot/ui/empty-state";
 import { Input } from "@groot/ui/input";
 import { Form, FormField, Field } from "@groot/ui/form";
-import { LoadingSpinner } from "@groot/ui/loading-spinner";
+import { Skeleton, SkeletonCard, SkeletonList } from "@groot/ui/loading-skeleton";
+import { useConfirm } from "@groot/ui/primitives";
 import { Plus, RefreshCw, Search, Trash2, Save, FileJson } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { z } from "zod";
@@ -24,16 +26,60 @@ const CodeMirrorEditor = lazy(() =>
   import("./CodeMirrorEditor").then((m) => ({ default: m.CodeMirrorEditor })),
 );
 
+/**
+ * Placeholder mirroring the toolbar and master/detail grid while settings
+ * load, composed from the shared skeleton primitives.
+ */
+function AppSettingsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Skeleton className="h-5 w-64" />
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <Card className="gap-0 p-0">
+          <div className="border-b border-border p-3">
+            <Skeleton className="h-8 w-full" />
+          </div>
+          <SkeletonList rows={3} leading="none" trailing={false} />
+        </Card>
+        <SkeletonCard titleWidth="w-40" description>
+          <div className="space-y-5">
+            <div className="space-y-1.5">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-9 w-full" />
+            </div>
+            <div className="space-y-1.5">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-[400px] w-full" />
+            </div>
+          </div>
+        </SkeletonCard>
+      </div>
+    </div>
+  );
+}
+
 export function AppSettings() {
   const s = useAppSettings();
+  const confirm = useConfirm();
+
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: "Delete setting",
+      description: `Are you sure you want to delete “${s.selectedKey}”? This action cannot be undone.`,
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (confirmed) s.confirmDelete();
+  };
 
   if (s.isLoading) {
-    return (
-      <div className="flex h-96 flex-col items-center justify-center rounded-xl border border-border bg-card">
-        <LoadingSpinner size="lg" />
-        <p className="mt-4 text-sm text-muted-foreground">Loading settings…</p>
-      </div>
-    );
+    return <AppSettingsSkeleton />;
   }
 
   return (
@@ -58,14 +104,14 @@ export function AppSettings() {
 
       {/* Add-setting inline form */}
       {s.showNewSettingForm && (
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-4">
-            <h3 className="text-sm font-semibold">New setting</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle className="text-sm">New setting</CardTitle>
+            <CardDescription className="text-xs">
               Give it a descriptive key — you can edit the value next.
-            </p>
-          </div>
-          <div className="px-5 py-4">
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <Form
               schema={settingKeySchema}
               defaultValues={{ key: "" }}
@@ -87,14 +133,14 @@ export function AppSettings() {
                 Cancel
               </Button>
             </Form>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Master / detail */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         {/* Settings list */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <Card className="gap-0 p-0">
           <div className="border-b border-border p-3">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -147,32 +193,30 @@ export function AppSettings() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Editor */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <Card className="gap-0 p-0">
           {s.selectedKey ? (
             <>
-              <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
-                <div className="min-w-0">
-                  <h3 className="truncate text-base font-semibold">{s.selectedKey}</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Edit the configuration below and save your changes.
-                  </p>
-                </div>
+              <CardHeader className="border-b px-5 py-4">
+                <CardTitle className="truncate">{s.selectedKey}</CardTitle>
+                <CardDescription className="text-xs">
+                  Edit the configuration below and save your changes.
+                </CardDescription>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={s.requestDelete}
+                  onClick={handleDelete}
                   disabled={s.isDeleting}
-                  className="text-destructive hover:text-destructive"
+                  className="col-start-2 row-span-2 row-start-1 self-start justify-self-end text-destructive hover:text-destructive"
                 >
                   <Trash2 className="size-3.5" />
                   Delete
                 </Button>
-              </div>
+              </CardHeader>
 
-              <div className="space-y-5 p-5">
+              <CardContent className="space-y-5 px-5 py-4">
                 <Field label="Description" htmlFor="description">
                   <Input
                     id="description"
@@ -198,46 +242,25 @@ export function AppSettings() {
                     </Suspense>
                   </div>
                 </Field>
-              </div>
+              </CardContent>
 
-              {/* Footer action row */}
-              <div className="mt-auto flex items-center justify-end gap-2 border-t border-border bg-muted/40 px-5 py-3">
+              <CardFooter className="mt-auto justify-end gap-2 px-5 py-3">
                 <Button size="sm" onClick={s.save} disabled={s.isSaving}>
                   <Save className="size-3.5" />
                   {s.isSaving ? "Saving…" : "Save changes"}
                 </Button>
-              </div>
+              </CardFooter>
             </>
           ) : (
-            <div className="flex h-96 flex-col items-center justify-center text-center">
-              <FileJson className="size-8 text-muted-foreground/50" />
-              <p className="mt-3 text-sm font-medium">No setting selected</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Choose a setting from the list to edit its value.
-              </p>
-            </div>
+            <EmptyState
+              icon={FileJson}
+              title="No setting selected"
+              description="Choose a setting from the list to edit its value."
+              className="h-96"
+            />
           )}
-        </div>
+        </Card>
       </div>
-
-      <Dialog open={s.showDeleteDialog} onOpenChange={s.setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete setting</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete “{s.selectedKey}”? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => s.setShowDeleteDialog(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={s.confirmDelete} disabled={s.isDeleting}>
-              {s.isDeleting ? "Deleting…" : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

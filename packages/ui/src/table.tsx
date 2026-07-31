@@ -4,6 +4,16 @@ import * as React from "react";
 
 import { cn } from "./lib/utils";
 
+/**
+ * Column-header typography shared by every tabular surface.
+ *
+ * `TableHead` applies this automatically. Grid-based tables (which can't use
+ * `<th>` because their rows are links) should import this instead of
+ * re-declaring a local header class, so both table styles stay in step.
+ */
+export const tableColumnHeaderClass =
+  "text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div data-slot="table-container" className="relative w-full overflow-x-auto">
@@ -58,7 +68,8 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        tableColumnHeaderClass,
+        "px-4 py-2.5 text-left align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         className,
       )}
       {...props}
@@ -70,7 +81,10 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
       data-slot="table-cell"
-      className={cn("p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0", className)}
+      className={cn(
+        "px-4 py-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        className,
+      )}
       {...props}
     />
   );

@@ -1,5 +1,17 @@
-import { ChevronRight, Folder, FolderPlus, Home, RefreshCw, Trash2, Upload } from "lucide-react";
+import { Folder, FolderPlus, Home, RefreshCw, Trash2, Upload } from "lucide-react";
 import { Button } from "@groot/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@groot/ui/breadcrumb";
+import { EmptyState } from "@groot/ui/empty-state";
+import { SkeletonCard, SkeletonTable } from "@groot/ui/loading-skeleton";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@groot/ui/table";
+import { PageLayout } from "@groot/shell/components/layout/PageLayout";
 import { CreateFolderDialog } from "./components/CreateFolderDialog";
 import { DesktopFileRow } from "./components/DesktopFileRow";
 import { MobileFileCard } from "./components/MobileFileCard";
@@ -18,150 +30,166 @@ interface StorageProps {
 export function Storage({ onView }: StorageProps = {}) {
   const s = useStorageActions();
 
+  const actions = (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={() => s.refetchFiles()}
+      aria-label="Refresh files"
+    >
+      <RefreshCw className="size-4" />
+    </Button>
+  );
+
+  const lastCrumbIndex = s.breadcrumbs.length - 1;
+
+  const breadcrumb = (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <button
+              type="button"
+              onClick={() => s.navigateToFolder("")}
+              aria-label="Go to root folder"
+            >
+              <Home className="size-4" />
+            </button>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        {s.breadcrumbs.map((crumb, index) => (
+          <BreadcrumbItem key={crumb.path}>
+            <BreadcrumbSeparator />
+            {index === lastCrumbIndex ? (
+              <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
+            ) : (
+              <BreadcrumbLink asChild>
+                <button type="button" onClick={() => s.navigateToFolder(crumb.path)}>
+                  {crumb.name}
+                </button>
+              </BreadcrumbLink>
+            )}
+          </BreadcrumbItem>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-medium text-foreground">Storage</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Browse and manage your files and folders
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => s.refetchFiles()}
-          aria-label="Refresh files"
-        >
-          <RefreshCw className="h-4 w-4" />
+    <PageLayout
+      title="Storage"
+      description="Browse and manage your files and folders"
+      actions={actions}
+      breadcrumb={breadcrumb}
+      maxWidth="7xl"
+    >
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-2">
+        <input
+          ref={s.uploadInputRef}
+          type="file"
+          className="hidden"
+          multiple
+          onChange={s.handleUpload}
+        />
+
+        <Button onClick={() => s.uploadInputRef.current?.click()}>
+          <Upload className="size-4" />
+          Upload
         </Button>
-      </div>
 
-      <div className="space-y-6">
-        {/* Breadcrumb navigation */}
-        <nav className="flex items-center space-x-1 text-sm">
-          <button
-            type="button"
-            onClick={() => s.navigateToFolder("")}
-            aria-label="Go to root folder"
-            className="flex items-center text-muted-foreground hover:text-foreground"
-          >
-            <Home className="h-4 w-4" />
-          </button>
-          {s.breadcrumbs.map((crumb) => (
-            <div key={crumb.path} className="flex items-center">
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              <button
-                type="button"
-                onClick={() => s.navigateToFolder(crumb.path)}
-                className="ml-1 text-muted-foreground hover:text-foreground"
-              >
-                {crumb.name}
-              </button>
-            </div>
-          ))}
-        </nav>
+        <Button variant="outline" onClick={() => s.setFolderDialogOpen(true)}>
+          <FolderPlus className="size-4" />
+          New Folder
+        </Button>
 
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-2">
-          <input
-            ref={s.uploadInputRef}
-            type="file"
-            className="hidden"
-            multiple
-            onChange={s.handleUpload}
-          />
-
-          <Button onClick={() => s.uploadInputRef.current?.click()}>
-            <Upload className="mr-2 h-4 w-4" />
-            Upload
-          </Button>
-
-          <Button variant="outline" onClick={() => s.setFolderDialogOpen(true)}>
-            <FolderPlus className="mr-2 h-4 w-4" />
-            New Folder
-          </Button>
-
-          {s.selectedFiles.size > 0 && (
-            <>
-              <Button variant="outline" onClick={s.clearSelection}>
-                Clear ({s.selectedFiles.size})
-              </Button>
-              <Button variant="destructive" onClick={s.handleDeleteSelected}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </>
-          )}
-
-          {s.fileCount > 0 && (
-            <Button variant="outline" onClick={s.selectAllFiles}>
-              Select All Files
-            </Button>
-          )}
-        </div>
-
-        {/* File list */}
-        {s.isLoading ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">Loading files...</div>
-        ) : s.files.length === 0 ? (
-          <div className="py-20 text-center">
-            <Folder className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-base font-medium text-foreground">No files found</h3>
-            <p className="text-sm text-muted-foreground">
-              This folder is empty. Upload files or create a new folder to get started.
-            </p>
-          </div>
-        ) : (
+        {s.selectedFiles.size > 0 && (
           <>
-            {/* Mobile Card View */}
-            <div className="space-y-3 md:hidden">
-              {s.files.map((file) => (
-                <MobileFileCard
-                  key={file.key}
-                  file={file}
-                  selected={s.selectedFiles.has(file.key)}
-                  onToggle={s.toggleFileSelection}
-                  onNavigate={s.navigateToFolder}
-                  onDeleteFolder={s.handleDeleteFolder}
-                  onView={onView}
-                />
-              ))}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden overflow-hidden rounded-lg border md:block">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th aria-label="Select file" className="w-12 px-4 py-3" />
-                    <th className="px-4 py-3 text-left font-medium">Name</th>
-                    <th className="px-4 py-3 text-left font-medium">Size</th>
-                    <th className="px-4 py-3 text-left font-medium">Modified</th>
-                    <th className="px-4 py-3 text-right font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {s.files.map((file) => (
-                    <DesktopFileRow
-                      key={file.key}
-                      file={file}
-                      selected={s.selectedFiles.has(file.key)}
-                      onToggle={s.toggleFileSelection}
-                      onNavigate={s.navigateToFolder}
-                      onDeleteFolder={s.handleDeleteFolder}
-                      onDeleteFile={s.handleDeleteFile}
-                      onRename={s.startRename}
-                      onView={onView}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Button variant="outline" onClick={s.clearSelection}>
+              Clear ({s.selectedFiles.size})
+            </Button>
+            <Button variant="destructive" onClick={s.handleDeleteSelected}>
+              <Trash2 className="size-4" />
+              Delete
+            </Button>
           </>
         )}
+
+        {s.fileCount > 0 && (
+          <Button variant="outline" onClick={s.selectAllFiles}>
+            Select All Files
+          </Button>
+        )}
       </div>
+
+      {/* File list */}
+      {s.isLoading ? (
+        <>
+          {/* Mobile card placeholders */}
+          <div className="space-y-3 md:hidden">
+            {["w-40", "w-32", "w-48"].map((w) => (
+              <SkeletonCard key={w} titleWidth={w} lines={2} />
+            ))}
+          </div>
+          {/* Desktop table placeholder */}
+          <div className="hidden overflow-hidden rounded-lg border md:block">
+            <SkeletonTable columns={5} rows={6} />
+          </div>
+        </>
+      ) : s.files.length === 0 ? (
+        <EmptyState
+          icon={Folder}
+          title="No files found"
+          description="This folder is empty. Upload files or create a new folder to get started."
+        />
+      ) : (
+        <>
+          {/* Mobile Card View */}
+          <div className="space-y-3 md:hidden">
+            {s.files.map((file) => (
+              <MobileFileCard
+                key={file.key}
+                file={file}
+                selected={s.selectedFiles.has(file.key)}
+                onToggle={s.toggleFileSelection}
+                onNavigate={s.navigateToFolder}
+                onDeleteFolder={s.handleDeleteFolder}
+                onView={onView}
+              />
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden overflow-hidden rounded-lg border md:block">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead aria-label="Select file" className="w-12" />
+                  <TableHead>Name</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Modified</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {s.files.map((file) => (
+                  <DesktopFileRow
+                    key={file.key}
+                    file={file}
+                    selected={s.selectedFiles.has(file.key)}
+                    onToggle={s.toggleFileSelection}
+                    onNavigate={s.navigateToFolder}
+                    onDeleteFolder={s.handleDeleteFolder}
+                    onDeleteFile={s.handleDeleteFile}
+                    onRename={s.startRename}
+                    onView={onView}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       <CreateFolderDialog
         open={s.folderDialogOpen}
@@ -178,6 +206,6 @@ export function Storage({ onView }: StorageProps = {}) {
         isPending={s.renameFile.isPending}
         onRename={s.handleRename}
       />
-    </div>
+    </PageLayout>
   );
 }

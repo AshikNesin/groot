@@ -1,6 +1,8 @@
 import { Button } from "@groot/ui/button";
 import { Card } from "@groot/ui/card";
 import { cn } from "@groot/ui/lib/utils";
+import { tableColumnHeaderClass } from "@groot/ui/table";
+import { Section } from "@groot/shell/components/layout";
 import type { ScheduledJob } from "@groot/jobs/client/types";
 import { Pencil, Trash2 } from "lucide-react";
 import { ScheduledJobsSkeleton } from "./skeletons";
@@ -12,8 +14,6 @@ type Props = {
   onCancel: (jobName: string, key?: string) => void;
 };
 
-const COLUMN_HEADER = "text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
-
 /** Scheduled (cron) jobs: desktop grid + mobile cards, with edit/cancel actions. */
 export function ScheduledJobsPanel({ scheduledJobs, loading, onEdit, onCancel }: Props) {
   if (loading) {
@@ -23,18 +23,14 @@ export function ScheduledJobsPanel({ scheduledJobs, loading, onEdit, onCancel }:
   if (scheduledJobs.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-foreground">Scheduled jobs</span>
-        <span className="text-xs text-muted-foreground">{scheduledJobs.length} total</span>
-      </div>
+    <Section title="Scheduled jobs" meta={`${scheduledJobs.length} total`}>
       <Card className="gap-0 overflow-hidden p-0">
         <div className="hidden md:block">
           <div className="grid grid-cols-12 gap-4 border-b border-border/60 px-4 py-2.5">
-            <div className={cn(COLUMN_HEADER, "col-span-3")}>Job name</div>
-            <div className={cn(COLUMN_HEADER, "col-span-3")}>Schedule</div>
-            <div className={cn(COLUMN_HEADER, "col-span-2")}>Timezone</div>
-            <div className={cn(COLUMN_HEADER, "col-span-3")}>Data</div>
+            <div className={cn(tableColumnHeaderClass, "col-span-3")}>Job name</div>
+            <div className={cn(tableColumnHeaderClass, "col-span-3")}>Schedule</div>
+            <div className={cn(tableColumnHeaderClass, "col-span-2")}>Timezone</div>
+            <div className={cn(tableColumnHeaderClass, "col-span-3")}>Data</div>
             <div className="col-span-1" />
           </div>
           <div className="divide-y divide-border/40">
@@ -104,6 +100,6 @@ export function ScheduledJobsPanel({ scheduledJobs, loading, onEdit, onCancel }:
           ))}
         </div>
       </Card>
-    </div>
+    </Section>
   );
 }

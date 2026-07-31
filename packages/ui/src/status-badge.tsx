@@ -1,3 +1,4 @@
+import { Badge } from "./badge";
 import { cn } from "./lib/utils";
 import {
   Activity,
@@ -15,6 +16,8 @@ import {
  * health status. Colors come exclusively from design tokens.
  *
  * If you need to show a status, use this instead of hand-rolling color maps.
+ * Built on {@link Badge} so status pills share their shape and typography with
+ * every other badge in the app.
  */
 
 export type StatusVariant =
@@ -157,16 +160,10 @@ export function StatusBadge({
   const Icon = config.icon;
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium",
-        config.bg,
-        className,
-      )}
-    >
-      {showDot && <span className={cn("h-1.5 w-1.5 rounded-full", config.dot)} />}
-      {showIcon && Icon && <Icon className="h-3 w-3" />}
-      <span className={config.text}>{displayLabel}</span>
-    </span>
+    <Badge variant="secondary" className={cn(config.bg, config.text, className)}>
+      {showDot && <span className={cn("size-1.5 rounded-full", config.dot)} />}
+      {showIcon && Icon && <Icon className="size-3" />}
+      {displayLabel}
+    </Badge>
   );
 }

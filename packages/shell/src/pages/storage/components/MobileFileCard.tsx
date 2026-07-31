@@ -1,5 +1,7 @@
 import { Button } from "@groot/ui/button";
+import { Card } from "@groot/ui/card";
 import { Checkbox } from "@groot/ui/checkbox";
+import { cn } from "@groot/ui/lib/utils";
 import { handleDownload, handleView } from "@groot/shell/pages/storage/hooks/useStorageActions";
 import type { StorageFile } from "@groot/shell/pages/storage/hooks/useStorage";
 import { Download, File as FileIcon, Folder, Trash2 } from "lucide-react";
@@ -24,7 +26,7 @@ export function MobileFileCard({
   onView,
 }: Props) {
   return (
-    <div className={`space-y-3 rounded-lg border p-4 ${selected ? "bg-info/10" : ""}`}>
+    <Card className={cn("gap-3 p-4", selected && "bg-muted")}>
       <div className="flex items-start justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {!file.isDirectory && (
@@ -40,12 +42,12 @@ export function MobileFileCard({
               className="flex items-center gap-2"
               onClick={() => onNavigate(file.key)}
             >
-              <Folder className="h-5 w-5 flex-shrink-0 text-info" />
+              <Folder className="size-5 flex-shrink-0 text-info" />
               <span className="truncate font-medium text-info">{file.name}</span>
             </button>
           ) : (
             <>
-              <FileIcon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+              <FileIcon className="size-5 flex-shrink-0 text-muted-foreground" />
               <span className="truncate">{file.name}</span>
             </>
           )}
@@ -72,7 +74,7 @@ export function MobileFileCard({
           onClick={() => onDeleteFolder(file.key)}
           className="w-full"
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className="size-4" />
           Delete Folder
         </Button>
       ) : (
@@ -91,11 +93,11 @@ export function MobileFileCard({
             onClick={() => handleDownload(file.key, file.name)}
             className="flex-1"
           >
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="size-4" />
             Download
           </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

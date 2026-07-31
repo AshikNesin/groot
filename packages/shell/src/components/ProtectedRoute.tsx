@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { LoadingSpinner } from "@groot/ui/loading-spinner";
 import { useAuthStore } from "@groot/shell/store/auth";
 
 interface ProtectedRouteProps {
@@ -13,7 +14,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!hasCheckedAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/40">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }

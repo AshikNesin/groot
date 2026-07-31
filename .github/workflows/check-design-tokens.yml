@@ -1,22 +1,32 @@
 name: Check Design Tokens
 
-# Enforces the UI design-system invariant: no raw Tailwind palette colors
-# (gray-*, red-*, blue-*, …) outside the token layer (client/src/index.css,
-# tailwind.config.js). Pre-commit runs the same check via `vp staged`; this is
-# the non-bypassable CI layer (a `--no-verify` commit still gets caught here).
+# Enforces the UI design-system invariants: no raw Tailwind palette colors
+# outside the token layer (packages/shell/src/index.css), and no hand-rolled
+# re-implementations of shared primitives (Card, Table, icon spacing/sizing).
+# Pre-commit runs the same check via `vp staged`; this is the non-bypassable CI
+# layer (a `--no-verify` commit still gets caught here).
 #
-# See scripts/check-design-tokens.ts and PLAN.md.
+# The path filters must cover every dir in SRC_DIRS in
+# scripts/check-design-tokens.ts — otherwise this job silently never runs.
+#
+# See scripts/check-design-tokens.ts and docs/features/client.md.
 
 on:
   push:
     branches: [main]
     paths:
-      - "client/src/**"
+      - "apps/web/src/client/**"
+      - "packages/ui/src/**"
+      - "packages/shell/src/**"
+      - "packages/jobs/src/client/**"
       - "scripts/check-design-tokens.ts"
       - ".github/workflows/check-design-tokens.yml"
   pull_request:
     paths:
-      - "client/src/**"
+      - "apps/web/src/client/**"
+      - "packages/ui/src/**"
+      - "packages/shell/src/**"
+      - "packages/jobs/src/client/**"
       - "scripts/check-design-tokens.ts"
       - ".github/workflows/check-design-tokens.yml"
 
@@ -67,5 +77,5 @@ jobs:
           fi
           rg --version | head -n 1
 
-      - name: Check design tokens
+      - name: Check design system
         run: pnpm check:tokens

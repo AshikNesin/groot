@@ -1,4 +1,5 @@
 import { Button } from "@groot/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@groot/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -7,20 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@groot/ui/dialog";
+import { EmptyState, ErrorState } from "@groot/ui/empty-state";
 import { Input } from "@groot/ui/input";
 import { Label } from "@groot/ui/label";
 import { Badge } from "@groot/ui/badge";
-import { LoadingSpinner } from "@groot/ui/loading-spinner";
-import {
-  KeyRound,
-  Smartphone,
-  ShieldCheck,
-  Plus,
-  Pencil,
-  Trash2,
-  Fingerprint,
-  AlertCircle,
-} from "lucide-react";
+import { Skeleton, SkeletonCard, SkeletonList } from "@groot/ui/loading-skeleton";
+import { useConfirm } from "@groot/ui/primitives";
+import { KeyRound, Smartphone, ShieldCheck, Plus, Pencil, Trash2, Fingerprint } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -46,8 +40,36 @@ function formatDate(date: Date | null): string {
   return formatDisplayDate(date);
 }
 
+/**
+ * Placeholder mirroring the "Add a passkey" form and the passkey list while
+ * passkeys load, composed from the shared skeleton primitives.
+ */
+function PasskeyManagerSkeleton() {
+  return (
+    <div className="space-y-6">
+      <SkeletonCard titleWidth="w-32" description>
+        <div className="flex items-end gap-3">
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+          <Skeleton className="h-9 w-28" />
+        </div>
+      </SkeletonCard>
+      <Card className="gap-0 pb-0">
+        <CardHeader className="border-b px-5 pb-4">
+          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <SkeletonList rows={2} leading="circle" secondaryLine trailing={false} />
+      </Card>
+    </div>
+  );
+}
+
 export function PasskeyManager() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const passkeysQuery = useQuery({
     queryKey: PASSKEYS_KEY,
     queryFn: () => passkeyService.listPasskeys(),
@@ -56,7 +78,6 @@ export function PasskeyManager() {
   const isLoading = passkeysQuery.isLoading;
 
   const [newPasskeyName, setNewPasskeyName] = useState("");
-  const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null);
   const [passkeyToEdit, setPasskeyToEdit] = useState<Passkey | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: PASSKEYS_KEY });
@@ -91,11 +112,26 @@ export function PasskeyManager() {
     });
   };
 
-  const handleDeletePasskey = () => {
-    if (!passkeyToDelete) return;
-    deleteMutation.mutate(passkeyToDelete.id, {
-      onSuccess: () => setPasskeyToDelete(null),
+  const handleDeletePasskey = async (passkey: Passkey) => {
+    const isLast = passkeys.length === 1;
+    const confirmed = await confirm({
+      title: "Delete passkey",
+      description: (
+        <>
+          Are you sure you want to delete “{passkey.credentialName || "this passkey"}”? You won’t be
+          able to use it to sign in anymore.
+          {isLast && (
+            <span className="mt-2 block font-medium text-destructive">
+              This is your last passkey. Make sure you can still access your account with a
+              password.
+            </span>
+          )}
+        </>
+      ),
+      confirmLabel: "Delete",
+      destructive: true,
     });
+    if (confirmed) deleteMutation.mutate(passkey.id);
   };
 
   const handleUpdatePasskeyName = (name: string) => {
@@ -111,28 +147,23 @@ export function PasskeyManager() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border bg-card">
-        <LoadingSpinner size="md" />
-        <p className="mt-4 text-sm text-muted-foreground">Loading passkeys…</p>
-      </div>
-    );
+    return <PasskeyManagerSkeleton />;
   }
 
   return (
     <div className="space-y-6">
       {/* Add a passkey */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="flex items-center gap-2 text-base font-semibold">
+      <Card>
+        <CardHeader className="border-b px-5 pb-4">
+          <CardTitle className="flex items-center gap-2">
             <Fingerprint className="size-4 text-primary" />
             Add a passkey
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          </CardTitle>
+          <CardDescription>
             Use biometrics (Face ID / Touch ID) or a security key for passwordless sign-in.
-          </p>
-        </div>
-        <div className="flex items-end gap-3 px-5 py-4">
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-end gap-3 px-5">
           <div className="flex-1 space-y-1.5">
             <Label htmlFor="passkey-name" className="text-xs">
               Name (optional)
@@ -149,42 +180,41 @@ export function PasskeyManager() {
             <Plus className="size-3.5" />
             {addMutation.isPending ? "Adding…" : "Add passkey"}
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Passkey list */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="flex items-center gap-2 text-base font-semibold">
+      <Card className="gap-0 pb-0">
+        <CardHeader className="border-b px-5 pb-4">
+          <CardTitle className="flex items-center gap-2">
             <KeyRound className="size-4 text-primary" />
             Your passkeys
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          </CardTitle>
+          <CardDescription>
             Devices currently authorised to sign in to your account.
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
         {passkeysQuery.isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center">
-            <AlertCircle className="size-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">Couldn’t load passkeys.</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => passkeysQuery.refetch()}
-              disabled={passkeysQuery.isFetching}
-            >
-              {passkeysQuery.isFetching ? "Retrying…" : "Retry"}
-            </Button>
-          </div>
+          <ErrorState
+            title="Couldn’t load passkeys."
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => passkeysQuery.refetch()}
+                disabled={passkeysQuery.isFetching}
+              >
+                {passkeysQuery.isFetching ? "Retrying…" : "Retry"}
+              </Button>
+            }
+          />
         ) : passkeys.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 px-5 py-12 text-center">
-            <KeyRound className="size-8 text-muted-foreground/50" />
-            <p className="text-sm font-medium">No passkeys configured</p>
-            <p className="text-xs text-muted-foreground">
-              Add a passkey above to enable passwordless authentication.
-            </p>
-          </div>
+          <EmptyState
+            icon={KeyRound}
+            title="No passkeys configured"
+            description="Add a passkey above to enable passwordless authentication."
+          />
         ) : (
           <ul className="divide-y divide-border">
             {passkeys.map((passkey) => (
@@ -217,7 +247,8 @@ export function PasskeyManager() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setPasskeyToDelete(passkey)}
+                    onClick={() => handleDeletePasskey(passkey)}
+                    disabled={deleteMutation.isPending}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="size-3.5" />
@@ -228,38 +259,7 @@ export function PasskeyManager() {
             ))}
           </ul>
         )}
-      </div>
-
-      {/* Delete confirmation */}
-      <Dialog open={!!passkeyToDelete} onOpenChange={() => setPasskeyToDelete(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete passkey</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete “{passkeyToDelete?.credentialName || "this passkey"}“?
-              You won’t be able to use it to sign in anymore.
-              {passkeys.length === 1 && (
-                <span className="mt-2 block font-medium text-destructive">
-                  This is your last passkey. Make sure you can still access your account with a
-                  password.
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPasskeyToDelete(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeletePasskey}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting…" : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </Card>
 
       {/* Edit name */}
       <Dialog open={!!passkeyToEdit} onOpenChange={() => setPasskeyToEdit(null)}>
