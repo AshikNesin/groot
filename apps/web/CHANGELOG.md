@@ -1,5 +1,14 @@
 # @groot/web
 
+## 0.2.18
+
+### Patch Changes
+
+- Updated dependencies [[`399ee35`](https://github.com/AshikNesin/groot/commit/399ee35d36a4bae5fcd3df68b481170d6f68da53), [`399ee35`](https://github.com/AshikNesin/groot/commit/399ee35d36a4bae5fcd3df68b481170d6f68da53), [`399ee35`](https://github.com/AshikNesin/groot/commit/399ee35d36a4bae5fcd3df68b481170d6f68da53)]:
+  - @groot/jobs@0.8.2
+  - @groot/shell@0.9.0
+  - @groot/ui@0.4.0
+
 ## 0.2.17
 
 ### Patch Changes

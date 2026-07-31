@@ -1,5 +1,19 @@
 # @groot/jobs
 
+## 0.8.2
+
+### Patch Changes
+
+- [`399ee35`](https://github.com/AshikNesin/groot/commit/399ee35d36a4bae5fcd3df68b481170d6f68da53) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Adopt the shared UI primitives in the jobs client instead of local reimplementations.
+
+  - `JobDetail` renders through `PageLayout`, using the new `breadcrumb` / `titleAdornment` slots and the `Breadcrumb` primitive. It previously duplicated `PageHeader`'s `<h1>` classes verbatim and hand-rolled its breadcrumb trail.
+  - `JobsTable` and `ScheduledJobsPanel` use `Section` for their headings and import `tableColumnHeaderClass` instead of each declaring a local `COLUMN_HEADER` constant.
+  - Empty and error surfaces in `JobsTable` and `JobDetail` use `EmptyState` / `ErrorState`, so their icon sizes and spacing now match every other list in the app.
+
+- Updated dependencies [[`399ee35`](https://github.com/AshikNesin/groot/commit/399ee35d36a4bae5fcd3df68b481170d6f68da53), [`399ee35`](https://github.com/AshikNesin/groot/commit/399ee35d36a4bae5fcd3df68b481170d6f68da53)]:
+  - @groot/shell@0.9.0
+  - @groot/ui@0.4.0
+
 ## 0.8.1
 
 ### Patch Changes
