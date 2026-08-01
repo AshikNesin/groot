@@ -28,11 +28,22 @@ test.describe("Jobs page selection", () => {
     // Submit the new job (Click the "Add Job" button in the dialog)
     await page.getByRole("dialog").getByRole("button", { name: /^add job$/i }).click();
 
-    // Wait for the job row to appear in the table using a role/text-based locator
-    const jobRow = page.getByRole("link", { name: /todo-summary/i }).first();
+    // Wait for the success toast and retrieve the unique job ID from the 'View job' link's href.
+    const viewJobLink = page.getByRole("link", { name: /view job/i });
+    await expect(viewJobLink).toBeVisible();
+    const href = await viewJobLink.getAttribute("href");
+    if (!href) {
+      throw new Error("Could not find href attribute on View Job toast link");
+    }
+    // href format: /jobs/todo-summary/123-abc-...
+    const parts = href.split("/");
+    const jobId = parts[parts.length - 1];
+
+    // Wait for the exact desktop job row to appear in the table using the unique job ID
+    const jobRow = page.locator(".hidden.md\\:block").locator(`a[href="/jobs/todo-summary/${jobId}"]`);
     await expect(jobRow).toBeVisible();
 
-    // Click the checkbox inside the first job row
+    // Click the checkbox inside our specific job row
     const checkbox = jobRow.getByRole("checkbox");
     await checkbox.click();
 
@@ -41,5 +52,17 @@ test.describe("Jobs page selection", () => {
 
     // Verify that the checkbox is actually checked
     await expect(checkbox).toBeChecked();
+
+    // Cleanup: Hover over the row, open the dropdown action menu, and delete the created job
+    await jobRow.hover();
+    // The dropdown trigger is the last button in the row (since the first button is the checkbox)
+    const dropdownTrigger = jobRow.getByRole("button").last();
+    await dropdownTrigger.click();
+
+    // Click 'Delete' in the dropdown menu
+    await page.getByRole("menuitem", { name: /delete/i }).click();
+
+    // Wait for the job row to be removed from the table to ensure the test is isolated and deterministic
+    await expect(jobRow).not.toBeVisible();
   });
 });
