@@ -159,30 +159,28 @@ export function JobsTable({
                   {jobs.map((job) => (
                     <div
                       key={job.id}
-                      className="relative group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
+                      className="group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
                     >
-                      <Link
-                        to={`/jobs/${job.name}/${job.id}`}
-                        className="absolute inset-0"
-                        aria-label={`View details for job ${job.name} (${formatJobId(job.id)})`}
-                      />
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
-                        <span className="relative z-10">
-                          <Checkbox
-                            checked={selectedJobs.has(
-                              JSON.stringify({ queueName: job.name, jobId: job.id }),
-                            )}
-                            onCheckedChange={() => toggleJobSelection(job.name, job.id)}
-                            className="size-3.5"
-                          />
-                        </span>
+                        <Checkbox
+                          checked={selectedJobs.has(
+                            JSON.stringify({ queueName: job.name, jobId: job.id }),
+                          )}
+                          onCheckedChange={() => toggleJobSelection(job.name, job.id)}
+                          aria-label={`Select job ${job.name} (${formatJobId(job.id)})`}
+                          className="size-3.5"
+                        />
                         <FileText className="size-4 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
+                        <Link
+                          to={`/jobs/${job.name}/${job.id}`}
+                          className="min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          aria-label={`View details for job ${job.name} (${formatJobId(job.id)})`}
+                        >
                           <div className="truncate font-medium text-foreground">{job.name}</div>
                           <div className="truncate font-mono text-xs text-muted-foreground">
                             {formatJobId(job.id)}
                           </div>
-                        </div>
+                        </Link>
                       </div>
                       <div className="col-span-2">
                         <StatusBadge status={job.state} />
@@ -205,7 +203,7 @@ export function JobsTable({
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <MoreVertical className="size-3.5" />
                             </Button>

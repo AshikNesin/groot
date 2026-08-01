@@ -1,7 +1,8 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "@playwright/test";
 
 test.describe("Jobs page selection", () => {
-  let createdJobId: string | null = null;
+  // null = job id not yet captured; undefined = no job pending cleanup.
+  let createdJobId: string | null | undefined = undefined;
 
   /**
    * The table only renders `formatJobId(id)` as visible text — UUIDs are
@@ -28,6 +29,28 @@ test.describe("Jobs page selection", () => {
       .first();
   }
 
+  /**
+   * Fallback locator for the newest `todo-summary` job row — used by teardown
+   * when the submit succeeded but the id was never captured (e.g. toast
+   * never appeared). Rows are rendered newest-first, so `.first()` is the
+   * most recently created job, which is the one we should clean up.
+   */
+  function newestTodoSummaryRow(page: Page) {
+    return page
+      .locator(".hidden.md\\:block .divide-y > div")
+      .filter({ hasText: "todo-summary" })
+      .first();
+  }
+
+  /** Delete a job row via its row overflow dropdown. */
+  async function deleteJobRow(page: Page, jobRow: Locator) {
+    await jobRow.hover();
+    const dropdownTrigger = jobRow.getByRole("button").last();
+    await dropdownTrigger.click();
+    await page.getByRole("menuitem", { name: /delete/i }).click();
+    await expect(jobRow).not.toBeVisible();
+  }
+
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto("/login");
@@ -39,29 +62,27 @@ test.describe("Jobs page selection", () => {
   });
 
   test.afterEach(async ({ page }) => {
-    // Robust cleanup: if a job was created, delete it even if the test fails in the middle
-    if (createdJobId) {
-      const idToDelete = createdJobId;
-      createdJobId = null;
-      try {
-        await page.goto("/jobs");
-        await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
+    // Robust cleanup: a job is created server-side the moment 'Add Job' is
+    // submitted, but the id is only captured later from the toast. If the test
+    // fails in that window, createdJobId is null — so we fall back to deleting
+    // the newest todo-summary row rather than silently skipping.
+    if (createdJobId === undefined) return; // no submit happened
 
-        const jobRow = jobRowLocator(page, idToDelete);
-        // Fail loudly if the created job can't be found — silent no-ops leave
-        // orphans that accumulate across CI runs and make the suite flaky.
-        await expect(jobRow).toBeVisible();
-        await jobRow.hover();
-        // The dropdown trigger is the last button in the row
-        const dropdownTrigger = jobRow.getByRole("button").last();
-        await dropdownTrigger.click();
-        // Click 'Delete' in the dropdown menu
-        await page.getByRole("menuitem", { name: /delete/i }).click();
-        // Wait for the job row to be removed
-        await expect(jobRow).not.toBeVisible();
-      } catch (error) {
-        console.error(`Teardown cleanup failed for job ${idToDelete}:`, error);
-      }
+    const isKnownId = createdJobId !== null;
+    const idLabel = isKnownId ? createdJobId! : "<unknown>";
+    createdJobId = undefined;
+
+    try {
+      await page.goto("/jobs");
+      await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
+
+      const jobRow = isKnownId ? jobRowLocator(page, idLabel) : newestTodoSummaryRow(page);
+      // Fail loudly if the created job can't be found — silent no-ops leave
+      // orphans that accumulate across CI runs and make the suite flaky.
+      await expect(jobRow).toBeVisible();
+      await deleteJobRow(page, jobRow);
+    } catch (error) {
+      console.error(`Teardown cleanup failed for job ${idLabel}:`, error);
     }
   });
 
@@ -79,7 +100,11 @@ test.describe("Jobs page selection", () => {
     // Click on the 'todo-summary' option in the dropdown
     await page.getByRole("menuitem", { name: "todo-summary" }).click();
 
-    // Submit the new job (Click the "Add Job" button in the dialog)
+    // Submit the new job (Click the "Add Job" button in the dialog).
+    // The job is created server-side here, so mark a pending cleanup before we
+    // even read the toast — if anything below fails, afterEach will still try
+    // to delete the newest todo-summary job.
+    createdJobId = null;
     await page
       .getByRole("dialog")
       .getByRole("button", { name: /^add job$/i })
