@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 
 test.describe("Jobs page selection", () => {
-  // null = job id not yet captured; undefined = no job pending cleanup.
+  // null = job created but id not yet captured; undefined = nothing to clean.
   let createdJobId: string | null | undefined = undefined;
 
   /**
@@ -14,31 +14,12 @@ test.describe("Jobs page selection", () => {
     return id.length > 8 ? id.substring(0, 6) : id;
   }
 
-  /**
-   * Locate the desktop job row for a specific created job.
-   *
-   * Filtering on the truncated id alone is fragile (UUID prefix collisions,
-   * numeric sub-string matches). We additionally filter on the job name so
-   * the locator only matches the row we created, not an unrelated orphan.
-   */
+  /** Desktop job-row locator matching a specific raw job id. */
   function jobRowLocator(page: Page, rawJobId: string) {
     return page
       .locator(".hidden.md\\:block .divide-y > div")
       .filter({ hasText: "todo-summary" })
       .filter({ hasText: displayJobId(rawJobId) })
-      .first();
-  }
-
-  /**
-   * Fallback locator for the newest `todo-summary` job row — used by teardown
-   * when the submit succeeded but the id was never captured (e.g. toast
-   * never appeared). Rows are rendered newest-first, so `.first()` is the
-   * most recently created job, which is the one we should clean up.
-   */
-  function newestTodoSummaryRow(page: Page) {
-    return page
-      .locator(".hidden.md\\:block .divide-y > div")
-      .filter({ hasText: "todo-summary" })
       .first();
   }
 
@@ -52,86 +33,94 @@ test.describe("Jobs page selection", () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Login before each test
     await page.goto("/login");
     await page.getByLabel(/email/i).fill("demo@example.com");
     await page.getByLabel(/password/i).fill("demo@example.com");
     await page.getByRole("button", { name: /sign in/i }).click();
-    // Wait for redirect to a specific page after login
     await page.waitForURL(/\/(todos|dashboard)/);
   });
 
   test.afterEach(async ({ page }) => {
-    // Robust cleanup: a job is created server-side the moment 'Add Job' is
-    // submitted, but the id is only captured later from the toast. If the test
-    // fails in that window, createdJobId is null — so we fall back to deleting
-    // the newest todo-summary row rather than silently skipping.
     if (createdJobId === undefined) return; // no submit happened
 
-    const isKnownId = createdJobId !== null;
-    const idLabel = isKnownId ? createdJobId! : "<unknown>";
+    const idToDelete = createdJobId!;
     createdJobId = undefined;
 
     try {
       await page.goto("/jobs");
       await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
 
-      const jobRow = isKnownId ? jobRowLocator(page, idLabel) : newestTodoSummaryRow(page);
       // Fail loudly if the created job can't be found — silent no-ops leave
       // orphans that accumulate across CI runs and make the suite flaky.
+      const jobRow = jobRowLocator(page, idToDelete);
       await expect(jobRow).toBeVisible();
       await deleteJobRow(page, jobRow);
     } catch (error) {
-      console.error(`Teardown cleanup failed for job ${idLabel}:`, error);
+      console.error(`Teardown cleanup failed for job ${idToDelete}:`, error);
     }
   });
 
   test("can select a job without navigating to job details page", async ({ page }) => {
-    // Navigate to jobs page
     await page.goto("/jobs");
     await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
 
+    // Snapshot existing todo-summary job ids (read from row link hrefs) so we
+    // can identify the newly created row by diffing — even if the success
+    // toast never appears or vanishes before we can read it.
+    async function existingJobIds(): Promise<Set<string>> {
+      const links = page.locator('.hidden.md\\:block a[href*="/jobs/todo-summary/"]');
+      const hrefs = await links.evaluateAll((els) =>
+        els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? ""),
+      );
+      return new Set(hrefs.map((h) => h.split("/").pop()!));
+    }
+
+    const beforeIds = await existingJobIds();
+
     // Trigger a new job so we have at least one job in the table
     await page.getByRole("button", { name: /add job/i }).click();
-
-    // Click on the job type selection trigger button
     await page.locator("#job-name").click();
-
-    // Click on the 'todo-summary' option in the dropdown
     await page.getByRole("menuitem", { name: "todo-summary" }).click();
 
-    // Submit the new job (Click the "Add Job" button in the dialog).
-    // The job is created server-side here, so mark a pending cleanup before we
-    // even read the toast — if anything below fails, afterEach will still try
-    // to delete the newest todo-summary job.
+    // Submit — the job is created server-side at this point.
     createdJobId = null;
     await page
       .getByRole("dialog")
       .getByRole("button", { name: /^add job$/i })
       .click();
 
-    // Wait for the success toast and retrieve the unique job ID from the 'View job' link's href.
-    const viewJobLink = page.getByRole("link", { name: /view job/i });
-    await expect(viewJobLink).toBeVisible();
-    const href = await viewJobLink.getAttribute("href");
-    if (!href) {
-      throw new Error("Could not find href attribute on View Job toast link");
+    // Try to capture the id from the success toast first (fastest path).
+    try {
+      const viewJobLink = page.getByRole("link", { name: /view job/i });
+      await expect(viewJobLink).toBeVisible({ timeout: 3000 });
+      const href = await viewJobLink.getAttribute("href");
+      if (href) {
+        createdJobId = href.split("/").pop()!;
+      }
+    } catch {
+      // Toast didn't appear or vanished — fall through to table diffing.
     }
-    // href format: /jobs/todo-summary/123-abc-...
-    const parts = href.split("/");
-    createdJobId = parts[parts.length - 1];
 
-    // Wait for the exact desktop job row to appear in the table.
-    // Filter on both the job name and the displayed (truncated) id so we
-    // match only the row we created, even if orphaned jobs exist.
-    const jobRow = jobRowLocator(page, createdJobId);
+    // If the toast didn't give us the id, diff the table's link hrefs against
+    // the pre-submit snapshot to find the new job deterministically.
+    if (createdJobId === null) {
+      await expect(async () => {
+        const afterIds = await existingJobIds();
+        const newIds = [...afterIds].filter((id) => !beforeIds.has(id));
+        expect(newIds, "expected exactly one new todo-summary job").toHaveLength(1);
+        createdJobId = newIds[0];
+      }).toPass({ timeout: 10000 });
+    }
+
+    // Wait for the exact desktop job row to appear.
+    const jobRow = jobRowLocator(page, createdJobId!);
     await expect(jobRow).toBeVisible();
 
     // Click the checkbox inside our specific job row
     const checkbox = jobRow.getByRole("checkbox");
     await checkbox.click();
 
-    // Verify we are STILL on the /jobs page and haven't navigated (using assertion-based poll on the URL)
+    // Verify we are STILL on the /jobs page and haven't navigated
     await expect(page).toHaveURL(/\/jobs$/);
 
     // Verify that the checkbox is actually checked
