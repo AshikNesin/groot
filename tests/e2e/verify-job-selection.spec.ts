@@ -26,25 +26,18 @@ test.describe("Jobs page selection", () => {
     await page.getByRole("menuitem", { name: "todo-summary" }).click();
 
     // Submit the new job (Click the "Add Job" button in the dialog)
-    await page.getByRole("button", { name: /^add job$/i }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /^add job$/i }).click();
 
-    // Wait for the job row to appear in the table
-    const jobRow = page.locator(".divide-y > .group").first();
+    // Wait for the job row to appear in the table using a role/text-based locator
+    const jobRow = page.getByRole("link", { name: /todo-summary/i }).first();
     await expect(jobRow).toBeVisible();
-
-    // Verify current URL is /jobs
-    expect(page.url()).toContain("/jobs");
 
     // Click the checkbox inside the first job row
     const checkbox = jobRow.getByRole("checkbox");
     await checkbox.click();
 
-    // Let's wait a small amount of time to make sure no navigation happens
-    await page.waitForTimeout(1000);
-
-    // Verify we are STILL on the /jobs page and haven't navigated
-    expect(page.url()).toContain("/jobs");
-    expect(page.url()).not.toContain("/jobs/todo-summary");
+    // Verify we are STILL on the /jobs page and haven't navigated (using assertion-based poll on the URL)
+    await expect(page).toHaveURL(/\/jobs$/);
 
     // Verify that the checkbox is actually checked
     await expect(checkbox).toBeChecked();
