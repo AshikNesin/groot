@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 test.describe("Jobs page selection", () => {
   let createdJobId: string | null = null;
@@ -11,6 +11,21 @@ test.describe("Jobs page selection", () => {
    */
   function displayJobId(id: string): string {
     return id.length > 8 ? id.substring(0, 6) : id;
+  }
+
+  /**
+   * Locate the desktop job row for a specific created job.
+   *
+   * Filtering on the truncated id alone is fragile (UUID prefix collisions,
+   * numeric sub-string matches). We additionally filter on the job name so
+   * the locator only matches the row we created, not an unrelated orphan.
+   */
+  function jobRowLocator(page: Page, rawJobId: string) {
+    return page
+      .locator(".hidden.md\\:block .divide-y > div")
+      .filter({ hasText: "todo-summary" })
+      .filter({ hasText: displayJobId(rawJobId) })
+      .first();
   }
 
   test.beforeEach(async ({ page }) => {
@@ -26,28 +41,26 @@ test.describe("Jobs page selection", () => {
   test.afterEach(async ({ page }) => {
     // Robust cleanup: if a job was created, delete it even if the test fails in the middle
     if (createdJobId) {
+      const idToDelete = createdJobId;
+      createdJobId = null;
       try {
         await page.goto("/jobs");
         await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
 
-        const jobRow = page
-          .locator(".hidden.md\\:block .divide-y > div")
-          .filter({ hasText: displayJobId(createdJobId) })
-          .first();
-        if (await jobRow.isVisible()) {
-          await jobRow.hover();
-          // The dropdown trigger is the last button in the row
-          const dropdownTrigger = jobRow.getByRole("button").last();
-          await dropdownTrigger.click();
-          // Click 'Delete' in the dropdown menu
-          await page.getByRole("menuitem", { name: /delete/i }).click();
-          // Wait for the job row to be removed
-          await expect(jobRow).not.toBeVisible();
-        }
+        const jobRow = jobRowLocator(page, idToDelete);
+        // Fail loudly if the created job can't be found — silent no-ops leave
+        // orphans that accumulate across CI runs and make the suite flaky.
+        await expect(jobRow).toBeVisible();
+        await jobRow.hover();
+        // The dropdown trigger is the last button in the row
+        const dropdownTrigger = jobRow.getByRole("button").last();
+        await dropdownTrigger.click();
+        // Click 'Delete' in the dropdown menu
+        await page.getByRole("menuitem", { name: /delete/i }).click();
+        // Wait for the job row to be removed
+        await expect(jobRow).not.toBeVisible();
       } catch (error) {
-        console.error("Teardown cleanup failed:", error);
-      } finally {
-        createdJobId = null;
+        console.error(`Teardown cleanup failed for job ${idToDelete}:`, error);
       }
     }
   });
@@ -83,13 +96,10 @@ test.describe("Jobs page selection", () => {
     const parts = href.split("/");
     createdJobId = parts[parts.length - 1];
 
-    // Wait for the exact desktop job row to appear in the table using the unique job ID
-    // Match on the *displayed* id (formatJobId truncates UUIDs to 6 chars),
-    // not the raw id, since the row only renders the shortened form.
-    const jobRow = page
-      .locator(".hidden.md\\:block .divide-y > div")
-      .filter({ hasText: displayJobId(createdJobId) })
-      .first();
+    // Wait for the exact desktop job row to appear in the table.
+    // Filter on both the job name and the displayed (truncated) id so we
+    // match only the row we created, even if orphaned jobs exist.
+    const jobRow = jobRowLocator(page, createdJobId);
     await expect(jobRow).toBeVisible();
 
     // Click the checkbox inside our specific job row

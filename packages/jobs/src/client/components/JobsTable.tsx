@@ -164,7 +164,7 @@ export function JobsTable({
                       <Link
                         to={`/jobs/${job.name}/${job.id}`}
                         className="absolute inset-0"
-                        aria-label={`View details for job ${job.name}`}
+                        aria-label={`View details for job ${job.name} (${formatJobId(job.id)})`}
                       />
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
                         <span className="relative z-10">
@@ -199,13 +199,13 @@ export function JobsTable({
                       >
                         {job.startedon ? formatRelativeTime(job.startedon) : "—"}
                       </div>
-                      <div className="col-span-1 flex items-center justify-end gap-2 relative z-10">
+                      <div className="col-span-1 flex items-center justify-end gap-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <MoreVertical className="size-3.5" />
                             </Button>
