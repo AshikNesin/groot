@@ -157,19 +157,26 @@ export function JobsTable({
                 </div>
                 <div className="divide-y divide-border/40">
                   {jobs.map((job) => (
-                    <Link
+                    <div
                       key={job.id}
-                      to={`/jobs/${job.name}/${job.id}`}
-                      className="group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
+                      className="group relative grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
                     >
+                      {/* Full-row navigation link — sits above all content except
+                          interactive controls (checkbox, actions) which are lifted
+                          with `relative z-10`. */}
+                      <Link
+                        to={`/jobs/${job.name}/${job.id}`}
+                        className="absolute inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                        aria-label={`View details for job ${job.name} (${formatJobId(job.id)})`}
+                      />
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
                         <Checkbox
                           checked={selectedJobs.has(
                             JSON.stringify({ queueName: job.name, jobId: job.id }),
                           )}
                           onCheckedChange={() => toggleJobSelection(job.name, job.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="size-3.5"
+                          aria-label={`Select job ${job.name} (${formatJobId(job.id)})`}
+                          className="relative z-10 size-3.5"
                         />
                         <FileText className="size-4 shrink-0 text-muted-foreground" />
                         <div className="min-w-0">
@@ -200,13 +207,12 @@ export function JobsTable({
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => e.preventDefault()}
+                              className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <MoreVertical className="size-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuContent align="end">
                             {job.state === "failed" && (
                               <DropdownMenuItem onClick={() => onRetry(job.name, job.id)}>
                                 <RefreshCw className="size-3.5" />
@@ -244,7 +250,7 @@ export function JobsTable({
                         </DropdownMenu>
                         <ChevronRight className="size-4 text-muted-foreground" />
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
