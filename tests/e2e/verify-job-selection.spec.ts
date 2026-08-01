@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Jobs page selection", () => {
+  let createdJobId: string | null = null;
+
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto("/login");
@@ -9,6 +11,32 @@ test.describe("Jobs page selection", () => {
     await page.getByRole("button", { name: /sign in/i }).click();
     // Wait for redirect to a specific page after login
     await page.waitForURL(/\/(todos|dashboard)/);
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Robust cleanup: if a job was created, delete it even if the test fails in the middle
+    if (createdJobId) {
+      try {
+        await page.goto("/jobs");
+        await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
+
+        const jobRow = page.locator(".hidden.md\\:block .divide-y > div").filter({ hasText: createdJobId }).first();
+        if (await jobRow.isVisible()) {
+          await jobRow.hover();
+          // The dropdown trigger is the last button in the row
+          const dropdownTrigger = jobRow.getByRole("button").last();
+          await dropdownTrigger.click();
+          // Click 'Delete' in the dropdown menu
+          await page.getByRole("menuitem", { name: /delete/i }).click();
+          // Wait for the job row to be removed
+          await expect(jobRow).not.toBeVisible();
+        }
+      } catch (error) {
+        console.error("Teardown cleanup failed:", error);
+      } finally {
+        createdJobId = null;
+      }
+    }
   });
 
   test("can select a job without navigating to job details page", async ({ page }) => {
@@ -37,10 +65,10 @@ test.describe("Jobs page selection", () => {
     }
     // href format: /jobs/todo-summary/123-abc-...
     const parts = href.split("/");
-    const jobId = parts[parts.length - 1];
+    createdJobId = parts[parts.length - 1];
 
     // Wait for the exact desktop job row to appear in the table using the unique job ID
-    const jobRow = page.locator(".hidden.md\\:block").locator(`a[href="/jobs/todo-summary/${jobId}"]`);
+    const jobRow = page.locator(".hidden.md\\:block .divide-y > div").filter({ hasText: createdJobId }).first();
     await expect(jobRow).toBeVisible();
 
     // Click the checkbox inside our specific job row
@@ -52,17 +80,5 @@ test.describe("Jobs page selection", () => {
 
     // Verify that the checkbox is actually checked
     await expect(checkbox).toBeChecked();
-
-    // Cleanup: Hover over the row, open the dropdown action menu, and delete the created job
-    await jobRow.hover();
-    // The dropdown trigger is the last button in the row (since the first button is the checkbox)
-    const dropdownTrigger = jobRow.getByRole("button").last();
-    await dropdownTrigger.click();
-
-    // Click 'Delete' in the dropdown menu
-    await page.getByRole("menuitem", { name: /delete/i }).click();
-
-    // Wait for the job row to be removed from the table to ensure the test is isolated and deterministic
-    await expect(jobRow).not.toBeVisible();
   });
 });

@@ -157,13 +157,17 @@ export function JobsTable({
                 </div>
                 <div className="divide-y divide-border/40">
                   {jobs.map((job) => (
-                    <Link
+                    <div
                       key={job.id}
-                      to={`/jobs/${job.name}/${job.id}`}
-                      className="group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
+                      className="relative group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
                     >
+                      <Link
+                        to={`/jobs/${job.name}/${job.id}`}
+                        className="absolute inset-0"
+                        aria-label={`View details for job ${job.name}`}
+                      />
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
-                        <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                        <span className="relative z-10">
                           <Checkbox
                             checked={selectedJobs.has(
                               JSON.stringify({ queueName: job.name, jobId: job.id }),
@@ -195,19 +199,18 @@ export function JobsTable({
                       >
                         {job.startedon ? formatRelativeTime(job.startedon) : "—"}
                       </div>
-                      <div className="col-span-1 flex items-center justify-end gap-2">
+                      <div className="col-span-1 flex items-center justify-end gap-2 relative z-10">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon-sm"
                               className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => e.preventDefault()}
                             >
                               <MoreVertical className="size-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuContent align="end">
                             {job.state === "failed" && (
                               <DropdownMenuItem onClick={() => onRetry(job.name, job.id)}>
                                 <RefreshCw className="size-3.5" />
@@ -245,7 +248,7 @@ export function JobsTable({
                         </DropdownMenu>
                         <ChevronRight className="size-4 text-muted-foreground" />
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
