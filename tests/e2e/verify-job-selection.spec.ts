@@ -3,6 +3,16 @@ import { test, expect } from "@playwright/test";
 test.describe("Jobs page selection", () => {
   let createdJobId: string | null = null;
 
+  /**
+   * The table only renders `formatJobId(id)` as visible text — UUIDs are
+   * truncated to their first 6 chars, short numeric ids are shown in full.
+   * `hasText` matches against text content (not attributes like the link
+   * href), so we must filter on the *displayed* id, not the raw one.
+   */
+  function displayJobId(id: string): string {
+    return id.length > 8 ? id.substring(0, 6) : id;
+  }
+
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto("/login");
@@ -20,7 +30,10 @@ test.describe("Jobs page selection", () => {
         await page.goto("/jobs");
         await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible();
 
-        const jobRow = page.locator(".hidden.md\\:block .divide-y > div").filter({ hasText: createdJobId }).first();
+        const jobRow = page
+          .locator(".hidden.md\\:block .divide-y > div")
+          .filter({ hasText: displayJobId(createdJobId) })
+          .first();
         if (await jobRow.isVisible()) {
           await jobRow.hover();
           // The dropdown trigger is the last button in the row
@@ -54,7 +67,10 @@ test.describe("Jobs page selection", () => {
     await page.getByRole("menuitem", { name: "todo-summary" }).click();
 
     // Submit the new job (Click the "Add Job" button in the dialog)
-    await page.getByRole("dialog").getByRole("button", { name: /^add job$/i }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^add job$/i })
+      .click();
 
     // Wait for the success toast and retrieve the unique job ID from the 'View job' link's href.
     const viewJobLink = page.getByRole("link", { name: /view job/i });
@@ -68,7 +84,12 @@ test.describe("Jobs page selection", () => {
     createdJobId = parts[parts.length - 1];
 
     // Wait for the exact desktop job row to appear in the table using the unique job ID
-    const jobRow = page.locator(".hidden.md\\:block .divide-y > div").filter({ hasText: createdJobId }).first();
+    // Match on the *displayed* id (formatJobId truncates UUIDs to 6 chars),
+    // not the raw id, since the row only renders the shortened form.
+    const jobRow = page
+      .locator(".hidden.md\\:block .divide-y > div")
+      .filter({ hasText: displayJobId(createdJobId) })
+      .first();
     await expect(jobRow).toBeVisible();
 
     // Click the checkbox inside our specific job row
