@@ -163,14 +163,15 @@ export function JobsTable({
                       className="group grid grid-cols-12 items-center gap-4 px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
                     >
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
-                        <Checkbox
-                          checked={selectedJobs.has(
-                            JSON.stringify({ queueName: job.name, jobId: job.id }),
-                          )}
-                          onCheckedChange={() => toggleJobSelection(job.name, job.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="size-3.5"
-                        />
+                        <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                          <Checkbox
+                            checked={selectedJobs.has(
+                              JSON.stringify({ queueName: job.name, jobId: job.id }),
+                            )}
+                            onCheckedChange={() => toggleJobSelection(job.name, job.id)}
+                            className="size-3.5"
+                          />
+                        </span>
                         <FileText className="size-4 shrink-0 text-muted-foreground" />
                         <div className="min-w-0">
                           <div className="truncate font-medium text-foreground">{job.name}</div>
