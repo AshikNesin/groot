@@ -228,3 +228,17 @@ export async function renameFile(params: {
 
   return { newPath: params.newPath };
 }
+
+export async function copyFile(params: {
+  oldPath: string;
+  newPath: string;
+}): Promise<{ newPath: string }> {
+  const exists = await files.exists(params.oldPath);
+  if (!exists) {
+    throw Boom.notFound(`Source file not found: ${params.oldPath}`);
+  }
+
+  await files.copy(params.oldPath, params.newPath);
+
+  return { newPath: params.newPath };
+}
