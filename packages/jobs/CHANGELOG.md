@@ -1,5 +1,27 @@
 # @groot/jobs
 
+## 0.8.3
+
+### Patch Changes
+
+- [#111](https://github.com/AshikNesin/groot/pull/111) [`19a086c`](https://github.com/AshikNesin/groot/commit/19a086c832c9a009ecef2ff3eaf905f24d54f2a7) Thanks [@AshikNesin](https://github.com/AshikNesin)! - fix: prevent row navigation when selecting jobs in table
+
+- [`d03042b`](https://github.com/AshikNesin/groot/commit/d03042b6798461138fccb5d1881b2f9e80521153) Thanks [@AshikNesin](https://github.com/AshikNesin)! - feat: render job-data links inline within the JSON view
+
+  Replaces the separate Structured/JSON toggle in `JobJsonBlock` with a single
+  read-only JSON panel that highlights resolver-matched values as clickable
+  links. Link ranges are computed while pretty-printing (`stringifyWithLinks`)
+  and rendered as CodeMirror decorations that navigate on click.
+
+  - `JobJsonBlock` no longer toggles between `JobDataView` and raw JSON; it always
+    shows JSON with inline link highlights.
+  - `CodeMirrorEditor` gains `linkRanges` and `onLinkClick` props to drive
+    `Decoration.mark` ranges + click handling, plus a `.cm-json-link` style.
+
+- Updated dependencies [[`cc632b9`](https://github.com/AshikNesin/groot/commit/cc632b982912b5d9261bfd268813ed25a30ef395), [`d03042b`](https://github.com/AshikNesin/groot/commit/d03042b6798461138fccb5d1881b2f9e80521153)]:
+  - @groot/core@0.8.1
+  - @groot/shell@0.9.1
+
 ## 0.8.2
 
 ### Patch Changes
