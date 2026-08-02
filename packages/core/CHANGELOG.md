@@ -1,5 +1,15 @@
 # @groot/core
 
+## 0.8.1
+
+### Patch Changes
+
+- [`cc632b9`](https://github.com/AshikNesin/groot/commit/cc632b982912b5d9261bfd268813ed25a30ef395) Thanks [@AshikNesin](https://github.com/AshikNesin)! - feat(core): add `copyFile` storage helper
+
+  Mirrors the existing `renameFile` util but uses `files.copy()` so the source
+  is preserved. Throws `Boom.notFound` when the source key does not exist,
+  matching `renameFile` semantics.
+
 ## 0.8.0
 
 ### Minor Changes
