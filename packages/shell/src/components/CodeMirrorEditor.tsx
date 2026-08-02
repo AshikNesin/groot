@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import type { ReactCodeMirrorProps } from "@uiw/react-codemirror";
+import type { Extension } from "@codemirror/state";
 
-/**
- * JSON editor built on CodeMirror.
- *
- * Owns the heavy `@codemirror/*` + `@uiw/react-codemirror` imports so callers
- * can code-split them: import this via `React.lazy(() => …)` behind a
- * `<Suspense>` and CodeMirror lands in its own chunk instead of the main bundle.
- */
+export interface CodeMirrorLinkRange {
+  from: number;
+  to: number;
+  href: string;
+}
 
-// Dynamically load the heavy CodeMirror packages so they are excluded from
-// the main chunk. The promises resolve on first render; subsequent renders
-// reuse the cached modules.
 const editorPromise = Promise.all([
   import("@uiw/react-codemirror"),
   import("@codemirror/lang-json"),
@@ -19,6 +15,7 @@ const editorPromise = Promise.all([
 ]).then(([cm, langJson, view]) => ({
   CodeMirror: cm.default as ComponentType<Record<string, unknown>>,
   json: langJson.json,
+  Decoration: view.Decoration,
   EditorView: view.EditorView,
 }));
 
@@ -29,9 +26,10 @@ interface CodeMirrorEditorProps {
   onChange?: (value: string) => void;
   height?: string;
   editable?: boolean;
-  /** Enable `EditorView.lineWrapping` (wrap long lines instead of horizontal scroll). */
   lineWrapping?: boolean;
   basicSetup?: ReactCodeMirrorProps["basicSetup"];
+  linkRanges?: CodeMirrorLinkRange[];
+  onLinkClick?: (href: string) => void;
 }
 
 export function CodeMirrorEditor({
@@ -41,6 +39,8 @@ export function CodeMirrorEditor({
   editable = true,
   lineWrapping = false,
   basicSetup,
+  linkRanges = [],
+  onLinkClick,
 }: CodeMirrorEditorProps) {
   const [mods, setMods] = useState<EditorModules | null>(null);
 
@@ -48,12 +48,38 @@ export function CodeMirrorEditor({
     editorPromise.then(setMods);
   }, []);
 
-  // Keep the extension array referentially stable across renders that don't
-  // change lineWrapping — @uiw/react-codemirror reconfigures on reference change.
-  const extensions = useMemo(() => {
+  const extensions = useMemo<Extension[]>(() => {
     if (!mods) return [];
-    return [mods.json(), ...(lineWrapping ? [mods.EditorView.lineWrapping] : [])];
-  }, [mods, lineWrapping]);
+
+    const extensions: Extension[] = [mods.json()];
+    if (lineWrapping) extensions.push(mods.EditorView.lineWrapping);
+
+    if (linkRanges.length > 0 && onLinkClick) {
+      const linkMark = mods.Decoration.mark({ class: "cm-json-link" });
+      const decorations = mods.Decoration.set(
+        linkRanges.map((range) => linkMark.range(range.from, range.to)),
+        true,
+      );
+
+      extensions.push(
+        mods.EditorView.decorations.of(decorations),
+        mods.EditorView.domEventHandlers({
+          click(event, view) {
+            const position = view.posAtCoords({ x: event.clientX, y: event.clientY });
+            const range =
+              position === null
+                ? undefined
+                : linkRanges.find(({ from, to }) => position >= from && position <= to);
+            if (!range) return false;
+            onLinkClick(range.href);
+            return true;
+          },
+        }),
+      );
+    }
+
+    return extensions;
+  }, [mods, lineWrapping, linkRanges, onLinkClick]);
 
   if (!mods) return null;
 
