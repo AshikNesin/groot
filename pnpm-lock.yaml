@@ -390,6 +390,22 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
 
+  packages/ai:
+    dependencies:
+      '@earendil-works/pi-ai':
+        specifier: ^0.80.3
+        version: 0.80.3(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+      openai:
+        specifier: ^6.45.0
+        version: 6.45.0(@aws-sdk/credential-provider-node@3.972.62)(@smithy/signature-v4@5.6.2)(ws@8.21.0)(zod@4.4.3)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+
   packages/core:
     dependencies:
       '@aws-sdk/client-s3':
@@ -401,9 +417,6 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1079.0
         version: 3.1079.0
-      '@earendil-works/pi-ai':
-        specifier: ^0.80.3
-        version: 0.80.3(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
       '@keyv/postgres':
         specifier: ^2.2.3
         version: 2.2.3(keyv@5.6.0)
@@ -470,9 +483,6 @@ importers:
       multer:
         specifier: ^2.2.0
         version: 2.2.0
-      openai:
-        specifier: ^6.45.0
-        version: 6.45.0(@aws-sdk/credential-provider-node@3.972.62)(@smithy/signature-v4@5.6.2)(ws@8.21.0)(zod@4.4.3)
       pg:
         specifier: 8.22.0
         version: 8.22.0

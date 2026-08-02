@@ -1,5 +1,5 @@
 // Re-export key types from @earendil-works/pi-ai for convenience
-import type { ThinkingLevel } from "@earendil-works/pi-ai/compat";
+import type { Model as PiAIModel, ThinkingLevel } from "@earendil-works/pi-ai/compat";
 
 export type {
   Api,
@@ -32,15 +32,40 @@ export { Type } from "@earendil-works/pi-ai/compat";
 export type { Static, TSchema } from "@earendil-works/pi-ai/compat";
 
 /**
+ * A pi-ai model of any API flavor — resolved from the built-in catalog or
+ * constructed for a custom endpoint. (`Model<TApi>` is invariant in its
+ * `compat` field, hence the `any`.)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyModel = PiAIModel<any>;
+
+/**
  * Configuration for creating an AI instance
  */
 export interface AIConfig {
-  /** Provider name (e.g., 'openai') */
+  /**
+   * Provider name. For catalog models this is a pi-ai provider id
+   * (e.g. "openai", "anthropic"); for custom endpoints it's just a label.
+   */
   provider: string;
-  /** Model ID (e.g., 'gpt-4o-mini', 'claude-sonnet-4-20250514') */
+  /** Model ID (e.g. "gpt-4o-mini", "claude-sonnet-4-6", or a gateway id like "google/gemini-3-flash-preview") */
   model: string;
-  /** Optional API key (overrides environment variable) */
+  /** Optional API key (overrides the provider's environment variable) */
   apiKey?: string;
+  /**
+   * Custom OpenAI-compatible endpoint (e.g. Cloudflare AI Gateway).
+   * When set, requests go straight to this URL and the built-in model
+   * catalog is bypassed.
+   */
+  baseUrl?: string;
+  /** Extra HTTP headers for custom endpoints (e.g. { "cf-aig-authorization": "Bearer …" }) */
+  headers?: Record<string, string>;
+  /** Custom endpoints only: set true if the model supports reasoning/thinking. Default false. */
+  reasoning?: boolean;
+  /** Custom endpoints only: accepted input modalities. Default ["text", "image"]. */
+  input?: ("text" | "image")[];
+  /** Model used by embed(). Defaults to "text-embedding-3-small". */
+  embeddingModel?: string;
 }
 
 /**
@@ -63,7 +88,7 @@ export interface CompletionOptions {
  * Options for `ai.generateObject()`
  */
 export interface GenerateObjectOptions extends CompletionOptions {
-  /** How "hard" to instruct the model to comply with the schema */
+  /** Name of the tool the model is forced to call (defaults to "extract_data") */
   schemaName?: string;
   /** Description for the schema shown to the LLM */
   schemaDescription?: string;

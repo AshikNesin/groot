@@ -59,6 +59,7 @@ export const SYNC_PATTERNS: readonly string[] = [
 
   // Tests mirroring synced source (core/shared/ui infra + shared test setup).
   // App-specific and e2e tests stay project-local.
+  "tests/server/ai/**",
   "tests/server/core/**",
   "tests/server/shared/**",
   "tests/server/groot/**",

@@ -20,18 +20,24 @@ export function zodToTypeBox(schema: z.ZodTypeAny): TSchema {
 
   const typeName: string = def.type ?? def.typeName; // v4: type, v3: typeName
 
+  // v3 stores .describe() in _def.description; v4 registers it as meta,
+  // exposed via the schema's `description` getter.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const description: string | undefined = def.description ?? (schema as any).description;
+  const opts = description ? { description } : undefined;
+
   switch (typeName) {
     case "ZodString":
     case "string":
-      return Type.String(def.description ? { description: def.description } : undefined);
+      return Type.String(opts);
 
     case "ZodNumber":
     case "number":
-      return Type.Number(def.description ? { description: def.description } : undefined);
+      return Type.Number(opts);
 
     case "ZodBoolean":
     case "boolean":
-      return Type.Boolean(def.description ? { description: def.description } : undefined);
+      return Type.Boolean(opts);
 
     case "ZodObject":
     case "object": {
