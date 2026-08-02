@@ -42,7 +42,10 @@ function toBase64(data: string | URL | Uint8Array | ArrayBuffer): string {
     }
     return match[1];
   }
-  return Buffer.from(data).toString("base64");
+  // View the ArrayBuffer as bytes (Buffer.from has no single overload
+  // accepting the ArrayBuffer | Uint8Array union, so narrow first).
+  const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
+  return Buffer.from(bytes).toString("base64");
 }
 
 /**
