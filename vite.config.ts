@@ -55,7 +55,7 @@ export default defineConfig({
           sentryVitePlugin({
             authToken,
             org: process.env.SENTRY_ORG,
-            project: process.env.SENTRY_PROJECT ?? "groot",
+            project: process.env.SENTRY_PROJECT || pkgName,
             sourcemaps: {
               filesToDeleteAfterUpload: ["dist/assets/*.map"],
             },

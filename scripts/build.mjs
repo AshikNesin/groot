@@ -124,7 +124,7 @@ async function build() {
               sentryEsbuildPlugin({
                 authToken,
                 org: process.env.SENTRY_ORG,
-                project: process.env.SENTRY_PROJECT ?? "groot",
+                project: process.env.SENTRY_PROJECT || pkgName,
                 release,
                 sourcemaps: {
                   filesToDeleteAfterUpload: ["dist/bundle.js.map"],
