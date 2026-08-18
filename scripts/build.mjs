@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import { sentryEsbuildPlugin } from "@sentry/esbuild-plugin";
 import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -13,14 +14,18 @@ async function getExternalDependencies() {
 function getSentryRelease() {
   if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE;
   const sourceVersion = process.env.SOURCE_COMMIT || process.env.SOURCE_VERSION;
-  if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
+  if (sourceVersion) return `${pkgName}@${sourceVersion.slice(0, 7)}`;
   try {
     const sha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
-    return `groot@${sha.slice(0, 7)}`;
+    return `${pkgName}@${sha.slice(0, 7)}`;
   } catch {
     return undefined;
   }
 }
+
+// App name used for Sentry release tags. Derived from package.json so child
+// repos that use a different project don't need to fork this script.
+const pkgName = JSON.parse(readFileSync("package.json", "utf-8")).name;
 
 /**
  * The generated Prisma client is bundled into dist/bundle.js, so the database
@@ -53,18 +58,19 @@ async function assertBundledEngine() {
 }
 
 /**
- * Copy static assets from apps/web/src/server/public to dist/public so they
- * ship with the production bundle and can be served via express.static.
- * No-op if the dir doesn't exist.
+ * Copy static assets from apps/web/public (Vite's publicDir) to dist/public so
+ * they ship with the production bundle and can be served via express.static.
+ * No-op (with a warning) if the dir doesn't exist.
  */
 async function copyPublicAssets() {
-  const sourceDir = path.join(process.cwd(), "apps/web/src/server", "public");
+  const sourceDir = path.join(process.cwd(), "apps/web", "public");
   const destDir = path.join(process.cwd(), "dist", "public");
 
   try {
     await fs.access(sourceDir);
   } catch {
-    return; // nothing to copy
+    console.warn(`Warning: Public directory not found at ${sourceDir}. Skipping copy.`);
+    return;
   }
 
   await fs.rm(destDir, { recursive: true, force: true });
@@ -96,6 +102,8 @@ async function build() {
         ".prisma/client",
         "@sentry/profiling-node",
         "vite",
+        "vite-plus",
+        "@vitejs/plugin-react",
         "lightningcss",
         "fsevents",
         // Native modules + their optional platform packages cannot be bundled
@@ -116,7 +124,7 @@ async function build() {
               sentryEsbuildPlugin({
                 authToken,
                 org: process.env.SENTRY_ORG,
-                project: "groot",
+                project: process.env.SENTRY_PROJECT ?? "groot",
                 release,
                 sourcemaps: {
                   filesToDeleteAfterUpload: ["dist/bundle.js.map"],

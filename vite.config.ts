@@ -2,20 +2,24 @@ import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const clientSrc = path.resolve(rootDir, "apps/web/src/client");
 const packagesDir = path.resolve(rootDir, "packages");
+// App name used for Sentry release tags. Derived from package.json so child
+// repos that use a different project don't need to fork this config.
+const pkgName = JSON.parse(readFileSync(new URL("package.json", import.meta.url), "utf-8")).name;
 
 function getSentryRelease() {
   if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE;
   const sourceVersion = process.env.SOURCE_COMMIT || process.env.SOURCE_VERSION;
-  if (sourceVersion) return `groot@${sourceVersion.slice(0, 7)}`;
+  if (sourceVersion) return `${pkgName}@${sourceVersion.slice(0, 7)}`;
   try {
     const sha = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
-    return `groot@${sha.slice(0, 7)}`;
+    return `${pkgName}@${sha.slice(0, 7)}`;
   } catch {
     return undefined;
   }
@@ -51,7 +55,7 @@ export default defineConfig({
           sentryVitePlugin({
             authToken,
             org: process.env.SENTRY_ORG,
-            project: "groot",
+            project: process.env.SENTRY_PROJECT ?? "groot",
             sourcemaps: {
               filesToDeleteAfterUpload: ["dist/assets/*.map"],
             },

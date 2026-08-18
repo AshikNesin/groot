@@ -13,7 +13,8 @@ env.d.ts
 /.DS_Store
 pnpm-debug.log*
 
-/packages/database/generated/prisma
+/packages/core/generated
+packages/database/generated/prisma
 playwright-report/
 test-results/
 .pnpm-store/

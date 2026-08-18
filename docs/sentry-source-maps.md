@@ -53,7 +53,8 @@ There are two ways to create a token:
    - **Name:** `SENTRY_AUTH_TOKEN`
    - **Value:** `<paste your token>`
    - Make sure it's available during **build** (not just runtime)
-5. Save and redeploy
+5. Optionally add `SENTRY_PROJECT` (defaults to the package name) if your Sentry project is named differently
+6. Save and redeploy
 
 ## 3. Verify It Works
 
@@ -74,7 +75,9 @@ The build pipeline uses two Sentry plugins:
 
 Both plugins only activate when `SENTRY_AUTH_TOKEN` is set. Local builds without the token work normally (plugins are skipped).
 
-A release identifier (`groot@<git-sha>`) is computed during build and written to `dist/release.json`. At runtime, `instrument.ts` reads this file to ensure the release value matches what was uploaded to Sentry.
+A release identifier (`<package-name>@<git-sha>`, e.g. `groot@abc1234`) is computed during build and written to `dist/release.json`. At runtime, `instrument.ts` reads this file to ensure the release value matches what was uploaded to Sentry.
+
+**Project slug:** plugins upload to the project named `SENTRY_PROJECT`, falling back to `groot` (the package name) when unset. Child repos with a different Sentry project just set `SENTRY_PROJECT`.
 
 ## Troubleshooting
 
