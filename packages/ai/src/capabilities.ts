@@ -54,3 +54,41 @@ export function getModelCapabilities(
   }
   return IMAGES_ONLY;
 }
+
+/**
+ * Reasoning-effort values accepted by `reasoning_effort` on OpenAI-compatible
+ * endpoints (pi-ai's ThinkingLevel plus "max", which ClinePass models use).
+ */
+export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
+
+/**
+ * Highest `reasoning_effort` a model accepts, or undefined when the model
+ * exposes no effort control (always-on or toggle-only thinking) and the
+ * parameter must be omitted entirely.
+ *
+ * Sourced from ClinePass's model catalog — the `reasoningOptions` effort
+ * values embedded in the cline CLI (v3.0.52):
+ *   kimi-k3                          → ["low", "high", "max"]
+ *   deepseek-v4-flash/pro, glm-5.2,
+ *   qwen3.8-max                      → up to "xhigh"
+ *   kimi-k2.6/k2.7-code, qwen3.7*,
+ *   mimo*, minimax-m3                → [] (no effort control)
+ *
+ * Unknown models default to "high" — the highest value every mainstream
+ * OpenAI-compatible reasoning API accepts.
+ */
+const EFFORT_RULES: Array<{ test: RegExp; max: ReasoningEffort | null }> = [
+  // Must precede the kimi-k2 rule (both match the "kimi" family).
+  { test: /kimi-k3/i, max: "max" },
+  { test: /deepseek-v4|glm-5\.2|qwen3\.8/i, max: "xhigh" },
+  { test: /kimi-k2|qwen3\.7|mimo|minimax/i, max: null },
+];
+
+export function maxReasoningEffort(modelId: string): ReasoningEffort | undefined {
+  for (const rule of EFFORT_RULES) {
+    if (rule.test.test(modelId)) {
+      return rule.max ?? undefined;
+    }
+  }
+  return "high";
+}
