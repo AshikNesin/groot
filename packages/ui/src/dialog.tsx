@@ -60,16 +60,16 @@ function DialogContent({
 }) {
   const handlePointerDownOutside = dismissOnOutsideClick
     ? onPointerDownOutside
-    : (e: React.PointerEvent) => {
+    : (e: { preventDefault(): void }) => {
         e.preventDefault();
-        onPointerDownOutside?.(e);
+        onPointerDownOutside?.(e as Parameters<NonNullable<typeof onPointerDownOutside>>[0]);
       };
 
   const handleInteractOutside = dismissOnOutsideClick
     ? onInteractOutside
-    : (e: React.PointerEvent) => {
+    : (e: { preventDefault(): void }) => {
         e.preventDefault();
-        onInteractOutside?.(e);
+        onInteractOutside?.(e as Parameters<NonNullable<typeof onInteractOutside>>[0]);
       };
 
   return (

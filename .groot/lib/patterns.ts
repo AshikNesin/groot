@@ -78,6 +78,12 @@ export const SYNC_PATTERNS: readonly string[] = [
   "postcss.config.js",
   "components.json",
 
+  // Deployment config (railpack) — shared by all downstream apps.
+  "railpack.json",
+
+  // App config templates (the live config.yml is project-owned, see SKIP_PATTERNS).
+  "config.example.yml",
+
   // Sync tooling — keep the sync tool itself up to date.
   // State files (boilerplate-sync.json, sync-report.json) and project-only
   // docs (feature-request.md, repo-drift.md) are guarded by
@@ -114,6 +120,9 @@ export const SKIP_PATTERNS: readonly string[] = [
   "tests/server/app/**",
   "tests/server/routes/**",
   "tests/e2e/**",
+
+  // Project-owned live app config (config.example.yml is synced instead).
+  "config.yml",
 
   // Other (project-owned docs and lockfile)
   "README.md",

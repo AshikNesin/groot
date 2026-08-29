@@ -36,9 +36,11 @@ default:
     format: "json"
 
   passkey:
-    rpName: "Groot"
-    rpId: "localhost"
-    origin: "https://groot.localhost"
+    # Resolved from env vars declared in .env.schema (dev defaults exist;
+    # required in production). {{ env.X }} throws if a var is unset.
+    rpName: "{{ env.RP_NAME }}"
+    rpId: "{{ env.RP_ID }}"
+    origin: "{{ env.ORIGIN }}"
 
   sentry:
     dsn: ""

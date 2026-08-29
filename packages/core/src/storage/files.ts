@@ -31,11 +31,16 @@ async function createFiles(): Promise<Files> {
   }
 
   // Dynamic import keeps @aws-sdk/* out of the module graph unless S3 is used.
+  // Varlock enforces these when STORAGE_DRIVER=s3; the guard keeps TS happy
+  // (the vars are optional in env.d.ts) and gives a clearer error otherwise.
+  if (!env.AWS_DEFAULT_S3_BUCKET) {
+    throw new Error("STORAGE_DRIVER=s3 requires AWS_DEFAULT_S3_BUCKET");
+  }
   const { s3 } = await import("files-sdk/s3");
   return new Files({
     adapter: s3({
       bucket: env.AWS_DEFAULT_S3_BUCKET,
-      region: env.AWS_REGION,
+      region: env.AWS_REGION ?? "us-east-1",
       // Credentials auto-loaded from the AWS chain.
     }),
   });
