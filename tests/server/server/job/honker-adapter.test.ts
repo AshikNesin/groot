@@ -100,6 +100,36 @@ runIfSqlite("HonkerAdapter (SQLite job queue)", () => {
     await adapter.unschedule("daily-summary");
   });
 
+  it("fires a scheduled job when its time arrives (scheduler loop runs)", async () => {
+    // Regression test: start() must launch honker's scheduler loop
+    // (scheduler.run()). Without it, scheduler().add() rows sit in
+    // _honker_scheduler_tasks forever — next_fire_at passes and nothing is
+    // enqueued. pg-boss starts its equivalent loop in boss.start(); honker
+    // requires an explicit run().
+    const received: JobContext[] = [];
+    let resolveWork!: () => void;
+    const workDone = new Promise<void>((r) => (resolveWork = r));
+
+    await adapter.start();
+    await adapter.work("ticker", { pollingIntervalSeconds: 1, batchSize: 1 }, async (jobs) => {
+      received.push(...jobs);
+      resolveWork();
+    });
+
+    // @every 2s fires soon; the loop should enqueue within ~seconds.
+    await adapter.schedule("ticker", { kind: "tick" }, "@every 2s");
+
+    await Promise.race([
+      workDone,
+      new Promise((_, rej) =>
+        setTimeout(() => rej(new Error("scheduled job never fired")), 15_000),
+      ),
+    ]);
+    expect(received.length).toBeGreaterThanOrEqual(1);
+    expect(received[0].data).toEqual({ kind: "tick" });
+    await adapter.unschedule("ticker");
+  });
+
   it("getAvailableQueues only returns queues with live rows (adapter-level)", async () => {
     // This documents the honker adapter limitation that motivated the
     // queries.ts union with registered handlers: honker has no queue registry,

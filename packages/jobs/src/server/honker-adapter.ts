@@ -191,6 +191,8 @@ export class HonkerAdapter implements JobQueueAdapter {
   /** Active claim wakers per queue, for clean shutdown. */
   private activeWakers: ClaimWaker[] = [];
   private abort: AbortController | null = null;
+  /** Aborts the scheduler run loop started in start(). */
+  private schedulerAbort: AbortController | null = null;
 
   constructor() {
     // honker manages its own connection to the SQLite file (separate from
@@ -202,11 +204,34 @@ export class HonkerAdapter implements JobQueueAdapter {
 
   async start(): Promise<void> {
     // honker bootstraps its schema lazily on first queue/scheduler use.
+    //
+    // The scheduler loop is NOT auto-started: without an explicit run(),
+    // rows registered via scheduler().add() sit in _honker_scheduler_tasks
+    // with next_fire_at in the past and never enqueue. pg-boss runs its
+    // equivalent loop inside boss.start(), so we mirror that here: spawn
+    // scheduler.run() and keep a reference for graceful shutdown. The run
+    // loop resolves when the AbortSignal fires.
+    this.schedulerAbort = new AbortController();
+    void this.db
+      .scheduler()
+      .run(`honker-scheduler-${process.pid}`, this.schedulerAbort.signal)
+      .catch((err: unknown) => {
+        // Only a real error if we didn't initiate the shutdown.
+        if (!this.schedulerAbort?.signal.aborted) {
+          logger.error({ err }, "honker scheduler loop exited unexpectedly");
+        }
+      });
     logger.info("honker job queue initialized (SQLite)");
   }
 
   async stop(): Promise<void> {
     this.abort?.abort();
+    this.schedulerAbort?.abort();
+    // Give the scheduler loop a beat to observe the signal before closing
+    // the DB handle out from under it.
+    if (this.schedulerAbort) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
     for (const w of this.activeWakers) {
       try {
         w.close();
