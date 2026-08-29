@@ -45,10 +45,18 @@ it — this file is mainly a hook for future customisation):
 {
   "$schema": "https://schema.railpack.com",
   "deploy": {
-    "startCommand": "pnpm run postinstall && pnpm start"
+    "startCommand": "pnpm run postinstall && pnpm start",
+    "aptPackages": ["libsqlite3-0"]
   }
 }
 ```
+
+`aptPackages` installs packages into the **final runtime image**. honker's
+prebuilt native binding (`honker-node-linux-x64-gnu`) dynamically links
+`libsqlite3.so.0`, which the slim railpack runtime (Debian 12) omits —
+without this the app crashes at boot with `ERR_DLOPEN_FAILED` /
+`Cannot find native binding`. (`better-sqlite3` and the `sqlite3` KV driver
+bundle their own SQLite, so they need nothing.)
 
 ## What happens on deploy
 
