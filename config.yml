@@ -36,9 +36,12 @@ default:
     format: "json"
 
   passkey:
-    rpName: "Groot"
-    rpId: "localhost"
-    origin: "https://groot.localhost"
+    # Read from environment (declared in .env.schema with dev defaults;
+    # required in production) so each deployment uses the correct
+    # relying party id / origin.
+    rpName: "{{ env.RP_NAME }}"
+    rpId: "{{ env.RP_ID }}"
+    origin: "{{ env.ORIGIN }}"
 
   sentry:
     # TODO: Update your sentry DNS

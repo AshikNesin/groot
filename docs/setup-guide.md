@@ -57,14 +57,16 @@ Copy `.env.schema` to `.env` and configure the keys below (validated in
 
 #### Passkey (WebAuthn)
 
-Passkey settings live in **`config.yml`** (`passkey:` section), not env vars:
+Passkey settings live in **`config.yml`** (`passkey:` section), which resolves
+them from env vars (`{{ env.RP_NAME }}` etc.). The vars are declared in
+`.env.schema` — dev defaults work out of the box; in production they are
+required (set them to your real domain):
 
-```yaml
-passkey:
-  rpName: "Groot" # shown in passkey prompts
-  rpId: "localhost" # Relying Party ID (your domain in prod)
-  origin: "https://groot.localhost" # full origin URL
-```
+| Variable  | Dev default             | Production example                 |
+| --------- | ----------------------- | ---------------------------------- |
+| `RP_NAME` | `Groot`                 | `Groot` (shown in passkey prompts) |
+| `RP_ID`   | `localhost`             | `yourapp.example.com`              |
+| `ORIGIN`  | `http://localhost:3000` | `https://yourapp.example.com`      |
 
 See [Passkey authentication](./features/passkey-authentication.md) and
 [Config](./config.md).
