@@ -15,15 +15,15 @@ feature docs as you need them.
 
 ## Guides
 
-| Document                                                           | What it covers                                       |
-| ------------------------------------------------------------------ | ---------------------------------------------------- |
-| [`guides/architecture.md`](./guides/architecture.md)               | Feature modules, core infrastructure, request flow   |
-| [`guides/development.md`](./guides/development.md)                 | Day-to-day commands, conventions, adding a feature   |
-| [`guides/database-migrations.md`](./guides/database-migrations.md) | Prisma migrate workflow, pooled-DB guidance          |
-| [`guides/deploy-railway.md`](./guides/deploy-railway.md)           | Deploy to Railway (nixpacks, volumes, env vars)      |
-| [`guides/testing.md`](./guides/testing.md)                         | Vitest + Supertest patterns, running on both engines |
-| [`config.md`](./config.md)                                         | `config.yml` settings, env interpolation, validation |
-| [`precommit-hooks.md`](./precommit-hooks.md)                       | gitleaks secret detection + Vite+ staged lint/format |
+| Document                                                           | What it covers                                            |
+| ------------------------------------------------------------------ | --------------------------------------------------------- |
+| [`guides/architecture.md`](./guides/architecture.md)               | Feature modules, core infrastructure, request flow        |
+| [`guides/development.md`](./guides/development.md)                 | Day-to-day commands, conventions, adding a feature        |
+| [`guides/database-migrations.md`](./guides/database-migrations.md) | Prisma migrate workflow, pooled-DB guidance               |
+| [`guides/deploy.md`](./guides/deploy.md)                           | Deploy with Railpack (Coolify/Railway, volumes, env vars) |
+| [`guides/testing.md`](./guides/testing.md)                         | Vitest + Supertest patterns, running on both engines      |
+| [`config.md`](./config.md)                                         | `config.yml` settings, env interpolation, validation      |
+| [`precommit-hooks.md`](./precommit-hooks.md)                       | gitleaks secret detection + Vite+ staged lint/format      |
 
 ## Features
 
