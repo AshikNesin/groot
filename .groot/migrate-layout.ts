@@ -106,7 +106,9 @@ function gitMv(oldPath: string, newPath: string): void {
           );
         }
         // Source is clean — safe to remove in favor of the synced version.
-        git(["rm", "-f", srcFile]);
+        // -r is needed when the colliding path is a directory (e.g. shared/ai
+        // vs core/ai both mapping into packages/core/src).
+        git(["rm", "-f", "-r", srcFile]);
         console.log(`  resolve: ${srcFile} (kept synced ${destFile})`);
       } else {
         git(["mv", srcFile, destFile]);
