@@ -100,6 +100,26 @@ runIfSqlite("HonkerAdapter (SQLite job queue)", () => {
     await adapter.unschedule("daily-summary");
   });
 
+  it("supports multiple schedules per queue via key (e.g. 9:30am + 6pm daily)", async () => {
+    // Regression: schedule() used the job name as the honker schedule name,
+    // so scheduling the same job twice overwrote the first schedule. With
+    // options.key the schedule name is `job:key`, mirroring pg-boss's
+    // singleton-key schedules.
+    await adapter.start();
+    await adapter.schedule("daily-report", { when: "am" }, "30 9 * * *", { key: "am" });
+    await adapter.schedule("daily-report", { when: "pm" }, "0 18 * * *", { key: "pm" });
+    const schedules = await adapter.getSchedules();
+    const forQueue = schedules.filter((s) => s.name === "daily-report");
+    expect(forQueue).toHaveLength(2);
+    expect(forQueue.map((s) => s.key).sort()).toEqual(["am", "pm"]);
+    // unschedule by key removes only that entry
+    await adapter.unschedule("daily-report", "am");
+    const after = await adapter.getSchedules();
+    expect(after.filter((s) => s.name === "daily-report")).toHaveLength(1);
+    expect(after.find((s) => s.name === "daily-report")?.key).toBe("pm");
+    await adapter.unschedule("daily-report", "pm");
+  });
+
   it("fires a scheduled job when its time arrives (scheduler loop runs)", async () => {
     // Regression test: start() must launch honker's scheduler loop
     // (scheduler.run()). Without it, scheduler().add() rows sit in

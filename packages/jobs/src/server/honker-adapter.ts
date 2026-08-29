@@ -261,17 +261,29 @@ export class HonkerAdapter implements JobQueueAdapter {
     return String(id);
   }
 
+  /**
+   * Schedule name for a job name / key pair.
+   *
+   * honker schedules are named independently of the target queue, and the
+   * schedule name must be unique. Without a `key` the schedule name IS the
+   * job name (back-compat); with a `key` it's `<name>:<key>`, which allows
+   * multiple schedules (e.g. different times of day) for the same queue —
+   * mirroring pg-boss's singleton-key schedules.
+   */
+  private static scheduleName(name: string, key?: string): string {
+    return key ? `${name}:${key}` : name;
+  }
+
   async schedule(
     name: string,
     data: unknown,
     cron: string,
-    _options?: ScheduleJobOptions,
+    options?: ScheduleJobOptions,
   ): Promise<void> {
-    // honker schedules are named; the schedule name IS the job name. The
-    // target queue is the same string. `cron` may be a 5-field cron, 6-field
-    // cron, or `@every <duration>`.
+    // The target queue is the job name; `cron` may be a 5-field cron,
+    // 6-field cron, or `@every <duration>`.
     this.db.scheduler().add({
-      name,
+      name: HonkerAdapter.scheduleName(name, options?.key),
       queue: name,
       schedule: cron,
       payload: data as JsonValue,
@@ -279,18 +291,20 @@ export class HonkerAdapter implements JobQueueAdapter {
     });
   }
 
-  async unschedule(name: string): Promise<void> {
-    this.db.scheduler().remove(name);
+  async unschedule(name: string, key?: string): Promise<void> {
+    this.db.scheduler().remove(HonkerAdapter.scheduleName(name, key));
   }
 
   async getSchedules() {
     const list = this.db.scheduler().list() as unknown as HonkerScheduleRow[];
     return list.map((r) => ({
-      name: r.name,
+      // Undo the composite-name mapping: `job:key` → job name + key, plain
+      // names pass through untouched.
+      name: r.name.includes(":") ? (r.name.split(":")[0] as string) : r.name,
       cron: r.cron_expr,
       timezone: undefined,
       data: parsePayload(r.payload),
-      key: r.name,
+      key: r.name.includes(":") ? (r.name.split(":")[1] as string) : r.name,
     }));
   }
 
