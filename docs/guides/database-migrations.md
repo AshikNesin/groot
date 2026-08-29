@@ -79,14 +79,14 @@ Migrations run automatically on deployment via the `prestart` script:
 }
 ```
 
-When you push to main, Coolify runs `pnpm start`, which first executes `prestart` to apply any pending migrations.
+When you push to main, Railway (or Coolify) runs `pnpm start`, which first executes `prestart` to apply any pending migrations.
 
 ### Manual Migration (if needed)
 
 To run migrations manually in production:
 
 ```bash
-# SSH into the container or use Coolify's terminal
+# SSH into the container or use Railway's terminal (or Coolify)
 pnpm db:migrate
 ```
 
@@ -132,12 +132,12 @@ separately via `@prisma/adapter-pg` in `packages/core/src/database.ts`.
 
 ### When you need it
 
-| Environment                  | `DATABASE_URL_DIRECT`                              |
-| ---------------------------- | -------------------------------------------------- |
-| Local Postgres (dev)         | not needed (unset)                                 |
-| Direct Postgres (Coolify)    | not needed (unset)                                 |
-| Supabase / Supavisor pooled  | **set** — point at the session-mode port (`:5432`) |
-| PgBouncer (transaction mode) | **set** — point past the pooler                    |
+| Environment                       | `DATABASE_URL_DIRECT`                              |
+| --------------------------------- | -------------------------------------------------- |
+| Local Postgres (dev)              | not needed (unset)                                 |
+| Direct Postgres (Railway/Coolify) | not needed (unset)                                 |
+| Supabase / Supavisor pooled       | **set** — point at the session-mode port (`:5432`) |
+| PgBouncer (transaction mode)      | **set** — point past the pooler                    |
 
 `DATABASE_URL_DIRECT` is optional and only needs to bypass the pooler. With it
 set, `prestart` → `prisma migrate deploy` connects directly and boots cleanly.

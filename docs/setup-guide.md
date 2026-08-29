@@ -40,7 +40,7 @@ Copy `.env.schema` to `.env` and configure the keys below (validated in
 | Variable          | Description                                                                                                                                    |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NODE_ENV`        | `development`, `production`, or `test`                                                                                                         |
-| `PORT`            | HTTP port for Express (default `3000`; set automatically by hosts like Coolify)                                                                |
+| `PORT`            | HTTP port for Express (default `3000`; set automatically by hosts like Railway/Coolify)                                                        |
 | `DATABASE_ENGINE` | `sqlite` (default) or `postgres`. Selects the Prisma driver adapter, KV backend, and job queue. See [Database Engines](./database-engines.md). |
 | `DATABASE_URL`    | SQLite file path (e.g. `file:./data/dev.db`) or a Postgres connection string, depending on `DATABASE_ENGINE`. Used by Prisma, KV, and jobs.    |
 | `DOPPLER_TOKEN`   | (Production) varlock uses this to fetch secrets from Doppler. Optional in dev.                                                                 |
