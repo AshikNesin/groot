@@ -80,14 +80,15 @@ it — this file is mainly a hook for future customisation):
 4. **Environment variables** (Environment tab). In production varlock
    requires real values (dev placeholders are rejected):
 
-   | Variable                       | Value                                                                                            |
-   | ------------------------------ | ------------------------------------------------------------------------------------------------ |
-   | `NODE_ENV`                     | `production`                                                                                     |
-   | `DATABASE_URL`                 | `file:/app/data/groot.db` (SQLite) or `postgresql://…`                                           |
-   | `JWT_SECRET_KEY`               | random string, min 32 chars                                                                      |
-   | `ADMIN_AUTH_KEY`               | random string (admin-only routes, `X-Admin-Auth-Key`)                                            |
-   | `RP_NAME` / `RP_ID` / `ORIGIN` | passkey relying-party name, domain, and full origin                                              |
-   | `AWS_*` + `STORAGE_DRIVER`     | required by env validation even when unused; set dummies unless you use S3 (`STORAGE_DRIVER=s3`) |
+   | Variable                       | Value                                                               |
+   | ------------------------------ | ------------------------------------------------------------------- |
+   | `NODE_ENV`                     | `production`                                                        |
+   | `DATABASE_URL`                 | `file:/app/data/groot.db` (SQLite) or `postgresql://…`              |
+   | `JWT_SECRET_KEY`               | random string, min 32 chars                                         |
+   | `ADMIN_AUTH_KEY`               | random string (admin-only routes, `X-Admin-Auth-Key`)               |
+   | `RP_NAME` / `RP_ID` / `ORIGIN` | passkey relying-party name, domain, and full origin                 |
+   | `STORAGE_DRIVER`               | `local` (default — no AWS vars needed) or `s3`                      |
+   | `AWS_*`                        | only required when `STORAGE_DRIVER=s3` (enforced by env validation) |
 
    Optionally set `DOPPLER_TOKEN` to pull secrets from Doppler instead.
 

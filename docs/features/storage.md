@@ -53,13 +53,24 @@ curl -H "Authorization: Bearer <token>" \
 
 ## Environment Variables
 
+AWS\_\* variables are **conditionally required** — only when
+`STORAGE_DRIVER=s3` (enforced by `.env.schema` via
+`@required=eq($STORAGE_DRIVER, s3)`). With the default `local` driver they
+can stay unset:
+
 ```bash
-AWS_ACCESS_KEY_ID=localstack
-AWS_SECRET_ACCESS_KEY=localstack
+STORAGE_DRIVER=local   # default; no AWS_* needed
+
+# or, for S3:
+STORAGE_DRIVER=s3
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
 AWS_REGION=us-east-1
-AWS_DEFAULT_S3_BUCKET=local-bucket
+AWS_DEFAULT_S3_BUCKET=my-bucket
 ```
 
+Credentials are loaded by files-sdk from the standard AWS chain (env vars,
+IAM role, shared profile), so on AWS infra the env vars can stay unset too.
 For production, use real IAM credentials and bucket.
 
 ## Core Storage Service
