@@ -150,6 +150,29 @@ export class JobLogStream extends Writable {
   }
 }
 
+/**
+ * Level gate for DB-persisted job logs.
+ *
+ * Decoupled from `config.logging.level`: that level is an ops concern
+ * (console/stdout noise) and defaults to "warn" in production. The job
+ * logger exists to power the dashboard's log viewer, which needs at least
+ * `info` (handler progress lines) — gating the DB stream by the ops level
+ * made production jobs write zero rows and the dashboard show "nothing at
+ * all". So the DB stream persists at least info+ in every environment:
+ * quieter ops settings only quiet the console, not the persisted history.
+ * More verbose ops settings (debug/trace) pass through unchanged.
+ */
+const JOB_LOG_DB_FLOOR = "info";
+
+const LOG_LEVEL_ORDER: Record<string, number> = {
+  fatal: 60,
+  error: 50,
+  warn: 40,
+  info: 30,
+  debug: 20,
+  trace: 10,
+};
+
 export function createJobLogStream(jobId: string, jobName?: string): JobLogStream {
   return new JobLogStream(jobId, jobName);
 }
@@ -159,17 +182,40 @@ export function createJobLogger(options: CreateJobLoggerOptions): Logger {
   const { jobId, jobName, additionalContext = {} } = options;
   const dbStream = createJobLogStream(jobId, jobName);
 
+  // Pino gates at the ROOT before any stream sees a record, so the root
+  // level must be the most verbose of the sinks (numeric min — lower = more
+  // verbose). The DB stream is never quieter than the info floor above: a
+  // quieter ops level (production's "warn") only quiets the console; a more
+  // verbose one (debug/trace) is honored by both sinks. "silent" silences
+  // everything.
+  const opsNumeric = LOG_LEVEL_ORDER[logLevel] ?? LOG_LEVEL_ORDER.info;
+  const dbNumeric =
+    logLevel === "silent" ? null : Math.min(opsNumeric, LOG_LEVEL_ORDER[JOB_LOG_DB_FLOOR]);
+  const numericToLevel = (n: number | null): pino.Level =>
+    n === null
+      ? "silent"
+      : ((Object.keys(LOG_LEVEL_ORDER).find((k) => LOG_LEVEL_ORDER[k] === n) ??
+          JOB_LOG_DB_FLOOR) as pino.Level);
+  const dbStreamLevel = numericToLevel(dbNumeric);
+  const rootLevel = numericToLevel(dbNumeric === null ? null : Math.min(opsNumeric, dbNumeric));
+
   // biome-ignore lint/suspicious/noExplicitAny: streams array type is complex
   let streams: any[];
   if (isDevelopment && devPrettyStream) {
-    streams = [{ stream: devPrettyStream }, { stream: dbStream }];
+    streams = [
+      { stream: devPrettyStream, level: logLevel },
+      { stream: dbStream, level: dbStreamLevel },
+    ];
   } else {
-    streams = [{ stream: process.stdout }, { stream: dbStream }];
+    streams = [
+      { stream: process.stdout, level: logLevel },
+      { stream: dbStream, level: dbStreamLevel },
+    ];
   }
 
   // Create config without transport for multistream usage
   const jobLoggerConfig = {
-    level: logLevel,
+    level: rootLevel,
     base: loggerConfig.base,
     formatters: loggerConfig.formatters,
     serializers: loggerConfig.serializers,
