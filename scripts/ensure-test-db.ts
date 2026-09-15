@@ -72,7 +72,23 @@ async function resetPostgresDatabase(connectionString: string): Promise<void> {
 
 async function main() {
   const shouldReset = process.argv.includes("--reset");
-  const dbUrl = process.env.TEST_DATABASE_URL!;
+  const dbUrl = process.env.TEST_DATABASE_URL;
+
+  // Refuse to guess: without an explicit TEST_DATABASE_URL the child `varlock
+  // run -- prisma migrate deploy` below would resolve DATABASE_URL from
+  // .env.schema for the AMBIENT environment — the dev database (data/dev.db),
+  // which this script would then silently "migrate" instead of the test DB.
+  // (Run via the pretest hooks, which set NODE_ENV=test so varlock resolves
+  // TEST_DATABASE_URL=file:./tmp/test.db — or export it yourself.)
+  if (!dbUrl) {
+    console.error(
+      "❌ TEST_DATABASE_URL is not set. Refusing to run — otherwise prisma would target the DEV database.",
+    );
+    console.error(
+      "   Run with NODE_ENV=test (pretest hooks do) or export TEST_DATABASE_URL=file:./tmp/test.db",
+    );
+    process.exit(1);
+  }
 
   console.log("\n🧪 Ensuring test database...\n");
 

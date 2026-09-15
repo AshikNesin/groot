@@ -9,7 +9,6 @@
  * colors (gray-*, red-*, …) outside index.css.
  */
 
-export * from "./alert";
 export * from "./badge";
 export * from "./breadcrumb";
 export * from "./button";
@@ -25,8 +24,6 @@ export * from "./input-group";
 export * from "./label";
 export { Skeleton, SkeletonCard, SkeletonList, SkeletonTable } from "./loading-skeleton";
 export { LoadingSpinner, LoadingState } from "./loading-spinner";
-export * from "./pagination";
-export * from "./select";
 export { StatusBadge } from "./status-badge";
 export type { StatusVariant } from "./status-badge";
 export * from "./table";

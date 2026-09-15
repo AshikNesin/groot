@@ -4,37 +4,9 @@
  */
 export type JobName = string;
 
-export enum JobState {
-  CREATED = "created",
-  RETRY = "retry",
-  ACTIVE = "active",
-  COMPLETED = "completed",
-  EXPIRED = "expired",
-  CANCELLED = "cancelled",
-  FAILED = "failed",
-}
-
-export interface Job {
-  id: string;
-  name: string;
-  data: Record<string, unknown>;
-  state: JobState;
-  priority: number;
-  retrylimit: number;
-  retrycount: number;
-  retrydelay: number;
-  retrybackoff: boolean;
-  startafter: string;
-  startedon: string | null;
-  singletonkey: string | null;
-  singletonon: string | null;
-  expirein: string;
-  createdon: string;
-  completedon: string | null;
-  keepuntil: string;
-  output: Record<string, unknown> | null;
-  deadletter: string | null;
-}
+// The dashboard Job shape is defined once, by the server adapter contract
+// (QueueJob). Type-only import — erased in the client bundle, no runtime coupling.
+export type { QueueJob as Job, ScheduledJobInfo as ScheduledJob } from "../../server/adapter";
 
 export interface JobStats {
   active: number;
@@ -44,14 +16,6 @@ export interface JobStats {
   completed: number;
   expired: number;
   cancelled: number;
-}
-
-export interface ScheduledJob {
-  name: string;
-  cron: string;
-  key: string;
-  timezone: string | null;
-  data: Record<string, unknown>;
 }
 
 export interface JobLog {

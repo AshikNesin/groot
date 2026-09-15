@@ -13,7 +13,7 @@ export interface NotificationOptions {
 /**
  * Notification Service for sending push notifications
  */
-export class NotificationService {
+class NotificationService {
   private isEnabled: boolean;
 
   constructor() {

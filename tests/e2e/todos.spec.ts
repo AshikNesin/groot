@@ -24,7 +24,7 @@ test.describe("Todos page (authenticated)", () => {
     await page.getByRole("button", { name: /create todo/i }).click();
 
     const uniqueTodo = `Test Todo ${Date.now()}`;
-    await page.getByPlaceholder(/todo title/i).fill(uniqueTodo);
+    await page.getByLabel("Title").fill(uniqueTodo);
     await page.getByRole("button", { name: /^create$/i }).click();
     await expect(page.getByText(uniqueTodo)).toBeVisible();
   });

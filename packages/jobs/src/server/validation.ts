@@ -38,12 +38,6 @@ export const paginationQuerySchema = z.object({
   offset: z.coerce.number().optional(),
 });
 
-export const getJobsByStateSchema = z.object({
-  state: z.string().min(1),
-  limit: z.coerce.number().optional(),
-  offset: z.coerce.number().optional(),
-});
-
 export const getJobsSchema = z.object({
   state: z.string().optional(),
   name: z.string().optional(),

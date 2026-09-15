@@ -33,7 +33,7 @@ interface LogEntry {
   [key: string]: unknown;
 }
 
-export class JobLogStream extends Writable {
+class JobLogStream extends Writable {
   private jobId: string;
   private jobName?: string;
   private buffer: LogEntry[] = [];
@@ -173,6 +173,7 @@ const LOG_LEVEL_ORDER: Record<string, number> = {
   trace: 10,
 };
 
+/** Raw DB-log stream for callers that wire their own sinks (see tests). */
 export function createJobLogStream(jobId: string, jobName?: string): JobLogStream {
   return new JobLogStream(jobId, jobName);
 }
@@ -180,7 +181,7 @@ export function createJobLogStream(jobId: string, jobName?: string): JobLogStrea
 // Job-aware logger factory with DB persistence.
 export function createJobLogger(options: CreateJobLoggerOptions): Logger {
   const { jobId, jobName, additionalContext = {} } = options;
-  const dbStream = createJobLogStream(jobId, jobName);
+  const dbStream = new JobLogStream(jobId, jobName);
 
   // Pino gates at the ROOT before any stream sees a record, so the root
   // level must be the most verbose of the sinks (numeric min — lower = more
@@ -191,7 +192,7 @@ export function createJobLogger(options: CreateJobLoggerOptions): Logger {
   const opsNumeric = LOG_LEVEL_ORDER[logLevel] ?? LOG_LEVEL_ORDER.info;
   const dbNumeric =
     logLevel === "silent" ? null : Math.min(opsNumeric, LOG_LEVEL_ORDER[JOB_LOG_DB_FLOOR]);
-  const numericToLevel = (n: number | null): pino.Level =>
+  const numericToLevel = (n: number | null): pino.LevelWithSilent =>
     n === null
       ? "silent"
       : ((Object.keys(LOG_LEVEL_ORDER).find((k) => LOG_LEVEL_ORDER[k] === n) ??

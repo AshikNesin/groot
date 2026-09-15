@@ -12,10 +12,11 @@ import { EmptyState } from "@groot/ui/empty-state";
 import { SkeletonCard, SkeletonTable } from "@groot/ui/loading-skeleton";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@groot/ui/table";
 import { PageLayout } from "@groot/shell/components/layout/PageLayout";
-import { CreateFolderDialog } from "./components/CreateFolderDialog";
+
 import { DesktopFileRow } from "./components/DesktopFileRow";
 import { MobileFileCard } from "./components/MobileFileCard";
-import { RenameDialog } from "./components/RenameDialog";
+import { TextInputDialog } from "./components/TextInputDialog";
+
 import { useStorageActions } from "./hooks/useStorageActions";
 import type { StorageFile } from "./hooks/useStorage";
 
@@ -191,20 +192,32 @@ export function Storage({ onView }: StorageProps = {}) {
         </>
       )}
 
-      <CreateFolderDialog
+      <TextInputDialog
         open={s.folderDialogOpen}
         onOpenChange={s.setFolderDialogOpen}
-        currentPath={s.currentPath}
-        isPending={s.createFolder.isPending}
-        onCreate={s.handleCreateFolder}
+        title="Create New Folder"
+        description={`Enter a name for the new folder in ${s.currentPath || "root"}`}
+        label="Folder Name"
+        placeholder="my-folder"
+        submitLabel="Create"
+        pendingLabel="Creating..."
+        pending={s.createFolder.isPending}
+        onSubmit={s.handleCreateFolder}
       />
 
-      <RenameDialog
+      <TextInputDialog
         open={Boolean(s.renameTarget)}
         onOpenChange={(open) => !open && s.setRenameTarget(null)}
-        currentName={s.renameTarget?.name}
-        isPending={s.renameFile.isPending}
-        onRename={s.handleRename}
+        title="Rename File"
+        description="Enter a new name for the file"
+        label="New Name"
+        placeholder="filename.txt"
+        initialValue={s.renameTarget?.name}
+        hint={s.renameTarget ? `Current: ${s.renameTarget.name}` : undefined}
+        submitLabel="Rename"
+        pendingLabel="Renaming..."
+        pending={s.renameFile.isPending}
+        onSubmit={s.handleRename}
       />
     </PageLayout>
   );

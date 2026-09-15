@@ -2,10 +2,10 @@ import dayjs from "dayjs";
 import { prisma } from "@groot/core/database";
 import { createJobLogger } from "@groot/jobs/server/logger";
 import { registerJobHandler } from "@groot/jobs/server/worker";
-import type { JobContext, SendJobOptions } from "@groot/jobs/server/adapter";
+import type { JobContext } from "@groot/jobs/server/adapter";
 
 // Job names
-export const TODO_JOB_NAMES = {
+const TODO_JOB_NAMES = {
   CLEANUP: "todo-cleanup",
   SUMMARY: "todo-summary",
 } as const;
@@ -17,22 +17,6 @@ export type TodoCleanupJobData = {
 
 export type TodoSummaryJobData = {
   includeCompleted?: boolean;
-};
-
-// Per-job retry/scheduling options
-export const todoJobOptions: Record<string, Partial<SendJobOptions>> = {
-  [TODO_JOB_NAMES.CLEANUP]: {
-    retryLimit: 2,
-    retryDelay: 120,
-    retryBackoff: true,
-    expireInSeconds: 60 * 60 * 12,
-  },
-  [TODO_JOB_NAMES.SUMMARY]: {
-    retryLimit: 3,
-    retryDelay: 60,
-    retryBackoff: true,
-    expireInSeconds: 60 * 60 * 12,
-  },
 };
 
 // --- Handlers ---

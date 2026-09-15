@@ -1,5 +1,5 @@
 import { jobsApi } from "./api";
-import { formatJobId } from "./utils";
+import { formatJobId, withJobToast } from "./utils";
 import { endOfDay, startOfDay, startOfMonth, subtractDays } from "@groot/shell/lib/utils";
 import type { Job, JobName, ScheduledJob } from "./types";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
@@ -175,77 +175,55 @@ export function useJobs() {
     setRefreshing(false);
   };
 
-  const handleRetry = async (queueName: string, jobId: string) => {
-    try {
-      await jobsApi.retryJob(queueName, jobId);
-      toast.success("Success", { description: "Job has been queued for retry" });
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to retry job",
-      });
-    }
-  };
+  const handleRetry = (queueName: string, jobId: string) =>
+    withJobToast(
+      () => jobsApi.retryJob(queueName, jobId),
+      () => "Job has been queued for retry",
+      "Failed to retry job",
+      invalidateJobs,
+    );
 
-  const handleCancel = async (queueName: string, jobId: string) => {
-    try {
-      await jobsApi.cancelJob(queueName, jobId);
-      toast.success("Success", { description: "Job has been cancelled" });
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to cancel job",
-      });
-    }
-  };
+  const handleCancel = (queueName: string, jobId: string) =>
+    withJobToast(
+      () => jobsApi.cancelJob(queueName, jobId),
+      () => "Job has been cancelled",
+      "Failed to cancel job",
+      invalidateJobs,
+    );
 
-  const handleResume = async (queueName: string, jobId: string) => {
-    try {
-      await jobsApi.resumeJob(queueName, jobId);
-      toast.success("Success", { description: "Job has been resumed" });
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to resume job",
-      });
-    }
-  };
+  const handleResume = (queueName: string, jobId: string) =>
+    withJobToast(
+      () => jobsApi.resumeJob(queueName, jobId),
+      () => "Job has been resumed",
+      "Failed to resume job",
+      invalidateJobs,
+    );
 
-  const handleDelete = async (queueName: string, jobId: string) => {
-    try {
-      await jobsApi.deleteJob(queueName, jobId);
-      toast.success("Success", { description: "Job has been deleted" });
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to delete job",
-      });
-    }
-  };
+  const handleDelete = (queueName: string, jobId: string) =>
+    withJobToast(
+      () => jobsApi.deleteJob(queueName, jobId),
+      () => "Job has been deleted",
+      "Failed to delete job",
+      invalidateJobs,
+    );
 
-  const handleRerun = async (queueName: string, jobId: string) => {
-    try {
-      const result = await jobsApi.rerunJob(queueName, jobId);
-      toast.success("Success", {
-        description: (
-          <span>
-            Job re-run created.{" "}
-            <Link
-              to={`/jobs/${result.queueName}/${result.newJobId}`}
-              className="underline font-medium hover:text-foreground"
-            >
-              View new job ({formatJobId(result.newJobId)})
-            </Link>
-          </span>
-        ),
-      });
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to re-run job",
-      });
-    }
-  };
+  const handleRerun = (queueName: string, jobId: string) =>
+    withJobToast(
+      () => jobsApi.rerunJob(queueName, jobId),
+      (result) => (
+        <span>
+          Job re-run created.{" "}
+          <Link
+            to={`/jobs/${result.queueName}/${result.newJobId}`}
+            className="underline font-medium hover:text-foreground"
+          >
+            View new job ({formatJobId(result.newJobId)})
+          </Link>
+        </span>
+      ),
+      "Failed to re-run job",
+      invalidateJobs,
+    );
 
   const handleBulkRerun = async () => {
     if (selectedJobs.size === 0) return;
@@ -335,74 +313,68 @@ export function useJobs() {
       return;
     }
 
-    try {
-      const { deletedCount } = await jobsApi.purgeJobsByState(state);
-      toast.success("Success", {
-        description: `Purged ${deletedCount} ${stateLabel(state)} jobs`,
-      });
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to purge jobs",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.purgeJobsByState(state),
+      ({ deletedCount }) => `Purged ${deletedCount} ${stateLabel(state)} jobs`,
+      "Failed to purge jobs",
+      invalidateJobs,
+    );
   };
 
-  const handleAddJob = async () => {
+  const handleAddJob = () => {
     if (!newJobName) {
       toast.error("Error", { description: "Please select a job name" });
       return;
     }
-
-    try {
-      const data = JSON.parse(newJobData);
-      const jobId = await jobsApi.addJob(newJobName as JobName, data);
-      toast.success("Success", {
-        description: (
-          <span>
-            Job has been added to the queue.{" "}
-            <Link
-              to={`/jobs/${newJobName}/${jobId}`}
-              className="underline font-medium hover:text-foreground"
-            >
-              View job ({formatJobId(jobId)})
-            </Link>
-          </span>
-        ),
-      });
-      setAddJobDialogOpen(false);
-      setNewJobName("");
-      setNewJobData("{}");
-      invalidateJobs();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to add job",
-      });
-    }
+    return withJobToast(
+      async () => {
+        const data = JSON.parse(newJobData);
+        const jobId = await jobsApi.addJob(newJobName as JobName, data);
+        return { jobId };
+      },
+      ({ jobId }) => (
+        <span>
+          Job has been added to the queue.{" "}
+          <Link
+            to={`/jobs/${newJobName}/${jobId}`}
+            className="underline font-medium hover:text-foreground"
+          >
+            View job ({formatJobId(jobId)})
+          </Link>
+        </span>
+      ),
+      "Failed to add job",
+      () => {
+        setAddJobDialogOpen(false);
+        setNewJobName("");
+        setNewJobData("{}");
+        invalidateJobs();
+      },
+    );
   };
 
-  const handleScheduleJob = async () => {
+  const handleScheduleJob = () => {
     if (!scheduledJobName || !scheduledJobCron) {
       toast.error("Error", {
         description: "Please select a job name and provide a cron expression",
       });
       return;
     }
-
-    try {
-      const data = JSON.parse(scheduledJobData);
-      await jobsApi.scheduleJob(scheduledJobName as JobName, scheduledJobCron, data);
-      toast.success("Success", { description: "Job has been scheduled" });
-      setScheduleJobDialogOpen(false);
-      setScheduledJobName("");
-      setScheduledJobCron("");
-      setScheduledJobData("{}");
-      invalidateScheduled();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to schedule job",
-      });
-    }
+    return withJobToast(
+      async () => {
+        const data = JSON.parse(scheduledJobData);
+        await jobsApi.scheduleJob(scheduledJobName as JobName, scheduledJobCron, data);
+      },
+      () => "Job has been scheduled",
+      "Failed to schedule job",
+      () => {
+        setScheduleJobDialogOpen(false);
+        setScheduledJobName("");
+        setScheduledJobCron("");
+        setScheduledJobData("{}");
+        invalidateScheduled();
+      },
+    );
   };
 
   const handleCancelScheduledJob = async (jobName: string, key?: string) => {
@@ -417,15 +389,12 @@ export function useJobs() {
       return;
     }
 
-    try {
-      await jobsApi.cancelScheduledJob(jobName, key);
-      toast.success("Success", { description: "Scheduled job has been cancelled" });
-      invalidateScheduled();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to cancel scheduled job",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.cancelScheduledJob(jobName, key),
+      () => "Scheduled job has been cancelled",
+      "Failed to cancel scheduled job",
+      invalidateScheduled,
+    );
   };
 
   const openEditScheduledDialog = (job: ScheduledJob) => {
@@ -436,28 +405,28 @@ export function useJobs() {
     setEditScheduledDialogOpen(true);
   };
 
-  const handleEditScheduledJob = async () => {
+  const handleEditScheduledJob = () => {
     if (!editScheduledCron) {
       toast.error("Error", { description: "Please provide a cron expression" });
       return;
     }
-
-    try {
-      const data = JSON.parse(editScheduledDataStr);
-      await jobsApi.editScheduledJob(
-        editScheduledName,
-        editScheduledKeyRef.current,
-        editScheduledCron,
-        data,
-      );
-      toast.success("Success", { description: "Scheduled job has been updated" });
-      setEditScheduledDialogOpen(false);
-      invalidateScheduled();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to update scheduled job",
-      });
-    }
+    return withJobToast(
+      async () => {
+        const data = JSON.parse(editScheduledDataStr);
+        await jobsApi.editScheduledJob(
+          editScheduledName,
+          editScheduledKeyRef.current,
+          editScheduledCron,
+          data,
+        );
+      },
+      () => "Scheduled job has been updated",
+      "Failed to update scheduled job",
+      () => {
+        setEditScheduledDialogOpen(false);
+        invalidateScheduled();
+      },
+    );
   };
 
   const activeSecondaryTab = secondaryOptions.find((t) => t.value === queryParams.state);
