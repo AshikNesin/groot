@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.6.0
+
+### Minor Changes
+
+- [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Switch the default deploy pipeline from nixpacks to railpack (Railway config-as-code) and make AWS\_\* env vars conditional
+
+  The repo now deploys through railpack (`railpack.json`, `railway.json`) instead of nixpacks (`nixpacks.toml` removed), with `docs/guides/deploy.md` documenting the Railway flow. `AWS_*` vars in `.env.schema` are now `@required=eq($STORAGE_DRIVER, s3)` — they apply only when the S3 driver is selected, so local-driver setups no longer fail env validation for missing S3 credentials. The railpack runtime image also installs `libsqlite3-0` so the SQLite build boots on Railway.
+
+### Patch Changes
+
+- [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Declare RP_NAME/RP_ID/ORIGIN in .env.schema and mark them @public — unblock passkey responses
+
+  config.yml resolves the WebAuthn relying party from `{{ env.RP_NAME }}` / `{{ env.RP_ID }}` / `{{ env.ORIGIN }}`, so these vars must be declared (with dev defaults; required in production). They are also marked `@public`: varlock treats every schema item as sensitive by default and patches `ServerResponse.end` to scan for leaked values — but the passkey endpoints intentionally return rpId/rp.name in WebAuthn options (the protocol requires it), so every `/passkey/*/options` response was killed with "DETECTED LEAKED SENSITIVE CONFIG - RP_NAME" once the app ran with the vars set.
+
 ## 2.5.1
 
 ### Patch Changes
