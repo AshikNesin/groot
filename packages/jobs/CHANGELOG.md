@@ -1,5 +1,57 @@
 # @groot/jobs
 
+## 0.9.0
+
+### Minor Changes
+
+- [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Codebase simplification pass — dead code, duplication, API surface
+
+  Audit-driven cleanup, no behavior changes. Verified green across every layer: typecheck, lint, 211 unit tests, full build, 6 e2e tests. All removals were verified to have zero real consumers via import-graph resolution.
+
+  Dead code (~1,300 LOC across 22 files):
+
+  - date/shell lib helpers with zero callers (25→9 date fns; dropped `formatCurrency`, `debounce`, `truncate`, `getInitials`)
+  - one-line Prisma pass-throughs in auth/passkey services; never-wired `auth.deleteUser`, `storage.copyFile`, 6 storage DTO aliases
+  - vestigial breadcrumb subsystem (zero `addBreadcrumb` callers), dead `createLogger`/`logPerformance`/`parseLimit`/`useBulkUpload`/`todoJobOptions`
+  - 4 orphan ui primitives: `alert`, `pagination`, `select`, `tooltip` (423 lines, zero real importers)
+
+  Duplication:
+
+  - The jobs client `Job`/`ScheduledJob` types now alias the server adapter's `QueueJob`/`ScheduledJobInfo` instead of maintaining a second drifting 19-field shape
+  - `withJobToast` helper replaces 15 identical try/toast/catch blocks in `useJobs`/`useJobDetail`
+  - `TextInputDialog` consolidates the CreateFolder/Rename dialogs
+
+  Also fixes pre-existing breaks on main: the job-logger level gate was typed `pino.LevelWithSilent` (root tsc exited 2), the pretest hook resolved the DEV database when NODE_ENV wasn't set (now `NODE_ENV=test` everywhere; `ensure-test-db.ts` refuses to run when `TEST_DATABASE_URL` is unset), and login + todos e2e specs drifted from the UI copy.
+
+### Patch Changes
+
+- [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Simplify the jobs client: single source of truth for job types, withJobToast, shared job utils
+
+  - The jobs client `Job`/`ScheduledJob` now alias the server adapter's `QueueJob`/`ScheduledJobInfo` (type-only import, erased in the client bundle) — one source of truth instead of two drifting 19-field shapes; the dead client `JobState` enum and two re-export shims are deleted.
+  - `withJobToast` helper replaces 15 identical try/toast/catch blocks in `useJobs`/`useJobDetail`.
+  - Job-level options helpers (`todoJobOptions`) and dead validation/constant exports removed.
+
+- [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11) Thanks [@AshikNesin](https://github.com/AshikNesin)! - Start the honker scheduler loop and support multiple schedules per queue via options.key
+
+  Two honker (SQLite) fixes:
+
+  - The scheduler loop was never started, so cron schedules never fired. The adapter now starts honker on init.
+  - `schedule()` used the job name as the honker schedule name, so scheduling the same job at two different times (e.g. 9:30am and 6pm daily) overwrote the first entry. `ScheduleJobOptions.key` is now honored by naming the schedule `job:key` (plain job name when no key, back-compat), mirroring pg-boss's singleton-key schedules. `getSchedules()` maps the composite name back to `{ name, key }`; `unschedule(name, key)` removes one entry.
+
+- [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11) Thanks [@AshikNesin](https://github.com/AshikNesin)! - DB-persisted job logs gated by ops log level — dashboard showed nothing in production
+
+  The pino ROOT level (from config.logging.level, default `warn` in production) gated records before the JobLogStream ever saw them: info lines from job handlers were dropped, job_logs stayed empty, and the dashboard's log panel rendered nothing at all. Additionally pino.multistream's per-stream default level is `info`, so debug lines never persisted even in dev.
+
+  - Pin the DB stream to an `info` floor: quieter ops levels (warn/error) only quiet the console, never the persisted history the dashboard reads.
+  - Honor more-verbose ops levels (debug/trace) on the DB stream too.
+  - Keep the console stream at the exact ops level; `silent` stays silent.
+  - Engine-agnostic: JobLogStream writes via Prisma (job_logs), shared by honker (SQLite) and pg-boss (Postgres).
+
+- Updated dependencies [[`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11), [`18e3200`](https://github.com/AshikNesin/groot/commit/18e3200e3a34db550672c49aa2c5683a4f261b11)]:
+  - @groot/core@0.9.0
+  - @groot/shell@0.10.0
+  - @groot/ui@0.5.0
+
 ## 0.8.3
 
 ### Patch Changes
