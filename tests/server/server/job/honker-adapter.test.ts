@@ -24,7 +24,7 @@ runIfSqlite("HonkerAdapter (SQLite job queue)", () => {
     await adapter.stop();
   });
 
-  it("enqueues a job and a worker receives and acks it", async () => {
+  it("enqueues a job and a worker receives and acks it", { timeout: 10_000 }, async () => {
     const received: JobContext[] = [];
     let resolveWork!: () => void;
     const workDone = new Promise<void>((r) => (resolveWork = r));
@@ -45,38 +45,52 @@ runIfSqlite("HonkerAdapter (SQLite job queue)", () => {
     expect(received[0].data).toEqual({ msg: "hello" });
   });
 
-  it("retries a failing job then dead-letters after max attempts", async () => {
-    let attempts = 0;
-    await adapter.start();
-    await adapter.createQueue("flaky");
-    // Short retry delay so the test resolves quickly.
-    await adapter.work("flaky", { pollingIntervalSeconds: 1, batchSize: 1 }, async () => {
-      attempts++;
-      throw new Error(`boom #${attempts}`);
-    });
+  // This test needs several serialized write transactions (enqueue, claim,
+  // retry, reclaim, dead-letter) plus a 1s retry delay, and the full suite
+  // shares one SQLite file across parallel workers — on CI's slower disks the
+  // fsync latency alone pushes it past the default 5s vitest timeout (killed
+  // at ~5s on two consecutive CI runs while the mechanism worked; ~500ms
+  // locally). The 12s valve stays below the 15s vitest timeout so a genuinely
+  // broken adapter still fails with the assertion diff, not a raw timeout.
+  it(
+    "retries a failing job then dead-letters after max attempts",
+    { timeout: 15_000 },
+    async () => {
+      let attempts = 0;
+      await adapter.start();
+      await adapter.createQueue("flaky");
+      // Short retry delay so the test resolves quickly.
+      await adapter.work("flaky", { pollingIntervalSeconds: 1, batchSize: 1 }, async () => {
+        attempts++;
+        throw new Error(`boom #${attempts}`);
+      });
 
-    await adapter.send("flaky", { n: 1 }, { retryLimit: 2 });
+      await adapter.send("flaky", { n: 1 }, { retryLimit: 2 });
 
-    // Wait for the job to exhaust retries and land in _honker_dead.
-    await new Promise<void>((resolve) => {
-      const t = setInterval(async () => {
-        const failed = await adapter.getFailedJobs(10);
-        if (failed.length > 0) {
+      // Wait for the job to exhaust retries and land in _honker_dead. Scoped to
+      // the "flaky" queue via getJobs: all test files share one SQLite file and
+      // run in parallel, so a global getFailedJobs() poll can be satisfied by
+      // another file's dead rows (or stale rows from a previous local run).
+      await new Promise<void>((resolve) => {
+        const t = setInterval(async () => {
+          const { total } = await adapter.getJobs({ name: "flaky", state: "failed" });
+          if (total > 0) {
+            clearInterval(t);
+            resolve();
+          }
+        }, 200);
+        setTimeout(() => {
           clearInterval(t);
           resolve();
-        }
-      }, 200);
-      setTimeout(() => {
-        clearInterval(t);
-        resolve();
-      }, 8000);
-    });
+        }, 12_000);
+      });
 
-    const failed = await adapter.getFailedJobs(10);
-    expect(failed.length).toBeGreaterThanOrEqual(1);
-    expect(failed[0].state).toBe("failed");
-    expect(failed[0].deadletter).toContain("boom");
-  });
+      const { jobs: failed } = await adapter.getJobs({ name: "flaky", state: "failed" });
+      expect(failed.length).toBeGreaterThanOrEqual(1);
+      expect(failed[0].state).toBe("failed");
+      expect(failed[0].deadletter).toContain("boom");
+    },
+  );
 
   it("getQueueStats reports created and failed counts", async () => {
     await adapter.start();
@@ -120,35 +134,41 @@ runIfSqlite("HonkerAdapter (SQLite job queue)", () => {
     await adapter.unschedule("daily-report", "pm");
   });
 
-  it("fires a scheduled job when its time arrives (scheduler loop runs)", async () => {
-    // Regression test: start() must launch honker's scheduler loop
-    // (scheduler.run()). Without it, scheduler().add() rows sit in
-    // _honker_scheduler_tasks forever — next_fire_at passes and nothing is
-    // enqueued. pg-boss starts its equivalent loop in boss.start(); honker
-    // requires an explicit run().
-    const received: JobContext[] = [];
-    let resolveWork!: () => void;
-    const workDone = new Promise<void>((r) => (resolveWork = r));
+  // The 15s "never fired" race below must stay under the vitest timeout so a
+  // broken scheduler fails with that message instead of a raw test timeout.
+  it(
+    "fires a scheduled job when its time arrives (scheduler loop runs)",
+    { timeout: 20_000 },
+    async () => {
+      // Regression test: start() must launch honker's scheduler loop
+      // (scheduler.run()). Without it, scheduler().add() rows sit in
+      // _honker_scheduler_tasks forever — next_fire_at passes and nothing is
+      // enqueued. pg-boss starts its equivalent loop in boss.start(); honker
+      // requires an explicit run().
+      const received: JobContext[] = [];
+      let resolveWork!: () => void;
+      const workDone = new Promise<void>((r) => (resolveWork = r));
 
-    await adapter.start();
-    await adapter.work("ticker", { pollingIntervalSeconds: 1, batchSize: 1 }, async (jobs) => {
-      received.push(...jobs);
-      resolveWork();
-    });
+      await adapter.start();
+      await adapter.work("ticker", { pollingIntervalSeconds: 1, batchSize: 1 }, async (jobs) => {
+        received.push(...jobs);
+        resolveWork();
+      });
 
-    // @every 2s fires soon; the loop should enqueue within ~seconds.
-    await adapter.schedule("ticker", { kind: "tick" }, "@every 2s");
+      // @every 2s fires soon; the loop should enqueue within ~seconds.
+      await adapter.schedule("ticker", { kind: "tick" }, "@every 2s");
 
-    await Promise.race([
-      workDone,
-      new Promise((_, rej) =>
-        setTimeout(() => rej(new Error("scheduled job never fired")), 15_000),
-      ),
-    ]);
-    expect(received.length).toBeGreaterThanOrEqual(1);
-    expect(received[0].data).toEqual({ kind: "tick" });
-    await adapter.unschedule("ticker");
-  });
+      await Promise.race([
+        workDone,
+        new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("scheduled job never fired")), 15_000),
+        ),
+      ]);
+      expect(received.length).toBeGreaterThanOrEqual(1);
+      expect(received[0].data).toEqual({ kind: "tick" });
+      await adapter.unschedule("ticker");
+    },
+  );
 
   it("getAvailableQueues only returns queues with live rows (adapter-level)", async () => {
     // This documents the honker adapter limitation that motivated the
