@@ -35,10 +35,6 @@ export interface JobQueryResponse {
   total: number;
 }
 
-// ScheduledJobInfo now lives in adapter.ts (single source of truth). Re-export
-// so existing imports from "./types" keep resolving.
-export type { ScheduledJobInfo } from "./adapter";
-
 export interface BulkRerunResult {
   queueName: string;
   jobId: string;

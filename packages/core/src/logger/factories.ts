@@ -14,20 +14,6 @@ export interface LogBusinessEventOptions {
   level?: "info" | "warn" | "error";
 }
 
-export interface LogPerformanceOptions {
-  operation: string;
-  duration: number;
-  data?: Record<string, unknown>;
-}
-
-// Context-aware logger factory
-export function createLogger(context: Record<string, unknown> = {}): Logger {
-  return logger.child({
-    ...context,
-    loggerId: randomUUID().slice(0, 8),
-  });
-}
-
 // Request-aware logger factory
 export function createRequestLogger(options: CreateRequestLoggerOptions): Logger {
   const { req, additionalContext = {} } = options;
@@ -54,21 +40,5 @@ export function logBusinessEvent(options: LogBusinessEventOptions): void {
       timestamp: new Date().toISOString(),
     },
     `Business event: ${event}`,
-  );
-}
-
-// Performance logger
-export function logPerformance(options: LogPerformanceOptions): void {
-  const { operation, duration, data = {} } = options;
-  const level = duration > 5000 ? "warn" : duration > 1000 ? "info" : "debug";
-
-  logger[level](
-    {
-      type: "performance",
-      operation,
-      duration: `${duration}ms`,
-      ...data,
-    },
-    `Performance: ${operation} completed in ${duration}ms`,
   );
 }

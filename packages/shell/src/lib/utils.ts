@@ -1,24 +1,6 @@
 // Class name utility — reuse the single implementation from @groot/ui.
 export { cn } from "@groot/ui/lib/utils";
 
-// Format currency with locale support.
-// Intl.NumberFormat construction is expensive; cache per locale+currency so
-// repeated calls (the common case — same locale/currency) reuse one formatter.
-const currencyFormatters = new Map<string, Intl.NumberFormat>();
-export function formatCurrency(amount: number, currency = "USD", locale = "en-US"): string {
-  const key = `${locale}:${currency}`;
-  let fmt = currencyFormatters.get(key);
-  if (!fmt) {
-    fmt = new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 2,
-    });
-    currencyFormatters.set(key, fmt);
-  }
-  return fmt.format(amount);
-}
-
 // Format bytes to human readable format
 export function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return "0 Bytes";
@@ -32,59 +14,15 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
-// Debounce function
-export function debounce<T extends (...args: unknown[]) => unknown>(
-  fn: T,
-  delay: number,
-): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-}
-
-// Truncate text with ellipsis
-export function truncate(text: string, length: number): string {
-  if (text.length <= length) return text;
-  return `${text.slice(0, length)}...`;
-}
-
-// Generate initials from name
-export function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-// Re-export all date utilities from centralized location
+// Re-export date utilities from centralized location
 export {
   formatDate,
-  formatYYYYMM,
   formatDisplayDate,
-  formatDisplayDateTime,
-  formatDetailedDateTime,
   formatLocaleDateTime,
   formatRelativeTime,
-  getCurrentMonthRange,
   startOfDay,
   endOfDay,
   startOfMonth,
-  endOfMonth,
-  startOfMonthFormatted,
-  endOfMonthFormatted,
-  addDays,
   subtractDays,
-  addMonths,
-  subtractMonths,
-  isSameDay,
-  isBefore,
-  isAfter,
-  parseYYYYMM,
-  currentMonth,
-  getMonthRange,
   formatDuration,
 } from "./date.utils";

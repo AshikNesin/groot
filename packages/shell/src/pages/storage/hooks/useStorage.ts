@@ -9,7 +9,7 @@ export interface StorageFile {
   isDirectory: boolean;
 }
 
-export const storageKeys = {
+const storageKeys = {
   root: ["storage"] as const,
   files: (prefix: string) => [...storageKeys.root, "files", prefix] as const,
 };
@@ -38,25 +38,6 @@ export function useUploadFile() {
         formData.append("contentType", params.contentType);
       }
       return apiClient.postForm<{ filePath: string }>("/storage/files/upload", formData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: storageKeys.root });
-    },
-  });
-}
-
-export function useBulkUpload() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (files: FileList | File[]) => {
-      const formData = new FormData();
-      for (const file of Array.from(files)) {
-        formData.append("files", file);
-      }
-      return apiClient.postForm<{
-        uploadedFiles: string[];
-        failedFiles: Array<{ filePath: string; error: string }>;
-      }>("/storage/files/bulk-upload", formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storageKeys.root });

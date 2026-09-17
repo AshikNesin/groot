@@ -37,13 +37,3 @@ export function createTraceContext(parentTraceId?: string): TraceContext {
 export function getCurrentTraceContext(): TraceContext | null {
   return getLoggerContext()?.trace ?? null;
 }
-
-/**
- * Clear the current trace context
- */
-export function clearTraceContext(): void {
-  const context = getLoggerContext();
-  if (context) {
-    context.trace = null;
-  }
-}

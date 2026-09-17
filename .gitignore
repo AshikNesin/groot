@@ -47,3 +47,4 @@ service-account.json
 settings.local.json
 .claude/settings.local.json
 packages/core/generated
+.auto/

@@ -20,7 +20,7 @@ function firstString(value: ParamValue): string | undefined {
 
 /**
  * Parse raw input against a Zod schema, throwing a structured Boom error on
- * failure. Shared by `parseBody`, `parseQuery`, and `parseParams`.
+ * failure. Shared by `parseBody` and `parseQuery`.
  */
 function parseInput<S extends ZodSchema>(input: unknown, schema: S): z.output<S> {
   const result = schema.safeParse(input ?? {});
@@ -71,20 +71,6 @@ export function parseStringParam(value: ParamValue, paramName = "param"): string
 }
 
 /**
- * Parse and sanitize a limit query parameter
- * Returns a positive integer clamped to [1, maxLimit], or defaultValue if missing/invalid
- */
-export function parseLimit(value: ParamValue, defaultValue = 50, maxLimit = 100): number {
-  const resolved = firstString(value);
-  // Reject anything that isn't a bare run of digits (e.g. "10junk", "1.5")
-  // rather than letting parseInt silently truncate — consistent with parseId.
-  if (resolved === undefined || !/^\d+$/.test(resolved)) return defaultValue;
-  const parsed = Number.parseInt(resolved, 10);
-  if (Number.isNaN(parsed) || parsed < 1) return defaultValue;
-  return Math.min(parsed, maxLimit);
-}
-
-/**
  * Schema-aware request parsers.
  *
  * Parse and validate `req.body`, `req.query`, or `req.params` against a Zod
@@ -108,10 +94,6 @@ export function parseBody<S extends ZodSchema>(req: Request, schema: S): z.outpu
 
 export function parseQuery<S extends ZodSchema>(req: Request, schema: S): z.output<S> {
   return parseInput(req.query, schema);
-}
-
-export function parseParams<S extends ZodSchema>(req: Request, schema: S): z.output<S> {
-  return parseInput(req.params, schema);
 }
 
 /**

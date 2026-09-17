@@ -21,56 +21,6 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 
-// ── Passkey data access ────────────────────────────────────────────────────
-
-type CreatePasskeyData = {
-  userId: number;
-  credentialId: string;
-  publicKey: Uint8Array<ArrayBuffer>;
-  counter: bigint;
-  deviceType?: string | null;
-  backedUp: boolean;
-  transports: string[];
-  credentialName?: string | null;
-};
-
-type UpdatePasskeyData = {
-  counter?: bigint;
-  lastUsedAt?: Date;
-  credentialName?: string;
-};
-
-export async function createPasskey(data: CreatePasskeyData): Promise<Passkey> {
-  return prisma.passkey.create({ data });
-}
-
-export async function findPasskeyByCredentialId(credentialId: string): Promise<Passkey | null> {
-  return prisma.passkey.findUnique({ where: { credentialId } });
-}
-
-export async function findPasskeysByUserId(userId: number): Promise<Passkey[]> {
-  return prisma.passkey.findMany({ where: { userId }, orderBy: { createdAt: "desc" } });
-}
-
-export async function updatePasskey(id: number, data: UpdatePasskeyData): Promise<Passkey> {
-  return prisma.passkey.update({ where: { id }, data });
-}
-
-export async function deletePasskeyRecord(id: number): Promise<Passkey> {
-  return prisma.passkey.delete({ where: { id } });
-}
-
-export async function countPasskeysByUserId(userId: number): Promise<number> {
-  return prisma.passkey.count({ where: { userId } });
-}
-
-export async function findPasskeyByIdAndUserId(
-  id: number,
-  userId: number,
-): Promise<Passkey | null> {
-  return prisma.passkey.findFirst({ where: { id, userId } });
-}
-
 // ── Challenge store backed by KV with TTL ──────────────────────────────────
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
@@ -129,7 +79,10 @@ export async function generateRegistrationOptions({
     throw Boom.notFound("User not found");
   }
 
-  const existingPasskeys = await findPasskeysByUserId(userId);
+  const existingPasskeys = await prisma.passkey.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
   const options = await generatePasskeyRegistrationOptions(user, existingPasskeys);
 
   await storeChallenge(options.challenge);
@@ -169,7 +122,9 @@ export async function verifyRegistration({
   }
 
   const credentialIdBase64 = credential.id;
-  const existingPasskey = await findPasskeyByCredentialId(credentialIdBase64);
+  const existingPasskey = await prisma.passkey.findUnique({
+    where: { credentialId: credentialIdBase64 },
+  });
   if (existingPasskey) {
     throw Boom.conflict("This passkey is already registered");
   }
@@ -179,15 +134,17 @@ export async function verifyRegistration({
 
   const publicKey = new Uint8Array(Buffer.from(credential.publicKey));
 
-  const passkey = await createPasskey({
-    userId,
-    credentialId: credentialIdBase64,
-    publicKey,
-    counter: BigInt(credential.counter ?? 0),
-    deviceType: credentialDeviceType || null,
-    backedUp: !!credentialBackedUp,
-    transports: serializeTransports(credential.transports),
-    credentialName: defaultName,
+  const passkey = await prisma.passkey.create({
+    data: {
+      userId,
+      credentialId: credentialIdBase64,
+      publicKey,
+      counter: BigInt(credential.counter ?? 0),
+      deviceType: credentialDeviceType || null,
+      backedUp: !!credentialBackedUp,
+      transports: serializeTransports(credential.transports),
+      credentialName: defaultName,
+    },
   });
 
   logger.info(
@@ -206,7 +163,10 @@ export async function generateAuthenticationOptions({
   if (email) {
     const user = await findUserByEmail(email);
     if (user) {
-      userPasskeys = await findPasskeysByUserId(user.id);
+      userPasskeys = await prisma.passkey.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+      });
     }
   }
 
@@ -232,7 +192,9 @@ export async function verifyAuthentication({
   }
 
   const credentialIdBase64 = Buffer.from(response.rawId, "base64url").toString("base64url");
-  const passkey = await findPasskeyByCredentialId(credentialIdBase64);
+  const passkey = await prisma.passkey.findUnique({
+    where: { credentialId: credentialIdBase64 },
+  });
   if (!passkey) {
     throw Boom.unauthorized("Passkey not found");
   }
@@ -248,9 +210,12 @@ export async function verifyAuthentication({
     throw Boom.unauthorized("User not found");
   }
 
-  await updatePasskey(passkey.id, {
-    counter: BigInt(verification.authenticationInfo.newCounter),
-    lastUsedAt: dayjs().toDate(),
+  await prisma.passkey.update({
+    where: { id: passkey.id },
+    data: {
+      counter: BigInt(verification.authenticationInfo.newCounter),
+      lastUsedAt: dayjs().toDate(),
+    },
   });
 
   const token = generateToken({
@@ -275,7 +240,10 @@ export async function listPasskeys({ userId }: { userId: number }): Promise<
     counter: number;
   })[]
 > {
-  const passkeys = await findPasskeysByUserId(userId);
+  const passkeys = await prisma.passkey.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
 
   return passkeys.map(({ publicKey: _, credentialId: __, counter, ...safePasskey }) => ({
     ...safePasskey,
@@ -290,17 +258,17 @@ export async function deletePasskey({
   passkeyId: number;
   userId: number;
 }): Promise<void> {
-  const passkey = await findPasskeyByIdAndUserId(passkeyId, userId);
+  const passkey = await prisma.passkey.findFirst({ where: { id: passkeyId, userId } });
   if (!passkey) {
     throw Boom.notFound("Passkey not found");
   }
 
-  const passkeyCount = await countPasskeysByUserId(userId);
+  const passkeyCount = await prisma.passkey.count({ where: { userId } });
   if (passkeyCount === 1) {
     throw Boom.badRequest("Cannot delete the last passkey. Please add another passkey first.");
   }
 
-  await deletePasskeyRecord(passkeyId);
+  await prisma.passkey.delete({ where: { id: passkeyId } });
 
   logger.info({ userId, passkeyId }, "Passkey deleted successfully");
 }
@@ -314,13 +282,14 @@ export async function updatePasskeyName({
   userId: number;
   credentialName: string;
 }): Promise<Passkey> {
-  const passkey = await findPasskeyByIdAndUserId(passkeyId, userId);
+  const passkey = await prisma.passkey.findFirst({ where: { id: passkeyId, userId } });
   if (!passkey) {
     throw Boom.notFound("Passkey not found");
   }
 
-  const updatedPasskey = await updatePasskey(passkeyId, {
-    credentialName,
+  const updatedPasskey = await prisma.passkey.update({
+    where: { id: passkeyId },
+    data: { credentialName },
   });
 
   logger.info({ userId, passkeyId, credentialName }, "Passkey name updated successfully");

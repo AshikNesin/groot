@@ -4,14 +4,13 @@ import { VALID_JOB_STATES, isValidJobState } from "./constants";
 import { getJobQueue } from "./client";
 import { Boom } from "@groot/core/errors";
 import type {
-  ScheduledJobInfo,
   FetchJobsOptions,
   GetFailedJobsOptions,
   GetJobsByStateOptions,
   GetJobsOptions,
   JobQueryResponse,
 } from "./types";
-import type { QueueJob } from "./adapter";
+import type { QueueJob, ScheduledJobInfo } from "./adapter";
 import { getRegisteredHandlers } from "./worker";
 
 // Get all scheduled jobs

@@ -18,7 +18,7 @@ import { logger } from "@groot/core/logger";
 import { prisma } from "@groot/core/database";
 import { jobConfig } from "./config";
 import { defaultJobOptions } from "./config";
-import { isValidJobState, VALID_JOB_STATES } from "./constants";
+import { VALID_JOB_STATES } from "./constants";
 import type {
   JobContext,
   JobQueueAdapter,
@@ -341,7 +341,3 @@ export class PgBossAdapter implements JobQueueAdapter {
     return Boolean(await this.boss.resume(queueName, jobId));
   }
 }
-
-// isValidJobState is imported above for parity with the old queries module; it
-// is re-exported here so callers that migrated from queries.ts still resolve.
-export { isValidJobState };

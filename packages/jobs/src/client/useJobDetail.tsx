@@ -1,5 +1,5 @@
 import { jobsApi } from "./api";
-import { formatJobId } from "./utils";
+import { formatJobId, withJobToast } from "./utils";
 import type { JobLog } from "./types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -71,43 +71,34 @@ export function useJobDetail() {
     return () => clearInterval(interval);
   }, [queueName, jobId, fetchLogs]);
 
-  const retry = async () => {
+  const retry = () => {
     if (!job) return;
-    try {
-      await jobsApi.retryJob(job.name, job.id);
-      toast.success("Success", { description: "Job has been queued for retry" });
-      invalidateJob();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to retry job",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.retryJob(job.name, job.id),
+      () => "Job has been queued for retry",
+      "Failed to retry job",
+      invalidateJob,
+    );
   };
 
-  const cancel = async () => {
+  const cancel = () => {
     if (!job) return;
-    try {
-      await jobsApi.cancelJob(job.name, job.id);
-      toast.success("Success", { description: "Job has been cancelled" });
-      invalidateJob();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to cancel job",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.cancelJob(job.name, job.id),
+      () => "Job has been cancelled",
+      "Failed to cancel job",
+      invalidateJob,
+    );
   };
 
-  const resume = async () => {
+  const resume = () => {
     if (!job) return;
-    try {
-      await jobsApi.resumeJob(job.name, job.id);
-      toast.success("Success", { description: "Job has been resumed" });
-      invalidateJob();
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to resume job",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.resumeJob(job.name, job.id),
+      () => "Job has been resumed",
+      "Failed to resume job",
+      invalidateJob,
+    );
   };
 
   const deleteJob = async () => {
@@ -122,39 +113,31 @@ export function useJobDetail() {
     ) {
       return;
     }
-    try {
-      await jobsApi.deleteJob(job.name, job.id);
-      toast.success("Success", { description: "Job has been deleted" });
-      navigate("/jobs");
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to delete job",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.deleteJob(job.name, job.id),
+      () => "Job has been deleted",
+      "Failed to delete job",
+      () => navigate("/jobs"),
+    );
   };
 
-  const rerun = async () => {
+  const rerun = () => {
     if (!job) return;
-    try {
-      const result = await jobsApi.rerunJob(job.name, job.id);
-      toast.success("Success", {
-        description: (
-          <span>
-            Job re-run created.{" "}
-            <Link
-              to={`/jobs/${result.queueName}/${result.newJobId}`}
-              className="underline font-medium hover:text-foreground"
-            >
-              View new job ({formatJobId(result.newJobId)})
-            </Link>
-          </span>
-        ),
-      });
-    } catch (error) {
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "Failed to re-run job",
-      });
-    }
+    return withJobToast(
+      () => jobsApi.rerunJob(job.name, job.id),
+      (result) => (
+        <span>
+          Job re-run created.{" "}
+          <Link
+            to={`/jobs/${result.queueName}/${result.newJobId}`}
+            className="underline font-medium hover:text-foreground"
+          >
+            View new job ({formatJobId(result.newJobId)})
+          </Link>
+        </span>
+      ),
+      "Failed to re-run job",
+    );
   };
 
   return { job, loading, error, logs, retry, cancel, resume, deleteJob, rerun };

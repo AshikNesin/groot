@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { Boom } from "@groot/core/errors";
-import { getBreadcrumbs, getCurrentTraceContext, sanitizeRequestBody } from "@groot/core/logger";
+import { getCurrentTraceContext, sanitizeRequestBody } from "@groot/core/logger";
 
 export function buildErrorContext(
   error: Error,
@@ -9,7 +9,6 @@ export function buildErrorContext(
   requestDuration?: number,
 ) {
   const traceContext = getCurrentTraceContext();
-  const breadcrumbs = getBreadcrumbs();
   const sanitizedBody = sanitizeRequestBody(req.body);
 
   return {
@@ -42,11 +41,5 @@ export function buildErrorContext(
             requestDuration: `${requestDuration}ms`,
           }
         : undefined,
-    breadcrumbs: breadcrumbs.map((b) => ({
-      timestamp: b.timestamp,
-      category: b.category,
-      message: b.message,
-      level: b.level,
-    })),
   };
 }
